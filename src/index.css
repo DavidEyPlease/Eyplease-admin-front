@@ -1,0 +1,307 @@
+@import "tailwindcss";
+@import "tailwindcss-animated";
+@import '@fontsource-variable/inter';
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+.react-code-input > input {
+  text-align: center !important;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.react-code-input > input:focus {
+  border-bottom: 2px solid #4E31C0 !important;
+}
+
+:root {
+  --font-family: 'Inter Variable', system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  font-family: var(--font-family);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --radius: 0.75rem;
+   --background: oklch(1 0 0);
+   --foreground: oklch(0.141 0.005 285.823);
+   --card: oklch(1 0 0);
+   --card-foreground: oklch(0.141 0.005 285.823);
+   --popover: oklch(1 0 0);
+   --popover-foreground: oklch(0.141 0.005 285.823);
+   --primary: oklch(0.4463 0.2077 283.36);
+   --primary-foreground: oklch(0.969 0.016 293.756);
+   --secondary: oklch(0.967 0.001 286.375);
+   --secondary-foreground: oklch(0.21 0.006 285.885);
+   --muted: oklch(0.967 0.001 286.375);
+   --muted-foreground: oklch(0.552 0.016 285.938);
+   --accent: oklch(0.967 0.001 286.375);
+   --accent-foreground: oklch(0.21 0.006 285.885);
+   --destructive: oklch(0.577 0.245 27.325);
+   --border: oklch(0.92 0.004 286.32);
+   --input: oklch(0.92 0.004 286.32);
+   --ring: oklch(0.606 0.25 292.717);
+   --chart-1: oklch(0.646 0.222 41.116);
+   --chart-2: oklch(0.6 0.118 184.704);
+   --chart-3: oklch(0.398 0.07 227.392);
+   --chart-4: oklch(0.828 0.189 84.429);
+   --chart-5: oklch(0.769 0.188 70.08);
+   --sidebar: var(--primary);
+   --sidebar-foreground: oklch(1 0 0);
+   --sidebar-primary: oklch(0.606 0.25 292.717);
+   --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+   --sidebar-accent: oklch(0.967 0.001 286.375);
+   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+   --sidebar-border: oklch(0.92 0.004 286.32);
+   --sidebar-ring: oklch(0.606 0.25 292.717);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+.dark {
+   --background: oklch(0.141 0.005 285.823);
+   --foreground: oklch(0.985 0 0);
+   --card: oklch(0.21 0.006 285.885);
+   --card-foreground: oklch(0.985 0 0);
+   --popover: oklch(0.21 0.006 285.885);
+   --popover-foreground: oklch(0.985 0 0);
+   --primary: oklch(0.4021 0.1748 280.21);
+   --primary-foreground: oklch(0.969 0.016 293.756);
+   --secondary: oklch(0.274 0.006 286.033);
+   --secondary-foreground: oklch(0.985 0 0);
+   --muted: oklch(0.274 0.006 286.033);
+   --muted-foreground: oklch(0.705 0.015 286.067);
+   --accent: oklch(0.274 0.006 286.033);
+   --accent-foreground: oklch(0.985 0 0);
+   --destructive: oklch(0.704 0.191 22.216);
+   --border: oklch(1 0 0 / 10%);
+   --input: oklch(1 0 0 / 15%);
+   --ring: oklch(0.541 0.281 293.009);
+   --chart-1: oklch(0.488 0.243 264.376);
+   --chart-2: oklch(0.696 0.17 162.48);
+   --chart-3: oklch(0.769 0.188 70.08);
+   --chart-4: oklch(0.627 0.265 303.9);
+   --chart-5: oklch(0.645 0.246 16.439);
+   --sidebar: var(--primary);
+   --sidebar-foreground: oklch(0.985 0 0); /* Text color for Sidebar's items*/
+   --sidebar-primary: oklch(0.606 0.25 292.717);
+   --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+   --sidebar-accent: oklch(0.274 0.006 286.033);
+   --sidebar-accent-foreground: oklch(0.985 0 0);
+   --sidebar-border: oklch(1 0 0 / 10%);
+   --sidebar-ring: oklch(0.541 0.281 293.009);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  :root {
+    --chart-1: oklch(61.141% 0.24787 29.627);
+    --chart-2: oklch(59.03% 0.15095 153.345);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+  }
+
+  .dark {
+    --chart-1: oklch(61.141% 0.24787 29.627);
+    --chart-2: oklch(59.03% 0.15095 153.345);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+  }
+}
+
+.bg-sidebar {
+  background-color: var(--primary);
+}
+
+.fc {
+  /* the calendar root */
+  /* max-width: 1200px;
+  margin: 0 auto; */
+  font-family: var(--font-family) !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: none !important;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  padding-inline: 1rem !important;
+}
+
+.fc-button {
+  background-color: var(--primary) !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+}
+
+.fc-button-group {
+  gap: 0.5rem !important;
+}
+
+.fc .fc-scrollgrid table {
+  border-top-style: inherit;
+}
+
+.fc th.fc-col-header-cell {
+  padding: 0.5rem !important;
+  border-inline-end-color: transparent !important;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  @apply border-input
+}
+
+.fc-h-event {
+  @apply rounded-md;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+}
+
+/* .fc .fc-daygrid-day-frame {
+  min-height: 100px !important;
+  overflow-y: scroll;
+} */
+
+/* .fc .fc-daygrid-day {
+  height: 180px;
+  width: 200px
+  padding: 0.5rem !important;
+} */
+
+.fc .fc-daygrid-day.fc-day-today {
+  @apply bg-primary/40;
+  color: var(--primary-foreground) !important;
+}
+
+@media (max-width: 768px) {
+  .fc .fc-toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+.fc-dayGridMonth-button {
+  display: none !important;
+}
+
+.fc-theme-standard .fc-popover-header {
+  background: var(--color-primary);
+  border-top-left-radius: var(--radius) !important;
+  border-top-right-radius: var(--radius) !important;
+  padding: 0.5em;
+}
+
+.fc-theme-standard .fc-popover {
+  border-radius: var(--radius) !important;
+  border: 0 !important;
+}
+
+.fc-popover-title {
+  @apply text-white
+}
+
+.react-autosuggest__container {
+  position: relative;
+}
+
+.react-autosuggest__input {
+  border-color: var(--input);
+  @apply placeholder:text-muted-foreground rounded-md border bg-transparent dark:bg-input/30 px-3 py-2.5 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:opacity-50 md:text-sm w-full min-w-0;
+}
+
+.react-autosuggest__input--focused {
+  outline: none;
+}
+
+.react-autosuggest__input--open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.react-autosuggest__suggestions-container {
+  display: none;
+}
+
+.react-autosuggest__suggestions-container--open {
+  display: block;
+  position: absolute;
+  top: 51px;
+  z-index: 2;
+  @apply border border-input bg-popover w-full rounded-b-md rounded-bl-md max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto
+}
+
+.react-autosuggest__suggestions-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.react-autosuggest__suggestion {
+  cursor: pointer;
+  @apply relative flex cursor-default items-center gap-2 rounded-sm p-2 text-sm outline-hidden select-none
+}
+
+.react-autosuggest__suggestion--highlighted {
+  @apply bg-primary/20 cursor-pointer;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
