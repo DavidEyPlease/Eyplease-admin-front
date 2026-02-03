@@ -7,6 +7,7 @@ import { JSONValue } from '@/interfaces/common';
 type UseListInitResult<T, F> = {
     response: T | undefined;
     isLoading: boolean;
+    isRefetching: boolean;
     page: number;
     search: string;
     error: Error | null;
@@ -74,6 +75,7 @@ const useListQuery = <T, F = unknown>({
     const {
         error,
         loading: isLoading,
+        isRefetching,
         response: apiResponse,
         setData,
         fetchRetry,
@@ -127,6 +129,7 @@ const useListQuery = <T, F = unknown>({
         search,
         perPage,
         selectedFilters,
+        isRefetching,
         setPerPage,
         onApplyFilters,
         fetchRetry,

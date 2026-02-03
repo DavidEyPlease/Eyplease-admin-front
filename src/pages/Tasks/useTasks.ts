@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/constants/api";
+import { BROWSER_EVENTS } from "@/constants/browserEvents";
 import useListQuery from "@/hooks/useListQuery";
 import { ITask, TasksFilters } from "@/interfaces/tasks";
 import { TasksService } from "@/services/tasks.service";
@@ -11,13 +12,32 @@ import { toast } from "sonner";
 
 const CURRENT_MONTH = new Date().getMonth() + 1;
 
-const useTasks = () => {
+export interface UseTaskResult {
+    isLoading: boolean;
+    isRefetching: boolean;
+    selectedTask: ITask | null;
+    setSelectedTask: (task: ITask | null) => void;
+    selectedDate: Date | null;
+    setSelectedDate: (date: Date | null) => void;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    tasks: ITask[];
+    setData: (data: ITask[]) => void;
+    handleEventClick: (eventInfo: EventClickArg) => void;
+    handleDateSelect: (selectInfo: DateClickArg) => void;
+    filters: TasksFilters;
+    onApplyFilters: (filters: TasksFilters) => void;
+    onDragEnd: (toDate: Date, taskId: string) => Promise<void>;
+}
+
+const useTasks = (): UseTaskResult => {
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null)
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [open, setOpen] = useState(false)
 
     const {
         isLoading,
+        isRefetching,
         response,
         filters,
         onApplyFilters,
@@ -73,6 +93,16 @@ const useTasks = () => {
     }, [handleTaskUpdate])
 
     useEffect(() => {
+        const handleEvent = (event: BrowserEvent<ITask>) => {
+            setSelectedTask(event.detail);
+        };
+        subscribeEvent(BROWSER_EVENTS.OPEN_TASK_DETAIL, handleEvent as EventListener)
+        return () => {
+            unsubscribeEvent(BROWSER_EVENTS.OPEN_TASK_DETAIL, handleEvent as EventListener)
+        }
+    }, [])
+
+    useEffect(() => {
         if (tasks) {
             setData(tasks.map((task) => ({
                 ...task,
@@ -88,6 +118,7 @@ const useTasks = () => {
     return {
         isLoading,
         selectedTask,
+        isRefetching,
         setSelectedTask,
         selectedDate,
         setSelectedDate,

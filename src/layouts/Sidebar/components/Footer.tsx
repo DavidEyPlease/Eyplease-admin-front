@@ -53,7 +53,7 @@ const SidebarFooter = ({ user }: Props) => {
                                         {user?.name}
                                     </span>
                                     <span className="text-xs truncate">
-                                        {user?.username}
+                                        {user?.role?.name}
                                     </span>
                                 </div>
                                 <ChevronsUpDown className="ml-auto size-4" />
@@ -73,7 +73,7 @@ const SidebarFooter = ({ user }: Props) => {
                                             {user?.name}
                                         </span>
                                         <span className="text-xs truncate">
-                                            {user?.username}
+                                            {user?.role?.name}
                                         </span>
                                     </div>
                                 </div>

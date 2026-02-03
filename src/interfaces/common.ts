@@ -116,7 +116,7 @@ export interface IFile extends FileUrls {
     id: string
     sort: number
     name: string
-    extension: string
+    ext: string
 }
 
 export interface FileUrls {

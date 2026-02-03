@@ -5,6 +5,7 @@ import { AppSidebar } from "@/uishadcn/app-sidebar";
 import ContentContainer from "./Sidebar/components/ContentContainer";
 import { useEffect, useState } from "react";
 import UploadToastProgress from "@/components/generics/UploadToastProgress";
+import { HeaderActionsProvider } from "@/providers/HeaderActionsProvider";
 
 const MainLayout = () => {
     const navigate = useNavigate();
@@ -24,24 +25,26 @@ const MainLayout = () => {
 
     return (
         <section className='flex'>
-            <SidebarProvider
-            // style={
-            //     {
-            //         "--sidebar-width": "19rem",
-            //     } as React.CSSProperties
-            // }
-            >
-                <AppSidebar />
-                <SidebarInset>
-                    <ContentContainer page={location.pathname}>
-                        <div key={animationKey} className="animate-fade flex flex-col flex-1 gap-4 p-4">
-                            <Outlet />
-                        </div>
-                    </ContentContainer>
-                </SidebarInset>
-            </SidebarProvider>
+            <HeaderActionsProvider>
+                <SidebarProvider
+                // style={
+                //     {
+                //         "--sidebar-width": "19rem",
+                //     } as React.CSSProperties
+                // }
+                >
+                    <AppSidebar />
+                    <SidebarInset>
+                        <ContentContainer page={location.pathname}>
+                            <div key={animationKey} className="animate-fade flex flex-col flex-1 gap-4 p-4">
+                                <Outlet />
+                            </div>
+                        </ContentContainer>
+                    </SidebarInset>
+                </SidebarProvider>
 
-            <UploadToastProgress />
+                <UploadToastProgress />
+            </HeaderActionsProvider>
         </section>
     )
 }

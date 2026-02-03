@@ -15,27 +15,46 @@ import { Button } from "@/uishadcn/ui/button";
 import { Card, CardContent } from "@/uishadcn/ui/card";
 import { isImage } from "@/utils";
 import { formatDate } from "@/utils/dates";
-import { publishEvent } from "@/utils/events";
 
 import AlertConfirm from "@/components/generics/AlertConfirm"
 import { TasksService } from "@/services/tasks.service"
 import DynamicTabs from "@/components/generics/DynamicTabs"
 import Spinner from "@/components/common/Spinner"
 import useFiles from "@/hooks/useFiles";
+import useFetchQuery from "@/hooks/useFetchQuery";
+import { queryKeys } from "@/utils/queryKeys";
 // import useFiles from "@/hooks/useFiles"
 
 interface IProps {
     taskId: string;
     assignedTo: ITask['assigned_to']
-    attachments: ITaskFile[];
 }
 
 type GroupFiles = 'others' | 'design'
 
-const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
+const TaskFiles = ({ taskId, assignedTo }: IProps) => {
     const { fileLoadingAction, downloadFile } = useFiles()
     const [selectedFile, setSelectedFile] = useState<IFile | null>(null)
     const [loadingDelete, setLoadingDelete] = useState('');
+
+    const [draggableParentRef, dragDropItems, setDragDropList] = useDragAndDrop<HTMLDivElement, ITaskFile>(
+        [],
+        {
+            // plugins: [animations()],
+            onDragend: () => {
+                sortItems()
+            }
+        }
+    )
+
+    const { response: filesList, loading, setData: setFiles } = useFetchQuery<ITaskFile[]>(
+        API_ROUTES.TASKS.GET_FILES.replace('{id}', taskId),
+        {
+            customQueryKey: queryKeys.list(`tasks-files-${taskId}`),
+            enabled: !!taskId
+        }
+    )
+
     const { request } = useRequestQuery({
         onError: (e) => {
             console.log(e);
@@ -45,8 +64,10 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
     const startUpload = useUploadStore(state => state.startUpload)
 
     const onSuccessFiles = (files: ITaskFile[]) => {
-        publishEvent('tasks-updated', { id: taskId, files, eventType: 'update' });
-        publishEvent('tasks-updated', { id: taskId, files, eventType: 'updateDetail' });
+        setDragDropList(files);
+        setFiles(files);
+        // publishEvent('tasks-updated', { id: taskId, files, eventType: 'update' });
+        // publishEvent('tasks-updated', { id: taskId, files, eventType: 'updateDetail' });
     }
 
     const onUploadFiles = (files: FileList | null) => {
@@ -59,7 +80,7 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
                     const newTask = await request<unknown, ITaskFile[]>('POST', API_ROUTES.TASKS.STORE_ATTACHMENTS.replace('{id}', taskId), {
                         file_uris: uploadedResults
                     })
-                    onSuccessFiles([...newTask.data, ...attachments])
+                    onSuccessFiles([...newTask.data, ...(filesList || [])]);
                     // clean input file
                     const inputFile = document.getElementById(`attachment-${taskId}`) as HTMLInputElement;
                     if (inputFile) {
@@ -74,8 +95,10 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
         setLoadingDelete(fileId);
         try {
             await TasksService.deleteTaskFile(taskId, fileId);
-            publishEvent('tasks-updated', { id: taskId, files: attachments.filter(file => file.id !== fileId), eventType: 'update' });
-            publishEvent('tasks-updated', { id: taskId, files: attachments.filter(file => file.id !== fileId), eventType: 'updateDetail' });
+            const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
+            onSuccessFiles(updatedFiles);
+            // publishEvent('tasks-updated', { id: taskId, files: (filesList || []).filter(file => file.id !== fileId), eventType: 'update' });
+            // publishEvent('tasks-updated', { id: taskId, files: (filesList || []).filter(file => file.id !== fileId), eventType: 'updateDetail' });
         } catch (error) {
             console.error('Error al eliminar el archivo:', error);
             toast.error('Error al eliminar el archivo');
@@ -83,16 +106,6 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
             setLoadingDelete('');
         }
     }
-
-    const [draggableParentRef, dragDropItems, setDragDropList] = useDragAndDrop<HTMLDivElement, ITaskFile>(
-        [],
-        {
-            // plugins: [animations()],
-            onDragend: () => {
-                sortItems()
-            }
-        }
-    )
 
     const sortItems = async () => {
         const sortFiles = dragDropItems.map((item, index) => ({
@@ -107,12 +120,14 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
     }
 
     const onFilterFiles = (criteria: GroupFiles) => {
-        setDragDropList(attachments.filter(att => criteria === 'design' ? att.uploaded_by.id === assignedTo?.id : att.uploaded_by.id !== assignedTo?.id))
+        setDragDropList((filesList || []).filter(att => criteria === 'design' ? att.uploaded_by.id === assignedTo?.id : att.uploaded_by.id !== assignedTo?.id))
     }
 
     useEffect(() => {
-        onFilterFiles('design');
-    }, [attachments])
+        if (filesList) {
+            onFilterFiles('design');
+        }
+    }, [filesList])
 
     return (
         <div>
@@ -139,10 +154,10 @@ const TaskFiles = ({ taskId, assignedTo, attachments }: IProps) => {
                                     className="size-12 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
                                     onClick={() => setSelectedFile(attachment.file)}
                                 >
-                                    {isImage(attachment.file.extension) ? (
+                                    {isImage(attachment.file.ext) ? (
                                         <img src={attachment.file.url} className="rounded object-cover max-w-full h-full" alt="" />
                                     ) : (
-                                        <span className="text-xs font-medium uppercase">{attachment.file.extension}</span>
+                                        <span className="text-xs font-medium uppercase">{attachment.file.ext}</span>
                                     )}
                                 </div>
                                 <div className="flex-1">

@@ -33,12 +33,12 @@ export interface ITaskStatus {
 }
 
 export type TasksFilters = {
-    month: number
+    month?: number
     task_types?: string[]
     statuses?: string[]
 }
 
-export interface ITask {
+export interface ITask extends IBaseDBProperties {
     id: string
     title: string
     description: string | null

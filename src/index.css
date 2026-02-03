@@ -233,6 +233,14 @@
   display: none !important;
 }
 
+.fc-theme-standard .fc-popover {
+  width: 300px;
+}
+
+.fc-icon-x::before {
+  color: white
+}
+
 .fc-theme-standard .fc-popover-header {
   background: var(--color-primary);
   border-top-left-radius: var(--radius) !important;

@@ -4,6 +4,7 @@ import { SIDEBAR_ITEMS } from "@/constants/app";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/uishadcn/ui/breadcrumb";
 import { Separator } from "@/uishadcn/ui/separator";
 import { SidebarInset, SidebarTrigger } from "@/uishadcn/ui/sidebar";
+import { useHeaderActions } from "@/providers/HeaderActionsProvider";
 
 interface Props {
     children: React.ReactNode;
@@ -12,6 +13,8 @@ interface Props {
 
 const ContentContainer = ({ children, page }: Props) => {
     const labelPage = SIDEBAR_ITEMS.find(item => item.path === page)?.label;
+    const { headerActions } = useHeaderActions();
+
     return (
         <SidebarInset>
             <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-white dark:bg-background w-full">
@@ -38,6 +41,11 @@ const ContentContainer = ({ children, page }: Props) => {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
+                {headerActions && (
+                    <div className="flex items-center gap-2">
+                        {headerActions}
+                    </div>
+                )}
                 <div className="ml-auto px-3">
                     <DarkModeSelector />
                 </div>

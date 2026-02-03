@@ -57,7 +57,7 @@ export function AttachmentViewer({ isOpen, onClose, attachment }: AttachmentView
             <DialogContent className="max-w-[95vw] bg-transparent shadow-none max-h-[95vh] w-full h-full p-0 border-none">
                 <div className="relative w-full h-full flex flex-col">
                     {/* Zoom controls for images */}
-                    {isImage(attachment.extension) && (
+                    {isImage(attachment.ext) && (
                         <div className="absolute top-4 left-4 z-10 flex gap-2">
                             <Button
                                 variant="ghost"
@@ -90,7 +90,7 @@ export function AttachmentViewer({ isOpen, onClose, attachment }: AttachmentView
 
                     {/* Main content area */}
                     <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-                        {isImage(attachment.extension) ? (
+                        {isImage(attachment.ext) ? (
                             <div className="relative max-w-full max-h-full">
                                 <img
                                     src={currentAttachment.url}
@@ -105,7 +105,7 @@ export function AttachmentViewer({ isOpen, onClose, attachment }: AttachmentView
                             <div className="flex flex-col items-center justify-center text-white">
                                 <div className="w-24 h-24 bg-gray-600 rounded-lg flex items-center justify-center mb-4">
                                     <span className="text-2xl font-bold uppercase">
-                                        {currentAttachment.extension}
+                                        {currentAttachment.ext}
                                     </span>
                                 </div>
                                 <p className="text-lg mb-2">Vista previa no disponible</p>

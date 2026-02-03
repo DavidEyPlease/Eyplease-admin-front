@@ -1,5 +1,6 @@
 import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
 import { TasksFilters } from "@/interfaces/tasks"
+import { cn } from "@/lib/utils"
 import useAuthStore from "@/store/auth"
 import { Checkbox } from "@/uishadcn/ui/checkbox"
 import { Label } from "@/uishadcn/ui/label"
@@ -9,23 +10,21 @@ type Filters = Partial<TasksFilters>
 
 interface FilterSidebarProps {
 	filters: Filters;
+	children?: React.ReactNode;
+	className?: string;
 	onChangeFilters: (filters: Filters) => void;
 }
 
-const FilterSidebar = ({ filters, onChangeFilters }: FilterSidebarProps) => {
+const FilterSidebar = ({ filters, className, children, onChangeFilters }: FilterSidebarProps) => {
 	const { utilData } = useAuthStore(state => state)
 
 	const onSelectFilter = (value: Filters) => {
-		console.log('onSelectFilter', value)
 		onChangeFilters(value)
 	}
 
 	return (
-		<div className="w-64 border-r space-y-6 p-5">
-			{/* <Button className="w-full bg-primary hover:bg-primary/90">
-        <PlusIcon className="mr-1 h-4 w-4" />
-        Agregar tarea
-      </Button> */}
+		<div className={cn("w-56 border-r space-y-6 p-4", className)}>
+			{children}
 
 			<div className="space-y-4">
 				<h3 className="font-medium text-foreground">Tipos de tareas</h3>

@@ -123,8 +123,6 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
         }
     }
 
-    const taskFiles = [...task.files].sort((a, b) => a.file.sort - b.file.sort);
-
     return (
         <Dialog open={Boolean(task)} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-hidden p-0">
@@ -264,7 +262,6 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                             />
                             {activeTab === 'files' && (
                                 <TaskFiles
-                                    attachments={taskFiles}
                                     taskId={task.id}
                                     assignedTo={task.assigned_to}
                                 />
