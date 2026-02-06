@@ -27,8 +27,8 @@ const ToolsTaskSchema = BaseTaskSchema.extend({
 
 export const TaskSchema = z.discriminatedUnion("type", [
     ToolsTaskSchema,
-]).refine((data) => !data.expired_at || data.expired_at >= data.started_at, {
-    message: "La fecha de vencimiento no puede ser menor a la fecha de inicio",
+]).refine((data) => !data.expired_at || data.expired_at < data.started_at, {
+    message: "La fecha de entrega no puede ser mayor a la fecha de inicio",
     path: ["expired_at"],
 })
 

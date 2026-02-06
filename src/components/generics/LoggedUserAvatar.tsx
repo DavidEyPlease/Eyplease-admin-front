@@ -9,7 +9,6 @@ interface Props {
 }
 
 const LoggedUserAvatar = ({ user, className, sizeClasses = 'w-8 h-8', loading = false }: Props) => {
-    console.log('user avatar render', loading)
     return (
         <Avatar
             sizeClasses={sizeClasses}

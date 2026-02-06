@@ -95,7 +95,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
     const debouncedSave = useDebouncedCallback((data: ITaskUpdate) => {
         handleSave(data)
-    }, 600)
+    }, 1000)
 
     const onChangeInputs = (value: string, field: keyof ITaskUpdate) => {
         if (!value || !value.trim()) return;
@@ -187,7 +187,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         text={
                                             <div className="flex items-center gap-2">
                                                 <CalendarIcon className="size-4" />
-                                                Vencimiento
+                                                Entrega
                                             </div>
                                         }
                                     />

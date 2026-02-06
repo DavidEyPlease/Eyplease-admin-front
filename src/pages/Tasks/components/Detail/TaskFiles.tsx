@@ -145,7 +145,7 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
                 </div>
             </div>
 
-            <div className="grid xl:grid-cols-2 gap-2" ref={draggableParentRef}>
+            <div className="grid lg:grid-cols-2 gap-2" ref={draggableParentRef}>
                 {dragDropItems.map((attachment, index) => (
                     <Card key={index} className="mb-2 hover:bg-accent cursor-move">
                         <CardContent className="flex items-center justify-between flex-wrap gap-2">

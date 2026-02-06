@@ -21,6 +21,7 @@ import { Separator } from "@/uishadcn/ui/separator";
 import Dropdown from "@/components/common/Inputs/Dropdown";
 import { TOOLS_TYPES } from "@/constants/app";
 import PlanSelector from "@/components/generics/PlanSelector";
+import { ScrollArea } from "@/uishadcn/ui/scroll-area";
 
 interface TaskFormProps {
     selectedDate: Date | null;
@@ -59,16 +60,15 @@ const TaskForm = ({ selectedDate, onSuccess }: TaskFormProps) => {
         if (selectedDate) {
             form.setValue('started_at', selectedDate);
             form.setValue('expired_at', selectedDate);
+            form.setValue('metadata.publication_date', selectedDate);
         }
     }, [selectedDate]);
 
     const taskType = form.watch('type');
 
-    console.log('form errors', form.formState.errors);
-
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <div className="grid md:grid-cols-2">
                     <FormItem>
                         <FormLabel>
@@ -160,7 +160,7 @@ const TaskForm = ({ selectedDate, onSuccess }: TaskFormProps) => {
                             <FormItem className="flex flex-col">
                                 <FormLabel>
                                     <CalendarIcon className="size-4" />
-                                    Fecha Vencimiento
+                                    Fecha Entrega
                                 </FormLabel>
                                 <DateTimePicker
                                     dateValue={field.value}
@@ -215,24 +215,6 @@ const TaskForm = ({ selectedDate, onSuccess }: TaskFormProps) => {
                                 )}
                             />
                         </div>
-                        <FormField
-                            control={form.control}
-                            name="metadata.publication_date"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>
-                                        <CalendarIcon className="size-4" />
-                                        Fecha Publicación
-                                    </FormLabel>
-                                    <DateTimePicker
-                                        withTime={false}
-                                        dateValue={field.value}
-                                        onDateChange={(date) => field.onChange(date)}
-                                    />
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                     </>
                 )}
 

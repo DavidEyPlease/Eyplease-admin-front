@@ -96,7 +96,7 @@ const columns: ColumnDef<ITask>[] = [
     },
     {
         accessorKey: "expired_at",
-        header: "Vencimiento",
+        header: "Entrega",
         cell: ({ row }) => formatDate(row.original.expired_at)
     },
 ]

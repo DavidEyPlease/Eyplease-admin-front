@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/uishadcn/ui/scroll-area";
 import {
     Sheet,
     SheetContent,
@@ -27,14 +29,16 @@ interface SideModalProps {
 const SideModal = ({ open, onOpenChange, title, description, children, size = 'sm' }: SideModalProps) => {
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className={`${SHEET_SIZES[size]}`} onOpenAutoFocus={(e) => e.preventDefault()}>
-                <SheetHeader>
+            <SheetContent className={cn(SHEET_SIZES[size], 'flex flex-col h-full')} onOpenAutoFocus={(e) => e.preventDefault()}>
+                <SheetHeader className="sticky top-0">
                     <SheetTitle>{title}</SheetTitle>
                     {description && <SheetDescription>{description}</SheetDescription>}
                 </SheetHeader>
-                <div className="px-4">
-                    {children}
-                </div>
+                <ScrollArea className="flex-1 overflow-y-auto">
+                    <div className="px-4 pb-4">
+                        {children}
+                    </div>
+                </ScrollArea>
             </SheetContent>
         </Sheet>
     )
