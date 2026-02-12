@@ -34,7 +34,7 @@ const TrainingsPage = () => {
             <DataTable
                 columns={trainingColumns}
                 contentHeader={
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-3">
                         <div>
                             <CardTitle>Entrenamientos</CardTitle>
                             <CardDescription>Gestiona todos los entrenamientos disponibles</CardDescription>

@@ -14,7 +14,14 @@ import ManageClients from "../components/ManageClients"
 import TemplateDetail from "../components/TemplateDetail"
 
 const TemplatesPage = () => {
-    const { isLoading, templates, actionDialogOpen, selectedTemplate, setSearch, setSelectedTemplate } = useTemplates()
+    const {
+        isLoading,
+        templates,
+        actionDialogOpen,
+        selectedTemplate,
+        setSearch,
+        setSelectedTemplate
+    } = useTemplates()
     const [openForm, setOpenForm] = useState(false)
 
     return (
@@ -48,7 +55,7 @@ const TemplatesPage = () => {
             <DataTable
                 columns={templatesColumns}
                 contentHeader={
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <CardTitle>Plantillas de Boletín</CardTitle>
                             <CardDescription>Gestiona todas las plantillas disponibles</CardDescription>

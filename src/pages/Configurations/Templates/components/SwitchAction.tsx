@@ -1,6 +1,7 @@
 import SwitchInput from "@/components/common/Inputs/Switch"
 import { SwitchInputProps } from "@/components/common/Inputs/types"
 import { API_ROUTES } from "@/constants/api"
+import { BROWSER_EVENTS } from "@/constants/browserEvents"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { ITemplate } from "@/interfaces/templates"
 import { publishEvent } from "@/utils/events"
@@ -20,7 +21,7 @@ const SwitchAction = ({ id, templateId, actionField, ...props }: Props & SwitchI
     const onSwitchAction = async (checked: boolean) => {
         const response = await request<Partial<ITemplate>, ITemplate>('PUT', API_ROUTES.TEMPLATES.UPDATE.replace('{id}', templateId), { [actionField]: checked })
         if (response.success) {
-            publishEvent('templates-updated', { ...response.data })
+            publishEvent(BROWSER_EVENTS.TEMPLATES_LIST_UPDATED, { ...response.data })
         }
     }
 
