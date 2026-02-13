@@ -17,7 +17,7 @@ import useCustomForm from "@/hooks/useCustomForm";
 import { TaskSchema } from "../Form/schema";
 import { publishEvent } from "@/utils/events";
 import DateTimePicker from "@/components/common/Inputs/DateTimePicker";
-import { formatDate } from "@/utils/dates";
+import { formatDate, toLocalDateFromUtc } from "@/utils/dates";
 import TaskFiles from "./TaskFiles";
 import DynamicTabs from "@/components/generics/DynamicTabs";
 import { useState } from "react";
@@ -35,7 +35,7 @@ const getFormCurrentTask = (task: ITask) => {
     return {
         description: task.description,
         title: task.title,
-        started_at: task.started_at,
+        started_at: toLocalDateFromUtc(task.started_at),
         expired_at: new Date(task.expired_at),
         expired_at_time: formatDate(task.expired_at, 'HH:mm:ss'),
         type: task.task_type.id,
@@ -153,7 +153,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
                         <div className="mt-6 space-y-6">
                             {/* Labels and Due Date */}
-                            <div className="grid md:grid-cols-5 gap-3">
+                            <div className="flex flex-wrap gap-3">
                                 <div className="flex flex-col gap-2">
                                     <TypographySmall text="Tipo de tarea" />
                                     <Dropdown
@@ -211,8 +211,6 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                     <DateTimePicker
                                         dateValue={form.watch('started_at') || ''}
                                         onDateChange={(date) => onChangeValues(date, 'started_at')}
-                                    // timeValue={form.watch('started_at_time') || ''}
-                                    // onTimeChange={(time) => onChangeValues(time, 'started_at_time')}
                                     />
                                 </div>
 

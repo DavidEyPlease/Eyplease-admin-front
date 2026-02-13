@@ -5,10 +5,12 @@ import { ITask, TasksFilters } from "@/interfaces/tasks";
 import { TasksService } from "@/services/tasks.service";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
 import { queryKeys } from "@/utils/queryKeys"
+import { toLocalDateFromUtc } from "@/utils/dates";
 import { EventClickArg } from "@fullcalendar/core/index.js";
 import { DateClickArg } from "@fullcalendar/interaction/index.js";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import dayjs from "dayjs";
 
 const CURRENT_MONTH = new Date().getMonth() + 1;
 
@@ -104,12 +106,13 @@ const useTasks = (): UseTaskResult => {
 
     useEffect(() => {
         if (tasks) {
-            setData(tasks.map((task) => ({
+            const calendarTasks = tasks.map((task) => ({
                 ...task,
-                start: new Date(task.expired_at).toISOString().replace(/T.*$/, ''),
-                end: new Date(task.started_at).toISOString().replace(/T.*$/, ''),
+                start: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
+                // end: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
                 classNames: ['border-0', 'bg-primary', 'shadow-md'],
-            })))
+            }))
+            setData(calendarTasks)
         }
     }, [tasks])
 

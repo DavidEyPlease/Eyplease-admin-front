@@ -6,7 +6,6 @@ import interactionPlugin from '@fullcalendar/interaction'
 import { Card, CardContent } from "@/uishadcn/ui/card"
 import FilterSidebar from "./components/FilterSidebar"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/uishadcn/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/uishadcn/ui/tooltip"
 import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
 import { EventContentArg } from "@fullcalendar/core/index.js"
