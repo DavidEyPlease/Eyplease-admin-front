@@ -221,6 +221,10 @@
   color: var(--primary-foreground) !important;
 }
 
+.fc .fc-daygrid-day-number {
+  padding: 1px
+}
+
 @media (max-width: 768px) {
   .fc .fc-toolbar {
     flex-wrap: wrap;

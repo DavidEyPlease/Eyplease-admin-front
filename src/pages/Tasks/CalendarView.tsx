@@ -20,23 +20,35 @@ const renderEventContent = (eventInfo: EventContentArg & { event: ITask }) => {
     const { task_type, task_status } = eventInfo.event._def.extendedProps;
     return (
         <div
-            className={cn('p-2 rounded-md flex flex-col gap-y-1 shadow-sm', ...eventInfo.event.classNames)}
+            className={cn('p-1 rounded-md flex flex-col gap-y-1 shadow-sm', ...eventInfo.event.classNames)}
         >
             {/* <Badge className={cn(MAP_TASK_TYPES_COLORS[task_type?.slug])}>{task_type?.name}</Badge> */}
-            <Badge className={cn('w-fit', 'text-[10px]', MAP_TASK_STATUS_COLORS[task_status?.slug as TaskStatusTypes])}>
+            {/* <Badge className={cn('w-fit', 'text-[10px]', MAP_TASK_STATUS_COLORS[task_status?.slug as TaskStatusTypes])}>
                 {task_status?.name}
-            </Badge>
+            </Badge> */}
 
-            <div className="flex items-center gap-x-1 break-words">
+            <div className="flex items-center justify-between break-words">
+                <div className="flex gap-x-1">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <div className={`size-3 rounded-full ${MAP_TASK_TYPES_COLORS[task_type.slug]}`} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{task_type?.name}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <p className={cn('break-words', 'text-xs', task_status?.slug === TaskStatusTypes.COMPLETED && 'line-through')}>
+                        {eventInfo.event.title.length > 15 ? `${eventInfo.event.title.substring(0, 15)}...` : eventInfo.event.title}
+                    </p>
+                </div>
                 <Tooltip>
                     <TooltipTrigger>
-                        <div className={`size-3 rounded-full ${MAP_TASK_TYPES_COLORS[task_type.slug]}`} />
+                        <div className={`size-3 rounded-full ${MAP_TASK_STATUS_COLORS[task_status?.slug as TaskStatusTypes]}`} />
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>{task_type?.name}</p>
+                        <p>{task_status?.name}</p>
                     </TooltipContent>
                 </Tooltip>
-                <p className={cn('break-words', 'text-xs', task_status?.slug === TaskStatusTypes.COMPLETED && 'line-through')}>{eventInfo.event.title.length > 15 ? `${eventInfo.event.title.substring(0, 15)}...` : eventInfo.event.title}</p>
             </div>
         </div>
     )

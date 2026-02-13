@@ -106,11 +106,9 @@ const useTasks = (): UseTaskResult => {
         if (tasks) {
             setData(tasks.map((task) => ({
                 ...task,
-                start: new Date(task.started_at).toISOString().replace(/T.*$/, ''),
-                end: new Date(task.expired_at).toISOString().replace(/T.*$/, ''),
+                start: new Date(task.expired_at).toISOString().replace(/T.*$/, ''),
+                end: new Date(task.started_at).toISOString().replace(/T.*$/, ''),
                 classNames: ['border-0', 'bg-primary', 'shadow-md'],
-                // borderColor: ['transparent'],
-                // backgroundColor: MAP_TASK_TYPES_COLORS[task.task_type.slug],
             })))
         }
     }, [tasks])

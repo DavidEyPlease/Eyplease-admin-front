@@ -3,7 +3,7 @@ import { ITask, TaskStatusTypes } from "@/interfaces/tasks"
 import { Badge } from "@/uishadcn/ui/badge"
 import { ColumnDef } from "@tanstack/react-table"
 import { UseTaskResult } from "./useTasks"
-import { BookCheckIcon, CircleCheckBigIcon, LoaderIcon, PaintbrushIcon, PencilLineIcon, UserRoundCogIcon, ViewIcon } from "lucide-react"
+import { BookCheckIcon, CalendarIcon, CircleCheckBigIcon, LoaderIcon, PaintbrushIcon, PencilLineIcon, UserRoundCogIcon, ViewIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
 import { formatDate } from "@/utils/dates"
@@ -96,8 +96,23 @@ const columns: ColumnDef<ITask>[] = [
     },
     {
         accessorKey: "expired_at",
-        header: "Entrega",
+        header: () => (
+            <div className="flex items-center gap-1">
+                <CalendarIcon className="size-4" />
+                <span>Entrega</span>
+            </div>
+        ),
         cell: ({ row }) => formatDate(row.original.expired_at)
+    },
+    {
+        accessorKey: "started_at",
+        header: () => (
+            <div className="flex items-center gap-1">
+                <CalendarIcon className="size-4" />
+                <span>Publicación</span>
+            </div>
+        ),
+        cell: ({ row }) => formatDate(row.original.started_at, { date: 'medium' })
     },
 ]
 

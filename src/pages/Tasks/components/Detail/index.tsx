@@ -125,7 +125,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
     return (
         <Dialog open={Boolean(task)} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-hidden p-0">
+            <DialogContent className="sm:max-w-8xl max-h-[90vh] overflow-hidden p-0">
                 <div className="flex flex-wrap">
                     {/* Main Content */}
                     <ScrollArea className="h-[90vh] flex-1 p-5">
@@ -153,7 +153,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
                         <div className="mt-6 space-y-6">
                             {/* Labels and Due Date */}
-                            <div className="flex flex-wrap gap-3">
+                            <div className="grid md:grid-cols-5 gap-3">
                                 <div className="flex flex-col gap-2">
                                     <TypographySmall text="Tipo de tarea" />
                                     <Dropdown
@@ -196,6 +196,23 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         onDateChange={(date) => onChangeValues(date, 'expired_at')}
                                         timeValue={form.watch('expired_at_time') || ''}
                                         onTimeChange={(time) => onChangeValues(time, 'expired_at_time')}
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <TypographySmall
+                                        text={
+                                            <div className="flex items-center gap-2">
+                                                <CalendarIcon className="size-4" />
+                                                Publicación
+                                            </div>
+                                        }
+                                    />
+                                    <DateTimePicker
+                                        dateValue={form.watch('started_at') || ''}
+                                        onDateChange={(date) => onChangeValues(date, 'started_at')}
+                                    // timeValue={form.watch('started_at_time') || ''}
+                                    // onTimeChange={(time) => onChangeValues(time, 'started_at_time')}
                                     />
                                 </div>
 
