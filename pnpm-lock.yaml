@@ -23,6 +23,9 @@ dependencies:
   '@fullcalendar/interaction':
     specifier: ^6.1.18
     version: 6.1.18(@fullcalendar/core@6.1.18)
+  '@fullcalendar/list':
+    specifier: ^6.1.20
+    version: 6.1.20(@fullcalendar/core@6.1.18)
   '@fullcalendar/react':
     specifier: ^6.1.18
     version: 6.1.18(@fullcalendar/core@6.1.18)(react-dom@19.1.0)(react@19.1.0)
@@ -107,6 +110,9 @@ dependencies:
   date-fns:
     specifier: ^4.1.0
     version: 4.1.0
+  dayjs:
+    specifier: ^1.11.19
+    version: 1.11.19
   input-otp:
     specifier: ^1.4.2
     version: 1.4.2(react-dom@19.1.0)(react@19.1.0)
@@ -565,6 +571,14 @@ packages:
     resolution: {integrity: sha512-f/mD5RTjzw+Q6MGTMZrLCgIrQLIUUO9NV/58aM2J6ZBQZeRlNizDqmqldqyG+j49zj2vFhUfZibPrVKWm5yA4Q==}
     peerDependencies:
       '@fullcalendar/core': ~6.1.18
+    dependencies:
+      '@fullcalendar/core': 6.1.18
+    dev: false
+
+  /@fullcalendar/list@6.1.20(@fullcalendar/core@6.1.18):
+    resolution: {integrity: sha512-7Hzkbb7uuSqrXwTyD0Ld/7SwWNxPD6SlU548vtkIpH55rZ4qquwtwYdMPgorHos5OynHA4OUrZNcH51CjrCf2g==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.20
     dependencies:
       '@fullcalendar/core': 6.1.18
     dev: false
@@ -2542,6 +2556,10 @@ packages:
 
   /date-fns@4.1.0:
     resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
+    dev: false
+
+  /dayjs@1.11.19:
+    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
     dev: false
 
   /debug@4.4.1:
