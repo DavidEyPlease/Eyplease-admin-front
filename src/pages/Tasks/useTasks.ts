@@ -1,18 +1,21 @@
-import { API_ROUTES } from "@/constants/api";
-import { BROWSER_EVENTS } from "@/constants/browserEvents";
-import useListQuery from "@/hooks/useListQuery";
-import { ITask, TasksFilters } from "@/interfaces/tasks";
-import { TasksService } from "@/services/tasks.service";
-import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
-import { queryKeys } from "@/utils/queryKeys"
-import { toLocalDateFromUtc } from "@/utils/dates";
-import { EventClickArg } from "@fullcalendar/core/index.js";
-import { DateClickArg } from "@fullcalendar/interaction/index.js";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import dayjs from "dayjs";
+import { useCallback, useEffect, useState } from "react"
+import { toast } from "sonner"
+import dayjs from "dayjs"
 
-const CURRENT_MONTH = new Date().getMonth() + 1;
+import { API_ROUTES } from "@/constants/api"
+import { BROWSER_EVENTS } from "@/constants/browserEvents"
+import useListQuery from "@/hooks/useListQuery"
+import { ITask, TasksFilters } from "@/interfaces/tasks"
+import { TasksService } from "@/services/tasks.service"
+import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events"
+import { queryKeys } from "@/utils/queryKeys"
+import { toLocalDateFromUtc } from "@/utils/dates"
+import { EventClickArg } from "@fullcalendar/core/index.js"
+import { DateClickArg } from "@fullcalendar/interaction/index.js"
+import useAuth from "@/hooks/useAuth"
+import { RoleKeys } from "@/interfaces/common"
+
+const CURRENT_MONTH = new Date().getMonth() + 1
 
 export interface UseTaskResult {
     isLoading: boolean;
@@ -33,6 +36,7 @@ export interface UseTaskResult {
 }
 
 const useTasks = (): UseTaskResult => {
+    const { user } = useAuth()
     const [selectedTask, setSelectedTask] = useState<ITask | null>(null)
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [open, setOpen] = useState(false)
@@ -105,16 +109,18 @@ const useTasks = (): UseTaskResult => {
     }, [])
 
     useEffect(() => {
-        if (tasks) {
+        if (tasks && user) {
+            const startKeyByRole = user.role.role_key === RoleKeys.SUPER_ADMIN ? 'started_at' : 'expired_at'
+
             const calendarTasks = tasks.map((task) => ({
                 ...task,
-                start: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
+                start: dayjs(toLocalDateFromUtc(task[startKeyByRole])).format('YYYY-MM-DD'),
                 // end: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
                 classNames: ['border-0', 'bg-primary', 'shadow-md'],
             }))
             setData(calendarTasks)
         }
-    }, [tasks])
+    }, [tasks, user])
 
     return {
         isLoading,

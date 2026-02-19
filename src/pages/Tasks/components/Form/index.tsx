@@ -21,7 +21,6 @@ import { Separator } from "@/uishadcn/ui/separator";
 import Dropdown from "@/components/common/Inputs/Dropdown";
 import { TOOLS_TYPES } from "@/constants/app";
 import PlanSelector from "@/components/generics/PlanSelector";
-import { ScrollArea } from "@/uishadcn/ui/scroll-area";
 
 interface TaskFormProps {
     selectedDate: Date | null;
