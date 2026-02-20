@@ -15,7 +15,8 @@ export type TaskStatusTypes = typeof TaskStatusTypes[keyof typeof TaskStatusType
 
 export const TaskTypes = {
     TOOLS: 'tools',
-    SERVICE: 'user-service-request'
+    SERVICE: 'user-service-request',
+    TRAININGS: 'trainings'
 } as const;
 
 export type TaskTypes = typeof TaskTypes[keyof typeof TaskTypes];

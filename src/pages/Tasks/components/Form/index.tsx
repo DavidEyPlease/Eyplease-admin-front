@@ -65,28 +65,36 @@ const TaskForm = ({ selectedDate, onSuccess }: TaskFormProps) => {
 
     const taskType = form.watch('type');
 
+    console.log(form.formState.errors)
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <div className="grid md:grid-cols-2">
-                    <FormItem>
-                        <FormLabel>
-                            Tipo de tarea
-                        </FormLabel>
-                        <Select defaultValue={TaskTypes.TOOLS} disabled>
-                            <FormControl className="w-full">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Seleccionar tipo de tarea" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {utilData.task_types.map((type) => (
-                                    <SelectItem key={type.id} value={type.slug}>{type.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
+                    <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>
+                                    Tipo de tarea
+                                </FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl className="w-full">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Seleccionar tipo de tarea" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {utilData.task_types.map((type) => (
+                                            <SelectItem disabled={type.slug === TaskTypes.SERVICE} key={type.id} value={type.slug}>{type.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
 
                 <FormField
@@ -206,7 +214,7 @@ const TaskForm = ({ selectedDate, onSuccess }: TaskFormProps) => {
                                         </FormLabel>
                                         <PlanSelector
                                             mode="multiple"
-                                            value={field.value}
+                                            value={field.value || []}
                                             onChange={field.onChange}
                                         />
                                         <FormMessage />

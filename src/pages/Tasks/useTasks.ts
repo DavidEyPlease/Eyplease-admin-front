@@ -14,6 +14,7 @@ import { EventClickArg } from "@fullcalendar/core/index.js"
 import { DateClickArg } from "@fullcalendar/interaction/index.js"
 import useAuth from "@/hooks/useAuth"
 import { RoleKeys } from "@/interfaces/common"
+import { MAP_TASK_TYPES_COLORS } from "@/constants/app"
 
 const CURRENT_MONTH = new Date().getMonth() + 1
 
@@ -112,12 +113,15 @@ const useTasks = (): UseTaskResult => {
         if (tasks && user) {
             const startKeyByRole = user.role.role_key === RoleKeys.SUPER_ADMIN ? 'started_at' : 'expired_at'
 
-            const calendarTasks = tasks.map((task) => ({
-                ...task,
-                start: dayjs(toLocalDateFromUtc(task[startKeyByRole])).format('YYYY-MM-DD'),
-                // end: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
-                classNames: ['border-0', 'bg-primary', 'shadow-md'],
-            }))
+            const calendarTasks = tasks.map((task) => {
+                const taskType = task.task_type?.slug || 'tools';
+                return {
+                    ...task,
+                    start: dayjs(toLocalDateFromUtc(task[startKeyByRole])).format('YYYY-MM-DD'),
+                    // end: dayjs(toLocalDateFromUtc(task.started_at)).format('YYYY-MM-DD'),
+                    classNames: ['border-0', 'shadow-md', MAP_TASK_TYPES_COLORS[taskType]],
+                }
+            })
             setData(calendarTasks)
         }
     }, [tasks, user])

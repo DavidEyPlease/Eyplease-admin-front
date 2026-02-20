@@ -164,7 +164,8 @@ export const MAP_TASK_STATUS_COLORS: Record<TaskStatusTypes, string> = {
 }
 
 export const MAP_TASK_TYPES_COLORS: Record<string, string> = {
-    tools: 'bg-amber-500',
+    tools: 'bg-teal-500',
+    trainings: 'bg-indigo-500',
     'user-service-request': 'bg-purple-500',
 }
 

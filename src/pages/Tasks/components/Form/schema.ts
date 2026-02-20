@@ -19,14 +19,35 @@ const ToolsMetadataSchema = z.object({
     plan_ids: z.array(z.string()).min(1, { message: "El ID del plan es requerido" }),
 })
 
+// Generic Metadata Schema for other task types
+const GenericMetadataSchema = z.object({
+    tools_section: z.string().optional(),
+    publication_date: z.date().optional(),
+    plan_ids: z.array(z.string()).optional(),
+})
+
 // Schema for Tasks of type TOOLS
 const ToolsTaskSchema = BaseTaskSchema.extend({
     type: z.literal(TaskTypes.TOOLS),
     metadata: ToolsMetadataSchema,
 })
 
+// Schema for Tasks of type SERVICE
+const ServiceTaskSchema = BaseTaskSchema.extend({
+    type: z.literal(TaskTypes.SERVICE),
+    metadata: GenericMetadataSchema.optional(),
+})
+
+// Schema for Tasks of type TRAININGS
+const TrainingsTaskSchema = BaseTaskSchema.extend({
+    type: z.literal(TaskTypes.TRAININGS),
+    metadata: GenericMetadataSchema.optional(),
+})
+
 export const TaskSchema = z.discriminatedUnion("type", [
     ToolsTaskSchema,
+    ServiceTaskSchema,
+    TrainingsTaskSchema,
 ]).refine((data) => !data.expired_at || data.expired_at <= data.started_at, {
     message: "La fecha de entrega no puede ser mayor a la fecha de inicio",
     path: ["expired_at"],

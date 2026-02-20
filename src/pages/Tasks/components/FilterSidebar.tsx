@@ -40,7 +40,7 @@ const FilterSidebar = ({ filters, className, children, onChangeFilters }: Filter
 								/>
 								<Label htmlFor={filter.id}>{filter.name}</Label>
 							</div>
-							<div className={`size-3 rounded-full ${MAP_TASK_TYPES_COLORS[filter.slug]}`} />
+							<div className={cn(`size-3 rounded-full`, MAP_TASK_TYPES_COLORS[filter.slug])} />
 						</div>
 					))}
 				</div>
