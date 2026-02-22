@@ -39,7 +39,7 @@ const TrainingCover = ({ trainingId, cover }: Props) => {
             loading={executing}
             onUpload={(file) => onUploadFile({
                 file,
-                filename: `private/trainings/${trainingId}/cover.${getFileType(file.type)}`,
+                filename: `private/trainings/${trainingId}/cover_${Date.now()}.${getFileType(file.type)}`,
                 fileType: FileTypes.TRAINING_COVER,
                 callback: onUpload
             })}
