@@ -70,15 +70,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 											</CollapsibleTrigger>
 											<CollapsibleContent>
 												<SidebarMenuSub>
-													{item.children?.map((subItem) => (
-														<SidebarMenuSubItem key={subItem.key}>
-															<SidebarMenuSubButton asChild>
-																<Link to={subItem.path} className="text-sm text-white">
-																	{subItem.label}
-																</Link>
-															</SidebarMenuSubButton>
-														</SidebarMenuSubItem>
-													))}
+													{item.children?.map((subItem) => {
+														const subMenuActive = location.pathname === subItem.path
+														return (
+															<SidebarMenuSubItem key={subItem.key}>
+																<SidebarMenuSubButton isActive={subMenuActive} asChild>
+																	<Link to={subItem.path} className="text-sm text-white">
+																		{subItem.label}
+																	</Link>
+																</SidebarMenuSubButton>
+															</SidebarMenuSubItem>
+														)
+													})}
 												</SidebarMenuSub>
 											</CollapsibleContent>
 										</SidebarMenuItem>

@@ -42,67 +42,63 @@ const ReportUploadsPage = () => {
 
     return (
         <div>
-            <div className="grid md:grid-cols-5 gap-4">
-                <Card className="md:col-span-3">
-                    <CardContent className="grid gap-y-5">
-                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-                            <Dropdown
-                                label="Mes del reporte"
-                                placeholder="Selecciona un mes"
-                                value={selectedMonth}
-                                onChange={e => setSelectedMonth(e)}
-                                items={MONTHS_OPTIONS.map(c => ({
-                                    value: `${YEAR}-${c.value}`,
-                                    label: `${c.label} ${YEAR}`
-                                }))}
-                            />
-                            <ApiAutocomplete
-                                disabled={!selectedMonth}
-                                label="Seleccionar cliente"
-                                placeholder="Buscar cliente..."
-                                suggestionKeyValue="user_id"
-                                suggestionKeyLabel="name"
-                                value={selectedClient}
-                                queryFn={(params) => UtilsService.getSuggestionItems(API_ROUTES.CLIENTS.BASIC_LIST, params)}
-                                onChange={e => setSelectedClient(e)}
-                            />
-                            <DropdownGroup
-                                label="Boletín"
-                                disabled={!selectedClient || !selectedMonth}
-                                groups={newsletterGroups}
-                                placeholder="Seleccionar sección"
-                                value={selectedNewsletter}
-                                onChange={e => setSelectedNewsletter(e)}
-                            />
-                        </div>
-                        <Separator className="my-5" />
-                        <FileUploader
-                            title="Importar Boletín Manual"
-                            description="Sube archivos de boletines para procesamiento"
-                            buttonText="Procesar Boletín"
-                            fileAccepts=".xlsx, .xls"
-                            onUploadFiles={(files) => setFile(files[0])}
+            <Card className="mb-3">
+                <CardContent className="grid gap-3">
+                    <div className="grid md:grid-cols-3 gap-5">
+                        <Dropdown
+                            label="Mes del reporte"
+                            placeholder="Selecciona un mes"
+                            value={selectedMonth}
+                            onChange={e => setSelectedMonth(e)}
+                            items={MONTHS_OPTIONS.map(c => ({
+                                value: `${YEAR}-${c.value}`,
+                                label: `${c.label} ${YEAR}`
+                            }))}
                         />
-                        <Button
-                            text={loading ? 'Cargando...' : 'Subir Reporte'}
-                            type="submit"
-                            color="primary"
-                            rounded
-                            loading={loading}
-                            className="mx-auto"
-                            onClick={onSubmit}
+                        <ApiAutocomplete
+                            disabled={!selectedMonth}
+                            label="Seleccionar cliente"
+                            placeholder="Buscar cliente..."
+                            suggestionKeyValue="user_id"
+                            suggestionKeyLabel="name"
+                            value={selectedClient}
+                            queryFn={(params) => UtilsService.getSuggestionItems(API_ROUTES.CLIENTS.BASIC_LIST, params)}
+                            onChange={e => setSelectedClient(e)}
                         />
-                    </CardContent>
-                </Card>
-                <div className="md:col-span-2">
-                    {selectedMonth && selectedClient && (
-                        <ReportUploadList
-                            yearMonth={selectedMonth}
-                            userId={selectedClient}
+                        <DropdownGroup
+                            label="Boletín"
+                            disabled={!selectedClient || !selectedMonth}
+                            groups={newsletterGroups}
+                            placeholder="Seleccionar sección"
+                            value={selectedNewsletter}
+                            onChange={e => setSelectedNewsletter(e)}
                         />
-                    )}
-                </div>
-            </div>
+                    </div>
+                    <Separator className="my-5" />
+                    <FileUploader
+                        title="Importar Boletín Manual"
+                        description="Sube archivos de boletines para procesamiento"
+                        buttonText="Procesar Boletín"
+                        fileAccepts=".xlsx, .xls"
+                        onUploadFiles={(files) => setFile(files[0])}
+                    />
+                    <Button
+                        text={loading ? 'Cargando...' : 'Subir Reporte'}
+                        type="submit"
+                        color="primary"
+                        rounded
+                        loading={loading}
+                        className="mx-auto"
+                        onClick={onSubmit}
+                    />
+                </CardContent>
+            </Card>
+            {selectedMonth && selectedClient && (
+                <ReportUploadList
+                    yearMonth={selectedMonth}
+                    userId={selectedClient}
+                />
+            )}
 
             {uploadError &&
                 <UploadErrorFeedback open={!!uploadError} onClose={() => setUploadError(null)} uploadError={uploadError} />

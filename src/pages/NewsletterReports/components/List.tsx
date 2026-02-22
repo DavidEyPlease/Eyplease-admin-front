@@ -14,9 +14,11 @@ import {
 } from "@/uishadcn/ui/table"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/uishadcn/ui/badge"
-import { MAP_LABEL_STATUS } from "../utils"
+import { MAP_ERROR_CODE, MAP_LABEL_STATUS } from "../utils"
 import { formatDate } from "@/utils/dates"
 import { ScrollArea } from "@/uishadcn/ui/scroll-area"
+import { PaginationResponse } from "@/interfaces/common"
+import UIPagination from "@/components/generics/Pagination"
 
 interface Props {
     yearMonth?: string
@@ -25,8 +27,12 @@ interface Props {
 
 const ReportUploadList = ({ yearMonth, userId }: Props) => {
     const {
-        response: items,
-    } = useListQuery<ReportUpload[], { year_month?: string; user_id?: string }>({
+        response,
+        perPage,
+        page,
+        onChangePage,
+        setPerPage,
+    } = useListQuery<PaginationResponse<ReportUpload>, { year_month?: string; user_id?: string }>({
         endpoint: API_ROUTES.REPORTS.GET_UPLOADS,
         enabled: !!yearMonth && !!userId,
         defaultFilters: { year_month: yearMonth, user_id: userId },
@@ -51,7 +57,7 @@ const ReportUploadList = ({ yearMonth, userId }: Props) => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {(items || []).map((item) => (
+                            {(response?.items || []).map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell className="font-medium">
                                         {item.newsletter.name} - <br />
@@ -65,7 +71,7 @@ const ReportUploadList = ({ yearMonth, userId }: Props) => {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Badge
-                                            className={cn({
+                                            className={cn('w-max', {
                                                 'bg-amber-400': item.status === 'processing',
                                                 'bg-red-500': item.status === 'failed',
                                                 'bg-emerald-500': item.status === 'completed',
@@ -73,12 +79,22 @@ const ReportUploadList = ({ yearMonth, userId }: Props) => {
                                         >
                                             {MAP_LABEL_STATUS[item.status]}
                                         </Badge>
+                                        {item.error_message && (<small>{MAP_ERROR_CODE[item.error_message] ?? item.error_message}</small>)}
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </ScrollArea>
+                <div className="mt-4">
+                    <UIPagination
+                        totalPages={response?.last_page || 0}
+                        perPage={perPage || 15}
+                        page={page || 1}
+                        onChangePage={onChangePage}
+                        onChangePerPage={setPerPage}
+                    />
+                </div>
             </CardContent>
         </Card>
     )
