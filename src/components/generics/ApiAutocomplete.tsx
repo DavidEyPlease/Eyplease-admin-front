@@ -5,6 +5,9 @@ import Autosuggest, { ChangeEvent } from 'react-autosuggest';
 import { ApiListParams, ApiResponse } from "@/interfaces/common";
 import Spinner from "../common/Spinner";
 import { Label } from "@/uishadcn/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/uishadcn/ui/button";
+import { XIcon } from "lucide-react";
 
 export type GetListAction<T> = (params: ApiListParams) => Promise<ApiResponse<T[]>>
 
@@ -20,29 +23,33 @@ interface Props<T> {
     defaultSuggestions?: ApiAutocompleteItems
     disabled?: boolean
     queryFn: GetListAction<T>
+    onEmptyValue?: () => void
     onChange: (value: string) => void
 }
 
-const ApiAutocomplete = <T,>({ label, value, defaultSuggestions, disabled, suggestionKeyValue = 'id', suggestionKeyLabel = 'name', placeholder = 'Seleccionar', queryFn, onChange }: Props<T>) => {
-    const [suggestions, setSuggestions] = useState<ApiAutocompleteItems>(defaultSuggestions || [])
+const ApiAutocomplete = <T,>({ label, disabled, suggestionKeyValue = 'id', suggestionKeyLabel = 'name', placeholder = 'Seleccionar', queryFn, onChange }: Props<T>) => {
     const [searchValue, setSearchValue] = useState<string>('')
-    const [loading, setLoading] = useState<boolean>(false)
 
-    const fetchItems = async (search: string) => {
+    const fetchItems = async () => {
         try {
-            setLoading(true)
-            const response = await queryFn({ search, page: 1, pageSize: 10 })
-            const fetchedItems = response.data.map((item: any) => ({
+            const response = await queryFn({ search: searchValue, page: 1, pageSize: 10 })
+            const fetchedItems: ApiAutocompleteItems = response.data.map((item: any) => ({
                 id: item[suggestionKeyValue],
                 label: item[suggestionKeyLabel] || 'N/A'
             }))
-            setSuggestions(fetchedItems)
+            return fetchedItems
         } catch (error) {
             console.error('Error fetching items:', error)
-        } finally {
-            setLoading(false)
         }
     }
+
+    const { data, isLoading, isRefetching } = useQuery({
+        queryKey: ['autocomplete', searchValue],
+        queryFn: fetchItems,
+        staleTime: 3000,
+        enabled: !!searchValue && !disabled,
+        refetchOnWindowFocus: false,
+    })
 
     const inputProps = {
         placeholder,
@@ -69,20 +76,28 @@ const ApiAutocomplete = <T,>({ label, value, defaultSuggestions, disabled, sugge
     return (
         <div className="space-y-2">
             {label && <Label>{label}</Label>}
-            <div className="relative">
+            <div className="relative flex items-center gap-x-1">
                 <Autosuggest
-                    suggestions={suggestions}
-                    onSuggestionsFetchRequested={e => fetchItems(e.value)}
+                    suggestions={data || []}
+                    onSuggestionsFetchRequested={search => setSearchValue(search.value)}
                     // onSuggestionsClearRequested={() => {
                     //     console.log('clear input')
-                    //     onChange('')
+                    //     // onChange('')
                     // }}
                     getSuggestionValue={getSuggestionValue}
                     renderSuggestion={renderSuggestion}
                     inputProps={inputProps}
                 />
+                {!isLoading && !isRefetching && searchValue && (
+                    <Button size='icon' variant='ghost' type="button" onClick={() => {
+                        setSearchValue('')
+                        onChange('')
+                    }}>
+                        <XIcon className="text-primary" />
+                    </Button>
+                )}
                 <div className="absolute right-0 top-0 mt-2 mr-2">
-                    {loading && <Spinner size="sm" />}
+                    {(isLoading || isRefetching) && <Spinner size="sm" color="primary" />}
                 </div>
             </div>
         </div>

@@ -39,6 +39,7 @@ const DropdownGroup = ({ placeholder = 'Seleccionar', label, groups, disabled, v
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
+                        disabled={disabled}
                         className="w-full justify-between h-11 dark:bg-input/30"
                     >
                         {value ? groups.flatMap(g => g.items).find(i => i.value === value)?.label : placeholder}

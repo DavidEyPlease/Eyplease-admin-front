@@ -8,8 +8,8 @@ import { MONTHS_OPTIONS } from "@/constants/app";
 import DropdownGroup from "@/components/common/Inputs/DropdownGroup";
 import useAuthStore from "@/store/auth";
 import FileUploader from "@/components/generics/FileUploader";
-import UploadErrorFeedback from "./components/UploadErrorFeedback";
-import ReportUploadList from "./components/List";
+import UploadErrorFeedback from "../components/UploadErrorFeedback";
+import ReportUploadList from "../components/List";
 import Button from "@/components/common/Button";
 import useReportUpload from "@/hooks/useReportUpload";
 
@@ -45,18 +45,10 @@ const ReportUploadsPage = () => {
             <div className="grid md:grid-cols-5 gap-4">
                 <Card className="md:col-span-3">
                     <CardContent className="grid gap-y-5">
-                        <div className="grid md:grid-cols-3 gap-5">
-                            <DropdownGroup
-                                label="Boletín"
-                                groups={newsletterGroups}
-                                placeholder="Seleccionar sección"
-                                value={selectedNewsletter}
-                                onChange={e => setSelectedNewsletter(e)}
-                            />
+                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
                             <Dropdown
                                 label="Mes del reporte"
                                 placeholder="Selecciona un mes"
-                                disabled={!selectedNewsletter}
                                 value={selectedMonth}
                                 onChange={e => setSelectedMonth(e)}
                                 items={MONTHS_OPTIONS.map(c => ({
@@ -65,7 +57,7 @@ const ReportUploadsPage = () => {
                                 }))}
                             />
                             <ApiAutocomplete
-                                disabled={!selectedNewsletter || !selectedMonth}
+                                disabled={!selectedMonth}
                                 label="Seleccionar cliente"
                                 placeholder="Buscar cliente..."
                                 suggestionKeyValue="user_id"
@@ -73,6 +65,14 @@ const ReportUploadsPage = () => {
                                 value={selectedClient}
                                 queryFn={(params) => UtilsService.getSuggestionItems(API_ROUTES.CLIENTS.BASIC_LIST, params)}
                                 onChange={e => setSelectedClient(e)}
+                            />
+                            <DropdownGroup
+                                label="Boletín"
+                                disabled={!selectedClient || !selectedMonth}
+                                groups={newsletterGroups}
+                                placeholder="Seleccionar sección"
+                                value={selectedNewsletter}
+                                onChange={e => setSelectedNewsletter(e)}
                             />
                         </div>
                         <Separator className="my-5" />
@@ -95,10 +95,12 @@ const ReportUploadsPage = () => {
                     </CardContent>
                 </Card>
                 <div className="md:col-span-2">
-                    <ReportUploadList
-                        yearMonth={selectedMonth}
-                        userId={selectedClient}
-                    />
+                    {selectedMonth && selectedClient && (
+                        <ReportUploadList
+                            yearMonth={selectedMonth}
+                            userId={selectedClient}
+                        />
+                    )}
                 </div>
             </div>
 

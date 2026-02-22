@@ -55,3 +55,8 @@ export const MAP_LABEL_STATUS: Record<string, string> = {
     completed: 'Completado',
     failed: 'Fallido'
 }
+
+export const MAP_ERROR_CODE: Record<string, string> = {
+    [CONFLICT_CODES.CROSS_USER_VALIDATION_ERROR.toLowerCase()]: 'Usuarios en conflicto',
+    [CONFLICT_CODES.INVALID_REPORT_HEADINGS.toLowerCase()]: 'Archivo con formato inválido',
+}

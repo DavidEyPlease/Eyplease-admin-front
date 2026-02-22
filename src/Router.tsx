@@ -21,9 +21,10 @@ import TasksPage from "./pages/Tasks"
 import PermissionsPage from "./pages/Configurations/Permissions"
 import TemplateDetailPage from "./pages/Configurations/Templates/Detail"
 import TrainingsPage from "./pages/Trainings"
-import ReportUploadsPage from "./pages/ReportUploads"
+import NewsletterReportUploadPage from "./pages/NewsletterReports/Upload"
 import CreateClientPage from "./pages/Clients/Create"
 import EditClientPage from "./pages/Clients/Edit"
+import NewsletterReportListPage from "./pages/NewsletterReports/List"
 
 const Router = () => {
     const { isLogged, getMe } = useAuth();
@@ -52,7 +53,8 @@ const Router = () => {
                 <Route path={APP_ROUTES.CONFIGURATIONS.PERMISSIONS} element={<PermissionsPage />} />
                 <Route path={APP_ROUTES.TASKS.LIST} element={<TasksPage />} />
                 <Route path={APP_ROUTES.TRAININGS.LIST} element={<TrainingsPage />} />
-                <Route path={APP_ROUTES.REPORT_UPLOADS.LIST} element={<ReportUploadsPage />} />
+                <Route path={APP_ROUTES.NEWSLETTER_REPORTS.UPLOADS} element={<NewsletterReportUploadPage />} />
+                <Route path={APP_ROUTES.NEWSLETTER_REPORTS.LIST} element={<NewsletterReportListPage />} />
 
                 <Route path={APP_ROUTES.HOME.PROFILE} element={<ProfilePage />} />
             </Route>

@@ -2,7 +2,7 @@ import FileSelector from "@/components/generics/FileSelector"
 import Button from "@/components/common/Button";
 import { UploadIcon } from "lucide-react";
 import useReportUpload from "@/hooks/useReportUpload";
-import UploadErrorFeedback from "@/pages/ReportUploads/components/UploadErrorFeedback";
+import UploadErrorFeedback from "@/pages/NewsletterReports/components/UploadErrorFeedback";
 import { NetworkRankGroupType } from "@/interfaces/vendors";
 
 interface Props {

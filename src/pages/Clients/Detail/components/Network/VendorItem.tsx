@@ -16,7 +16,7 @@ const VendorItem = ({ person }: Props) => {
             <TableCell>
                 <div className="flex items-center gap-x-2">
                     <Avatar src={person.photo?.url} alt={person.name} />
-                    <div>
+                    <div className="flex flex-col">
                         {person.isClient ? (
                             <Link
                                 to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, person.id)}

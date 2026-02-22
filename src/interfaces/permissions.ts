@@ -20,7 +20,9 @@ export const PermissionKeys = {
     DASHBOARD: 'dashboard',
     USER_SERVICES: 'user_services',
     TRAININGS: 'trainings',
-    REPORT_UPLOADS: 'report_uploads',
+    NEWSLETTER_REPORTS: 'newsletter_reports',
+    NEWSLETTER_REPORT_UPLOADS: 'newsletter_report_uploads',
+    NEWSLETTER_REPORT_LIST: 'newsletter_report_list',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];

@@ -267,7 +267,7 @@
 
 .react-autosuggest__input {
   border-color: var(--input);
-  @apply placeholder:text-muted-foreground rounded-md border bg-transparent dark:bg-input/30 px-3 py-2.5 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:opacity-50 md:text-sm w-full min-w-0;
+  @apply placeholder:text-muted-foreground min-w-64 rounded-md border bg-transparent dark:bg-input/30 px-3 py-2.5 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:opacity-50 md:text-sm w-full;
 }
 
 .react-autosuggest__input--focused {
@@ -289,6 +289,11 @@
   top: 51px;
   z-index: 2;
   @apply border border-input bg-popover w-full rounded-b-md rounded-bl-md max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto
+}
+
+.react-autosuggest__container--open .react-autosuggest__suggestions-container {
+  position: absolute;
+  z-index: 11;
 }
 
 .react-autosuggest__suggestions-list {

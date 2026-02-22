@@ -25,7 +25,6 @@ interface Props {
 
 const ReportUploadList = ({ yearMonth, userId }: Props) => {
     const {
-        isLoading,
         response: items,
     } = useListQuery<ReportUpload[], { year_month?: string; user_id?: string }>({
         endpoint: API_ROUTES.REPORTS.GET_UPLOADS,
@@ -55,10 +54,15 @@ const ReportUploadList = ({ yearMonth, userId }: Props) => {
                             {(items || []).map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell className="font-medium">
+                                        {item.newsletter.name} - <br />
                                         {item.newsletter_section.name} <br />
-                                        {formatDate(item.created_at)}
+                                        <small className="text-muted-foreground">
+                                            F. Carga: {formatDate(item.created_at, { date: 'medium', time: 'short' })}
+                                        </small>
                                     </TableCell>
-                                    <TableCell>{item.year_month}</TableCell>
+                                    <TableCell>
+                                        {item.year_month}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <Badge
                                             className={cn({
