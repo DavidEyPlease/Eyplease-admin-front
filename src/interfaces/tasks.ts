@@ -1,4 +1,5 @@
 import { IBaseDBProperties, IFile } from "./common";
+import { IEvent } from "./events";
 import { IUser } from "./users";
 
 export const TaskStatusTypes = {
@@ -53,6 +54,10 @@ export interface ITask extends IBaseDBProperties {
         primaryColor?: string
         secondaryColor?: string
     }
+}
+
+export interface ITaskDetail extends ITask {
+    event?: IEvent | null
 }
 
 export interface ITaskUpdate {

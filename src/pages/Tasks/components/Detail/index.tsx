@@ -1,12 +1,12 @@
 import Dropdown from "@/components/common/Inputs/Dropdown";
 import { TypographySmall } from "@/components/common/Typography";
 import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app";
-import { ITask, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks";
+import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks";
 import useAuthStore from "@/store/auth";
 import { Button } from "@/uishadcn/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/uishadcn/ui/dialog"
 import { Textarea } from "@/uishadcn/ui/textarea";
-import { AlignLeftIcon, CalendarIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react";
+import { AlignLeftIcon, Calendar1Icon, CalendarIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react";
 import { API_ROUTES } from "@/constants/api";
 import useRequestQuery from "@/hooks/useRequestQuery";
 import { toast } from "sonner";
@@ -23,6 +23,8 @@ import DynamicTabs from "@/components/generics/DynamicTabs";
 import { useState } from "react";
 import FieldValue from "@/components/generics/FieldValue";
 import { ScrollArea } from "@/uishadcn/ui/scroll-area";
+import useFetchQuery from "@/hooks/useFetchQuery";
+import { queryKeys } from "@/utils/queryKeys";
 
 interface TaskDetailProps {
     task: ITask;
@@ -61,6 +63,13 @@ const ColorSwatch = ({ label, value }: { label: string; value: string }) => {
 }
 
 const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
+    const {
+        response: taskDetail,
+    } = useFetchQuery<ITaskDetail>(API_ROUTES.TASKS.DETAIL.replace('{id}', task.id), {
+        customQueryKey: [queryKeys.detail(`task`, task.id)],
+        enabled: Boolean(task.id),
+    })
+
     const [activeTab, setActiveTab] = useState<ActiveTab>("files");
 
     const { utilData } = useAuthStore(state => state);
@@ -122,6 +131,8 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
             toast.error('Error al eliminar la tarea');
         }
     }
+
+    console.log('Task Detail Render', { taskDetail })
 
     return (
         <Dialog open={Boolean(task)} onOpenChange={onClose}>
@@ -254,16 +265,38 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                 />
                             </div>
 
-                            {task.task_type?.slug === TaskTypes.SERVICE && task.metadata && (
-                                (task.metadata.primaryColor || task.metadata.secondaryColor) && (
-                                    <FieldValue label="Colores" flexDirection="col" className="items-start">
-                                        <div className="flex items-center gap-4">
-                                            <PaletteIcon />
-                                            <ColorSwatch label="Primario" value={task.metadata.primaryColor || ''} />
-                                            <ColorSwatch label="Secundario" value={task.metadata.secondaryColor || ''} />
+                            {task.task_type?.slug === TaskTypes.SERVICE && (
+                                <>
+                                    {task.metadata && (task.metadata.primaryColor || task.metadata.secondaryColor) && (
+                                        <FieldValue label="Colores" flexDirection="col" className="items-start">
+                                            <div className="flex items-center gap-4">
+                                                <PaletteIcon />
+                                                <ColorSwatch label="Primario" value={task.metadata.primaryColor || ''} />
+                                                <ColorSwatch label="Secundario" value={task.metadata.secondaryColor || ''} />
+                                            </div>
+                                        </FieldValue>
+                                    )}
+                                    {taskDetail?.event && (
+                                        <div className="grid md:grid-cols-3">
+                                            <FieldValue label="Tipo de evento: " value={taskDetail.event.event_type} />
+                                            {taskDetail.event.online_data && (
+                                                <div className="space-y-2">
+                                                    <FieldValue label="Zoom" value={taskDetail.event.online_data.zoom_id} />
+                                                    <FieldValue label="Link del evento" value={taskDetail.event.online_data.event_link} />
+                                                    <FieldValue label="Grupo de Facebook" value={taskDetail.event.online_data.facebook_group} />
+                                                </div>
+                                            )}
+                                            {(taskDetail.event.event_dates || []).map((date, index) => (
+                                                <FieldValue key={date.id} label={`Fecha ${index + 1}`} flexDirection="col" className="items-start">
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar1Icon />
+                                                        <span>{formatDate(date.start_date)}</span>
+                                                    </div>
+                                                </FieldValue>
+                                            ))}
                                         </div>
-                                    </FieldValue>
-                                )
+                                    )}
+                                </>
                             )}
 
                             {/* Attachments */}
