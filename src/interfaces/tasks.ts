@@ -42,6 +42,7 @@ export type TasksFilters = {
 
 export interface ITask extends IBaseDBProperties {
     id: string
+    consecutive: number
     title: string
     description: string | null
     started_at: Date

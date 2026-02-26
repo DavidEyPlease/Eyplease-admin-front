@@ -1,33 +1,33 @@
-import Dropdown from "@/components/common/Inputs/Dropdown";
-import { TypographySmall } from "@/components/common/Typography";
-import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app";
-import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks";
-import useAuthStore from "@/store/auth";
-import { Button } from "@/uishadcn/ui/button";
+import { useState } from "react"
+import { toast } from "sonner"
+
+import Dropdown from "@/components/common/Inputs/Dropdown"
+import { TypographySmall } from "@/components/common/Typography"
+import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
+import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks"
+import useAuthStore from "@/store/auth"
+import { Button } from "@/uishadcn/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/uishadcn/ui/dialog"
-import { Textarea } from "@/uishadcn/ui/textarea";
-import { AlignLeftIcon, Calendar1Icon, CalendarIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react";
-import { API_ROUTES } from "@/constants/api";
-import useRequestQuery from "@/hooks/useRequestQuery";
-import { toast } from "sonner";
-import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
-import Spinner from "@/components/common/Spinner";
-import TaskActivity from "./TaskActivity";
-import useCustomForm from "@/hooks/useCustomForm";
-import { TaskSchema } from "../Form/schema";
-import { publishEvent } from "@/utils/events";
-import DateTimePicker from "@/components/common/Inputs/DateTimePicker";
-import { formatDate, toLocalDateFromUtc } from "@/utils/dates";
-import TaskFiles from "./TaskFiles";
-import DynamicTabs from "@/components/generics/DynamicTabs";
-import { useState } from "react";
-import FieldValue from "@/components/generics/FieldValue";
-import { ScrollArea } from "@/uishadcn/ui/scroll-area";
-import useFetchQuery from "@/hooks/useFetchQuery";
-import { queryKeys } from "@/utils/queryKeys";
-import CopyButton from "@/components/generics/CopyButton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion";
-import { AlertConfirm } from "@/components/generics/AlertConfirm";
+import { Textarea } from "@/uishadcn/ui/textarea"
+import { Calendar1Icon, CalendarIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react"
+import { API_ROUTES } from "@/constants/api"
+import useRequestQuery from "@/hooks/useRequestQuery"
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback"
+import Spinner from "@/components/common/Spinner"
+import TaskActivity from "./TaskActivity"
+import useCustomForm from "@/hooks/useCustomForm"
+import { TaskSchema } from "../Form/schema"
+import { publishEvent } from "@/utils/events"
+import DateTimePicker from "@/components/common/Inputs/DateTimePicker"
+import { formatDate, toLocalDateFromUtc } from "@/utils/dates"
+import TaskFiles from "./TaskFiles"
+import DynamicTabs from "@/components/generics/DynamicTabs"
+import FieldValue from "@/components/generics/FieldValue"
+import { ScrollArea } from "@/uishadcn/ui/scroll-area"
+import useFetchQuery from "@/hooks/useFetchQuery"
+import { queryKeys } from "@/utils/queryKeys"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion"
+import { AlertConfirm } from "@/components/generics/AlertConfirm"
 
 interface TaskDetailProps {
     task: ITask;
@@ -156,6 +156,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                         {/* Header */}
                         <DialogHeader className="space-y-4">
                             <div className="flex items-center gap-3">
+                                <b>#{task.consecutive}</b>
                                 {requestState.loading ? (
                                     <Spinner size="xs" color="primary" className="w-fit" />
                                 ) : (
