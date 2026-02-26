@@ -135,6 +135,7 @@ export interface NewsletterSection {
     name: string
     canImported: boolean
     showInNewsletter: boolean
+    has_publish_posts: boolean
     sectionKey: string
 }
 

@@ -25,6 +25,7 @@ import NewsletterReportUploadPage from "./pages/NewsletterReports/Upload"
 import CreateClientPage from "./pages/Clients/Create"
 import EditClientPage from "./pages/Clients/Edit"
 import NewsletterReportListPage from "./pages/NewsletterReports/List"
+import PostsPage from "./pages/Posts"
 
 const Router = () => {
     const { isLogged, getMe } = useAuth();
@@ -57,6 +58,8 @@ const Router = () => {
                 <Route path={APP_ROUTES.NEWSLETTER_REPORTS.LIST} element={<NewsletterReportListPage />} />
 
                 <Route path={APP_ROUTES.HOME.PROFILE} element={<ProfilePage />} />
+
+                <Route path={APP_ROUTES.POSTS.PUBLISH} element={<PostsPage />} />
             </Route>
         </Routes>
     )

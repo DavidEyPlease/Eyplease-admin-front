@@ -25,6 +25,9 @@ import FieldValue from "@/components/generics/FieldValue";
 import { ScrollArea } from "@/uishadcn/ui/scroll-area";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
+import CopyButton from "@/components/generics/CopyButton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion";
+import { AlertConfirm } from "@/components/generics/AlertConfirm";
 
 interface TaskDetailProps {
     task: ITask;
@@ -70,7 +73,8 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
         enabled: Boolean(task.id),
     })
 
-    const [activeTab, setActiveTab] = useState<ActiveTab>("files");
+    const [activeTab, setActiveTab] = useState<ActiveTab>("files")
+    const [showConfirmCompleteTask, setShowConfirmCompleteTask] = useState(false);
 
     const { utilData } = useAuthStore(state => state);
     const currentTask = getFormCurrentTask(task);
@@ -113,6 +117,14 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
     }
 
     const onChangeValues = (value: string | Date, field: keyof ITaskUpdate) => {
+        if (field === 'status') {
+            const selectedStatus = utilData.task_statuses.find(s => s.id === value);
+            if (selectedStatus?.slug === TaskStatusTypes.COMPLETED && task.task_type.slug === TaskTypes.TOOLS) {
+                setShowConfirmCompleteTask(true);
+                form.setValue(field, '');
+                return
+            }
+        }
         form.setValue(field, value);
         handleSave({ [field]: value })
     }
@@ -132,7 +144,8 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
         }
     }
 
-    console.log('Task Detail Render', { taskDetail })
+    const isEditable = task.task_status.slug !== TaskStatusTypes.COMPLETED
+    const completedStatus = utilData.task_statuses.find(s => s.slug === TaskStatusTypes.COMPLETED)
 
     return (
         <Dialog open={Boolean(task)} onOpenChange={onClose}>
@@ -150,12 +163,18 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                 )}
                                 <DialogTitle className="flex w-full items-center justify-between">
                                     <Textarea
+                                        disabled={!isEditable}
                                         placeholder="Ingresa el titulo de la tarea"
                                         value={form.watch('title') || ''}
                                         className="min-h-[50px] text-lg md:text-xl resize-none w-full flex-1 border-none bg-transparent dark:bg-transparent focus:dark:bg-input/30"
                                         onChange={(e) => onChangeInputs(e.target.value, 'title')}
                                     />
-                                    <Button variant="ghost" size="icon" onClick={() => onDelete()} disabled={requestState.loading}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => onDelete()}
+                                        disabled={requestState.loading || !isEditable}
+                                    >
                                         <TrashIcon className="w-4 h-4" />
                                     </Button>
                                 </DialogTitle>
@@ -170,6 +189,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                     <Dropdown
                                         placeholder="Seleccionar tipo de tarea"
                                         value={form.watch('type')}
+                                        disabled={!isEditable}
                                         items={utilData.task_types.map(s => ({
                                             label: s.name,
                                             value: s.id,
@@ -181,6 +201,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                 <div className="flex flex-col gap-2">
                                     <TypographySmall text="Estado" />
                                     <Dropdown
+                                        disabled={!isEditable}
                                         placeholder="Seleccionar estado"
                                         value={form.watch('status')}
                                         key={form.watch('status')}
@@ -203,6 +224,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         }
                                     />
                                     <DateTimePicker
+                                        disabled={!isEditable}
                                         dateValue={form.watch('expired_at') || ''}
                                         onDateChange={(date) => onChangeValues(date, 'expired_at')}
                                         timeValue={form.watch('expired_at_time') || ''}
@@ -220,6 +242,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         }
                                     />
                                     <DateTimePicker
+                                        disabled={!isEditable}
                                         dateValue={form.watch('started_at') || ''}
                                         onDateChange={(date) => onChangeValues(date, 'started_at')}
                                     />
@@ -235,6 +258,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         }
                                     />
                                     <Dropdown
+                                        disabled={!isEditable}
                                         placeholder="Seleccionar responsable"
                                         value={form.watch('user') || ''}
                                         key={form.watch('user')}
@@ -249,20 +273,25 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
                             {/* Description */}
                             <div>
-                                <TypographySmall
-                                    text={
-                                        <div className="flex items-center gap-2">
-                                            <AlignLeftIcon className="size-4" />
+                                <Accordion type="single" className="rounded-lg border" collapsible defaultValue={`task-${task.id}-description`}>
+                                    <AccordionItem value={`task-${task.id}-description`} className="border-b px-4 last:border-b-0">
+                                        <AccordionTrigger>
                                             Descripción
-                                        </div>
-                                    }
-                                />
-                                <Textarea
-                                    placeholder="Añadir una descripción más detallada..."
-                                    value={form.watch('description') || ''}
-                                    onChange={(e) => onChangeInputs(e.target.value, 'description')}
-                                    className="min-h-[100px] resize-none mt-2"
-                                />
+                                            {/* <div className="flex items-center gap-2">
+                                                <AlignLeftIcon className="size-4" />
+                                            </div> */}
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <Textarea
+                                                disabled={!isEditable}
+                                                placeholder="Añadir una descripción más detallada..."
+                                                value={form.watch('description') || ''}
+                                                onChange={(e) => onChangeInputs(e.target.value, 'description')}
+                                                className="min-h-[100px] resize-none mt-2"
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
                             </div>
 
                             {task.task_type?.slug === TaskTypes.SERVICE && (
@@ -310,8 +339,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                             />
                             {activeTab === 'files' && (
                                 <TaskFiles
-                                    taskId={task.id}
-                                    assignedTo={task.assigned_to}
+                                    task={task}
                                 />
                             )}
                         </div>
@@ -322,6 +350,24 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                         <TaskActivity taskId={task.id} />
                     </div>
                 </div>
+
+                <AlertConfirm
+                    open={showConfirmCompleteTask}
+                    onOpenChange={() => setShowConfirmCompleteTask(false)}
+                    title="¿Marcar tarea como completada?"
+                    description="Al marcar esta tarea como completada se realizaran las publicaciones de las herramientas asociadas a esta tarea. Es importante que los diseños estén cargados. Al completar la tarea no se podra volver a editar ¿Deseas continuar?"
+                    loading={requestState.loading}
+                    onConfirm={() => {
+                        if (!completedStatus) return;
+                        form.setValue('status', completedStatus.id);
+                        handleSave({ status: completedStatus.id }).then(() => setShowConfirmCompleteTask(false));
+                    }}
+                    onCancel={() => {
+                        // return previous state
+                        console.log(currentTask.status, completedStatus?.id)
+                        form.setValue('status', currentTask.status);
+                    }}
+                />
             </DialogContent>
         </Dialog>
     )

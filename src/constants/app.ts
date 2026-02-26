@@ -45,6 +45,9 @@ export const APP_ROUTES = {
     NEWSLETTER_REPORTS: {
         UPLOADS: '/newsletter-reports/upload',
         LIST: '/newsletter-reports/list',
+    },
+    POSTS: {
+        PUBLISH: '/posts/publish',
     }
 }
 
@@ -104,6 +107,23 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
                 requiredPermission: true,
                 permissionKeys: [PermissionKeys.NEWSLETTER_REPORT_LIST],
             },
+        ]
+    },
+    {
+        key: PermissionKeys.PUBLISH_POSTS,
+        label: "Publicaciones",
+        path: '',
+        icon: 'posts',
+        requiredPermission: true,
+        permissionKeys: [PermissionKeys.PUBLISH_POSTS],
+        children: [
+            {
+                key: PermissionKeys.PUBLISH_POSTS,
+                label: "Publicar",
+                path: APP_ROUTES.POSTS.PUBLISH,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.PUBLISH_POSTS],
+            }
         ]
     },
     {

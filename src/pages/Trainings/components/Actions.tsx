@@ -1,4 +1,4 @@
-import AlertConfirm from "@/components/generics/AlertConfirm"
+import { AlertConfirmDelete } from "@/components/generics/AlertConfirm"
 import { API_ROUTES } from "@/constants/api"
 import { BROWSER_EVENTS } from "@/constants/browserEvents"
 import useRequestQuery from "@/hooks/useRequestQuery"
@@ -46,7 +46,7 @@ const TrainingActions = ({ training }: Props) => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
 
-                <AlertConfirm
+                <AlertConfirmDelete
                     trigger={
                         <DropdownMenuItem disabled={requestState.loading} className="text-red-500" onSelect={(e) => e.preventDefault()}>
                             <Trash2Icon className="w-4 h-4 mr-2 text-red-500" />

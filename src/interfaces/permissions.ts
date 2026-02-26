@@ -23,6 +23,7 @@ export const PermissionKeys = {
     NEWSLETTER_REPORTS: 'newsletter_reports',
     NEWSLETTER_REPORT_UPLOADS: 'newsletter_report_uploads',
     NEWSLETTER_REPORT_LIST: 'newsletter_report_list',
+    PUBLISH_POSTS: 'publish_posts',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];

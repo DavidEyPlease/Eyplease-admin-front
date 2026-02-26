@@ -8,6 +8,7 @@ import { Separator } from "@/uishadcn/ui/separator";
 import TimeInput from "./TimeInput";
 
 interface DateTimePickerProps {
+    disabled?: boolean;
     label?: string;
     buttonClassName?: string;
     withTime?: boolean;
@@ -17,12 +18,13 @@ interface DateTimePickerProps {
     onTimeChange?: (time: string) => void;
 }
 
-const DateTimePicker = ({ label = 'Selecciona una fecha', withTime = true, dateValue, buttonClassName, onDateChange, timeValue, onTimeChange }: DateTimePickerProps) => {
+const DateTimePicker = ({ disabled, label = 'Selecciona una fecha', withTime = true, dateValue, buttonClassName, onDateChange, timeValue, onTimeChange }: DateTimePickerProps) => {
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <Button
                     variant={"outline"}
+                    disabled={disabled}
                     className={cn(
                         "w-full pl-3 text-left font-normal dark:bg-input/30 py-5",
                         buttonClassName,

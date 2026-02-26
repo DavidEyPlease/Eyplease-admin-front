@@ -72,5 +72,8 @@ export const API_ROUTES = {
     REPORTS: {
         GET_UPLOADS: '/reports/uploads',
         UPLOAD: '/reports/upload',
+    },
+    POSTS: {
+        PUBLISH_NEWSLETTER: '/posts/publish-newsletter',
     }
 }

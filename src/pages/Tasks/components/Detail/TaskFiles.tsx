@@ -9,30 +9,31 @@ import { AttachmentViewer } from "@/components/generics/AttachmentViewer";
 import { API_ROUTES } from "@/constants/api";
 import useRequestQuery from "@/hooks/useRequestQuery";
 import { IFile } from "@/interfaces/common";
-import { ITask, ITaskFile } from "@/interfaces/tasks";
+import { ITask, ITaskFile, TaskStatusTypes } from "@/interfaces/tasks";
 import useUploadStore from "@/store/uploadStore";
 import { Button } from "@/uishadcn/ui/button";
 import { Card, CardContent } from "@/uishadcn/ui/card";
 import { isImage } from "@/utils";
 import { formatDate } from "@/utils/dates";
 
-import AlertConfirm from "@/components/generics/AlertConfirm"
+import { AlertConfirmDelete } from "@/components/generics/AlertConfirm"
 import { TasksService } from "@/services/tasks.service"
 import DynamicTabs from "@/components/generics/DynamicTabs"
 import Spinner from "@/components/common/Spinner"
 import useFiles from "@/hooks/useFiles";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
+import FieldValue from "@/components/generics/FieldValue";
+import CopyButton from "@/components/generics/CopyButton";
 // import useFiles from "@/hooks/useFiles"
 
 interface IProps {
-    taskId: string;
-    assignedTo: ITask['assigned_to']
+    task: ITask
 }
 
 type GroupFiles = 'others' | 'design'
 
-const TaskFiles = ({ taskId, assignedTo }: IProps) => {
+const TaskFiles = ({ task }: IProps) => {
     const { fileLoadingAction, downloadFile } = useFiles()
     const [selectedFile, setSelectedFile] = useState<IFile | null>(null)
     const [loadingDelete, setLoadingDelete] = useState('');
@@ -48,10 +49,10 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
     )
 
     const { response: filesList, loading, setData: setFiles } = useFetchQuery<ITaskFile[]>(
-        API_ROUTES.TASKS.GET_FILES.replace('{id}', taskId),
+        API_ROUTES.TASKS.GET_FILES.replace('{id}', task.id),
         {
-            customQueryKey: queryKeys.list(`tasks-files-${taskId}`),
-            enabled: !!taskId
+            customQueryKey: queryKeys.list(`tasks-files-${task.id}`),
+            enabled: !!task.id
         }
     )
 
@@ -75,14 +76,14 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
         startUpload(
             Array.from(files),
             {
-                uploadUri: `private/tasks/${taskId}/attachments`,
+                uploadUri: `private/tasks/${task.id}/attachments`,
                 onAllSuccess: async (uploadedResults) => {
-                    const newTask = await request<unknown, ITaskFile[]>('POST', API_ROUTES.TASKS.STORE_ATTACHMENTS.replace('{id}', taskId), {
+                    const newTask = await request<unknown, ITaskFile[]>('POST', API_ROUTES.TASKS.STORE_ATTACHMENTS.replace('{id}', task.id), {
                         file_uris: uploadedResults
                     })
                     onSuccessFiles([...newTask.data, ...(filesList || [])]);
                     // clean input file
-                    const inputFile = document.getElementById(`attachment-${taskId}`) as HTMLInputElement;
+                    const inputFile = document.getElementById(`attachment-${task.id}`) as HTMLInputElement;
                     if (inputFile) {
                         inputFile.value = '';
                     }
@@ -94,7 +95,7 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
     const onDelete = async (fileId: string) => {
         setLoadingDelete(fileId);
         try {
-            await TasksService.deleteTaskFile(taskId, fileId);
+            await TasksService.deleteTaskFile(task.id, fileId);
             const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
             onSuccessFiles(updatedFiles);
             // publishEvent('tasks-updated', { id: taskId, files: (filesList || []).filter(file => file.id !== fileId), eventType: 'update' });
@@ -120,7 +121,7 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
     }
 
     const onFilterFiles = (criteria: GroupFiles) => {
-        setDragDropList((filesList || []).filter(att => criteria === 'design' ? att.uploaded_by.id === assignedTo?.id : att.uploaded_by.id !== assignedTo?.id))
+        setDragDropList((filesList || []).filter(att => criteria === 'design' ? att.uploaded_by.id === task.assigned_to?.id : att.uploaded_by.id !== task.assigned_to?.id))
     }
 
     useEffect(() => {
@@ -141,57 +142,65 @@ const TaskFiles = ({ taskId, assignedTo }: IProps) => {
                     onValueChange={value => onFilterFiles(value as GroupFiles)}
                 />
                 <div>
-                    <InputFile label="Añadir" id={`attachment-${taskId}`} multiple onChange={e => onUploadFiles(e.target.files)} />
+                    <InputFile label="Añadir" id={`attachment-${task.id}`} multiple onChange={e => onUploadFiles(e.target.files)} />
                 </div>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-2" ref={draggableParentRef}>
-                {dragDropItems.map((attachment, index) => (
-                    <Card key={index} className="mb-2 hover:bg-accent cursor-move">
-                        <CardContent className="flex items-center justify-between flex-wrap gap-2">
-                            <div className="flex items-center gap-4">
-                                <div
-                                    className="size-12 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
-                                    onClick={() => setSelectedFile(attachment.file)}
-                                >
-                                    {isImage(attachment.file.ext) ? (
-                                        <img src={attachment.file.url} className="rounded object-cover max-w-full h-full" alt="" />
-                                    ) : (
-                                        <span className="text-xs font-medium uppercase">{attachment.file.ext}</span>
-                                    )}
+                {dragDropItems.map(attachment => (
+                    <div key={attachment.id} data-id={attachment.id}>
+                        {task?.task_status.slug === TaskStatusTypes.READY_FOR_PUBLISH && (
+                            <FieldValue label="URL Json">
+                                <CopyButton text={`${import.meta.env.VITE_API_BASE}/data-sources/tools/${task.id}?sort=${attachment.file.sort}`} />
+                            </FieldValue>
+                        )}
+                        <Card className="mb-2 hover:bg-accent cursor-move">
+                            <CardContent className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className="size-12 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
+                                        onClick={() => setSelectedFile(attachment.file)}
+                                    >
+                                        {isImage(attachment.file.ext) ? (
+                                            <img src={attachment.file.url} className="rounded object-cover max-w-full h-full" alt="" />
+                                        ) : (
+                                            <span className="text-xs font-medium uppercase">{attachment.file.ext}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-medium text-sm">{attachment.file.name}</p>
+                                        <p className="text-xs text-muted-foreground">Añadido por: {attachment.uploaded_by?.name} el {formatDate(attachment.created_at)}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="font-medium text-sm">{attachment.file.name}</p>
-                                    <p className="text-xs text-muted-foreground">Añadido por: {attachment.uploaded_by?.name} el {formatDate(attachment.created_at)}</p>
-                                </div>
-                            </div>
 
-                            <div className="flex gap-1">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="text-primary"
-                                    onClick={() => downloadFile(attachment.id, attachment.file.uri)}
-                                >
-                                    {fileLoadingAction === attachment.id ? (<Spinner />) : (<DownloadIcon className="size-3" />)}
-                                </Button>
-                                <AlertConfirm
-                                    trigger={
-                                        <Button
-                                            variant="outline"
-                                            className="text-destructive"
-                                            size="icon"
-                                            disabled={loadingDelete === attachment.id}
-                                        >
-                                            <Trash2Icon className="size-3" />
-                                        </Button>
-                                    }
-                                    loading={loadingDelete === attachment.id}
-                                    onConfirm={() => onDelete(attachment.id)}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                                <div className="flex gap-1">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="text-primary"
+                                        onClick={() => downloadFile(attachment.id, attachment.file.uri)}
+                                    >
+                                        {fileLoadingAction === attachment.id ? (<Spinner />) : (<DownloadIcon className="size-3" />)}
+                                    </Button>
+                                    <AlertConfirmDelete
+                                        trigger={
+                                            <Button
+                                                variant="outline"
+                                                className="text-destructive"
+                                                size="icon"
+                                                disabled={loadingDelete === attachment.id}
+                                            >
+                                                <Trash2Icon className="size-3" />
+                                            </Button>
+                                        }
+                                        loading={loadingDelete === attachment.id}
+                                        onConfirm={() => onDelete(attachment.id)}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                 ))}
             </div>
 

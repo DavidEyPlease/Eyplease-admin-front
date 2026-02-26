@@ -5,7 +5,7 @@ import { IconTraining } from '@/components/Svg/IconTraining'
 import { IconReports } from '@/components/Svg/IconReports'
 import { IconHome } from '@/components/Svg/IconHome'
 import { IconServices } from '@/components/Svg/IconServices'
-// import { IconPosts } from '@/components/Svg/IconPosts'
+import { IconPosts } from '@/components/Svg/IconPosts'
 import { IconSetting } from '@/components/Svg/IconSetting'
 
 export const ICONS: { [key: string]: React.FC } = {
@@ -16,4 +16,5 @@ export const ICONS: { [key: string]: React.FC } = {
     'services': IconServices,
     'trainings': IconTraining,
     'reportUploads': IconReports,
+    'posts': IconPosts,
 }
