@@ -60,17 +60,17 @@ const TrainingFiles = ({ training }: Props) => {
             />
             <FileUploader
                 title="PDF PowerPoint"
-                info={getTrainingFileByType(files, FileTypes.TRAINING_PDF_READING)?.name || ''}
-                fileAccepts=".pdf"
-                loading={loadingFiles.includes(FileTypes.TRAINING_PDF_READING)}
-                onUploadFiles={(files) => onUploadFile(files, FileTypes.TRAINING_PDF_READING)}
-            />
-            <FileUploader
-                title="Guía"
                 info={getTrainingFileByType(files, FileTypes.TRAINING_PPTX_TO_PDF)?.name || ''}
                 fileAccepts=".pdf"
                 loading={loadingFiles.includes(FileTypes.TRAINING_PPTX_TO_PDF)}
                 onUploadFiles={(files) => onUploadFile(files, FileTypes.TRAINING_PPTX_TO_PDF)}
+            />
+            <FileUploader
+                title="Guía"
+                info={getTrainingFileByType(files, FileTypes.TRAINING_PDF_READING)?.name || ''}
+                fileAccepts=".pdf"
+                loading={loadingFiles.includes(FileTypes.TRAINING_PDF_READING)}
+                onUploadFiles={(files) => onUploadFile(files, FileTypes.TRAINING_PDF_READING)}
             />
             <FileUploader
                 title="Prevista PowerPoint en PDF"
