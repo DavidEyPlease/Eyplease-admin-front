@@ -3,13 +3,13 @@ import { toast } from "sonner"
 
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { TypographySmall } from "@/components/common/Typography"
-import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
+import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS, TOOLS_TYPES } from "@/constants/app"
 import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks"
 import useAuthStore from "@/store/auth"
 import { Button } from "@/uishadcn/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/uishadcn/ui/dialog"
 import { Textarea } from "@/uishadcn/ui/textarea"
-import { Calendar1Icon, CalendarIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react"
+import { Calendar1Icon, CalendarIcon, CogIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react"
 import { API_ROUTES } from "@/constants/api"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback"
@@ -45,6 +45,7 @@ const getFormCurrentTask = (task: ITask) => {
         expired_at_time: formatDate(task.expired_at, 'HH:mm:ss'),
         type: task.task_type.id,
         status: task.task_status.id,
+        metadata: task.metadata,
         user: task.assigned_to?.id || null,
     }
 }
@@ -127,6 +128,15 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
         }
         form.setValue(field, value);
         handleSave({ [field]: value })
+    }
+
+    const onChangeToolsSection = (value: string) => {
+        const metadata = {
+            ...(form.watch('metadata') || {}),
+            tools_section: value
+        }
+        form.setValue('metadata', metadata)
+        handleSave({ metadata, type: task.task_type.slug }) // type is required in the backend to update metadata
     }
 
     const onDelete = async () => {
@@ -270,6 +280,25 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         onChange={v => onChangeValues(v, 'user')}
                                     />
                                 </div>
+                                {task.metadata?.tools_section && (
+                                    <div className="flex flex-col gap-2">
+                                        <TypographySmall
+                                            text={
+                                                <div className="flex items-center gap-2">
+                                                    <CogIcon className="size-4" />
+                                                    Sección de herramientas
+                                                </div>
+                                            }
+                                        />
+                                        <Dropdown
+                                            className="max-w-xs"
+                                            placeholder="Sección de herramientas"
+                                            value={form.watch('metadata')?.tools_section || ''}
+                                            onChange={onChangeToolsSection}
+                                            items={TOOLS_TYPES}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Description */}

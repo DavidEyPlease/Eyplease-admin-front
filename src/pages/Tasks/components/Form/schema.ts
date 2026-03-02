@@ -53,7 +53,9 @@ export const TaskSchema = z.discriminatedUnion("type", [
     path: ["expired_at"],
 })
 
-export const FORM_DEFAULT_VALUES: z.infer<typeof TaskSchema> = {
+export type TaskFormData = z.infer<typeof TaskSchema>;
+
+export const FORM_DEFAULT_VALUES: TaskFormData = {
     // category: '',
     started_at: new Date(),
     type: TaskTypes.TOOLS,

@@ -54,6 +54,7 @@ export interface ITask extends IBaseDBProperties {
     metadata: {
         primaryColor?: string
         secondaryColor?: string
+        tools_section?: string
     }
 }
 
@@ -70,6 +71,11 @@ export interface ITaskUpdate {
     status?: string;
     type?: string;
     user?: string | null;
+    metadata?: {
+        primaryColor?: string
+        secondaryColor?: string
+        tools_section?: string
+    }
 }
 
 export interface ITaskActivity extends IBaseDBProperties {
