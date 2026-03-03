@@ -12,6 +12,7 @@ import FadeInGrid from "@/components/generics/FadeInGrid"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion"
 import SearchInput from "@/components/generics/SearchInput"
 import PageLoader from "@/components/generics/PageLoader"
+import { Badge } from "@/uishadcn/ui/badge"
 
 interface PendingUploadItem {
     id: string
@@ -19,6 +20,7 @@ interface PendingUploadItem {
     name: string
     account: string
     missing_reports_count: number,
+    plan: string
     missing_reports: {
         newsletter_name: string
         newsletter_key: string
@@ -58,11 +60,14 @@ const PendingUploadReports = () => {
                         <FadeInGrid gridClassName="md:grid-cols-2 lg:grid-cols-3">
                             {(response?.items || []).map(item => (
                                 <Card className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50">
-                                    <CardHeader className="pb-4 pt-3">
+                                    <CardHeader className="pb-4 pt-3 flex flex-row justify-between items-start">
                                         <div>
                                             <Link to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, item.network_person_id)} text={item.name} />
                                             <p className="text-xs text-gray-500">Cuenta: {item.account}</p>
                                         </div>
+                                        <Badge>
+                                            {item.plan ?? 'Sin plan'}
+                                        </Badge>
                                     </CardHeader>
                                     <CardContent className="pt-0">
                                         <div className="space-y-4">
