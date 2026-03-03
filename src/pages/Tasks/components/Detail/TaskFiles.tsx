@@ -149,7 +149,7 @@ const TaskFiles = ({ task }: IProps) => {
             <div className="grid lg:grid-cols-2 gap-2" ref={draggableParentRef}>
                 {dragDropItems.map(attachment => (
                     <div key={attachment.id} data-id={attachment.id}>
-                        {task?.task_status.slug === TaskStatusTypes.READY_FOR_PUBLISH && (
+                        {(task?.task_status.slug === TaskStatusTypes.READY_FOR_PUBLISH || task?.task_status.slug === TaskStatusTypes.COMPLETED) && (
                             <FieldValue label="URL Json">
                                 <CopyButton text={`${import.meta.env.VITE_API_BASE}/data-sources/tools/${task.id}?sort=${attachment.file.sort}`} />
                             </FieldValue>
