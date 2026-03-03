@@ -28,6 +28,7 @@ import useFetchQuery from "@/hooks/useFetchQuery"
 import { queryKeys } from "@/utils/queryKeys"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion"
 import { AlertConfirm } from "@/components/generics/AlertConfirm"
+import PlanSelector from "@/components/generics/PlanSelector"
 
 interface TaskDetailProps {
     task: ITask;
@@ -137,6 +138,15 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
         }
         form.setValue('metadata', metadata)
         handleSave({ metadata, type: task.task_type.slug }) // type is required in the backend to update metadata
+    }
+
+    const onChangePlans = (planIds: string[]) => {
+        const metadata = {
+            ...(form.watch('metadata') || {}),
+            plan_ids: planIds
+        }
+        form.setValue('metadata', metadata)
+        handleSave({ metadata, type: task.task_type.slug })
     }
 
     const onDelete = async () => {
@@ -299,17 +309,25 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                         />
                                     </div>
                                 )}
+                                {task.metadata?.plan_ids && (
+                                    <div className="flex flex-col gap-2">
+                                        <TypographySmall
+                                            text='Planes'
+                                        />
+                                        <PlanSelector
+                                            mode="multiple"
+                                            value={form.watch('metadata')?.plan_ids || []}
+                                            onChange={v => onChangePlans([v].flat())}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Description */}
                             <div>
                                 <Accordion type="single" className="rounded-lg border" collapsible defaultValue={`task-${task.id}-description`}>
                                     <AccordionItem value={`task-${task.id}-description`} className="border-b px-4 last:border-b-0">
                                         <AccordionTrigger>
                                             Descripción
-                                            {/* <div className="flex items-center gap-2">
-                                                <AlignLeftIcon className="size-4" />
-                                            </div> */}
                                         </AccordionTrigger>
                                         <AccordionContent>
                                             <Textarea

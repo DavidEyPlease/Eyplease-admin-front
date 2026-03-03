@@ -55,6 +55,7 @@ export interface ITask extends IBaseDBProperties {
         primaryColor?: string
         secondaryColor?: string
         tools_section?: string
+        plan_ids?: string[]
     }
 }
 
