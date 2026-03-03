@@ -15,11 +15,12 @@ import useReportUpload from "@/hooks/useReportUpload";
 import DynamicTabs from "@/components/generics/DynamicTabs";
 import { useState } from "react";
 import DispatchImportJob from "./components/DispatchImportJob";
+import PendingUploadReports from "../components/PendingUpload";
 
 const YEAR = new Date().getFullYear()
 
 const ReportUploadsPage = () => {
-    const [uploadType, setUploadType] = useState<'job' | 'manual'>('manual');
+    const [uploadType, setUploadType] = useState<'job' | 'manual' | 'pending'>('manual');
     const { utilData } = useAuthStore(state => state)
 
     const {
@@ -52,13 +53,18 @@ const ReportUploadsPage = () => {
                 items={[
                     { label: 'Manual', value: 'manual' },
                     { label: 'Automático', value: 'job' },
+                    { label: 'Pendientes de carga', value: 'pending' },
                 ]}
             />
             <Card className="my-3">
                 <CardContent className="grid gap-3">
-                    {uploadType === 'job' ? (
+                    {uploadType === 'job' && (
                         <DispatchImportJob />
-                    ) : (
+                    )}
+                    {uploadType === 'pending' && (
+                        <PendingUploadReports />
+                    )}
+                    {uploadType === 'manual' && (
                         <div>
                             <div className="grid md:grid-cols-3 gap-5">
                                 <Dropdown

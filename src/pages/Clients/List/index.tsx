@@ -91,6 +91,7 @@ const ClientsListPage = () => {
                         <UIPagination
                             totalPages={response?.last_page || 0}
                             perPage={perPage || 15}
+                            pending={isLoading}
                             page={page || 1}
                             onChangePage={onChangePage}
                             onChangePerPage={setPerPage}

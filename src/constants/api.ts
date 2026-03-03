@@ -72,6 +72,7 @@ export const API_ROUTES = {
     REPORTS: {
         GET_UPLOADS: '/reports/uploads',
         UPLOAD: '/reports/upload',
+        PENDING_UPLOADS: '/reports/pending-uploads',
         DISPATCH_IMPORT_JOB: '/reports/dispatch-import',
     },
     POSTS: {
