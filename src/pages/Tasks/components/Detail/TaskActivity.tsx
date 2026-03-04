@@ -111,16 +111,21 @@ const TaskActivity = ({ taskId }: TaskActivityProps) => {
                 <div className="space-y-4">
                     {(activities || []).map((activity, index) => {
                         const activityType = translateTaskActivityType(activity.activity_type);
+                        const activityDescription = activity.activity_description
+                            .replace(/&nbsp;/g, ' ')
+                            .replace(/\u00A0/g, ' ');
                         return (
                             <div key={index} className="flex gap-3">
                                 <Avatar src={activity.user?.profile_picture?.url || ''} alt={activity.user?.name || ''} />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm break-words">
-                                        <span className="font-semibold me-2">{activity.user.name}</span>
-                                        {activityType && <span className="text-gray-500 text-xs">{activityType}: </span>}
-                                        <span
-                                            className="text-gray-800 dark:text-white break-words"
-                                            dangerouslySetInnerHTML={{ __html: activity.activity_description }}
+                                    <div className="text-sm flex flex-col">
+                                        <div>
+                                            <span className="font-semibold me-2">{activity.user.name}</span>
+                                            {activityType && <span className="text-gray-500 text-xs">{activityType}: </span>}
+                                        </div>
+                                        <div
+                                            className="w-full max-w-full text-gray-800 dark:text-white whitespace-normal break-words [&_*]:max-w-full"
+                                            dangerouslySetInnerHTML={{ __html: activityDescription }}
                                         />
                                     </div>
                                     <div className="flex justify-between items-center mt-1">
