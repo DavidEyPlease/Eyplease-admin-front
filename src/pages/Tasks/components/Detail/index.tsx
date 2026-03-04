@@ -9,7 +9,7 @@ import useAuthStore from "@/store/auth"
 import { Button } from "@/uishadcn/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/uishadcn/ui/dialog"
 import { Textarea } from "@/uishadcn/ui/textarea"
-import { Calendar1Icon, CalendarIcon, CogIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react"
+import { Calendar1Icon, CalendarIcon, CogIcon, MapIcon, PaletteIcon, TrashIcon, User2Icon } from "lucide-react"
 import { API_ROUTES } from "@/constants/api"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback"
@@ -365,10 +365,16 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                             )}
                                             {(taskDetail.event.event_dates || []).map((date, index) => (
                                                 <FieldValue key={date.id} label={`Fecha ${index + 1}`} flexDirection="col" className="items-start">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar1Icon />
-                                                        <span>{formatDate(date.start_date)}</span>
+                                                    <div className="flex gap-2">
+                                                        <Calendar1Icon className="size-4" />
+                                                        {formatDate(date.start_date)}
                                                     </div>
+                                                    {date.location && (
+                                                        <div className="flex gap-2">
+                                                            <MapIcon className="size-4" />
+                                                            <b>Dirección:</b> {date.location}
+                                                        </div>
+                                                    )}
                                                 </FieldValue>
                                             ))}
                                         </div>
