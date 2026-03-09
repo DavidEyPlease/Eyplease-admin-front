@@ -25,6 +25,7 @@ export const API_ROUTES = {
         SET_PLAN: '/clients/{id}/set-plan',
         SET_TEMPLATE: '/clients/{id}/set-template',
         UPDATE_NETWORK: '/clients/{id}/update-network',
+        SET_STATUS: '/clients/{id}/change-status',
     },
     PLANS: {
         LIST: '/plans',

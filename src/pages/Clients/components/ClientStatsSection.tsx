@@ -49,20 +49,20 @@ export const ClientStatsSection: React.FC<ClientStatsSectionProps> = ({ stats })
                     }
                     endContent={
                         <Badge
-                            className={`${getPercentageBgColor(stats.tools_download_percentage)} ${getPercentageColor(stats.tools_download_percentage)} border-0`}
+                            className={`${getPercentageBgColor(stats.posts_shared_percentage)} ${getPercentageColor(stats.tools_download_percentage)} border-0`}
                         >
-                            {stats.tools_download_percentage}%
+                            {stats.posts_shared_percentage}%
                         </Badge>
                     }
                 >
                     <div className="space-y-2">
                         <Progress
-                            value={stats.tools_download_percentage}
+                            value={stats.posts_shared_percentage}
                             className="h-2"
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{0} enviadas</span>
-                            <span>{0} total</span>
+                            <span>{stats.shared_posts} enviadas</span>
+                            <span>{stats.monthly_posts} total</span>
                         </div>
                     </div>
                 </StatCard>

@@ -9,6 +9,7 @@ export const FileTypes = {
   USER_PROFILE_PHOTO: 'user_profile_photo',
   USER_LOGOTYPE: 'user_logotype',
   TEMPLATE_COVER: 'template_cover',
+  SPONSOR_PHOTO: 'sponsor_photo',
 } as const;
 
 export type FileTypes = typeof FileTypes[keyof typeof FileTypes];

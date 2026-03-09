@@ -1,5 +1,3 @@
-import clsx from "clsx"
-
 import {
     Avatar as UIAvatar,
     AvatarFallback,
@@ -8,6 +6,8 @@ import {
 import Spinner from "../common/Spinner"
 import { getInitialLetters } from "@/utils"
 import { cn } from "@/lib/utils"
+import FileSelector from "./FileSelector"
+import { PencilLineIcon } from "lucide-react"
 
 interface Props {
     src: string
@@ -17,9 +17,21 @@ interface Props {
     loading?: boolean
 }
 
-const Avatar = ({ src, alt, sizeClasses, className, loading = false }: Props) => {
+interface EditableProps extends Props {
+    canEdit: true
+    onSelectedFile: (file: File) => void
+}
+
+interface ReadOnlyProps extends Props {
+    canEdit?: false
+    onSelectedFile?: never
+}
+
+type AvatarProps = EditableProps | ReadOnlyProps
+
+const Avatar = ({ src, alt, sizeClasses, className, loading = false, canEdit = false, onSelectedFile }: AvatarProps) => {
     return (
-        <UIAvatar className={cn("rounded-lg", 'relative', sizeClasses, className)}>
+        <UIAvatar className={cn("rounded-lg group/avatar relative", sizeClasses, className)}>
             <AvatarImage
                 src={src}
                 alt={alt}
@@ -30,6 +42,16 @@ const Avatar = ({ src, alt, sizeClasses, className, loading = false }: Props) =>
                     <Spinner />
                 </div>
             }
+            {canEdit && (
+                <FileSelector
+                    fileUploaderComponent={
+                        <button className={cn("hidden absolute inset-0 z-20 group-hover/avatar:grid group-hover/avatar:bg-primary/50 place-items-center rounded-lg group-hover/avatar:transition-all duration-300 cursor-pointer")}>
+                            <PencilLineIcon className="h-4 w-4 text-white" />
+                        </button>
+                    }
+                    onSelectedFile={onSelectedFile!}
+                />
+            )}
             <AvatarFallback className="grid text-sm text-center rounded-full">{getInitialLetters(alt)}</AvatarFallback>
         </UIAvatar>
     )

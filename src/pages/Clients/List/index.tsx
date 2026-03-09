@@ -32,7 +32,7 @@ const ClientsListPage = () => {
         setSearch,
         onApplyFilters,
         onSelectedFilter,
-        cleanSelectedFilters
+        cleanSelectedFilters,
     } = useListQuery<PaginationResponse<IClient>>({
         endpoint: API_ROUTES.CLIENTS.LIST,
         customQueryKey: (params) => queryKeys.list('clients/list', params)

@@ -2,7 +2,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { CalendarDaysIcon } from "lucide-react"
 import { formatDate } from "@/utils/dates"
 import { IClient } from "@/interfaces/clients"
-import ClientAvatar from "../../components/ClientAvatar"
 import QuickActionsClient from "../../components/QuickActions"
 import ClientActions from "../../components/Actions"
 import { Badge } from "@/uishadcn/ui/badge"
@@ -23,9 +22,7 @@ export const clientsColumns: ColumnDef<IClient>[] = [
     {
         accessorKey: "name",
         header: "Cliente",
-        cell: ({ row }) => (
-            <ClientAvatar client={row.original} />
-        )
+        cell: ({ row }) => row.original.name
     },
     {
         accessorKey: "plan",
@@ -39,7 +36,7 @@ export const clientsColumns: ColumnDef<IClient>[] = [
     {
         accessorKey: "quickActions",
         header: "Acciones rápidas",
-        cell: ({ row }) => <QuickActionsClient />
+        cell: ({ row }) => <QuickActionsClient client={row.original} />
     },
     {
         accessorKey: "actions",

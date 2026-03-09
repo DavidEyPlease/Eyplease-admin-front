@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader } from '@/uishadcn/ui/card';
 import { Badge } from '@/uishadcn/ui/badge';
 import { BarChart3Icon, Calendar, ChevronDownIcon, ChevronUpIcon, MailIcon } from 'lucide-react';
 import { IClient, IClientStats } from '@/interfaces/clients';
-import ClientAvatar from '../../components/ClientAvatar';
 import { formatDate } from '@/utils/dates';
 // import ClientActions from '../../components/Actions';
 import QuickActionsClient from '../../components/QuickActions';
@@ -12,22 +11,27 @@ import Spinner from '@/components/common/Spinner';
 import { useState } from 'react';
 import useFetchQuery from '@/hooks/useFetchQuery';
 import { API_ROUTES } from '@/constants/api';
-import { replaceRecordIdInPath } from '@/utils';
+import { getFileType, replaceRecordIdInPath } from '@/utils';
 import { queryKeys } from '@/utils/queryKeys';
 import { ClientStatsSection } from '../../components/ClientStatsSection';
+import Avatar from '@/components/generics/Avatar';
+import useClientActions from '../../hooks/useClientActions';
+import { FileTypes } from '@/interfaces/files';
+import Link from '@/components/common/Link';
+import { APP_ROUTES } from '@/constants/app';
 
 interface ClientCardProps {
     client: IClient;
 }
 
 export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
-    const [showStats, setShowStats] = useState(false);
+    const [showStats, setShowStats] = useState(false)
+    const { onChangePhoto, onChangeLogo, loading: loadingAction } = useClientActions()
 
     const { response: stats, loading } = useFetchQuery<IClientStats>(replaceRecordIdInPath(API_ROUTES.CLIENTS.STATS, client.id || ''), {
         customQueryKey: queryKeys.detail(`client/stats`, client.id),
         enabled: showStats
     })
-
 
     const getStatusColor = () => {
         return client.user?.active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
@@ -37,7 +41,24 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
         <Card className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50">
             <CardHeader className="pb-4 pt-3">
                 <div className="flex justify-between">
-                    <ClientAvatar client={client} />
+                    <div className="flex items-center gap-x-2">
+                        <Avatar
+                            // canEdit
+                            sizeClasses='size-12'
+                            src={client.photo?.url}
+                            alt={client.name}
+                            loading={loadingAction}
+                        // onSelectedFile={file => onChangePhoto(
+                        //     client.id,
+                        //     `${client.account}_${new Date().getTime()}.${getFileType(file.type)}`,
+                        //     file
+                        // )}
+                        />
+                        <div>
+                            <Link to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, client.id)} text={client.name} />
+                            <p className="text-xs text-gray-500">{client.account}</p>
+                        </div>
+                    </div>
 
                     <div className="flex items-center space-x-2">
                         <Badge className={getStatusColor()}>
@@ -49,9 +70,22 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
             </CardHeader>
             <CardContent className="pt-0">
                 <div className="space-y-4">
-                    <Badge variant={client.user?.plan ? "default" : "secondary"}>
-                        {client.user?.plan?.name ?? 'Sin plan'}
-                    </Badge>
+                    <div className="flex justify-between items-center">
+                        <Badge variant={client.user?.plan ? "default" : "secondary"}>
+                            {client.user?.plan?.name ?? 'Sin plan'}
+                        </Badge>
+                        <Avatar
+                            // canEdit
+                            sizeClasses='size-10'
+                            src={client.logotype?.url}
+                            alt={`Logotipo de ${client.name}`}
+                        // onSelectedFile={file => onChangeLogo(
+                        //     client.id,
+                        //     `${FileTypes.USER_LOGOTYPE}-${client.account}.${getFileType(file.type)}`,
+                        //     file
+                        // )}
+                        />
+                    </div>
                     <FieldValue
                         label={<MailIcon className="h-4 w-4" />}
                         value={client.user?.email}
@@ -64,7 +98,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
                         label={<Calendar className="h-4 w-4" />}
                         value={`Ultimo ingreso: ${client.last_sign_in_at ? formatDate(client.last_sign_in_at) : 'No disponible'}`}
                     />
-                    <QuickActionsClient />
+                    <QuickActionsClient client={client} />
 
                     <div className="mt-4 pt-4 border-t border-border">
                         <Button

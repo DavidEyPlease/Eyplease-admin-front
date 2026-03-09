@@ -12,10 +12,17 @@ export const queryKeys = {
     },
 
     /**
+     * Generate a base queryKey for list entities (without params)
+     */
+    listBase: (entityName: string): QueryKey => {
+        return ['entity', entityName, 'list']
+    },
+
+    /**
      * Generate a queryKey for a list of entities with optional parameters
      */
     list: (entityName: string, params?: Record<string, any>): QueryKey => {
-        return ['entity', entityName, 'list', params || {}]
+        return [...queryKeys.listBase(entityName), params || {}]
     },
 
     /**

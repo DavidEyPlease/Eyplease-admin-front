@@ -27,15 +27,12 @@ export interface IBasicClient {
 }
 
 export interface IClientStats {
-    newsPercentage: {
-        sent: number;
-        total: number;
-        percentage: number;
-    };
     tools_download_percentage: number;
     total_tools: number;
     downloaded_tools: number;
     monthly_posts: number;
+    shared_posts: number;
+    posts_shared_percentage: number;
     month: string;
 }
 
@@ -47,6 +44,7 @@ export interface IClientFilters {
 export interface IClientUpdate {
     photo?: string | null
     logo?: string | null
+    active?: boolean
 }
 
 export type ClientFilterKeys = keyof IClientFilters
