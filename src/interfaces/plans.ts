@@ -9,6 +9,7 @@ export interface IPlan {
     active: boolean
     free: boolean
     is_default: boolean
+    color: string
     clients_count: number
     created_at: Date
 }
@@ -21,6 +22,7 @@ export type PlanUpdate = {
     active: boolean
     free: boolean
     is_default: boolean
+    color?: string | null
     accesses: Array<{
         key: string
         nested_modules: Array<{

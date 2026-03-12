@@ -19,6 +19,7 @@ import useClientActions from '../../hooks/useClientActions';
 import { FileTypes } from '@/interfaces/files';
 import Link from '@/components/common/Link';
 import { APP_ROUTES } from '@/constants/app';
+import PlanBadge from '@/pages/Configurations/Plans/components/PlanBadge';
 
 interface ClientCardProps {
     client: IClient;
@@ -71,9 +72,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
             <CardContent className="pt-0">
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <Badge variant={client.user?.plan ? "default" : "secondary"}>
-                            {client.user?.plan?.name ?? 'Sin plan'}
-                        </Badge>
+                        <PlanBadge plan={client.user?.plan} />
                         <Avatar
                             // canEdit
                             sizeClasses='size-10'

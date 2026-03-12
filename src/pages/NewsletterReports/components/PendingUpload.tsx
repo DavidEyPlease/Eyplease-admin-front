@@ -13,6 +13,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import SearchInput from "@/components/generics/SearchInput"
 import PageLoader from "@/components/generics/PageLoader"
 import { Badge } from "@/uishadcn/ui/badge"
+import { IPlan } from "@/interfaces/plans"
+import PlanBadge from "@/pages/Configurations/Plans/components/PlanBadge"
 
 interface PendingUploadItem {
     id: string
@@ -20,7 +22,7 @@ interface PendingUploadItem {
     name: string
     account: string
     missing_reports_count: number,
-    plan: string
+    plan: IPlan | null
     missing_reports: {
         newsletter_name: string
         newsletter_key: string
@@ -65,9 +67,7 @@ const PendingUploadReports = () => {
                                             <Link to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, item.network_person_id)} text={item.name} />
                                             <p className="text-xs text-gray-500">Cuenta: {item.account}</p>
                                         </div>
-                                        <Badge>
-                                            {item.plan ?? 'Sin plan'}
-                                        </Badge>
+                                        <PlanBadge plan={item.plan} />
                                     </CardHeader>
                                     <CardContent className="pt-0">
                                         <div className="space-y-4">

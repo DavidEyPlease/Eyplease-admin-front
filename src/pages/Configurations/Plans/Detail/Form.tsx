@@ -46,10 +46,9 @@ const FormPlan = ({ plan }: Props) => {
         free: plan.free,
         is_default: plan.is_default,
         price: plan.price,
+        color: plan.color,
         accesses: plan.accesses.map(a => ({ key: a.permission_key, nested_modules: a.custom_permissions }))
     })
-
-    console.log(errors)
 
     const { fields: features, append, remove } = useFieldArray({
         control,
@@ -119,6 +118,14 @@ const FormPlan = ({ plan }: Props) => {
                             <SwitchInput id="free-plan" label="Gratis" checked={watch('free')} onCheckedChange={(e) => setValue('free', e)} />
                             <SwitchInput id="active-plan" label="Activo" checked={watch('active')} onCheckedChange={(e) => setValue('active', e)} />
                             <SwitchInput id="default-plan" label="Por defecto" checked={watch('is_default')} onCheckedChange={(e) => setValue('is_default', e)} />
+                        </div>
+
+                        <div className="mb-2">
+                            <p className="text-xs font-semibold">Color del plan</p>
+                            <input
+                                type="color"
+                                {...register('color')}
+                            />
                         </div>
 
                         <ScrollArea className="p-5 border rounded-md h-2/3">
