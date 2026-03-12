@@ -1,6 +1,7 @@
 import Button from "@/components/common/Button"
 import { API_ROUTES } from "@/constants/api"
 import useRequestQuery from "@/hooks/useRequestQuery"
+import { NewsletterTypes } from "@/interfaces/common"
 import useAuthStore from "@/store/auth"
 import { Checkbox } from "@/uishadcn/ui/checkbox"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/uishadcn/ui/field"
@@ -24,10 +25,15 @@ const DispatchImportJob = () => {
     const newsletterGroups = utilData.newsletters.map(n => ({
         groupName: n.name,
         key: n.code,
-        items: n.sections.filter(i => i.canImported).map(s => ({
-            label: s.name,
-            value: s.sectionKey
-        }))
+        items: [
+            ...n.sections.filter(i => i.canImported).map(s => ({
+                label: s.name,
+                value: s.sectionKey
+            })),
+            ...(n.code === NewsletterTypes.UNITY ? [
+                { label: 'Tempraneras', value: 'early' }
+            ] : [])
+        ]
     }))
 
     return (
