@@ -1,5 +1,5 @@
 import { API_ROUTES } from "@/constants/api";
-import { ClientFilterKeys, IClient } from "@/interfaces/clients";
+import { ClientFilterKeys, IClientListItem } from "@/interfaces/clients";
 import { PaginationResponse } from "@/interfaces/common";
 import PageLoader from "@/components/generics/PageLoader";
 import ClientsMetrics from "./Metrics";
@@ -33,7 +33,7 @@ const ClientsListPage = () => {
         onApplyFilters,
         onSelectedFilter,
         cleanSelectedFilters,
-    } = useListQuery<PaginationResponse<IClient>>({
+    } = useListQuery<PaginationResponse<IClientListItem>>({
         endpoint: API_ROUTES.CLIENTS.LIST,
         customQueryKey: (params) => queryKeys.list('clients/list', params)
     })

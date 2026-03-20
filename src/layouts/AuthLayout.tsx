@@ -22,11 +22,11 @@ const AuthLayout = ({ children }: Props) => {
 					</div>
 				</div>
 			</div>
-			<div className="bg-muted relative hidden lg:block">
+			<div className="bg-primary relative hidden lg:block">
 				<img
 					src={EYPLEASE_LOGO}
 					alt="Image"
-					className="absolute inset-0 h-full w-full object-cover"
+					className="absolute inset-0 h-full object-cover"
 				/>
 			</div>
 		</div>

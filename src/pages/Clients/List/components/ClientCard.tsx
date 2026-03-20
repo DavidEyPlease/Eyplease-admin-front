@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from '@/uishadcn/ui/card';
 import { Badge } from '@/uishadcn/ui/badge';
 import { BarChart3Icon, Calendar, ChevronDownIcon, ChevronUpIcon, MailIcon } from 'lucide-react';
-import { IClient, IClientStats } from '@/interfaces/clients';
+import { IClientListItem, IClientStats } from '@/interfaces/clients';
 import { formatDate } from '@/utils/dates';
 // import ClientActions from '../../components/Actions';
 import QuickActionsClient from '../../components/QuickActions';
@@ -22,7 +22,7 @@ import { APP_ROUTES } from '@/constants/app';
 import PlanBadge from '@/pages/Configurations/Plans/components/PlanBadge';
 
 interface ClientCardProps {
-    client: IClient;
+    client: IClientListItem;
 }
 
 export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
@@ -97,6 +97,16 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
                         label={<Calendar className="h-4 w-4" />}
                         value={`Ultimo ingreso: ${client.last_sign_in_at ? formatDate(client.last_sign_in_at) : 'No disponible'}`}
                     />
+                    <div className="flex justify-between flex-wrap">
+                        <FieldValue
+                            label='Login'
+                            value={client.guest_account || client.account}
+                        />
+                        <FieldValue
+                            label='Acceso'
+                            value={client.account_pw || 'No disponible'}
+                        />
+                    </div>
                     <QuickActionsClient client={client} />
 
                     <div className="mt-4 pt-4 border-t border-border">

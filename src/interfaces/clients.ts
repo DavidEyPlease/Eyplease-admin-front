@@ -17,6 +17,11 @@ export interface IClient {
     user: IUser & { plan: IPlan | null }
 }
 
+export interface IClientListItem extends IClient {
+    guest_account: string | null
+    account_pw: string | null
+}
+
 export interface IBasicClient {
     id: string
     name: string
