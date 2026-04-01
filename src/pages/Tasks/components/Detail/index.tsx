@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import Dropdown from "@/components/common/Inputs/Dropdown"
@@ -166,6 +166,13 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
 
     const isEditable = task.task_status.slug !== TaskStatusTypes.COMPLETED
     const completedStatus = utilData.task_statuses.find(s => s.slug === TaskStatusTypes.COMPLETED)
+
+    useEffect(() => {
+        if (taskDetail?.event) {
+            const { event } = taskDetail;
+            form.setValue('description', event.description || task.description || '');
+        }
+    }, [taskDetail])
 
     return (
         <Dialog open={Boolean(task)} onOpenChange={onClose}>
