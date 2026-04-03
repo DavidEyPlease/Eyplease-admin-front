@@ -25,6 +25,7 @@ export interface ITemplate extends IBaseDBProperties {
         layers: Array<{ layerName: string }>
         upload_status: string
     }
+    font_color: string | null
     render_configuration: RenderConfiguration | null
     unity_background_horizontal: Backgrounds
     unity_background_vertical: Backgrounds

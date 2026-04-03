@@ -102,6 +102,22 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
                     )}
                 />
 
+                {form.watch('template_group') === 'reports' && (
+                    <FormField
+                        control={form.control}
+                        name="font_color"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Color de la fuente</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ingresa el color de la fuente" {...field} value={field.value || ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
                 <FormField
                     control={form.control}
                     name="active"

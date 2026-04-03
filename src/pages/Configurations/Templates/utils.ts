@@ -4,13 +4,15 @@ export const TemplateSchema = z.object({
     name: z.string().min(3, { message: "El nombre es requerido" }).max(255),
     active: z.boolean(),
     template_group: z.string('El grupo de la plantilla es requerido').nonempty(),
-    enabled_all_clients: z.boolean()
+    enabled_all_clients: z.boolean(),
+    font_color: z.string().nullable().optional(),
 })
 
 export const FORM_DEFAULT_VALUES = {
     name: "",
     active: false,
     template_group: "",
+    font_color: null,
     enabled_all_clients: false
 }
 
