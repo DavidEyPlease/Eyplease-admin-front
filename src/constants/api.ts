@@ -58,6 +58,8 @@ export const API_ROUTES = {
         GET_ACTIVITY: '/tasks/{id}/activity',
         STORE_COMMENT: '/tasks/{id}/comment',
         STORE_ATTACHMENTS: '/tasks/{id}/attachments',
+        STORE_TEMPLATE_ATTACHMENT: '/tasks/{id}/template-attachment',
+        UPLOAD_TEMPLATE_ATTACHMENT: '/tasks/{id}/upload-template',
         DELETE_ATTACHMENT: '/tasks/{id}/attachments/{attachmentId}',
         DOWNLOAD_FILE: '/tasks/{id}/attachments/{fileId}/download',
         GET_FILES: '/tasks/{id}/attachments',

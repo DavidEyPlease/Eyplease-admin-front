@@ -29,6 +29,7 @@ import { queryKeys } from "@/utils/queryKeys"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion"
 import { AlertConfirm } from "@/components/generics/AlertConfirm"
 import PlanSelector from "@/components/generics/PlanSelector"
+import NexrenderConfig from "./NexrenderConfig"
 
 interface TaskDetailProps {
     task: ITask;
@@ -87,8 +88,10 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
     );
 
     const { request, requestState } = useRequestQuery({
-        onError: () => {
-            toast.error('Ha ocurrido un error al guardar la tarea');
+        onError: (error) => {
+            toast.error(error.message || 'Ha ocurrido un error al guardar la tarea', {
+                duration: 4000,
+            });
         }
     })
 
@@ -395,13 +398,16 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                 onValueChange={e => setActiveTab(e as ActiveTab)}
                                 items={[
                                     { label: 'Archivos / Diseños', value: 'files' },
-                                    { label: 'Configuración Nexrender', value: 'nexrender', disabled: task.task_status?.slug !== TaskStatusTypes.UPLOAD_AE_RESOURCES },
+                                    { label: 'Configuración Nexrender', value: 'nexrender', disabled: task.task_status?.slug !== TaskStatusTypes.READY_FOR_PUBLISH },
                                 ]}
                             />
                             {activeTab === 'files' && (
                                 <TaskFiles
                                     task={task}
                                 />
+                            )}
+                            {activeTab === 'nexrender' && (
+                                <NexrenderConfig task={task} />
                             )}
                         </div>
                     </ScrollArea>

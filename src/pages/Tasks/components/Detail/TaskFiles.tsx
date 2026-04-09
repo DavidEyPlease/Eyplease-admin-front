@@ -1,4 +1,4 @@
-import { DownloadIcon, ImageIcon, PaperclipIcon, Trash2Icon } from "lucide-react";
+import { ImageIcon, PaperclipIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useDragAndDrop } from "@formkit/drag-and-drop/react";
@@ -9,23 +9,14 @@ import { AttachmentViewer } from "@/components/generics/AttachmentViewer";
 import { API_ROUTES } from "@/constants/api";
 import useRequestQuery from "@/hooks/useRequestQuery";
 import { IFile } from "@/interfaces/common";
-import { ITask, ITaskFile, TaskStatusTypes } from "@/interfaces/tasks";
+import { ITask, ITaskFile } from "@/interfaces/tasks";
 import useUploadStore from "@/store/uploadStore";
-import { Button } from "@/uishadcn/ui/button";
-import { Card, CardContent } from "@/uishadcn/ui/card";
-import { isImage } from "@/utils";
-import { formatDate } from "@/utils/dates";
 
-import { AlertConfirmDelete } from "@/components/generics/AlertConfirm"
-import { TasksService } from "@/services/tasks.service"
 import DynamicTabs from "@/components/generics/DynamicTabs"
-import Spinner from "@/components/common/Spinner"
-import useFiles from "@/hooks/useFiles";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
-import FieldValue from "@/components/generics/FieldValue";
-import CopyButton from "@/components/generics/CopyButton";
-// import useFiles from "@/hooks/useFiles"
+import FileItem from "./FileItem";
+import { Skeleton } from "@/uishadcn/ui/skeleton";
 
 interface IProps {
     task: ITask
@@ -34,9 +25,7 @@ interface IProps {
 type GroupFiles = 'others' | 'design'
 
 const TaskFiles = ({ task }: IProps) => {
-    const { fileLoadingAction, downloadFile } = useFiles()
     const [selectedFile, setSelectedFile] = useState<IFile | null>(null)
-    const [loadingDelete, setLoadingDelete] = useState('');
 
     const [draggableParentRef, dragDropItems, setDragDropList] = useDragAndDrop<HTMLDivElement, ITaskFile>(
         [],
@@ -52,7 +41,8 @@ const TaskFiles = ({ task }: IProps) => {
         API_ROUTES.TASKS.GET_FILES.replace('{id}', task.id),
         {
             customQueryKey: queryKeys.list(`tasks-files-${task.id}`),
-            enabled: !!task.id
+            enabled: !!task.id,
+            queryParams: { file_type: 'image' }
         }
     )
 
@@ -67,8 +57,6 @@ const TaskFiles = ({ task }: IProps) => {
     const onSuccessFiles = (files: ITaskFile[]) => {
         setDragDropList(files);
         setFiles(files);
-        // publishEvent('tasks-updated', { id: taskId, files, eventType: 'update' });
-        // publishEvent('tasks-updated', { id: taskId, files, eventType: 'updateDetail' });
     }
 
     const onUploadFiles = (files: FileList | null) => {
@@ -90,22 +78,6 @@ const TaskFiles = ({ task }: IProps) => {
                 }
             }
         )
-    }
-
-    const onDelete = async (fileId: string) => {
-        setLoadingDelete(fileId);
-        try {
-            await TasksService.deleteTaskFile(task.id, fileId);
-            const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
-            onSuccessFiles(updatedFiles);
-            // publishEvent('tasks-updated', { id: taskId, files: (filesList || []).filter(file => file.id !== fileId), eventType: 'update' });
-            // publishEvent('tasks-updated', { id: taskId, files: (filesList || []).filter(file => file.id !== fileId), eventType: 'updateDetail' });
-        } catch (error) {
-            console.error('Error al eliminar el archivo:', error);
-            toast.error('Error al eliminar el archivo');
-        } finally {
-            setLoadingDelete('');
-        }
     }
 
     const sortItems = async () => {
@@ -147,61 +119,22 @@ const TaskFiles = ({ task }: IProps) => {
             </div>
 
             <div className="grid lg:grid-cols-2 gap-2" ref={draggableParentRef}>
-                {dragDropItems.map(attachment => (
-                    <div key={attachment.id} data-id={attachment.id}>
-                        {(task?.task_status.slug === TaskStatusTypes.READY_FOR_PUBLISH || task?.task_status.slug === TaskStatusTypes.COMPLETED) && (
-                            <FieldValue label="URL Json">
-                                <CopyButton text={`${import.meta.env.VITE_API_BASE}/data-sources/tools/${task.id}?sort=${attachment.file.sort}`} />
-                            </FieldValue>
-                        )}
-                        <Card className="mb-2 hover:bg-accent cursor-move">
-                            <CardContent className="flex items-center justify-between flex-wrap gap-2">
-                                <div className="flex items-center gap-4">
-                                    <div
-                                        className="size-12 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
-                                        onClick={() => setSelectedFile(attachment.file)}
-                                    >
-                                        {isImage(attachment.file.ext) ? (
-                                            <img src={attachment.file.url} className="rounded object-cover max-w-full h-full" alt="" />
-                                        ) : (
-                                            <span className="text-xs font-medium uppercase">{attachment.file.ext}</span>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-sm">{attachment.file.name}</p>
-                                        <p className="text-xs text-muted-foreground">Añadido por: {attachment.uploaded_by?.name} el {formatDate(attachment.created_at)}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-1">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="text-primary"
-                                        onClick={() => downloadFile(attachment.id, attachment.file.uri)}
-                                    >
-                                        {fileLoadingAction === attachment.id ? (<Spinner />) : (<DownloadIcon className="size-3" />)}
-                                    </Button>
-                                    <AlertConfirmDelete
-                                        trigger={
-                                            <Button
-                                                variant="outline"
-                                                className="text-destructive"
-                                                size="icon"
-                                                disabled={loadingDelete === attachment.id}
-                                            >
-                                                <Trash2Icon className="size-3" />
-                                            </Button>
-                                        }
-                                        loading={loadingDelete === attachment.id}
-                                        onConfirm={() => onDelete(attachment.id)}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                ))}
+                {loading ? (
+                    Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-20 w-full" />)
+                ) : (
+                    dragDropItems.map(attachment => (
+                        <FileItem
+                            key={attachment.id}
+                            attachment={attachment}
+                            taskId={task.id}
+                            taskStatus={task.task_status?.slug}
+                            onSuccessFile={(fileId) => {
+                                const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
+                                onSuccessFiles(updatedFiles);
+                            }}
+                        />
+                    ))
+                )}
             </div>
 
             {selectedFile && <AttachmentViewer isOpen={!!selectedFile} onClose={() => setSelectedFile(null)} attachment={selectedFile} />}

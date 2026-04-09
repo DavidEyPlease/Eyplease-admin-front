@@ -22,7 +22,13 @@ export type UploadFile = {
     abortController?: AbortController
 }
 
-type UploadStoreOptions = { fileType?: FileTypes, uploadUri?: string, customUploadUrl?: string, headers?: Record<string, string>, onAllSuccess?: UploadSuccessCallback }
+type UploadStoreOptions = {
+    fileType?: FileTypes,
+    uploadUri?: string,
+    customUploadUrl?: string,
+    headers?: Record<string, string>,
+    onAllSuccess?: UploadSuccessCallback
+}
 
 interface UploadState {
     uploads: UploadFile[]
