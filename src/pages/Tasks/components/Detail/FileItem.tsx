@@ -4,7 +4,6 @@ import { AttachmentViewer } from "@/components/generics/AttachmentViewer";
 import CopyButton from "@/components/generics/CopyButton";
 import FieldValue from "@/components/generics/FieldValue";
 import useFiles from "@/hooks/useFiles";
-import useRequestQuery from "@/hooks/useRequestQuery";
 import { IFile } from "@/interfaces/common";
 import { ITaskFile, TaskStatusTypes } from "@/interfaces/tasks";
 import { TasksService } from "@/services/tasks.service";

@@ -398,7 +398,7 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                 onValueChange={e => setActiveTab(e as ActiveTab)}
                                 items={[
                                     { label: 'Archivos / Diseños', value: 'files' },
-                                    { label: 'Configuración Nexrender', value: 'nexrender', disabled: task.task_status?.slug !== TaskStatusTypes.READY_FOR_PUBLISH },
+                                    { label: 'Configuración Nexrender', value: 'nexrender' },
                                 ]}
                             />
                             {activeTab === 'files' && (
