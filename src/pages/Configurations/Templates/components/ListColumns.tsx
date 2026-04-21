@@ -20,9 +20,13 @@ export const templatesColumns: ColumnDef<ITemplate>[] = [
                     cover={row.original.picture}
                     templateName={row.original.name}
                 />
-                <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
-                    {row.original.name}
-                </Link>
+                <div className="flex flex-col">
+                    <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
+                        {row.original.name}
+                    </Link>
+                    {row.original.template_group && <b>Grupo: {row.original.template_group}</b>}
+                    {row.original.template_asset_type && <b>Recurso: {row.original.template_asset_type}</b>}
+                </div>
             </div>
         ),
         enableSorting: false,

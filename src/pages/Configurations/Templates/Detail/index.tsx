@@ -21,7 +21,6 @@ import { formatDate } from "@/utils/dates"
 import { BrowserEvent, publishEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events"
 import NexrenderConfiguration from "../components/Nexrender"
 import { BROWSER_EVENTS } from "@/constants/browserEvents"
-import { TEMPLATE_GROUPS } from "../utils"
 
 const TemplateDetailPage = () => {
     const [activeTab, setActiveTab] = useState<string>("template")
@@ -44,7 +43,7 @@ const TemplateDetailPage = () => {
         }
     }, [handleTemplateUpdate])
 
-    const findTemplateGroup = TEMPLATE_GROUPS.find(group => group.value === template?.template_group)
+    // const findTemplateGroup = TEMPLATE_GROUPS.find(group => group.value === template?.template_group)
 
     return (
         <Card className={cn("w-full rounded-2xl")}>
@@ -59,11 +58,11 @@ const TemplateDetailPage = () => {
                     )}
                     Plantilla: {template?.name}
                 </CardTitle>
-                {findTemplateGroup && (
+                {/* {findTemplateGroup && (
                     <CardDescription>
                         Grupo: {findTemplateGroup.label}
                     </CardDescription>
-                )}
+                )} */}
             </CardHeader>
             <CardContent>
                 <div className="flex">

@@ -4,31 +4,28 @@ export const TemplateSchema = z.object({
     name: z.string().min(3, { message: "El nombre es requerido" }).max(255),
     active: z.boolean(),
     template_group: z.string('El grupo de la plantilla es requerido').nonempty(),
+    template_asset_type: z.enum(['image', 'video']).nullable().optional(),
     enabled_all_clients: z.boolean(),
     font_color: z.string().nullable().optional(),
-})
+}).superRefine((val, ctx) => {
+    // Si el grupo no es 'reports' y el asset_type está vacío/undefined
+    if (val.template_group !== 'reports' && !val.template_asset_type) {
+        ctx.addIssue({
+            code: 'custom',
+            message: "El tipo de asset es requerido para este grupo de plantilla",
+            input: val.template_asset_type,
+        });
+    }
+});
 
 export const FORM_DEFAULT_VALUES = {
     name: "",
     active: false,
     template_group: "",
     font_color: null,
+    template_asset_type: null,
     enabled_all_clients: false
 }
-
-export const TEMPLATE_GROUPS = [
-    { label: 'Reportes', value: 'reports' },
-    { label: 'Ordenantes del mes (Publicacines)', value: 'early' },
-    // { label: 'Estrellas', value: 'stars' },
-    // { label: 'Cuador de honor', value: 'honor_board' },
-    // { label: 'Nuevos inicios', value: 'new_beginnings' },
-    // { label: 'Camino al éxito', value: 'path_to_success' },
-    // { label: 'Aniversarios', value: 'anniversaries' },
-    // { label: 'Directora en calificación', value: 'director_in_rating' },
-    // { label: 'Corte de ventas', value: 'sales_cut' },
-    // { label: 'Corte de iniciación', value: 'initiation_cut' },
-    // { label: 'Unit club', value: 'unit_club' },
-]
 
 export const RENDER_ASSETS_TYPES = [
     { label: 'Texto', value: 'data' },

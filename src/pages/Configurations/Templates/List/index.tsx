@@ -45,6 +45,7 @@ const TemplatesPage = () => {
                     title="Crear nueva plantilla"
                     description="Crea una nueva plantilla de boletín para tus clientes"
                     open={openForm}
+                    size="xl"
                     onOpenChange={() => setOpenForm(false)}
                 >
                     <TemplateForm onSuccess={() => setOpenForm(false)} />
@@ -74,6 +75,7 @@ const TemplatesPage = () => {
                 title={`Editar plantilla: ${selectedTemplate?.name}`}
                 description="Edita la plantilla de boletín para tus clientes"
                 open={actionDialogOpen === 'edit'}
+                size="xl"
                 onOpenChange={() => {
                     setSelectedTemplate(null)
                 }}

@@ -15,6 +15,7 @@ export interface ITemplate extends IBaseDBProperties {
     picture: NullishFile
     active: boolean
     template_group: string
+    template_asset_type: 'image' | 'video' | null
     clients_count: number
     enabled_all_clients: boolean
     render_provider_id: string | null
