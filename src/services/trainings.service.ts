@@ -15,4 +15,8 @@ export class TrainingsService {
             file_type: fileType
         });
     }
+
+    static async publish(id: string, active: boolean): Promise<ApiResponse<ITraining>> {
+        return HttpService.patch(API_ROUTES.TRAININGS.PUBLISH.replace('{id}', id), { active });
+    }
 }

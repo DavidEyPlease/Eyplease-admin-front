@@ -1,7 +1,7 @@
+import { PlusIcon } from "lucide-react"
+
 import Button from "@/components/common/Button"
 import Modal from "@/components/common/Modal"
-import { PlusIcon } from "lucide-react"
-import { useState } from "react"
 import TrainingForm from "./components/TrainingForm"
 import useTrainingsList from "./useTrainingsList"
 import { DataTable } from "@/components/generics/DataTable"

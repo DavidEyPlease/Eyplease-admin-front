@@ -71,6 +71,7 @@ export const API_ROUTES = {
         DELETE: '/trainings/{id}',
         DETAIL: '/trainings/{id}',
         ATTACH_FILE: '/trainings/{id}/attach-file',
+        PUBLISH: '/trainings/{id}/publish',
     },
     REPORTS: {
         GET_UPLOADS: '/reports/uploads',
@@ -80,5 +81,6 @@ export const API_ROUTES = {
     },
     POSTS: {
         PUBLISH_NEWSLETTER: '/posts/publish-newsletter',
-    }
+    },
+    NETWORK_PERSONS: '/network-persons',
 }

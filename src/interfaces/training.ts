@@ -16,6 +16,7 @@ export interface ITrainingCategory {
 
 export interface ITraining extends IBaseDBProperties {
     title: string
+    active: boolean
     category: ITrainingCategory
     plans: IPlan[]
     files: EypleaseFile[]

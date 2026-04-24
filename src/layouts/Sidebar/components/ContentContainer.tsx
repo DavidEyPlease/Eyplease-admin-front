@@ -5,6 +5,9 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Separator } from "@/uishadcn/ui/separator";
 import { SidebarInset, SidebarTrigger } from "@/uishadcn/ui/sidebar";
 import { useHeaderActions } from "@/providers/HeaderActionsProvider";
+import NetworkPeopleSearch from "@/components/generics/NetworkPeopleSearch";
+import useAuth from "@/hooks/useAuth";
+import { RoleKeys } from "@/interfaces/common";
 
 interface Props {
     children: React.ReactNode;
@@ -14,6 +17,7 @@ interface Props {
 const ContentContainer = ({ children, page }: Props) => {
     const labelPage = SIDEBAR_ITEMS.find(item => item.path === page)?.label;
     const { headerActions } = useHeaderActions();
+    const { user } = useAuth()
 
     return (
         <SidebarInset>
@@ -41,6 +45,9 @@ const ContentContainer = ({ children, page }: Props) => {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
+                {user?.role?.role_key === RoleKeys.SUPER_ADMIN && (
+                    <NetworkPeopleSearch />
+                )}
                 {headerActions && (
                     <div className="flex items-center gap-2">
                         {headerActions}

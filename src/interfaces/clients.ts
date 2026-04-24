@@ -14,13 +14,12 @@ export interface IClient {
     logotype: EypleaseFile
     start_date: string
     last_sign_in_at: Date | null
+    guest_account: string | null
+    account_pw: string | null
     user: IUser & { plan: IPlan | null }
 }
 
-export interface IClientListItem extends IClient {
-    guest_account: string | null
-    account_pw: string | null
-}
+export type IClientListItem = IClient
 
 export interface IBasicClient {
     id: string

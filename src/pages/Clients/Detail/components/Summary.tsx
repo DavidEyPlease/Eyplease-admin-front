@@ -32,6 +32,17 @@ const Summary = ({ client }: Props) => {
                 <FieldValue label="Teléfono" value={client.user?.phone} />
                 <FieldValue label="Registrado desde" value={client.from_signup} />
 
+                <div className="flex justify-between flex-wrap">
+                    <FieldValue
+                        label='Login'
+                        value={client.guest_account || client.account}
+                    />
+                    <FieldValue
+                        label='Acceso'
+                        value={client.account_pw || 'No disponible'}
+                    />
+                </div>
+
                 {client.user?.plan && <Plan plan={client.user?.plan} />}
             </CardContent>
         </Card>

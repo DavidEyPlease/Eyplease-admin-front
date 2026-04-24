@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import PageLoader from "@/components/generics/PageLoader";
 import { API_ROUTES } from "@/constants/api";
@@ -22,24 +22,24 @@ const ClientDetailPage = () => {
         customQueryKey: queryKeys.detail('client', params.id || ''),
     })
 
+    const handleClientUpdate = useCallback((event: BrowserEvent<IClient>) => {
+        if (!response) return;
+        setData({
+            client: event.detail,
+            stats: response.stats
+        })
+    }, [response, setData])
+
     const client = response?.client;
     const stats = response?.stats;
 
     useEffect(() => {
-        const handleClientUpdate = (event: BrowserEvent<IClient>) => {
-            if (!response) return;
-            setData({
-                client: event.detail,
-                stats: response.stats
-            })
-        };
-
         subscribeEvent('client-updated', handleClientUpdate as EventListener)
 
         return () => {
             unsubscribeEvent('client-updated', handleClientUpdate as EventListener)
         }
-    }, [])
+    }, [handleClientUpdate])
 
     return (
         <div>

@@ -6,6 +6,7 @@ import TrainingActions from "./Actions"
 import TrainingCover from "./TrainingCover"
 import { getTrainingFileByType } from "../utils"
 import { FileTypes } from "@/interfaces/files"
+import TrainingStatusSwitch from "./TrainingStatusSwitch"
 
 export const trainingColumns: ColumnDef<ITraining>[] = [
     {
@@ -24,10 +25,13 @@ export const trainingColumns: ColumnDef<ITraining>[] = [
                     trainingId={row.original.id}
                     cover={getTrainingFileByType(row.original.files, FileTypes.TRAINING_COVER) || null}
                 />
-                {row.original.title.length > 30
-                    ? `${row.original.title.substring(0, 30)}...`
-                    : row.original.title
-                }
+                <div className="flex flex-col gap-y-2">
+                    {row.original.title.length > 30
+                        ? `${row.original.title.substring(0, 30)}...`
+                        : row.original.title
+                    }
+                    <TrainingStatusSwitch training={row.original} />
+                </div>
             </div>
         ),
         enableSorting: false,
