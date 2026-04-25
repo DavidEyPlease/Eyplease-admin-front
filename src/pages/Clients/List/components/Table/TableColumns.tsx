@@ -25,8 +25,8 @@ export const tableColumns: ColumnDef<IClient>[] = [
                 // loading={loadingAction}
                 />
                 <div className="font-semibold">
-                    <Link className="text-sm underline font-semibold dark:text-white" to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, row.original.id)} text={row.original.name} />
-                    <p className="text-xs text-primary dark:text-white">
+                    <Link className="text-sm underline font-semibold text-gray-800 dark:text-white" to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, row.original.id)} text={row.original.name} />
+                    <p className="text-xs text-gray-800 dark:text-white">
                         {row.original.account} - {row.original.rank}
                     </p>
                 </div>

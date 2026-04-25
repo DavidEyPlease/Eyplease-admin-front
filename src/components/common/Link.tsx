@@ -1,4 +1,4 @@
-import clsx from 'clsx'
+import { cn } from '@/lib/utils'
 import { Link as UILink } from 'react-router'
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 
 const Link = ({ text, to, className }: Props) => {
     return (
-        <UILink to={to} className={clsx('text-primary text-sm font-medium', className)}>{text}</UILink>
+        <UILink to={to} className={cn('text-primary text-sm font-medium', className)}>{text}</UILink>
     )
 }
 
