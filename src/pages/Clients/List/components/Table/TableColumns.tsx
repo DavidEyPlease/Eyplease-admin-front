@@ -2,19 +2,17 @@ import Link from "@/components/common/Link";
 import Avatar from "@/components/generics/Avatar";
 import { APP_ROUTES } from "@/constants/app";
 import { IClient } from "@/interfaces/clients";
-import { Badge } from "@/uishadcn/ui/badge";
 import { replaceRecordIdInPath } from "@/utils";
 import { ColumnDef } from "@tanstack/react-table";
-import { getStatusColor } from "../../utils";
 import PlanBadge from "@/pages/Configurations/Plans/components/PlanBadge";
 import { formatDate } from "@/utils/dates";
-import QuickActionsClient from "../../components/QuickActions";
+import QuickActionsClient from "../../../components/QuickActions";
 
 export const tableColumns: ColumnDef<IClient>[] = [
     {
         id: 'account',
         accessorKey: 'account',
-        size: 250,
+        size: 300,
         minSize: 200,
         header: 'Cuenta',
         cell: ({ row }) => (
@@ -26,11 +24,27 @@ export const tableColumns: ColumnDef<IClient>[] = [
                     alt={row.original.name}
                 // loading={loadingAction}
                 />
-                <div>
-                    <Link className="text-xs" to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, row.original.id)} text={row.original.name} />
-                    <p className="text-xs text-gray-500">{row.original.account}</p>
+                <div className="font-semibold">
+                    <Link className="text-sm underline font-semibold dark:text-white" to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, row.original.id)} text={row.original.name} />
+                    <p className="text-xs text-primary dark:text-white">
+                        {row.original.account} - {row.original.rank}
+                    </p>
                 </div>
             </div>
+        )
+    },
+    {
+        id: 'logo',
+        size: 100,
+        minSize: 100,
+        accessorKey: 'logo',
+        header: 'Logotipo',
+        cell: ({ row }) => (
+            <Avatar
+                sizeClasses='size-10'
+                src={row.original.logotype?.url}
+                alt={`Logotipo de ${row.original.name}`}
+            />
         )
     },
     {
@@ -38,9 +52,7 @@ export const tableColumns: ColumnDef<IClient>[] = [
         accessorKey: 'status',
         header: 'Estado',
         cell: ({ row }) => (
-            <Badge className={getStatusColor(row.original.user?.active || false)}>
-                {row.original.user?.active ? 'Activo' : 'Inactivo'}
-            </Badge>
+            <QuickActionsClient client={row.original} />
         )
     },
     {
@@ -52,15 +64,16 @@ export const tableColumns: ColumnDef<IClient>[] = [
         )
     },
     {
+        id: 'guestAccount',
+        accessorKey: 'platform_guest_account',
+        header: 'Login',
+        cell: ({ row }) => row.original.platform_guest_account || row.original.account
+    },
+    {
         id: 'accountPw',
-        accessorKey: 'accountPw',
+        accessorKey: 'external_company_pw',
         header: 'Acceso',
-        cell: ({ row }) => (
-            <div className="flex flex-col text-xs gap-1">
-                <span>{row.original.guest_account || row.original.account}</span>
-                {row.original.account_pw}
-            </div>
-        )
+        cell: ({ row }) => row.original.external_company_pw
     },
     {
         id: 'email',
@@ -87,9 +100,19 @@ export const tableColumns: ColumnDef<IClient>[] = [
         cell: ({ row }) => row.original.last_sign_in_at ? formatDate(row.original.last_sign_in_at) : 'N/A'
     },
     {
-        id: 'actions',
-        accessorKey: 'actions',
-        header: 'Acciones',
-        cell: ({ row }) => <QuickActionsClient client={row.original} />
+        id: 'start_date',
+        size: 180,
+        minSize: 180,
+        accessorKey: 'start_date',
+        header: 'Fecha Inicio',
+        cell: ({ row }) => row.original.start_date ? formatDate(new Date(row.original.start_date), { date: 'medium' }) : 'N/A'
+    },
+    {
+        id: 'last_order_date',
+        size: 180,
+        minSize: 180,
+        accessorKey: 'last_order_date',
+        header: 'Fecha Ult Orden',
+        cell: ({ row }) => row.original.last_order_date ? formatDate(new Date(row.original.last_order_date), { date: 'medium' }) : 'N/A'
     },
 ]

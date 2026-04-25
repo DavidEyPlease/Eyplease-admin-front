@@ -18,7 +18,7 @@ import ClientsGridList from "./components/GridList";
 import { useHeaderActions } from "@/providers/HeaderActionsProvider";
 import { useEffect, useState } from "react";
 import DynamicTabs from "@/components/generics/DynamicTabs";
-import ClientsTableList from "./components/TableList";
+import ClientsTableList from "./components/Table";
 
 const ClientsListPage = () => {
     const navigate = useNavigate()

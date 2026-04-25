@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils"
 import { Column, ColumnDef, ColumnFiltersState, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
 import { CSSProperties, useEffect, useMemo, useState } from "react"
-import { tableColumns } from "../List/components/TableColumns"
+import { tableColumns } from "../List/components/Table/TableColumns"
 import { IClient } from "@/interfaces/clients"
+import EditableTextCell from "../List/components/Table/EditableTextCell"
 
 interface UseClientsTableProps {
     items: IClient[]
@@ -15,12 +16,19 @@ declare module "@tanstack/react-table" {
 }
 
 const EDITABLE_COLUMN_IDS = new Set([
-    'hectares',
-    'releaseNote',
-    'cp',
-    'invoice',
-    'actualDeliveryDate',
+    'accountPw',
+    'guestAccount',
 ])
+
+const TRANSLATE_COLUMNS = {
+    accountPw: 'Contraseña de Cuenta',
+    guestAccount: 'Cuenta de Invitado',
+    status: 'Estado',
+    plan: 'Plan',
+    email: 'Correo Electrónico',
+    createdAt: 'Fecha de Creación',
+    lastSignInAt: 'Último Inicio de Sesión',
+}
 
 const isEditableColumn = (columnId: string) => EDITABLE_COLUMN_IDS.has(columnId)
 
@@ -79,7 +87,7 @@ const useClientsTable = ({ items }: UseClientsTableProps) => {
 
             return {
                 ...column,
-                // cell: EditableTextCell,
+                cell: EditableTextCell,
             }
         })
     }, [])
@@ -108,7 +116,7 @@ const useClientsTable = ({ items }: UseClientsTableProps) => {
         },
         initialState: {
             columnPinning: {
-                left: ["month", "uniqueCode"],
+                left: ["account"],
             }
         },
         onColumnFiltersChange: setColumnFilters,
@@ -131,5 +139,6 @@ export {
     getPinningClasses,
     getPinningStyles,
     useClientsTable,
-    isEditableColumn
+    isEditableColumn,
+    TRANSLATE_COLUMNS
 }

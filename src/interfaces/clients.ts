@@ -12,10 +12,12 @@ export interface IClient {
     created_at: Date
     country: string
     logotype: EypleaseFile
-    start_date: string
     last_sign_in_at: Date | null
-    guest_account: string | null
-    account_pw: string | null
+    platform_guest_account: string | null
+    external_company_pw: string | null
+    rank: string | null
+    start_date: string | null
+    last_order_date: string | null
     user: IUser & { plan: IPlan | null }
 }
 
@@ -49,6 +51,8 @@ export interface IClientUpdate {
     photo?: string | null
     logo?: string | null
     active?: boolean
+    platform_guest_account?: string | null
+    external_company_pw?: string | null
 }
 
 export type ClientFilterKeys = keyof IClientFilters

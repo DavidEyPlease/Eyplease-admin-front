@@ -35,11 +35,11 @@ const Summary = ({ client }: Props) => {
                 <div className="flex justify-between flex-wrap">
                     <FieldValue
                         label='Login'
-                        value={client.guest_account || client.account}
+                        value={client.platform_guest_account || client.account}
                     />
                     <FieldValue
                         label='Acceso'
-                        value={client.account_pw || 'No disponible'}
+                        value={client.external_company_pw || 'No disponible'}
                     />
                 </div>
 
