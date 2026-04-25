@@ -34,7 +34,7 @@ const MainLayout = () => {
                 // }
                 >
                     <AppSidebar />
-                    <SidebarInset>
+                    <SidebarInset className="min-w-0">
                         <ContentContainer page={location.pathname}>
                             <div key={animationKey} className="animate-fade flex flex-col flex-1 gap-4 p-4">
                                 <Outlet />

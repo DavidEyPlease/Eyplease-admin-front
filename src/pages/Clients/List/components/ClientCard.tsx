@@ -19,6 +19,7 @@ import useClientActions from '../../hooks/useClientActions';
 import Link from '@/components/common/Link';
 import { APP_ROUTES } from '@/constants/app';
 import PlanBadge from '@/pages/Configurations/Plans/components/PlanBadge';
+import { getStatusColor } from '../../utils';
 
 interface ClientCardProps {
     client: IClientListItem;
@@ -32,10 +33,6 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
         customQueryKey: queryKeys.detail(`client/stats`, client.id),
         enabled: showStats
     })
-
-    const getStatusColor = () => {
-        return client.user?.active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
-    };
 
     return (
         <Card className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/50">
@@ -61,7 +58,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({ client }) => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor()}>
+                        <Badge className={getStatusColor(client.user?.active || false)}>
                             {client.user?.active ? 'Activo' : 'Inactivo'}
                         </Badge>
                         {/* <ClientActions /> */}

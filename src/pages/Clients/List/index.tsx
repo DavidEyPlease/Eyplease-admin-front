@@ -5,21 +5,27 @@ import PageLoader from "@/components/generics/PageLoader";
 import ClientsMetrics from "./Metrics";
 import useListQuery from "@/hooks/useListQuery";
 import { queryKeys } from "@/utils/queryKeys";
-import { ClientCard } from "./components/ClientCard";
 import UIPagination from "@/components/generics/Pagination";
-import FadeInGrid from "@/components/generics/FadeInGrid";
 import FiltersAndSearch from "@/components/generics/FiltersAndSearch";
 import { CLIENTS_FILTER_ITEMS } from "./page-utils";
 import useAuthStore from "@/store/auth";
 import { FilterTypes } from "@/components/generics/FiltersAndSearch/types";
 import Button from "@/components/common/Button";
-import { PlusIcon } from "lucide-react";
+import { GridIcon, PlusIcon, TableIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { APP_ROUTES } from "@/constants/app";
+import ClientsGridList from "./components/GridList";
+import { useHeaderActions } from "@/providers/HeaderActionsProvider";
+import { useEffect, useState } from "react";
+import DynamicTabs from "@/components/generics/DynamicTabs";
+import ClientsTableList from "./components/TableList";
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
+
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
     const { utilData } = useAuthStore(state => state)
+    const { setHeaderActions } = useHeaderActions();
 
     const {
         selectedFilters,
@@ -38,6 +44,19 @@ const ClientsListPage = () => {
         customQueryKey: (params) => queryKeys.list('clients/list', params)
     })
 
+    useEffect(() => {
+        setHeaderActions(
+            <DynamicTabs
+                value={viewMode}
+                onValueChange={e => setViewMode(e as 'grid' | 'table')}
+                items={[
+                    { label: 'Tarjetas', value: 'grid', icon: <GridIcon /> },
+                    { label: 'Tabla', value: 'table', icon: <TableIcon /> },
+                ]}
+            />
+        )
+    }, [])
+
     const filterList = CLIENTS_FILTER_ITEMS.map(i => {
         if (i.id === 'plan' && i.type === FilterTypes.SELECT) {
             i.options = utilData.plans.map(plan => ({
@@ -49,7 +68,7 @@ const ClientsListPage = () => {
     })
 
     return (
-        <div className="grid pt-2 gap-y-4">
+        <div className="grid grid-cols-[minmax(0,1fr)] pt-2 gap-y-4">
             <ClientsMetrics />
             <div className="flex items-center gap-x-2">
                 <div className="flex-1">
@@ -81,13 +100,11 @@ const ClientsListPage = () => {
                     <PageLoader />
                 ) : (
                     <div className="space-y-4">
-                        <FadeInGrid gridClassName="md:grid-cols-2 lg:grid-cols-3">
-                            {
-                                (response?.items || []).map(item => (
-                                    <ClientCard key={item.id} client={item} />
-                                ))
-                            }
-                        </FadeInGrid>
+                        {viewMode === 'table' ? (
+                            <ClientsTableList items={response?.items || []} />
+                        ) : (
+                            <ClientsGridList items={response?.items || []} />
+                        )}
                         <UIPagination
                             totalPages={response?.last_page || 0}
                             perPage={perPage || 15}

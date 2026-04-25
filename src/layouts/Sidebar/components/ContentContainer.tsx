@@ -20,7 +20,7 @@ const ContentContainer = ({ children, page }: Props) => {
     const { user } = useAuth()
 
     return (
-        <SidebarInset>
+        <SidebarInset className="min-w-0">
             <header className="flex h-16 shrink-0 items-center gap-2 px-4 bg-white dark:bg-background w-full">
                 <div className="flex flex-1 items-center gap-2">
                     <SidebarTrigger className="-ml-1" />
@@ -57,7 +57,7 @@ const ContentContainer = ({ children, page }: Props) => {
                     <DarkModeSelector />
                 </div>
             </header>
-            <div className="relative min-h-screen bg-gray-50 dark:bg-background">
+            <div className="relative min-h-screen min-w-0 bg-gray-50 dark:bg-background">
                 {children}
             </div>
         </SidebarInset>
