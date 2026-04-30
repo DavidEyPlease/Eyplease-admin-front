@@ -10,11 +10,9 @@ import useUploadStore from "@/store/uploadStore";
 import { publishEvent } from "@/utils/events";
 import { BROWSER_EVENTS } from "@/constants/browserEvents";
 import { Separator } from "@/uishadcn/ui/separator";
-import { Label } from "@/uishadcn/ui/label";
 import NexrenderFormSettings from "./NexrenderFormSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/uishadcn/ui/alert";
 import { InfoIcon, RefreshCwIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/uishadcn/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion";
 import NexrenderPreviewTemplate from "./NexrenderPreviewTemplate";
 
