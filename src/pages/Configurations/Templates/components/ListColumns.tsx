@@ -14,11 +14,13 @@ export const templatesColumns: ColumnDef<ITemplate>[] = [
         header: "Plantilla",
         cell: ({ row }) => (
             <div className="flex flex-wrap items-center gap-x-5">
-                <TemplateCover
-                    templateId={row.original.id}
-                    cover={row.original.picture}
-                    templateName={row.original.name}
-                />
+                {row.original.template_group === 'reports' && (
+                    <TemplateCover
+                        templateId={row.original.id}
+                        cover={row.original.picture}
+                        templateName={row.original.name}
+                    />
+                )}
                 <div className="flex flex-col">
                     <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
                         {row.original.name}

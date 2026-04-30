@@ -19,11 +19,13 @@ const TemplateCard = ({ template }: TemplateCardProps) => {
             <CardHeader className="pb-4 pt-3">
                 <div className="flex justify-between items-start gap-x-3">
                     <div className="flex items-center gap-x-4 min-w-0">
-                        <TemplateCover
-                            templateId={template.id}
-                            cover={template.picture}
-                            templateName={template.name}
-                        />
+                        {template.template_group === 'reports' && (
+                            <TemplateCover
+                                templateId={template.id}
+                                cover={template.picture}
+                                templateName={template.name}
+                            />
+                        )}
                         <div className="flex flex-col min-w-0">
                             <Link
                                 className="font-medium underline truncate text-sm"

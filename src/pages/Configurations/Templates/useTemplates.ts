@@ -8,11 +8,12 @@ import { queryKeys } from "@/utils/queryKeys"
 import { useCallback, useEffect } from "react"
 import { TemplateFilters } from "./List/page-utils"
 
-const useTemplates = () => {
+const useTemplates = (defaultFilters?: Partial<TemplateFilters>) => {
     const store = useTemplatesStore(state => state)
 
     const listQuery = useListQuery<ITemplate[], TemplateFilters>({
         endpoint: API_ROUTES.TEMPLATES.LIST,
+        defaultFilters,
         customQueryKey: (params) => queryKeys.list('config/templates', params)
     })
 

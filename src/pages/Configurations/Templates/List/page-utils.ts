@@ -2,6 +2,7 @@ import { FilterItem, FilterTypes } from "@/components/generics/FiltersAndSearch/
 
 export type TemplateFilters = {
     template_group: string
+    not_template_group: string
     active: string
 }
 

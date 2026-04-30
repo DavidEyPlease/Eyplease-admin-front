@@ -16,9 +16,15 @@ import { useHeaderActions } from "@/providers/HeaderActionsProvider"
 import useAuthStore from "@/store/auth"
 import TemplatesTableList from "./components/TemplatesTableList"
 import TemplatesGridList from "./components/TemplatesGridList"
-import { TEMPLATES_FILTER_ITEMS, TemplateFilterKeys } from "./page-utils"
+import { TEMPLATES_FILTER_ITEMS, TemplateFilterKeys, TemplateFilters } from "./page-utils"
 
-const TemplatesPage = () => {
+interface TemplatesPageProps {
+    defaultFilters?: Partial<TemplateFilters>
+}
+
+const TemplatesPage = ({ defaultFilters }: TemplatesPageProps) => {
+    const isReportsTemplates = defaultFilters?.template_group === 'reports'
+
     const {
         isLoading,
         templates,
@@ -30,12 +36,12 @@ const TemplatesPage = () => {
         onApplyFilters,
         onSelectedFilter,
         cleanSelectedFilters,
-    } = useTemplates()
+    } = useTemplates(defaultFilters)
     const { utilData } = useAuthStore(state => state)
     const { setHeaderActions } = useHeaderActions()
 
     const [openForm, setOpenForm] = useState(false)
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>(isReportsTemplates ? 'grid' : 'table')
 
     useEffect(() => {
         setHeaderActions(
@@ -68,14 +74,13 @@ const TemplatesPage = () => {
             i.options = templateGroupOptions
         }
         return i
-    })
+    }).filter(i => isReportsTemplates ? i.id !== 'template_group' : true)
 
     return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Plantillas</h1>
-                    <p className="mt-1 text-gray-600 dark:text-gray-400">Administra las plantillas de boletín y su disponibilidad</p>
                 </div>
                 <Button
                     rounded
@@ -94,11 +99,11 @@ const TemplatesPage = () => {
                     size="xxl"
                     onOpenChange={() => setOpenForm(false)}
                 >
-                    <TemplateForm onSuccess={() => setOpenForm(false)} />
+                    <TemplateForm isReportsTemplates={isReportsTemplates} onSuccess={() => setOpenForm(false)} />
                 </Modal>
             </div>
 
-            <StatsTemplates />
+            {isReportsTemplates && <StatsTemplates />}
 
             <div className="flex items-center gap-x-2">
                 <div className="flex-1">

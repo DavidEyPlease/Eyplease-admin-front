@@ -49,7 +49,8 @@ const Router = () => {
 
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLANS} element={<PlansPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLAN_DETAIL} element={<PlanDetailPage />} />
-                <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATES} element={<TemplatesPage />} />
+                <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATES} element={<TemplatesPage defaultFilters={{ template_group: 'reports' }} />} />
+                <Route path={APP_ROUTES.CONFIGURATIONS.NEXRENDER_TEMPLATES} element={<TemplatesPage defaultFilters={{ not_template_group: 'reports' }} />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL} element={<TemplateDetailPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PERMISSIONS} element={<PermissionsPage />} />
                 <Route path={APP_ROUTES.TASKS.LIST} element={<TasksPage />} />

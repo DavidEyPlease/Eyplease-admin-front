@@ -23,6 +23,7 @@ export const APP_ROUTES = {
         PLANS: '/configurations/plans',
         PLAN_DETAIL: '/configurations/plans/:id',
         TEMPLATES: '/configurations/templates',
+        NEXRENDER_TEMPLATES: '/configurations/nexrender-templates',
         TEMPLATE_DETAIL: '/configurations/templates/:id',
         PERMISSIONS: '/configurations/permissions',
     },
@@ -143,10 +144,17 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
             },
             {
                 key: PermissionKeys.TEMPLATES,
-                label: "Plantillas",
+                label: "Plantillas Reportes",
                 path: APP_ROUTES.CONFIGURATIONS.TEMPLATES,
                 requiredPermission: true,
                 permissionKeys: [PermissionKeys.TEMPLATES],
+            },
+            {
+                key: PermissionKeys.TEMPLATES_NEXRENDER,
+                label: "Plantillas Nexrender",
+                path: APP_ROUTES.CONFIGURATIONS.NEXRENDER_TEMPLATES,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.TEMPLATES_NEXRENDER],
             },
             {
                 key: PermissionKeys.PERMISSIONS,

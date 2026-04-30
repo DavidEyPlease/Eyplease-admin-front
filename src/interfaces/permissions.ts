@@ -15,6 +15,7 @@ export const PermissionKeys = {
     CONFIGURATION: 'configurations',
     PLANS: 'plans',
     TEMPLATES: 'templates',
+    TEMPLATES_NEXRENDER: 'nexrender_templates',
     TASKS: 'tasks',
     PERMISSIONS: 'permissions',
     DASHBOARD: 'dashboard',

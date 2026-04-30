@@ -23,16 +23,17 @@ import useFetchQuery from "@/hooks/useFetchQuery"
 
 interface TemplateFormProps {
     item?: ITemplate | null
+    isReportsTemplates?: boolean
     onSuccess?: (template: ITemplate) => void;
 }
 
 type FormType = z.infer<typeof TemplateSchema>
 
-const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
+const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps) => {
     const { utilData } = useAuthStore(state => state)
     const form = useCustomForm(
         TemplateSchema,
-        item ?? FORM_DEFAULT_VALUES
+        item ?? { ...FORM_DEFAULT_VALUES, template_group: isReportsTemplates ? 'reports' : '' }
     );
 
     const { request, requestState } = useRequestQuery({
@@ -130,11 +131,15 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
                     <FormField
                         control={form.control}
                         name="template_group"
-                        disabled={Boolean(item)}
+                        // disabled={Boolean(item) || isReportsTemplates}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Grupo</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select
+                                    disabled={Boolean(item) || isReportsTemplates}
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                >
                                     <FormControl className="w-full">
                                         <SelectTrigger>
                                             <SelectValue placeholder="Seleccionar grupo" />
