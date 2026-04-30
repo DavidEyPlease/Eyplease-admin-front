@@ -1,5 +1,8 @@
 import Button from "@/components/common/Button"
+import Dropdown from "@/components/common/Inputs/Dropdown"
 import { API_ROUTES } from "@/constants/api"
+import { MONTHS_OPTIONS } from "@/constants/app"
+import useReportUpload from "@/hooks/useReportUpload"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { NewsletterTypes } from "@/interfaces/common"
 import useAuthStore from "@/store/auth"
@@ -10,6 +13,7 @@ import { Separator } from "@/uishadcn/ui/separator"
 import { useState } from "react"
 
 const DispatchImportJob = () => {
+    const { selectedMonth, setSelectedMonth } = useReportUpload()
     const { utilData } = useAuthStore(state => state)
     const [dispatchData, setDispatchData] = useState<{ type: string, sections: string[] }>({
         type: '',
@@ -19,7 +23,7 @@ const DispatchImportJob = () => {
 
     const onDispatch = async () => {
         console.log('Dispatching import job with data:', dispatchData)
-        await request('POST', API_ROUTES.REPORTS.DISPATCH_IMPORT_JOB, dispatchData)
+        await request('POST', API_ROUTES.REPORTS.DISPATCH_IMPORT_JOB, { ...dispatchData, month: parseInt(selectedMonth) })
     }
 
     const newsletterGroups = utilData.newsletters.map(n => ({
@@ -60,7 +64,14 @@ const DispatchImportJob = () => {
                 </RadioGroup>
                 <div className="col-span-3">
                     {dispatchData.type && (
-                        <>
+                        <div className="flex flex-col gap-4">
+                            <Dropdown
+                                label="Mes del reporte"
+                                placeholder="Selecciona un mes"
+                                value={selectedMonth}
+                                onChange={e => setSelectedMonth(e)}
+                                items={MONTHS_OPTIONS}
+                            />
                             <FieldSet>
                                 <FieldLegend variant="label">
                                     Selecciona las secciones a importar:
@@ -99,17 +110,19 @@ const DispatchImportJob = () => {
                                     ))}
                                 </FieldGroup>
                             </FieldSet>
-                            <Separator className="my-5" />
+                            <Separator />
 
                             <Button
                                 text='Importar'
                                 type="submit"
                                 color="primary"
+                                className="w-max mx-auto"
                                 rounded
+                                disabled={!selectedMonth}
                                 loading={requestState.loading}
                                 onClick={onDispatch}
                             />
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
