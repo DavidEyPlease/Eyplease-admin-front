@@ -6,14 +6,17 @@ import useTemplatesStore from "@/store/templates"
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events"
 import { queryKeys } from "@/utils/queryKeys"
 import { useCallback, useEffect } from "react"
+import { TemplateFilters } from "./List/page-utils"
 
 const useTemplates = () => {
     const store = useTemplatesStore(state => state)
 
-    const { response: templates, isLoading, search, setSearch, setData } = useListQuery<ITemplate[]>({
+    const listQuery = useListQuery<ITemplate[], TemplateFilters>({
         endpoint: API_ROUTES.TEMPLATES.LIST,
         customQueryKey: (params) => queryKeys.list('config/templates', params)
     })
+
+    const { response: templates, setData } = listQuery
 
     const handleTemplateUpdate = useCallback((event: BrowserEvent<ITemplate & { isDeleted?: boolean }>) => {
         if (event.detail.isDeleted) return setData((templates ?? []).filter(item => item.id !== event.detail.id))
@@ -31,11 +34,9 @@ const useTemplates = () => {
     }, [handleTemplateUpdate])
 
     return {
+        ...listQuery,
         templates,
-        isLoading,
-        search,
         ...store,
-        setSearch
     }
 }
 

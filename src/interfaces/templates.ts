@@ -15,12 +15,14 @@ export interface ITemplate extends IBaseDBProperties {
     picture: NullishFile
     active: boolean
     template_group: string
+    template_subgroup: string | null
     template_asset_type: 'image' | 'video' | null
     clients_count: number
     enabled_all_clients: boolean
     render_provider_id: string | null
     slug: string
     template_file_uri: string | null
+    month: number
     assets_data?: {
         compositions: string[]
         layers: Array<{ layerName: string }>

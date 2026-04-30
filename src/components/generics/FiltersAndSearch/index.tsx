@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/uishadcn/ui/badge";
 import { Separator } from "@/uishadcn/ui/separator";
 
-const FiltersAndSearch = ({ activeFilters, title, setSearch, onApplyFilters, resetFilters, ...props }: FiltersAndSearchProps) => {
+const FiltersAndSearch = ({ activeFilters, title, placeholderSearch, setSearch, onApplyFilters, resetFilters, ...props }: FiltersAndSearchProps) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const onOpenChange = () => setIsOpen(!isOpen)
@@ -42,7 +42,7 @@ const FiltersAndSearch = ({ activeFilters, title, setSearch, onApplyFilters, res
     return (
         <div className="flex gap-x-2 items-center">
             <SearchInput
-                placeholder="Buscar clientes"
+                placeholder={placeholderSearch || "Buscar..."}
                 onSubmitSearch={setSearch}
             />
             <Popover open={isOpen} onOpenChange={setIsOpen}>

@@ -3,7 +3,6 @@ import { ITemplate } from "@/interfaces/templates"
 import TemplateActions from "./Actions"
 import { Badge } from "@/uishadcn/ui/badge"
 import { UsersIcon } from "lucide-react"
-import { formatDate } from "@/utils/dates"
 import TemplateCover from "./TemplateCover"
 import SwitchAction from "./SwitchAction"
 import { Link } from "react-router"
@@ -24,13 +23,23 @@ export const templatesColumns: ColumnDef<ITemplate>[] = [
                     <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
                         {row.original.name}
                     </Link>
-                    {row.original.template_group && <b>Grupo: {row.original.template_group}</b>}
-                    {row.original.template_asset_type && <b>Recurso: {row.original.template_asset_type}</b>}
+                    {row.original.template_asset_type && <span className="text-xs text-muted-foreground">Recurso: {row.original.template_asset_type}</span>}
+                    <span className="text-xs text-muted-foreground">Mes: {row.original.month}</span>
                 </div>
             </div>
         ),
         enableSorting: false,
         enableHiding: false,
+    },
+    {
+        accessorKey: "template_group",
+        header: "Grupo",
+        cell: ({ row }) => (
+            <div className="flex flex-col">
+                {row.original.template_group}
+                {row.original.template_subgroup && <span className="text-xs text-muted-foreground"><b>Subgrupo</b>: {row.original.template_subgroup}</span>}
+            </div>
+        )
     },
     {
         accessorKey: "clients_count",
@@ -53,11 +62,6 @@ export const templatesColumns: ColumnDef<ITemplate>[] = [
         accessorKey: "enabled_all_clients",
         header: "Usada en todos los clientes",
         cell: ({ row }) => <SwitchAction templateId={row.original.id} checked={row.original.enabled_all_clients} actionField="enabled_all_clients" id={`template-${row.original.id}-all_clients_enabled`} />
-    },
-    {
-        accessorKey: "updated_at",
-        header: "Última modificación",
-        cell: ({ row }) => formatDate(row.original.updated_at)
     },
     {
         accessorKey: "actions",

@@ -18,21 +18,21 @@ interface Props {
 const AvatarUploadPhoto = ({ uri, src, alt, loading, size = 'lg', roundedClass = 'rounded-full', onlyIcon = false, onUpload }: Props) => {
 
     const AVATAR_SIZES_CLASSES = {
-        xs: 'size-16',
+        xs: 'size-14',
         sm: 'w-20 h-20',
         md: 'w-24 h-24',
         lg: 'w-28 h-28',
     }
 
     const CONTAINER_SIZES_CLASSES = {
-        xs: 'size-16',
+        xs: 'size-14',
         sm: 'w-20 h-20',
         md: 'w-24 h-24',
         lg: 'w-32 h-32',
     }
 
     const ICON_SIZES_CLASSES = {
-        xs: 'size-6',
+        xs: 'size-4',
         sm: 'w-8 h-8',
         md: 'w-10 h-10',
         lg: 'w-12 h-12',
@@ -57,8 +57,8 @@ const AvatarUploadPhoto = ({ uri, src, alt, loading, size = 'lg', roundedClass =
             <FileSelector
                 fileUploaderComponent={
                     uri ? (
-                        <button className="grid cursor-pointer place-content-center absolute top-0 right-[-15px] bg-primary text-white rounded-full size-7">
-                            <Edit3Icon className="size-4" />
+                        <button className="grid cursor-pointer place-content-center absolute top-0 right-[-10px] bg-primary text-white rounded-full size-6">
+                            <Edit3Icon className="size-3" />
                         </button>
                     ) : (
                         <button className={`flex flex-col items-center gap-1 justify-center ${CONTAINER_SIZES_CLASSES[size]} border border-dashed ${roundedClass} text-muted-foreground bg-[#F7F5FF] border-primary-light`}>

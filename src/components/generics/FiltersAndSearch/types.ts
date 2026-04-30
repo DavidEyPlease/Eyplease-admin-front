@@ -38,20 +38,21 @@ interface IUserAutocomplete extends Omit<IAutocomplete, 'type'> {
     endpoint: string
 }
 
-// interface IMultiSelectFilterItem extends IBaseFilterItem {
-//     type: FilterTypes.MULTI_SELECT
-//     options: AutocompleteItem[]
-// }
+interface IMultiSelectFilterItem extends IBaseFilterItem {
+    type: typeof FilterTypes.MULTI_SELECT
+    options: IAutocompleteItem[]
+}
 
 export interface ICustomDateFilterItem extends IBaseFilterItem {
     keyFilter: string
     type: typeof FilterTypes.CUSTOM_DATE
 }
 
-export type FilterItem = ISelectFilterItem | IAutocomplete | ICustomDateFilterItem | IUserAutocomplete
+export type FilterItem = IMultiSelectFilterItem | ISelectFilterItem | IAutocomplete | ICustomDateFilterItem | IUserAutocomplete
 
 export interface FiltersAndSearchProps {
     title?: string
+    placeholderSearch?: string
     showBadge?: boolean
     activeFilters: Record<string, any>
     filters: FilterItem[]

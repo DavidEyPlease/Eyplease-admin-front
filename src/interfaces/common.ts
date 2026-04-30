@@ -139,6 +139,12 @@ export interface NewsletterSection {
     sectionKey: string
 }
 
+export interface INewsletterSectionItem {
+    id: string
+    name: string
+    item_key: string
+}
+
 export interface INewsletter {
     id: string
     name: string

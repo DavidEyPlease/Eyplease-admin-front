@@ -12,11 +12,14 @@ import { FORM_DEFAULT_VALUES, TemplateSchema } from "../utils"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import Button from "@/components/common/Button"
 import Switch from "@/components/common/Inputs/Switch"
-import { ApiResponse } from "@/interfaces/common"
+import { ApiResponse, INewsletterSectionItem } from "@/interfaces/common"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/uishadcn/ui/select"
 import useAuthStore from "@/store/auth"
 import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group"
-import { Label } from "@/uishadcn/ui/label"
+import Dropdown from "@/components/common/Inputs/Dropdown"
+import { MONTHS_OPTIONS } from "@/constants/app"
+import { Field, FieldLabel } from "@/uishadcn/ui/field"
+import useFetchQuery from "@/hooks/useFetchQuery"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -56,6 +59,13 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
         )
     }
 
+    const {
+        response: subGroups,
+    } = useFetchQuery<INewsletterSectionItem[]>(API_ROUTES.GET_NEWSLETTER_SECTION_ITEMS.replace('{sectionKey}', form.watch('template_group')), {
+        enabled: !!form.watch('template_group') && !['reports', 'customers-birthdays'].includes(form.watch('template_group')),
+        customQueryKey: queryKeys.list('newsletter_section_items', { section: form.watch('template_group') })
+    })
+
     useEffect(() => {
         return () => {
             // Reset form and item update when component unmounts
@@ -85,7 +95,38 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                <div className="grid md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Nombre</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ingresa el nombre" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <div className="grid md:grid-cols-3 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="month"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Dropdown
+                                        label="Mes de la plantilla"
+                                        placeholder="Selecciona un mes"
+                                        value={field.value ? field.value.toString() : ''}
+                                        onChange={e => field.onChange(parseInt(e))}
+                                        items={MONTHS_OPTIONS}
+                                        error={form.formState?.errors?.month?.message}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
                     <FormField
                         control={form.control}
                         name="template_group"
@@ -109,39 +150,28 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
                             </FormItem>
                         )}
                     />
-
                     <FormField
                         control={form.control}
-                        name="name"
+                        name="template_subgroup"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Nombre</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Ingresa el nombre" {...field} />
-                                </FormControl>
+                                <Dropdown
+                                    className="max-w-xs"
+                                    label="Subgrupo"
+                                    disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                    placeholder="Selecciona un subgrupo"
+                                    value={field.value || ''}
+                                    onChange={field.onChange}
+                                    error={form.formState?.errors?.template_subgroup?.message}
+                                    items={subGroups ? subGroups.map(s => ({ label: s.name, value: s.item_key })) : []}
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
                 </div>
 
-                {templateGroupValue === 'reports' && (
-                    <FormField
-                        control={form.control}
-                        name="font_color"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Color de la fuente</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Ingresa el color de la fuente" {...field} value={field.value || ''} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
-
-                {templateGroupValue && templateGroupValue !== 'reports' && (
+                <div className="grid md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="template_asset_type"
@@ -154,21 +184,53 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
                                         onValueChange={e => field.onChange(e as 'image' | 'video')}
                                         className="w-fit"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <RadioGroupItem value="image" id="r1" />
-                                            <Label htmlFor="r1">Imagen</Label>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <RadioGroupItem value="video" id="r2" />
-                                            <Label htmlFor="r2">Video</Label>
-                                        </div>
+                                        <Field
+                                            orientation="horizontal"
+                                            data-invalid={Boolean(form.formState?.errors?.template_asset_type)}
+                                            data-disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                        >
+                                            <RadioGroupItem
+                                                value="image"
+                                                id="r1"
+                                                disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                                aria-invalid={Boolean(form.formState?.errors?.template_asset_type)}
+                                            />
+                                            <FieldLabel htmlFor="r1">Imagen</FieldLabel>
+                                        </Field>
+                                        <Field
+                                            orientation="horizontal"
+                                            data-invalid={Boolean(form.formState?.errors?.template_asset_type)}
+                                            data-disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                        >
+                                            <RadioGroupItem
+                                                value="video"
+                                                id="r2"
+                                                disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                                aria-invalid={Boolean(form.formState?.errors?.template_asset_type)}
+                                            />
+                                            <FieldLabel htmlFor="r2">Video</FieldLabel>
+                                        </Field>
                                     </RadioGroup>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                )}
+                    <FormField
+                        control={form.control}
+                        name="font_color"
+                        disabled={templateGroupValue !== 'reports'}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Color de la fuente</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ingresa el color de la fuente" {...field} value={field.value || ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <FormField
@@ -214,7 +276,7 @@ const TemplateForm = ({ item, onSuccess }: TemplateFormProps) => {
                     type="submit"
                     color="primary"
                     rounded
-                    block
+                    className="w-max mx-auto"
                     loading={requestState.loading}
                 />
             </form>

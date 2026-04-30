@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Field, FieldError, FieldLabel } from "@/uishadcn/ui/field";
 import { Label } from "@/uishadcn/ui/label";
 import {
     Select,
@@ -16,15 +17,16 @@ interface DropdownProps {
     items: Array<{ label: string; value: string, color?: string }>;
     disabled?: boolean;
     className?: string;
+    error?: string
     onChange?: (value: string) => void;
 }
 
-const Dropdown = ({ placeholder, label, items, disabled, value, className, onChange }: DropdownProps) => {
+const Dropdown = ({ placeholder, label, items, disabled, value, className, error, onChange }: DropdownProps) => {
     return (
-        <div className="space-y-2">
-            {label && <Label>{label}</Label>}
+        <Field data-invalid={Boolean(error)} className="w-full gap-1">
+            {label && <FieldLabel className="m-0">{label}</FieldLabel>}
             <Select defaultValue={value} onValueChange={onChange} disabled={disabled}>
-                <SelectTrigger className={cn("w-full", className)}>
+                <SelectTrigger className={cn("w-full", className)} aria-invalid={Boolean(error)}>
                     <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent>
@@ -38,7 +40,8 @@ const Dropdown = ({ placeholder, label, items, disabled, value, className, onCha
                     </SelectGroup>
                 </SelectContent>
             </Select>
-        </div>
+            <FieldError>{error}</FieldError>
+        </Field>
     )
 }
 

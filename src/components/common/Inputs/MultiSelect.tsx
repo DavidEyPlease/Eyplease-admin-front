@@ -5,6 +5,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/uishadcn/ui/dropdown-menu"
+import { Field, FieldError, FieldLabel } from "@/uishadcn/ui/field";
 import { ChevronDownIcon } from "lucide-react"
 
 interface MultiSelectProps {
@@ -14,33 +15,38 @@ interface MultiSelectProps {
     items: Array<{ label: string; value: string, color?: string }>;
     disabled?: boolean;
     className?: string;
+    error?: string;
     onChange?: (value: string[]) => void;
 }
 
-export function MultiSelect({ items, placeholder, value, onChange }: MultiSelectProps) {
+export function MultiSelect({ items, placeholder, value, error, label, onChange }: MultiSelectProps) {
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex justify-between text-muted-foreground">
-                    {placeholder}
-                    <ChevronDownIcon className="size-4 opacity-50" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-                {items.map(item => {
-                    const checked = value?.includes(item.value) ? true : false
-                    return (
-                        <DropdownMenuCheckboxItem
-                            key={item.value}
-                            checked={checked}
-                            onCheckedChange={v => onChange?.(v ? [...(value || []), item.value] : (value || []).filter(i => i !== item.value))}
-                            onSelect={(e) => e.preventDefault()}
-                        >
-                            {item.label}
-                        </DropdownMenuCheckboxItem>
-                    )
-                })}
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <Field data-invalid={Boolean(error)} className="w-full gap-1">
+            {label && <FieldLabel className="m-0">{label}</FieldLabel>}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex justify-between text-muted-foreground">
+                        {placeholder}
+                        <ChevronDownIcon className="size-4 opacity-50" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-fit" side="left">
+                    {items.map(item => {
+                        const checked = value?.includes(item.value) ? true : false
+                        return (
+                            <DropdownMenuCheckboxItem
+                                key={item.value}
+                                checked={checked}
+                                onCheckedChange={v => onChange?.(v ? [...(value || []), item.value] : (value || []).filter(i => i !== item.value))}
+                                onSelect={(e) => e.preventDefault()}
+                            >
+                                {item.label}
+                            </DropdownMenuCheckboxItem>
+                        )
+                    })}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <FieldError>{error}</FieldError>
+        </Field>
     )
 }

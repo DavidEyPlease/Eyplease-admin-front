@@ -1,5 +1,6 @@
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { FiltersAndSearchProps, FilterTypes } from "./types"
+import { MultiSelect } from "@/components/common/Inputs/MultiSelect"
 
 interface FilterContentProps extends Pick<FiltersAndSearchProps, 'filters' | 'columns' | 'onSelectFilter'> {
     selectedFilters: Record<string, any>
@@ -31,6 +32,19 @@ const FiltersContent = ({ filters, selectedFilters, columns = '2', onSelectFilte
                             value={selectedFilters?.[filter.id] || null}
                             onChange={(value) => onChangeFilter(filter.id, value)}
                             items={filter.options}
+                        />
+                    )
+                }
+
+                if (type === FilterTypes.MULTI_SELECT) {
+                    return (
+                        <MultiSelect
+                            key={filter.id}
+                            label={filter.label}
+                            items={filter.options}
+                            placeholder={selectedFilters?.[filter.id]?.length ? `${selectedFilters[filter.id].length} seleccionados` : 'Selecciona opciones'}
+                            value={selectedFilters?.[filter.id] || []}
+                            onChange={(v) => onChangeFilter(filter.id, v)}
                         />
                     )
                 }

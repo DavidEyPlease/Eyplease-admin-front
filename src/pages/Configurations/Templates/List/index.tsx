@@ -1,28 +1,74 @@
-import { useState } from "react"
-import { PlusIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import { GridIcon, PlusIcon, TableIcon } from "lucide-react"
 
 import useTemplates from "../useTemplates"
 import StatsTemplates from "../components/Stats"
 import Button from "@/components/common/Button"
-import SearchInput from "@/components/generics/SearchInput"
-import { CardDescription, CardTitle } from "@/uishadcn/ui/card"
-import { DataTable } from "@/components/generics/DataTable"
-import { templatesColumns } from "../components/ListColumns"
 import Modal from "@/components/common/Modal"
 import TemplateForm from "../components/TemplateForm"
 import ManageClients from "../components/ManageClients"
 import TemplateDetail from "../components/TemplateDetail"
+import PageLoader from "@/components/generics/PageLoader"
+import FiltersAndSearch from "@/components/generics/FiltersAndSearch"
+import DynamicTabs from "@/components/generics/DynamicTabs"
+import { FilterTypes } from "@/components/generics/FiltersAndSearch/types"
+import { useHeaderActions } from "@/providers/HeaderActionsProvider"
+import useAuthStore from "@/store/auth"
+import TemplatesTableList from "./components/TemplatesTableList"
+import TemplatesGridList from "./components/TemplatesGridList"
+import { TEMPLATES_FILTER_ITEMS, TemplateFilterKeys } from "./page-utils"
 
 const TemplatesPage = () => {
     const {
         isLoading,
         templates,
+        selectedFilters,
         actionDialogOpen,
         selectedTemplate,
         setSearch,
-        setSelectedTemplate
+        setSelectedTemplate,
+        onApplyFilters,
+        onSelectedFilter,
+        cleanSelectedFilters,
     } = useTemplates()
+    const { utilData } = useAuthStore(state => state)
+    const { setHeaderActions } = useHeaderActions()
+
     const [openForm, setOpenForm] = useState(false)
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
+
+    useEffect(() => {
+        setHeaderActions(
+            <DynamicTabs
+                value={viewMode}
+                onValueChange={e => setViewMode(e as 'grid' | 'table')}
+                items={[
+                    { label: 'Tarjetas', value: 'grid', icon: <GridIcon /> },
+                    { label: 'Tabla', value: 'table', icon: <TableIcon /> },
+                ]}
+            />
+        )
+    }, [viewMode, setHeaderActions])
+
+    const templateGroupOptions = [
+        { label: 'Reportes de boletín', value: 'reports' },
+        { label: 'Cumpleaños Mis Clientes', value: 'customers-birthdays' },
+        ...utilData.newsletters.flatMap(n =>
+            n.sections
+                .filter(i => i.has_publish_posts)
+                .map(s => ({
+                    label: `${n.name} - ${s.name}`,
+                    value: s.sectionKey,
+                }))
+        ),
+    ]
+
+    const filterList = TEMPLATES_FILTER_ITEMS.map(i => {
+        if (i.id === 'template_group' && i.type === FilterTypes.MULTI_SELECT) {
+            i.options = templateGroupOptions
+        }
+        return i
+    })
 
     return (
         <div className="space-y-5">
@@ -45,7 +91,7 @@ const TemplatesPage = () => {
                     title="Crear nueva plantilla"
                     description="Crea una nueva plantilla de boletín para tus clientes"
                     open={openForm}
-                    size="xl"
+                    size="xxl"
                     onOpenChange={() => setOpenForm(false)}
                 >
                     <TemplateForm onSuccess={() => setOpenForm(false)} />
@@ -53,29 +99,37 @@ const TemplatesPage = () => {
             </div>
 
             <StatsTemplates />
-            <DataTable
-                columns={templatesColumns}
-                contentHeader={
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <CardTitle>Plantillas de Boletín</CardTitle>
-                            <CardDescription>Gestiona todas las plantillas disponibles</CardDescription>
-                        </div>
-                        <SearchInput
-                            placeholder="Buscar plantillas"
-                            onSubmitSearch={(e) => setSearch(e)}
-                        />
-                    </div>
-                }
-                isLoading={isLoading}
-                data={templates ?? []}
-            />
+
+            <div className="flex items-center gap-x-2">
+                <div className="flex-1">
+                    <FiltersAndSearch
+                        title="Filtros de plantillas"
+                        columns="1"
+                        placeholderSearch="Buscar plantillas..."
+                        renderComponent="popover"
+                        filters={filterList}
+                        setSearch={setSearch}
+                        activeFilters={selectedFilters}
+                        onSelectFilter={(k, v) => onSelectedFilter(k as TemplateFilterKeys, v)}
+                        onApplyFilters={onApplyFilters}
+                        resetFilters={cleanSelectedFilters}
+                    />
+                </div>
+            </div>
+
+            {isLoading ? (
+                <PageLoader />
+            ) : viewMode === 'table' ? (
+                <TemplatesTableList items={templates ?? []} isLoading={isLoading} />
+            ) : (
+                <TemplatesGridList items={templates ?? []} />
+            )}
 
             <Modal
                 title={`Editar plantilla: ${selectedTemplate?.name}`}
                 description="Edita la plantilla de boletín para tus clientes"
                 open={actionDialogOpen === 'edit'}
-                size="xl"
+                size="xxl"
                 onOpenChange={() => {
                     setSelectedTemplate(null)
                 }}

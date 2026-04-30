@@ -2,6 +2,7 @@ export const API_ROUTES = {
     SIGN_IN: '/sign-in',
     LOGOUT: '/logout',
     DASHBOARD: '/dashboard',
+    GET_NEWSLETTER_SECTION_ITEMS: '/newsletters/sections/{sectionKey}/items',
     FORGOT_PASSWORD: {
         VALIDATE_EMAIL: '/forgot-password/send-email',
         RESET_PASSWORD: '/forgot-password/reset-password',
