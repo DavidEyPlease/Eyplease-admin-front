@@ -42,7 +42,9 @@ export const API_ROUTES = {
         STATS: '/templates/stats',
         UPLOAD_ASSETS: '/templates/{id}/upload-assets',
         GET_UPLOAD_ASSETS_URL: '/templates/{id}/upload-assets-url',
-        UPLOAD_TEMPLATE: '/templates/{id}/upload-template'
+        UPLOAD_TEMPLATE: '/templates/{id}/upload-template',
+        PREVIEW_TEMPLATE: '/templates/{id}/preview',
+        GET_JOB_PREVIEW: '/templates/job-preview',
     },
     PERMISSIONS: {
         GET_ALL_ACCESS: '/roles/accesses',

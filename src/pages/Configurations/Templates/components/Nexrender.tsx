@@ -14,6 +14,9 @@ import { Label } from "@/uishadcn/ui/label";
 import NexrenderFormSettings from "./NexrenderFormSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/uishadcn/ui/alert";
 import { InfoIcon, RefreshCwIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/uishadcn/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/uishadcn/ui/accordion";
+import NexrenderPreviewTemplate from "./NexrenderPreviewTemplate";
 
 interface Props {
     template: ITemplate
@@ -26,7 +29,6 @@ type UploadAssetsData = { uploadUrl: string, headers: string, templateId: string
 const NexrenderConfiguration = ({ template, isRefetching, onRefreshTemplate }: Props) => {
     const [uploadLoading, setUploadLoading] = useState(false)
     const { request, requestState } = useRequestQuery()
-    // const [uploadAssetsData, setUploadAssetsData] = useState<UploadAssetsData | null>(null)
     const startUpload = useUploadStore(state => state.startUpload)
 
     const getUploadAssetsInfo = async () => {
@@ -57,11 +59,6 @@ const NexrenderConfiguration = ({ template, isRefetching, onRefreshTemplate }: P
 
         try {
             setUploadLoading(true)
-            // const fd = new FormData();
-            // fd.append("file", files[0]);
-            // await request<FormData, unknown>('POST', API_ROUTES.TEMPLATES.UPLOAD_TEMPLATE.replace('{id}', template.id), fd)
-            // const uploadData = uploadAssetsData
-
             await new Promise((resolve) => {
                 startUpload(
                     files,
@@ -74,26 +71,6 @@ const NexrenderConfiguration = ({ template, isRefetching, onRefreshTemplate }: P
                     }
                 )
             })
-
-            // if (!uploadAssetsData) {
-            //     const response = await request<unknown, UploadAssetsData>('GET', API_ROUTES.TEMPLATES.GET_UPLOAD_ASSETS_URL.replace('{id}', template.id))
-            //     uploadData = response.data
-            // }
-            // if (uploadData) {
-            //     await new Promise((resolve) => {
-            //         startUpload(
-            //             files,
-            //             {
-            //                 customUploadUrl: uploadData.uploadUrl,
-            //                 headers: { 'Content-Type': 'application/octet-stream', 'x-amz-meta-custom': uploadData.headers },
-            //                 onAllSuccess: async (uploadedResults) => {
-            //                     console.log(uploadedResults)
-            //                     resolve(uploadedResults)
-            //                 }
-            //             }
-            //         )
-            //     })
-            // }
         } catch (error) {
             console.error(error)
         } finally {
@@ -102,29 +79,51 @@ const NexrenderConfiguration = ({ template, isRefetching, onRefreshTemplate }: P
     }
 
     const pendingAssetsUpload = template.assets_data?.upload_status === 'awaiting_upload'
+    const isUploaded = template.assets_data?.upload_status === 'uploaded'
 
     return (
         <div className="space-y-3">
             {template.render_provider_id ? (
                 <>
-                    <FieldValue label="Nexrender ID:" value={template.render_provider_id || ''} />
-                    <FieldValue label="Estado de la carga:" value={template.assets_data?.upload_status || ''} />
-                    <div className="grid md:grid-cols-2">
-                        <FieldValue label="Composiciones:" flexDirection="col" className="items-start">
-                            <ul>
-                                {template.assets_data?.compositions.map(comp => (
-                                    <li key={comp}>{comp}</li>
-                                ))}
-                            </ul>
-                        </FieldValue>
-                        <FieldValue label="Layers:" flexDirection="col" className="items-start">
-                            <ul>
-                                {template.assets_data?.layers.map(layer => (
-                                    <li key={layer.layerName}>{layer.layerName}</li>
-                                ))}
-                            </ul>
-                        </FieldValue>
+                    <div className="flex gap-4">
+                        <FieldValue label="Nexrender ID:" value={template.render_provider_id || ''} />
+                        <FieldValue label="Estado de la carga:" value={template.assets_data?.upload_status || ''} />
                     </div>
+                    <Accordion type="single" className="rounded-lg border px-4" collapsible>
+                        <AccordionItem value='info'>
+                            <AccordionTrigger>Composición y capas</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="grid md:grid-cols-2">
+                                    <FieldValue label="Composiciones:" flexDirection="col" className="items-start">
+                                        <ul>
+                                            {template.assets_data?.compositions.map(comp => (
+                                                <li key={comp}>{comp}</li>
+                                            ))}
+                                        </ul>
+                                    </FieldValue>
+                                    <FieldValue label="Layers:" flexDirection="col" className="items-start">
+                                        <ul>
+                                            {template.assets_data?.layers.map(layer => (
+                                                <li key={layer.layerName}>{layer.layerName}</li>
+                                            ))}
+                                        </ul>
+                                    </FieldValue>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value='settings' disabled={!isUploaded}>
+                            <AccordionTrigger>Configura los recursos dinamicos del render</AccordionTrigger>
+                            <AccordionContent>
+                                <NexrenderFormSettings template={template} />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value='preview' disabled={!isUploaded || (isUploaded && !template.render_configuration)}>
+                            <AccordionTrigger>Prueba la plantilla</AccordionTrigger>
+                            <AccordionContent>
+                                <NexrenderPreviewTemplate template={template} />
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
                 </>
             ) : (
                 <FieldValue label="Presiona para crear la plantilla en Nexrender" flexDirection="col">
@@ -190,13 +189,6 @@ const NexrenderConfiguration = ({ template, isRefetching, onRefreshTemplate }: P
                         Esto puede tardar unos minutos, una vez finalizado podrás configurar los recursos dinamicos.
                     </AlertDescription>
                 </Alert>
-            )}
-
-            {template.assets_data?.upload_status === 'uploaded' && (
-                <>
-                    <Label className="mb-5">Configura los recursos dinamicos del render</Label>
-                    <NexrenderFormSettings template={template} />
-                </>
             )}
         </div>
     );
