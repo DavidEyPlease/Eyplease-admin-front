@@ -19,6 +19,7 @@ const PostsPage = () => {
     const [newsletter, setNewsletter] = useState<string>('')
     const [selectedSections, setSelectedSections] = useState<string[]>([])
     const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
+    const [artifacts, setArtifacts] = useState<string[]>([])
 
     const newsletterGroups = utilData.newsletters.map(n => ({
         groupName: n.name,
@@ -31,10 +32,11 @@ const PostsPage = () => {
 
     const onDispatch = async () => {
         try {
-            if (!newsletter || !selectedMonth || !selectedSections.length) return
+            if (!newsletter || !selectedMonth || !selectedSections.length || !artifacts.length) return
             await request('POST', API_ROUTES.POSTS.PUBLISH_NEWSLETTER, {
                 section_keys: selectedSections,
                 month: selectedMonth,
+                artifacts
             })
             toast.success('Publicaciones ejecutadas correctamente')
         } catch (error) {
@@ -72,27 +74,63 @@ const PostsPage = () => {
                 <div className="space-y-4">
                     {newsletter && (
                         <>
-                            <Dropdown
-                                label="Mes de la publicación"
-                                placeholder="Selecciona un mes"
-                                value={(selectedMonth || '').toString()}
-                                className="w-max"
-                                onChange={e => setSelectedMonth(parseInt(e))}
-                                items={MONTHS_OPTIONS.map(c => ({
-                                    value: c.value,
-                                    label: c.label
-                                }))}
-                            />
-                            <Separator className="my-4" />
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <Dropdown
+                                    label="Mes de la publicación"
+                                    placeholder="Selecciona un mes"
+                                    value={(selectedMonth || '').toString()}
+                                    className="w-max"
+                                    onChange={e => setSelectedMonth(parseInt(e))}
+                                    items={MONTHS_OPTIONS.map(c => ({
+                                        value: c.value,
+                                        label: c.label
+                                    }))}
+                                />
+                                <FieldSet>
+                                    <FieldLegend variant="label">
+                                        Selecciona los archivos a generar:
+                                    </FieldLegend>
+                                    <FieldGroup className="gap-3">
+                                        {[{ label: 'Imagen', value: 'image' }, { label: 'Video', value: 'video' }].map(artifact => (
+                                            <Field orientation="horizontal" key={artifact.value}>
+                                                <Checkbox
+                                                    checked={artifacts.includes(artifact.value)}
+                                                    onCheckedChange={checked => {
+                                                        if (checked) {
+                                                            setArtifacts([...artifacts, artifact.value])
+                                                        } else {
+                                                            setArtifacts(prev => prev.filter(a => a !== artifact.value))
+                                                        }
+                                                    }}
+                                                />
+                                                <FieldLabel
+                                                    className="font-normal"
+                                                >
+                                                    {artifact.label}
+                                                </FieldLabel>
+                                            </Field>
+                                        ))}
+                                    </FieldGroup>
+                                </FieldSet>
 
-                            <FieldSet>
-                                <FieldLegend variant="label">
-                                    Selecciona las secciones a publicar:
-                                </FieldLegend>
-                                <FieldDescription>
-                                    Solo se importaran las secciones seleccionadas, si no se selecciona ninguna se importaran todas las secciones del boletín.
-                                </FieldDescription>
-                                <FieldGroup className="gap-3">
+                                <FieldSet>
+                                    <FieldLegend variant="label">
+                                        Selecciona la sección a publicar:
+                                    </FieldLegend>
+                                    <RadioGroup
+                                        defaultValue={selectedSections[0] || ''}
+                                        onValueChange={e => setSelectedSections([e])}
+                                    >
+                                        {newsletterGroups.find(g => g.key === newsletter)?.items.map(section => (
+                                            <Field orientation="horizontal" key={section.value}>
+                                                <RadioGroupItem value={section.value} id={section.value} />
+                                                <FieldLabel htmlFor={section.value} className="font-normal">
+                                                    {section.label}
+                                                </FieldLabel>
+                                            </Field>
+                                        ))}
+                                    </RadioGroup>
+                                    {/* <FieldGroup className="gap-3">
                                     {newsletterGroups.find(g => g.key === newsletter)?.items.map(section => (
                                         <Field orientation="horizontal" key={section.value}>
                                             <Checkbox
@@ -115,18 +153,22 @@ const PostsPage = () => {
                                             </FieldLabel>
                                         </Field>
                                     ))}
-                                </FieldGroup>
-                            </FieldSet>
+                                </FieldGroup> */}
+                                </FieldSet>
+                            </div>
+
                             <Separator className="my-4" />
 
-                            <Button
-                                text='Importar'
-                                type="submit"
-                                color="primary"
-                                rounded
-                                loading={requestState.loading}
-                                onClick={onDispatch}
-                            />
+                            <div className="text-center">
+                                <Button
+                                    text='Publicar'
+                                    type="submit"
+                                    color="primary"
+                                    rounded
+                                    loading={requestState.loading}
+                                    onClick={onDispatch}
+                                />
+                            </div>
                         </>
                     )}
                 </div>
