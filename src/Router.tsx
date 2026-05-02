@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { Navigate, Route, Routes } from "react-router"
 
@@ -26,13 +26,21 @@ import CreateClientPage from "./pages/Clients/Create"
 import EditClientPage from "./pages/Clients/Edit"
 import NewsletterReportListPage from "./pages/NewsletterReports/List"
 import PostsPage from "./pages/Posts"
+import FullScreenLoader from "./components/generics/FullScreenLoader"
 
 const Router = () => {
-    const { isLogged, getMe } = useAuth();
+    const { isLogged, pending: sessionLoading, getMe } = useAuth();
+    const sessionRequested = useRef(false);
 
     useEffect(() => {
+        if (sessionRequested.current) return;
+        sessionRequested.current = true;
         getMe();
-    }, []);
+    }, [getMe]);
+
+    if (sessionLoading) {
+        return <FullScreenLoader label="Cargando sesión..." />
+    }
 
     return (
         <Routes>

@@ -8,12 +8,13 @@ import {
     CommandList,
 } from "@/uishadcn/ui/command"
 import { useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, SearchIcon } from "lucide-react"
 import Button from "../common/Button"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import { queryKeys } from "@/utils/queryKeys"
 import { INetworkPerson } from "@/interfaces/vendors"
 import { API_ROUTES } from "@/constants/api"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/uishadcn/ui/tooltip"
 
 const SEARCH_DELAY_MS = 400
 const MIN_SEARCH_LENGTH = 2
@@ -54,13 +55,17 @@ const NetworkPeopleSearch = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <Button
-                variant="outline"
-                rounded
-                size="sm"
-                text='Buscar cuentas y personas'
-                onClick={() => setOpen(true)}
-            />
+            <Tooltip>
+                <TooltipTrigger>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        text={<SearchIcon className="text-muted-foreground" />}
+                        onClick={() => setOpen(true)}
+                    />
+                </TooltipTrigger>
+                <TooltipContent>Buscar cuentas / personas</TooltipContent>
+            </Tooltip>
             <CommandDialog open={open} onOpenChange={handleOpenChange} showCloseButton={false}>
                 <Command shouldFilter={false}>
                     <CommandInput

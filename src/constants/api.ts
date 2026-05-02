@@ -14,6 +14,7 @@ export const API_ROUTES = {
     UPDATE_USER: '/me',
     GET_UTIL_DATA: '/util-data',
     NOTIFICATIONS: '/users/notifications',
+    CLIENTS_NOTIFICATIONS: '/notifications/clients',
     CLIENTS: {
         LIST: '/clients',
         CREATE: '/clients',

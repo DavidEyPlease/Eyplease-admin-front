@@ -11,7 +11,7 @@ import { CLIENTS_FILTER_ITEMS } from "./page-utils";
 import useAuthStore from "@/store/auth";
 import { FilterTypes } from "@/components/generics/FiltersAndSearch/types";
 import Button from "@/components/common/Button";
-import { GridIcon, PlusIcon, TableIcon } from "lucide-react";
+import { BellIcon, GridIcon, PlusIcon, TableIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { APP_ROUTES } from "@/constants/app";
 import ClientsGridList from "./components/GridList";
@@ -19,11 +19,14 @@ import { useHeaderActions } from "@/providers/HeaderActionsProvider";
 import { useEffect, useState } from "react";
 import DynamicTabs from "@/components/generics/DynamicTabs";
 import ClientsTableList from "./components/Table";
+import FabButton from "@/components/generics/FabButton";
+import SendPushNotificationModal from "./components/SendPushNotificationModal";
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
 
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
+    const [showNotificationModal, setShowNotificationModal] = useState(false)
     const { utilData } = useAuthStore(state => state)
     const { setHeaderActions } = useHeaderActions();
 
@@ -55,7 +58,7 @@ const ClientsListPage = () => {
                 ]}
             />
         )
-    }, [])
+    }, [setHeaderActions, viewMode])
 
     const filterList = CLIENTS_FILTER_ITEMS.map(i => {
         if (i.id === 'plan' && i.type === FilterTypes.SELECT) {
@@ -116,6 +119,14 @@ const ClientsListPage = () => {
                     </div>
                 )
             }
+            <FabButton
+                icon={<BellIcon className="h-5 w-5" />}
+                onClick={() => setShowNotificationModal(true)}
+            />
+            <SendPushNotificationModal
+                open={showNotificationModal}
+                onOpenChange={setShowNotificationModal}
+            />
         </div>
     )
 }
