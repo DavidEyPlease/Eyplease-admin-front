@@ -1,13 +1,12 @@
 import AvatarUploadPhoto from "@/components/generics/AvatarUploadPhoto";
 import useFiles from "@/hooks/useFiles";
-import useRequest from "@/hooks/useRequest";
-import { IClient, IClientUpdate, URI_CLIENT_LOGOTYPE, URI_MAIN_CLIENT_PHOTO } from "@/interfaces/clients";
+import { IClient, IClientUpdate } from "@/interfaces/clients";
 import { EypleaseFile, FileTypes } from "@/interfaces/files";
 import { ClientsService } from "@/services/clients.service";
-import { getFileType, setVariablesInString } from "@/utils";
+import { getFileType } from "@/utils";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FormSteps } from "../Create/form";
+import { FormSteps } from "./form";
 
 interface ClientPicturesProps {
     clientId: string;
@@ -32,7 +31,7 @@ const Pictures = ({ clientId, photo, logotype, onUploadSuccess }: ClientPictures
         try {
             setLoading(fileType)
             const updateProperties = {
-                [FileTypes.USER_PROFILE_PHOTO]: 'photo',
+                [FileTypes.SPONSOR_PHOTO]: 'photo',
                 [FileTypes.USER_LOGOTYPE]: 'logo',
             }
 
@@ -40,17 +39,16 @@ const Pictures = ({ clientId, photo, logotype, onUploadSuccess }: ClientPictures
                 file,
                 filename: uri,
                 fileType,
-                callback: fileUri => onUpdate({ [updateProperties[fileType as keyof typeof updateProperties]]: fileUri }),
+                clientId,
+                callback: () => onUpdate({ [updateProperties[fileType as keyof typeof updateProperties]]: uri }),
             })
         } catch (error) {
+            console.error('Error al subir el archivo:', error);
             toast.error('Error al subir la portada de la plantilla')
         } finally {
             setLoading(null)
         }
     }
-
-    const photoUri = setVariablesInString(URI_MAIN_CLIENT_PHOTO, { id: clientId });
-    const logotypeUri = setVariablesInString(URI_CLIENT_LOGOTYPE, { id: clientId });
 
     return (
         <div className="grid md:grid-cols-3">
@@ -63,11 +61,11 @@ const Pictures = ({ clientId, photo, logotype, onUploadSuccess }: ClientPictures
                     roundedClass="rounded-md"
                     size="lg"
                     onlyIcon
-                    loading={loading === FileTypes.USER_PROFILE_PHOTO}
+                    loading={loading === FileTypes.SPONSOR_PHOTO}
                     onUpload={file => onUpload(
                         file,
-                        `${photoUri}/main-photo.${getFileType(file.type)}`,
-                        FileTypes.USER_PROFILE_PHOTO
+                        `main-photo.${getFileType(file.type)}`,
+                        FileTypes.SPONSOR_PHOTO
                     )}
                 />
             </div>
@@ -98,7 +96,7 @@ const Pictures = ({ clientId, photo, logotype, onUploadSuccess }: ClientPictures
                     loading={loading === FileTypes.USER_LOGOTYPE}
                     onUpload={file => onUpload(
                         file,
-                        `${logotypeUri}/logo.${getFileType(file.type)}`,
+                        `logo.${getFileType(file.type)}`,
                         FileTypes.USER_LOGOTYPE
                     )}
                 />

@@ -57,5 +57,5 @@ export interface IClientUpdate {
 
 export type ClientFilterKeys = keyof IClientFilters
 
-export const URI_MAIN_CLIENT_PHOTO = 'public/network-people/photos/{id}'
-export const URI_CLIENT_LOGOTYPE = 'public/network-people/logotypes/{id}'
+export const URI_MAIN_CLIENT_PHOTO = 'public/network-people/{id}/photos'
+export const URI_CLIENT_LOGOTYPE = 'public/network-people/{id}/logotypes'

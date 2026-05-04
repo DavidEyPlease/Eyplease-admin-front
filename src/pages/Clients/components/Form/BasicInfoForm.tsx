@@ -1,6 +1,6 @@
 import useCustomForm from "@/hooks/useCustomForm";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/uishadcn/ui/form"
-import { CreateClientSchema, FORM_DEFAULT_VALUES, FormType } from "../Create/form";
+import { CreateClientSchema, FORM_DEFAULT_VALUES, FormType } from "./form";
 import { Input } from "@/uishadcn/ui/input";
 import { Separator } from "@/uishadcn/ui/separator";
 import Button from "@/components/common/Button";
@@ -33,18 +33,18 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
 
     const { request, requestState } = useRequestQuery({
         onSuccess: (response: ApiResponse<IClient>) => {
-            toast.success(`Cliente creado exitosamente`);
+            toast.success(`Cliente ${client ? 'actualizado' : 'creado'} exitosamente`);
             onSuccess(response.data);
         },
         onError: (error) => {
-            toast.error(`Error al crear el cliente: ${error.message}`);
+            toast.error(`Error al ${client ? 'actualizar' : 'crear'} el cliente: ${error.message}`);
         }
     })
 
     const onSubmit = async (values: FormType) => {
         await request<FormType, IClient>(
-            'POST',
-            API_ROUTES.CLIENTS.CREATE,
+            client ? 'PUT' : 'POST',
+            client ? `${API_ROUTES.CLIENTS.CREATE}/${client.id}` : API_ROUTES.CLIENTS.CREATE,
             values
         )
     }

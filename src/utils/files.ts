@@ -3,11 +3,12 @@ import { uploadS3 } from '.'
 import { getSignUploadUrl } from "./apiUtils"
 import { FileTypes } from '@/interfaces/files'
 
-export const uploadFile = async (params: { file: File, fileType: FileTypes, filename: string, disk?: StorageDisks }) => {
+export const uploadFile = async (params: { file: File, fileType: FileTypes, filename: string, disk?: StorageDisks, clientId?: string }) => {
     const signUrl = await getSignUploadUrl({
         fileName: params.filename,
         fileType: params.fileType,
         disk: params.disk || 'private',
+        clientId: params.clientId,
     })
     if (signUrl.url) {
         await uploadS3(params.file, signUrl.url)

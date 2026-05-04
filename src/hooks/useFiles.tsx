@@ -11,6 +11,7 @@ interface OnUploadParams {
     fileType: FileTypes
     filename?: string
     disk?: StorageDisks
+    clientId?: string
     callback?: (fileKey: string) => Promise<void>
 }
 
@@ -39,6 +40,7 @@ const useFiles = () => {
                 filename: params.filename || params.file.name,
                 fileType: params.fileType,
                 disk: params.disk || 'private',
+                clientId: params.clientId,
             })
             if (fileKey) {
                 await params.callback?.(fileKey)

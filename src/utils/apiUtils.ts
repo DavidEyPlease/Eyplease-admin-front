@@ -3,7 +3,7 @@ import { API_ROUTES } from '@/constants/api'
 import HttpService from '@/services/http'
 import { FileTypes } from '@/interfaces/files'
 
-export const getSignUploadUrl = async (data: { fileName: string, fileType: FileTypes, disk: StorageDisks }) => {
+export const getSignUploadUrl = async (data: { fileName: string, fileType: FileTypes, disk: StorageDisks, clientId?: string }) => {
     const response = await HttpService.post<ApiResponse<{ url: string, key: string, disk: StorageDisks }>>(API_ROUTES.SIGN_URL, data)
     if (response.success) {
         return response.data

@@ -14,6 +14,7 @@ import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
 import FadeInGrid from "@/components/generics/FadeInGrid";
 import { ClientStatsSection } from "../components/ClientStatsSection";
+import ClientForm from "../components/Form";
 
 const ClientDetailPage = () => {
     const params = useParams<{ id: string }>();
@@ -59,10 +60,22 @@ const ClientDetailPage = () => {
                                     <Tabs defaultValue="vendors">
                                         <TabsList>
                                             <TabsTrigger value="vendors">Vendedoras (es)</TabsTrigger>
+                                            <TabsTrigger value="edit" disabled={!client}>Editar</TabsTrigger>
                                             <TabsTrigger value="actions">Acciones</TabsTrigger>
                                         </TabsList>
                                         <TabsContent value="vendors">
                                             <Network clientId={params.id || ''} />
+                                        </TabsContent>
+                                        <TabsContent value="edit">
+                                            {client && (
+                                                <ClientForm
+                                                    client={client}
+                                                    onSetClient={(client) => setData({
+                                                        client,
+                                                        stats: response?.stats || null
+                                                    })}
+                                                />
+                                            )}
                                         </TabsContent>
                                         <TabsContent value="actions">
                                             <div className="grid grid-cols-1 md:grid-cols-2">
