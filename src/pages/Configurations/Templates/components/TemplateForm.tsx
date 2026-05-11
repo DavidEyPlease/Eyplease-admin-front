@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { queryKeys } from "@/utils/queryKeys"
 import { useEffect } from "react"
 import { ITemplate } from "@/interfaces/templates"
-import { FORM_DEFAULT_VALUES, TemplateSchema } from "../utils"
+import { FORM_DEFAULT_VALUES, PINK_CIRCLE_MONTHS_OPTIONS, TemplateSchema } from "../utils"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import Button from "@/components/common/Button"
 import Switch from "@/components/common/Inputs/Switch"
@@ -175,6 +175,30 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                         )}
                     />
                 </div>
+
+                {['pink_circle'].includes(templateGroupValue) &&
+                    <div>
+                        <FormField
+                            control={form.control}
+                            name="metadata.pink_circle_months"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <Dropdown
+                                        className="max-w-xs"
+                                        label="Meses del círculo rosa"
+                                        disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                        placeholder="Selecciona un mes o rango de meses"
+                                        value={field.value || ''}
+                                        onChange={field.onChange}
+                                        error={form.formState?.errors?.metadata?.pink_circle_months?.message}
+                                        items={PINK_CIRCLE_MONTHS_OPTIONS}
+                                    />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                }
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <FormField

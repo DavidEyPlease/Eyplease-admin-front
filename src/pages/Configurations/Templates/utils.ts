@@ -1,5 +1,9 @@
 import { z } from "zod"
 
+const GenericMetadataSchema = z.object({
+    pink_circle_months: z.string().nullable().optional(),
+})
+
 export const TemplateSchema = z.object({
     name: z.string().min(3, { message: "El nombre es requerido" }).max(255),
     active: z.boolean(),
@@ -8,7 +12,8 @@ export const TemplateSchema = z.object({
     template_asset_type: z.enum(['image', 'video']).nullable().optional(),
     enabled_all_clients: z.boolean(),
     font_color: z.string().nullable().optional(),
-    month: z.int('El mes de la plantilla es requerido')
+    month: z.int('El mes de la plantilla es requerido'),
+    metadata: GenericMetadataSchema.optional(),
 }).superRefine((val, ctx) => {
     // Si el grupo no es 'reports' y el asset_type está vacío/undefined
     if (val.template_group !== 'reports' && !val.template_asset_type) {
@@ -28,7 +33,10 @@ export const FORM_DEFAULT_VALUES = {
     font_color: null,
     template_asset_type: null,
     enabled_all_clients: false,
-    month: 0
+    month: 0,
+    metadata: {
+        pink_circle_months: null,
+    }
 }
 
 export const RENDER_ASSETS_TYPES = [
@@ -36,4 +44,21 @@ export const RENDER_ASSETS_TYPES = [
     { label: 'Imagen', value: 'image' },
     { label: 'Video', value: 'video' },
     { label: 'Audio', value: 'audio' }
+]
+
+export const PINK_CIRCLE_MONTHS_OPTIONS = [
+    { label: '2 Meses', value: '2-months' },
+    { label: '3 Meses', value: '3-months' },
+    { label: '4 Meses', value: '4-months' },
+    { label: '5 Meses', value: '5-months' },
+    { label: '6 Meses', value: '6-months' },
+    { label: '7 Meses', value: '7-months' },
+    { label: '8 Meses', value: '8-months' },
+    { label: '9 Meses', value: '9-months' },
+    { label: '10 Meses', value: '10-months' },
+    { label: '11 Meses', value: '11-months' },
+    { label: '12 Meses', value: '12-months' },
+    { label: '13 - 23 Meses', value: '13_23-months' },
+    { label: '24 - 35 Meses', value: '24_35-months' },
+    { label: '36 - 300 Meses', value: '36_300-months' },
 ]

@@ -34,6 +34,9 @@ export interface ITemplate extends IBaseDBProperties {
     unity_background_vertical: Backgrounds
     national_background_horizontal: Backgrounds
     national_background_vertical: Backgrounds
+    metadata?: {
+        pink_circle_months?: string
+    }
 }
 
 export interface ITemplateUpdate {
