@@ -67,7 +67,7 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                             </div>
                         </div>
 
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 absolute right-2 -top-4">
                             {attachment.file_type === 'image' &&
                                 <Button
                                     variant="outline"
@@ -82,7 +82,7 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                                 trigger={
                                     <Button
                                         variant="outline"
-                                        className="text-destructive absolute right-2 -top-3"
+                                        className="text-destructive"
                                         size="icon"
                                         disabled={loadingDelete === attachment.id}
                                     >

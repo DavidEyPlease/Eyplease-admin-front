@@ -118,7 +118,7 @@ const TaskFiles = ({ task }: IProps) => {
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-2" ref={draggableParentRef}>
+            <div className="grid lg:grid-cols-2 gap-2 mt-5" ref={draggableParentRef}>
                 {loading ? (
                     Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-20 w-full" />)
                 ) : (
