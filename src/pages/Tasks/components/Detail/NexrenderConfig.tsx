@@ -1,6 +1,6 @@
 import { useDragAndDrop } from "@formkit/drag-and-drop/react";
 import { InputFile } from "@/components/common/Inputs/InputFile"
-import { ITask, ITaskFile } from "@/interfaces/tasks";
+import { ITask, ITaskFile, TemplateAssetType } from "@/interfaces/tasks";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { API_ROUTES } from "@/constants/api";
 import { queryKeys } from "@/utils/queryKeys";
@@ -9,6 +9,8 @@ import useRequestQuery from "@/hooks/useRequestQuery";
 import useUploadStore from "@/store/uploadStore";
 import { Skeleton } from "@/uishadcn/ui/skeleton";
 import FileItem from "./FileItem";
+import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group";
+import { Field, FieldLabel } from "@/uishadcn/ui/field";
 
 interface IProps {
     task: ITask
@@ -50,6 +52,11 @@ const NexrenderConfig = ({ task }: IProps) => {
         }))
         await request('PUT', API_ROUTES.SORT_FILES, { file_ids: sortFiles.map(item => item.file.id) })
         // onSuccessFiles(sortFiles)
+    }
+
+    const onUpdateAttachment = async (attachmentId: string, updatedFile: Partial<ITaskFile>) => {
+        await request('PATCH', API_ROUTES.TASKS.UPDATE_TASK_ATTACHMENT.replace('{id}', task.id).replace('{attachmentId}', attachmentId), updatedFile)
+        onSuccessFiles(dragDropItems.map(item => item.id === attachmentId ? { ...item, ...updatedFile } : item));
     }
 
     const onSuccessFiles = (files: ITaskFile[]) => {
@@ -110,16 +117,44 @@ const NexrenderConfig = ({ task }: IProps) => {
                     Array.from({ length: 2 }).map((_, index) => <Skeleton key={index} className="h-20 w-full" />)
                 ) : (
                     dragDropItems.map(attachment => (
-                        <FileItem
-                            key={attachment.id}
-                            attachment={attachment}
-                            taskId={task.id}
-                            taskStatus={task.task_status?.slug}
-                            onSuccessFile={(fileId) => {
-                                const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
-                                onSuccessFiles(updatedFiles);
-                            }}
-                        />
+                        <div className="">
+                            <FileItem
+                                key={attachment.id}
+                                attachment={attachment}
+                                taskId={task.id}
+                                taskStatus={task.task_status?.slug}
+                                onSuccessFile={(fileId) => {
+                                    const updatedFiles = dragDropItems.filter(file => file.id !== fileId);
+                                    onSuccessFiles(updatedFiles);
+                                }}
+                            />
+                            {attachment.file_type === 'nexrender_template' && (
+                                <RadioGroup
+                                    value={attachment.template_asset_type || ''}
+                                    onValueChange={e => onUpdateAttachment(attachment.id, { template_asset_type: e as TemplateAssetType })}
+                                    className="w-fit flex"
+                                >
+                                    <Field
+                                        orientation="horizontal"
+                                    >
+                                        <RadioGroupItem
+                                            value="image"
+                                            id="r1"
+                                        />
+                                        <FieldLabel htmlFor="r1">Imagen</FieldLabel>
+                                    </Field>
+                                    <Field
+                                        orientation="horizontal"
+                                    >
+                                        <RadioGroupItem
+                                            value="video"
+                                            id="r2"
+                                        />
+                                        <FieldLabel htmlFor="r2">Video</FieldLabel>
+                                    </Field>
+                                </RadioGroup>
+                            )}
+                        </div>
                     ))
                 )}
             </div>

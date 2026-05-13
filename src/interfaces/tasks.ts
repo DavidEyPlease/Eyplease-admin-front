@@ -85,8 +85,11 @@ export interface ITaskActivity extends IBaseDBProperties {
     activity_description: string;
 }
 
+export type TemplateAssetType = 'image' | 'video' | null;
+
 export interface ITaskFile extends IBaseDBProperties {
     uploaded_by: IUser;
     file: IFile
     file_type: 'image' | 'nexrender_template'
+    template_asset_type: TemplateAssetType
 }

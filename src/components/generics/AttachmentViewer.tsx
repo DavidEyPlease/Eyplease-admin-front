@@ -5,7 +5,8 @@ import { Dialog, DialogContent } from "@/uishadcn/ui/dialog"
 import { Button } from "@/uishadcn/ui/button"
 import { ExternalLink, Download, Trash2, ZoomIn, ZoomOut, RotateCw } from "lucide-react"
 import { IFile } from "@/interfaces/common"
-import { isImage } from "@/utils"
+import { isImage, isVideo } from "@/utils"
+import VideoPlayer from "./VideoPlayer"
 
 interface AttachmentViewerProps {
     isOpen: boolean
@@ -102,15 +103,23 @@ export function AttachmentViewer({ isOpen, onClose, attachment }: AttachmentView
                                 />
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center text-white">
-                                <div className="w-24 h-24 bg-gray-600 rounded-lg flex items-center justify-center mb-4">
-                                    <span className="text-2xl font-bold uppercase">
-                                        {currentAttachment.ext}
-                                    </span>
+                            isVideo(currentAttachment.ext) ? (
+                                <VideoPlayer
+                                    playerId={`video-player-${currentAttachment.id}`}
+                                    url={currentAttachment.url}
+                                    key={currentAttachment.id}
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center text-white">
+                                    <div className="w-24 h-24 bg-gray-600 rounded-lg flex items-center justify-center mb-4">
+                                        <span className="text-2xl font-bold uppercase">
+                                            {currentAttachment.ext}
+                                        </span>
+                                    </div>
+                                    <p className="text-lg mb-2">Vista previa no disponible</p>
+                                    <p className="text-sm text-gray-400">Haz clic en "Abrir en una pestaña nueva" para ver el archivo</p>
                                 </div>
-                                <p className="text-lg mb-2">Vista previa no disponible</p>
-                                <p className="text-sm text-gray-400">Haz clic en "Abrir en una pestaña nueva" para ver el archivo</p>
-                            </div>
+                            )
                         )}
                     </div>
 

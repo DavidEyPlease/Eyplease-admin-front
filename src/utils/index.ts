@@ -75,6 +75,12 @@ export const isImage = (fileExtension: string) => {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg']
     return imageExtensions.includes(fileExtension.toLowerCase())
 }
+
+export const isVideo = (fileExtension: string) => {
+    const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'flv', 'mkv']
+    return videoExtensions.includes(fileExtension.toLowerCase())
+}
+
 export const setVariablesInString = (str: string, variables: Record<string, string>) => {
     // Replace ${variable} in the string with the corresponding value from the variables object
     return str.replace(/\${([^}]*)}/g, (r, k) => variables[k] || '')

@@ -48,11 +48,11 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                         <CopyButton text={`${import.meta.env.VITE_API_BASE}/data-sources/tools/${taskId}?sort=${attachment.file.sort}`} />
                     </FieldValue>
                 )}
-                <Card className="mb-2 hover:bg-accent cursor-move">
+                <Card className="mb-2 hover:bg-accent cursor-move relative">
                     <CardContent className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-4">
                             <div
-                                className="size-12 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
+                                className="size-10 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
                                 onClick={() => attachment.file_type === 'image' && setSelectedFile(attachment.file)}
                             >
                                 {isImage(attachment.file.ext) ? (
@@ -82,7 +82,7 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                                 trigger={
                                     <Button
                                         variant="outline"
-                                        className="text-destructive"
+                                        className="text-destructive absolute right-2 -top-3"
                                         size="icon"
                                         disabled={loadingDelete === attachment.id}
                                     >

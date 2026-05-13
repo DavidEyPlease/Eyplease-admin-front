@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/uishadcn/ui/card"
 import FilterSidebar from "./components/FilterSidebar"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/uishadcn/ui/tooltip"
-import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS } from "@/constants/app"
+import { MAP_TASK_STATUS_COLORS } from "@/constants/app"
 import { EventContentArg } from "@fullcalendar/core/index.js"
 import { ITask, TaskStatusTypes } from "@/interfaces/tasks"
 import { useSidebar } from "@/uishadcn/ui/sidebar"
@@ -16,16 +16,23 @@ import { UseTaskResult } from "./useTasks"
 
 const renderEventContent = (eventInfo: EventContentArg & { event: ITask }) => {
     if (!eventInfo?.event) return null;
-    const { task_status } = eventInfo.event._def.extendedProps;
+    const { task_status, consecutive: taskConsecutive } = eventInfo.event._def.extendedProps;
     return (
         <div
             className={cn('p-1 rounded-md flex flex-col gap-y-1 shadow-sm', ...eventInfo.event.classNames)}
         >
-            <div className="flex items-center justify-between break-words">
+            <div className="flex items-center justify-between wrap-break-word">
                 <div className="flex gap-x-1">
-                    <p className={cn('break-words', 'text-xs', task_status?.slug === TaskStatusTypes.COMPLETED && 'line-through')}>
-                        {eventInfo.event.title.length > 15 ? `${eventInfo.event.title.substring(0, 15)}...` : eventInfo.event.title}
-                    </p>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <p className={cn('wrap-break-word', 'text-xs', task_status?.slug === TaskStatusTypes.COMPLETED && 'line-through')}>
+                                {eventInfo.event.title.length > 15 ? `${eventInfo.event.title.substring(0, 15)}...` : eventInfo.event.title}
+                            </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>#{taskConsecutive}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
                 <Tooltip>
                     <TooltipTrigger>

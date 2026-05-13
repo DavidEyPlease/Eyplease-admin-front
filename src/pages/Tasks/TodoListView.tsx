@@ -42,6 +42,7 @@ const columns: ColumnDef<ITask>[] = [
                 <div className="flex items-center">
                     <div className={`size-3 rounded-full ${MAP_TASK_TYPES_COLORS[row.original.task_type?.slug]}`} />
                     <UIButton variant='link' size='sm' onClick={() => publishEvent(BROWSER_EVENTS.OPEN_TASK_DETAIL, row.original)}>
+                        <b>#{row.original.consecutive}</b>
                         {row.original.title}
                     </UIButton>
                 </div>

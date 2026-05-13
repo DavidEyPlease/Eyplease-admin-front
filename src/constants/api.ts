@@ -67,6 +67,7 @@ export const API_ROUTES = {
         DELETE_ATTACHMENT: '/tasks/{id}/attachments/{attachmentId}',
         DOWNLOAD_FILE: '/tasks/{id}/attachments/{fileId}/download',
         GET_FILES: '/tasks/{id}/attachments',
+        UPDATE_TASK_ATTACHMENT: '/tasks/{id}/attachments/{attachmentId}',
     },
     TRAININGS: {
         LIST: '/trainings',
