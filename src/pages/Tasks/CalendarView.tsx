@@ -25,7 +25,7 @@ const renderEventContent = (eventInfo: EventContentArg & { event: ITask }) => {
                 <div className="flex gap-x-1">
                     <Tooltip>
                         <TooltipTrigger>
-                            <p className={cn('wrap-break-word', 'text-xs', task_status?.slug === TaskStatusTypes.COMPLETED && 'line-through')}>
+                            <p className={cn('wrap-break-word', 'text-xs', [TaskStatusTypes.COMPLETED, TaskStatusTypes.PUBLISHED].includes(task_status?.slug) && 'line-through')}>
                                 {eventInfo.event.title.length > 15 ? `${eventInfo.event.title.substring(0, 15)}...` : eventInfo.event.title}
                             </p>
                         </TooltipTrigger>
