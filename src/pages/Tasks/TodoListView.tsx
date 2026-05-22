@@ -23,6 +23,7 @@ export const TaskStatusIcon = ({ status }: { status: TaskStatusTypes }) => {
         [TaskStatusTypes.COMPLETED]: <CircleCheckBigIcon />,
         [TaskStatusTypes.PENDING_CORRECTION]: <PencilLineIcon />,
         [TaskStatusTypes.UPLOAD_AE_RESOURCES]: <PaintbrushIcon />,
+        [TaskStatusTypes.PUBLISHED]: <CircleCheckBigIcon />,
     }
 
     return icons[status] || null;
