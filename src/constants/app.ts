@@ -198,6 +198,7 @@ export const MAP_TASK_STATUS_COLORS: Record<TaskStatusTypes, string> = {
     [TaskStatusTypes.COMPLETED]: 'bg-green-500',
     [TaskStatusTypes.PENDING_CORRECTION]: 'bg-red-500',
     [TaskStatusTypes.UPLOAD_AE_RESOURCES]: 'bg-purple-500',
+    [TaskStatusTypes.PUBLISHED]: 'bg-indigo-500',
 }
 
 export const MAP_TASK_TYPES_COLORS: Record<string, string> = {

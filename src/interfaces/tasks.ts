@@ -9,7 +9,8 @@ export const TaskStatusTypes = {
     READY_FOR_PUBLISH: 'ready-for-publish',
     COMPLETED: 'completed',
     PENDING_CORRECTION: 'correction',
-    UPLOAD_AE_RESOURCES: 'upload_ae_resources'
+    UPLOAD_AE_RESOURCES: 'upload_ae_resources',
+    PUBLISHED: 'published'
 } as const;
 
 export type TaskStatusTypes = typeof TaskStatusTypes[keyof typeof TaskStatusTypes];
