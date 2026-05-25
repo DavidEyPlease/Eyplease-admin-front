@@ -61,7 +61,7 @@ const PostsTemplatesPage = () => {
     const onFilterChange = (key: TemplateFilterKeys, value: string) => {
         const next: Partial<TemplateFilters> = { [key]: value } as Partial<TemplateFilters>
         if (key === 'template_group') next.template_subgroup = ''
-        onApplyFilters(next)
+        onApplyFilters({ not_template_group: 'reports', ...next })
     }
 
     return (
