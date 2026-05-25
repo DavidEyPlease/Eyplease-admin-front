@@ -28,7 +28,7 @@ const PostsTemplatesPage = () => {
         setSelectedTemplate,
         setSearch,
         onApplyFilters,
-    } = useTemplates('templates/posts')
+    } = useTemplates('posts')
     const { utilData } = useAuthStore(state => state)
 
     const [openForm, setOpenForm] = useState(false)
@@ -45,14 +45,11 @@ const PostsTemplatesPage = () => {
         ),
     ]
 
-    const selectedGroup = filters.template_group || ''
-    const isGroupWithSubgroups = !!selectedGroup && !['customers-birthdays'].includes(selectedGroup)
-
     const { response: subGroups } = useFetchQuery<INewsletterSectionItem[]>(
-        API_ROUTES.GET_NEWSLETTER_SECTION_ITEMS.replace('{sectionKey}', selectedGroup),
+        API_ROUTES.GET_NEWSLETTER_SECTION_ITEMS.replace('{sectionKey}', filters?.template_group || ''),
         {
-            enabled: isGroupWithSubgroups,
-            customQueryKey: queryKeys.list('newsletter_section_items', { section: selectedGroup }),
+            enabled: Boolean(filters?.template_group && !['customers-birthdays', 'reports'].includes(filters?.template_group)),
+            customQueryKey: queryKeys.list('newsletter_section_items', { section: filters?.template_group }),
         }
     )
 
@@ -111,26 +108,26 @@ const PostsTemplatesPage = () => {
                 <Dropdown
                     placeholder="Mes"
                     items={MONTHS_OPTIONS}
-                    value={filters.month || ''}
+                    value={filters?.month || ''}
                     onChange={v => onFilterChange('month', v)}
                 />
                 <Dropdown
                     placeholder="Grupo"
                     items={templateGroupOptions}
-                    value={filters.template_group || ''}
+                    value={filters?.template_group || ''}
                     onChange={v => onFilterChange('template_group', v)}
                 />
                 <Dropdown
                     placeholder="Subgrupo"
                     items={subgroupOptions}
-                    value={filters.template_subgroup || ''}
-                    disabled={!isGroupWithSubgroups}
+                    value={filters?.template_subgroup || ''}
+                    disabled={!filters?.template_group || ['customers-birthdays'].includes(filters?.template_group)}
                     onChange={v => onFilterChange('template_subgroup', v)}
                 />
                 <Dropdown
                     placeholder="Recurso"
                     items={TEMPLATE_ASSET_TYPE_OPTIONS}
-                    value={filters.template_asset_type || ''}
+                    value={filters?.template_asset_type || ''}
                     onChange={v => onFilterChange('template_asset_type', v)}
                 />
             </div>

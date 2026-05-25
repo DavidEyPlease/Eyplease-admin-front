@@ -56,7 +56,7 @@ const Router = () => {
                 <Route path={APP_ROUTES.CLIENTS.CREATE} element={<CreateClientPage />} />
                 <Route path={APP_ROUTES.CLIENTS.EDIT} element={<EditClientPage />} />
 
-                <Route path={APP_ROUTES.TEMPLATES.REPORTS} element={<ReportsTemplatesPage defaultFilters={{ template_group: 'reports' }} />} />
+                <Route path={APP_ROUTES.TEMPLATES.REPORTS} element={<ReportsTemplatesPage />} />
                 <Route path={APP_ROUTES.TEMPLATES.POSTS} element={<PostsTemplatesPage />} />
 
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLANS} element={<PlansPage />} />

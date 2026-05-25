@@ -1,17 +1,12 @@
 import useTemplates from "./useTemplates"
 import StatsTemplates from "./components/Stats"
-import { TemplateFilters } from "./page-utils"
 import TemplatesList from "./List"
 
-interface TemplatesPageProps {
-    defaultFilters?: Partial<TemplateFilters>
-}
-
-const ReportsTemplatesPage = ({ defaultFilters }: TemplatesPageProps) => {
+const ReportsTemplatesPage = () => {
     const {
         isLoading,
         templates,
-    } = useTemplates('templates/reports', defaultFilters)
+    } = useTemplates('reports', { template_group: 'reports' })
 
     return (
         <div className="space-y-5">
