@@ -8,7 +8,7 @@ import { API_ROUTES } from "@/constants/api"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import { ITemplate } from "@/interfaces/templates"
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/uishadcn/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/uishadcn/ui/card"
 import { replaceRecordIdInPath } from "@/utils"
 import { queryKeys } from "@/utils/queryKeys"
 import TemplateCover from "../components/TemplateCover"
@@ -20,14 +20,13 @@ import FieldValue from "@/components/generics/FieldValue"
 import SwitchAction from "../components/SwitchAction"
 import { formatDate } from "@/utils/dates"
 import { BrowserEvent, publishEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events"
-import NexrenderConfiguration from "../components/Nexrender"
 import { BROWSER_EVENTS } from "@/constants/browserEvents"
 
 const TemplateDetailPage = () => {
     const [activeTab, setActiveTab] = useState<string>("template")
     const params = useParams<{ id: string }>()
 
-    const { response: template, loading, setData, fetchRetry, isRefetching } = useFetchQuery<ITemplate>(replaceRecordIdInPath(API_ROUTES.TEMPLATES.DETAIL, params.id || ''), {
+    const { response: template, loading, setData, } = useFetchQuery<ITemplate>(replaceRecordIdInPath(API_ROUTES.TEMPLATES.DETAIL, params.id || ''), {
         customQueryKey: queryKeys.detail(`template`, params?.id || ''),
         enabled: !!params.id
     })
@@ -59,11 +58,6 @@ const TemplateDetailPage = () => {
                     )}
                     Plantilla: {template?.name}
                 </CardTitle>
-                {/* {findTemplateGroup && (
-                    <CardDescription>
-                        Grupo: {findTemplateGroup.label}
-                    </CardDescription>
-                )} */}
             </CardHeader>
             <CardContent>
                 <div className="flex">
@@ -72,10 +66,10 @@ const TemplateDetailPage = () => {
                         onValueChange={e => setActiveTab(e)}
                         items={[
                             { label: 'Plantilla', value: 'template' },
-                            { label: 'Ver Fondos', value: 'backgrounds', disabled: template?.template_group !== 'reports' },
                             { label: 'Editar', value: 'edit' },
-                            { label: 'Gestionar Clientes', value: 'manage-clients' },
-                            { label: 'Configuración Nexrender', value: 'nexrender-configuration', disabled: template?.template_group === 'reports' },
+                            { label: 'Ver Fondos', value: 'backgrounds', disabled: template?.template_group !== 'reports' },
+                            { label: 'Gestionar Clientes', value: 'manage-clients', disabled: template?.template_group !== 'reports' },
+                            // { label: 'Configuración Nexrender', value: 'nexrender-configuration', disabled: template?.template_group === 'reports' },
                         ]}
                     />
                 </div>
@@ -110,7 +104,7 @@ const TemplateDetailPage = () => {
                             )}
 
                             {activeTab === 'edit' && template && (
-                                <div className="w-full md:w-1/2">
+                                <div className="w-full md:w-3/4">
                                     <TemplateForm
                                         item={template}
                                         onSuccess={(template) => publishEvent(BROWSER_EVENTS.TEMPLATE_DETAIL_UPDATED, template)}
@@ -122,9 +116,9 @@ const TemplateDetailPage = () => {
                                 <ManageClients template={template} />
                             )}
 
-                            {activeTab === 'nexrender-configuration' && template && (
+                            {/* {activeTab === 'nexrender-configuration' && template && (
                                 <NexrenderConfiguration template={template} isRefetching={isRefetching} onRefreshTemplate={fetchRetry} />
-                            )}
+                            )} */}
                         </>
                     )}
                 </div>

@@ -5,9 +5,9 @@ import { Link } from "react-router"
 
 import { ITemplate } from "@/interfaces/templates"
 import { APP_ROUTES } from "@/constants/app"
-import TemplateCover from "../../components/TemplateCover"
-import SwitchAction from "../../components/SwitchAction"
-import TemplateActions from "../../components/Actions"
+import TemplateCover from "./TemplateCover"
+import SwitchAction from "./SwitchAction"
+import TemplateActions from "./Actions"
 
 interface TemplateCardProps {
     template: ITemplate

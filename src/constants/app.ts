@@ -19,11 +19,13 @@ export const APP_ROUTES = {
         EDIT: '/clients/edit/:id',
         DETAIL: '/clients/:id',
     },
+    TEMPLATES: {
+        REPORTS: '/templates/reports',
+        POSTS: '/templates/posts'
+    },
     CONFIGURATIONS: {
         PLANS: '/configurations/plans',
         PLAN_DETAIL: '/configurations/plans/:id',
-        TEMPLATES: '/configurations/templates',
-        NEXRENDER_TEMPLATES: '/configurations/nexrender-templates',
         TEMPLATE_DETAIL: '/configurations/templates/:id',
         PERMISSIONS: '/configurations/permissions',
     },
@@ -128,6 +130,30 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         ]
     },
     {
+        key: PermissionKeys.TEMPLATES,
+        label: "Plantillas",
+        path: '',
+        icon: 'templates',
+        requiredPermission: true,
+        permissionKeys: [PermissionKeys.TEMPLATES],
+        children: [
+            {
+                key: PermissionKeys.TEMPLATES,
+                label: "Reportes",
+                path: APP_ROUTES.TEMPLATES.REPORTS,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.TEMPLATES],
+            },
+            {
+                key: PermissionKeys.TEMPLATES_PUBLICATION,
+                label: "Publicaciones",
+                path: APP_ROUTES.TEMPLATES.POSTS,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.TEMPLATES_PUBLICATION],
+            },
+        ]
+    },
+    {
         key: PermissionKeys.CONFIGURATION,
         label: "Configuraciones",
         path: '',
@@ -141,20 +167,6 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
                 path: APP_ROUTES.CONFIGURATIONS.PLANS,
                 requiredPermission: true,
                 permissionKeys: [PermissionKeys.PLANS],
-            },
-            {
-                key: PermissionKeys.TEMPLATES,
-                label: "Plantillas Reportes",
-                path: APP_ROUTES.CONFIGURATIONS.TEMPLATES,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.TEMPLATES],
-            },
-            {
-                key: PermissionKeys.TEMPLATES_NEXRENDER,
-                label: "Plantillas Nexrender",
-                path: APP_ROUTES.CONFIGURATIONS.NEXRENDER_TEMPLATES,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.TEMPLATES_NEXRENDER],
             },
             {
                 key: PermissionKeys.PERMISSIONS,

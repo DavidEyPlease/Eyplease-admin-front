@@ -22,6 +22,7 @@ export interface ITemplate extends IBaseDBProperties {
     render_provider_id: string | null
     slug: string
     template_file_uri: string | null
+    template_file_url: string | null
     month: number
     assets_data?: {
         compositions: string[]

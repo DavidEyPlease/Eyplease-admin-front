@@ -1,13 +1,10 @@
 import { FileTextIcon, UploadIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
-// import { Badge } from "@/uishadcn/ui/badge";
-// import { Button } from "@/uishadcn/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/uishadcn/ui/card";
 import { Input } from "@/uishadcn/ui/input";
 import { Label } from "@/uishadcn/ui/label";
 import { cn } from "@/lib/utils";
-import { Button } from "@/uishadcn/ui/button";
 import Spinner from "../common/Spinner";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
 
@@ -64,7 +61,7 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
             <CardContent className="space-y-4">
                 <div className={cn("border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors", disableUpload && 'opacity-50 cursor-not-allowed')}>
                     {loading ? (
-                        <Spinner className="mx-auto" />
+                        <Spinner className="mx-auto" color='primary' />
                     ) : (
                         <UploadIcon className="mx-auto h-12 w-12 text-gray-400" />
                     )}
@@ -99,7 +96,7 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
                         {/* <Badge variant="secondary" className="bg-green-100 text-green-700">
                             Listo
                         </Badge> */}
-                        <Button
+                        {/* <Button
                             variant="link"
                             className="text-sm text-red-600 hover:underline"
                             onClick={() => {
@@ -112,7 +109,7 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
                             }}
                         >
                             Eliminar
-                        </Button>
+                        </Button> */}
                     </div>
                 ))}
 

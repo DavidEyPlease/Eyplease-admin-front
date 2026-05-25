@@ -1,7 +1,10 @@
+import { useEffect, useMemo, useState } from "react"
 import {
     ColumnDef,
     flexRender,
     getCoreRowModel,
+    OnChangeFn,
+    RowSelectionState,
     useReactTable,
 } from "@tanstack/react-table"
 
@@ -15,8 +18,7 @@ import {
     TableRow,
 } from "@/uishadcn/ui/table"
 import { Card, CardContent, CardHeader } from "@/uishadcn/ui/card"
-import clsx from "clsx"
-import PageLoader from "./PageLoader"
+import { Checkbox } from "@/uishadcn/ui/checkbox"
 import { cn } from "@/lib/utils"
 import Spinner from "../common/Spinner"
 
@@ -27,6 +29,11 @@ interface DataTableProps<TData, TValue> {
     contentHeader?: React.ReactNode
     caption?: React.ReactNode
     containerClasses?: string
+    enableSelection?: boolean
+    rowSelection?: RowSelectionState
+    onRowSelectionChange?: OnChangeFn<RowSelectionState>
+    onSelectionChange?: (rows: TData[]) => void
+    getRowId?: (row: TData, index: number) => string
 }
 
 export function DataTable<TData, TValue>({
@@ -35,13 +42,69 @@ export function DataTable<TData, TValue>({
     isLoading,
     caption,
     containerClasses,
-    contentHeader
+    contentHeader,
+    enableSelection = false,
+    rowSelection: rowSelectionProp,
+    onRowSelectionChange,
+    onSelectionChange,
+    getRowId,
 }: DataTableProps<TData, TValue>) {
+    const isControlled = rowSelectionProp !== undefined
+    const [internalSelection, setInternalSelection] = useState<RowSelectionState>({})
+    const rowSelection = isControlled ? rowSelectionProp : internalSelection
+    const handleSelectionChange: OnChangeFn<RowSelectionState> = isControlled
+        ? (updater) => onRowSelectionChange?.(updater)
+        : setInternalSelection
+
+    const selectionColumn = useMemo<ColumnDef<TData, TValue>>(() => ({
+        id: '__select',
+        size: 40,
+        enableSorting: false,
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected()
+                        ? true
+                        : table.getIsSomePageRowsSelected()
+                            ? 'indeterminate'
+                            : false
+                }
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Seleccionar todo"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                disabled={!row.getCanSelect()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Seleccionar fila"
+            />
+        ),
+    }), [])
+
+    const finalColumns = useMemo(
+        () => (enableSelection ? [selectionColumn, ...columns] : columns),
+        [enableSelection, columns, selectionColumn]
+    )
+
     const table = useReactTable({
         data,
-        columns,
+        columns: finalColumns,
         getCoreRowModel: getCoreRowModel(),
+        enableRowSelection: enableSelection,
+        state: enableSelection ? { rowSelection } : undefined,
+        onRowSelectionChange: enableSelection ? handleSelectionChange : undefined,
+        getRowId,
     })
+
+    useEffect(() => {
+        if (!enableSelection || !onSelectionChange) return
+        const selectedRows = table.getSelectedRowModel().rows.map(r => r.original)
+        onSelectionChange(selectedRows)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rowSelection, enableSelection])
 
     return (
         <Card className={cn("w-full  relative overflow-hidden rounded-2xl py-0 gap-y-0", containerClasses)}>
@@ -90,7 +153,7 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell colSpan={finalColumns.length} className="h-24 text-center">
                                     No se encontrarón resultados.
                                 </TableCell>
                             </TableRow>

@@ -20,6 +20,7 @@ import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTHS_OPTIONS } from "@/constants/app"
 import { Field, FieldLabel } from "@/uishadcn/ui/field"
 import useFetchQuery from "@/hooks/useFetchQuery"
+import UploadTemplateFile from "./UploadTemplateFile"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -28,6 +29,11 @@ interface TemplateFormProps {
 }
 
 type FormType = z.infer<typeof TemplateSchema>
+
+const parseTemplateMonth = (month: number) => {
+    if (month < 10) return `0${month}`
+    return month.toString();
+}
 
 const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps) => {
     const { utilData } = useAuthStore(state => state)
@@ -119,7 +125,7 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                                     <Dropdown
                                         label="Mes de la plantilla"
                                         placeholder="Selecciona un mes"
-                                        value={field.value ? field.value.toString() : ''}
+                                        value={field.value ? parseTemplateMonth(field.value) : ''}
                                         onChange={e => field.onChange(parseInt(e))}
                                         items={MONTHS_OPTIONS}
                                         error={form.formState?.errors?.month?.message}
@@ -299,6 +305,10 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                 </div>
 
                 <Separator />
+
+                {item && (
+                    <UploadTemplateFile template={item} onSuccess={onSuccess} />
+                )}
 
                 <Button
                     text='Guardar'

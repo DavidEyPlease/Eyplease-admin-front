@@ -16,10 +16,9 @@ import ClientsListPage from "./pages/Clients/List"
 import PlansPage from "./pages/Configurations/Plans/List"
 import PlanDetailPage from "./pages/Configurations/Plans/Detail"
 import ClientDetailPage from "./pages/Clients/Detail"
-import TemplatesPage from "./pages/Configurations/Templates/List"
 import TasksPage from "./pages/Tasks"
 import PermissionsPage from "./pages/Configurations/Permissions"
-import TemplateDetailPage from "./pages/Configurations/Templates/Detail"
+import TemplateDetailPage from "./pages/Templates/Detail"
 import TrainingsPage from "./pages/Trainings"
 import NewsletterReportUploadPage from "./pages/NewsletterReports/Upload"
 import CreateClientPage from "./pages/Clients/Create"
@@ -27,6 +26,8 @@ import EditClientPage from "./pages/Clients/Edit"
 import NewsletterReportListPage from "./pages/NewsletterReports/List"
 import PostsPage from "./pages/Posts"
 import FullScreenLoader from "./components/generics/FullScreenLoader"
+import PostsTemplatesPage from "./pages/Templates/Posts"
+import ReportsTemplatesPage from "./pages/Templates/Reports"
 
 const Router = () => {
     const { isLogged, pending: sessionLoading, getMe } = useAuth();
@@ -55,10 +56,11 @@ const Router = () => {
                 <Route path={APP_ROUTES.CLIENTS.CREATE} element={<CreateClientPage />} />
                 <Route path={APP_ROUTES.CLIENTS.EDIT} element={<EditClientPage />} />
 
+                <Route path={APP_ROUTES.TEMPLATES.REPORTS} element={<ReportsTemplatesPage defaultFilters={{ template_group: 'reports' }} />} />
+                <Route path={APP_ROUTES.TEMPLATES.POSTS} element={<PostsTemplatesPage />} />
+
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLANS} element={<PlansPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLAN_DETAIL} element={<PlanDetailPage />} />
-                <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATES} element={<TemplatesPage defaultFilters={{ template_group: 'reports' }} />} />
-                <Route path={APP_ROUTES.CONFIGURATIONS.NEXRENDER_TEMPLATES} element={<TemplatesPage defaultFilters={{ not_template_group: 'reports' }} />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL} element={<TemplateDetailPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PERMISSIONS} element={<PermissionsPage />} />
                 <Route path={APP_ROUTES.TASKS.LIST} element={<TasksPage />} />

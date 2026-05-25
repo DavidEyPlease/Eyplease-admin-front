@@ -40,6 +40,7 @@ type UseListInitParams<F = unknown> = {
     staleTime?: number
     cacheTime?: number
     enabled?: boolean
+    requireActiveFilters?: boolean
     refetchOnWindowFocus?: boolean
 }
 
@@ -53,7 +54,8 @@ const useListQuery = <T, F = unknown>({
     customQueryKey,
     staleTime,
     cacheTime,
-    enabled,
+    enabled = true,
+    requireActiveFilters,
     refetchOnWindowFocus
 }: UseListInitParams<F>): UseListInitResult<T, F> => {
     const [search, setSearch] = useState(defaultSearch)
@@ -72,6 +74,9 @@ const useListQuery = <T, F = unknown>({
         return customQueryKey || ['list', endpoint, queryParams]
     }, [customQueryKey, endpoint, queryParams])
 
+    const hasActiveFilters = Object.keys(filters).length > 0
+    const enabledComputed = requireActiveFilters ? enabled && hasActiveFilters : enabled
+
     const {
         error,
         loading: isLoading,
@@ -84,7 +89,7 @@ const useListQuery = <T, F = unknown>({
         customQueryKey: generatedQueryKey,
         staleTime,
         cacheTime,
-        enabled,
+        enabled: enabledComputed,
         refetchOnWindowFocus,
     })
 
