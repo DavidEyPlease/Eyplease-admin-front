@@ -28,7 +28,7 @@ const PostsTemplatesPage = () => {
         setSelectedTemplate,
         setSearch,
         onApplyFilters,
-    } = useTemplates()
+    } = useTemplates('templates/posts')
     const { utilData } = useAuthStore(state => state)
 
     const [openForm, setOpenForm] = useState(false)

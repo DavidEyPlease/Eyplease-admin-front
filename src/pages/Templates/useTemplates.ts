@@ -8,7 +8,7 @@ import { queryKeys } from "@/utils/queryKeys"
 import { useCallback, useEffect, useState } from "react"
 import { TemplateFilters } from "./page-utils"
 
-const useTemplates = (defaultFilters?: Partial<TemplateFilters>) => {
+const useTemplates = (queryKey: string, defaultFilters?: Partial<TemplateFilters>) => {
     const store = useTemplatesStore(state => state)
     const {
         setFilters: setStoreFilters,
@@ -27,7 +27,7 @@ const useTemplates = (defaultFilters?: Partial<TemplateFilters>) => {
         endpoint: API_ROUTES.TEMPLATES.LIST,
         defaultFilters: initialFilters,
         defaultSearch: initialSearch,
-        customQueryKey: (params) => queryKeys.list('config/templates', params),
+        customQueryKey: (params) => queryKeys.list(queryKey, params),
         requireActiveFilters: true,
     })
 

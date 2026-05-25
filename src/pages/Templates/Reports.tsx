@@ -11,7 +11,7 @@ const ReportsTemplatesPage = ({ defaultFilters }: TemplatesPageProps) => {
     const {
         isLoading,
         templates,
-    } = useTemplates(defaultFilters)
+    } = useTemplates('templates/reports', defaultFilters)
 
     return (
         <div className="space-y-5">
