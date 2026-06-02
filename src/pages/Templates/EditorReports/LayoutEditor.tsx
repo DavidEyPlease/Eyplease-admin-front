@@ -2,7 +2,7 @@ import { Stage, Layer, Image as KImage, Rect, Transformer } from "react-konva";
 import { X } from "lucide-react";
 
 import { BgInfo, Layout, layoutKey } from "./layout-types";
-import { SELECTION, GROUP_LABELS, FORMAT_LABELS, bgName } from "./layout-helpers";
+import { SELECTION, GROUP_LABELS, FORMAT_LABELS, bgName, dataKeyOptionsFor } from "./layout-helpers";
 import { useLayoutEditor } from "./useLayoutEditor";
 import SectionTitle from "./components/SectionTitle";
 import PhotoNode from "./components/PhotoNode";
@@ -187,7 +187,7 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
                 <SectionTitle>Propiedades</SectionTitle>
                 {selIds.length === 0 && <p className="text-xs text-muted-foreground">Selecciona o agrega una zona.</p>}
                 {selIds.length > 1 && <p className="text-xs text-muted-foreground">{selIds.length} zonas. Arrástralas juntas. Shift+clic suma.</p>}
-                {sel && <PropPanel key={sel.id} z={sel} update={update} updateNested={updateNested} onDelete={() => del(sel.id)} logos={logos} />}
+                {sel && <PropPanel key={sel.id} z={sel} zones={zones} update={update} updateNested={updateNested} onDelete={() => del(sel.id)} logos={logos} dataKeyOptions={dataKeyOptionsFor(selectedBg)} />}
             </aside>
         </div>
     );

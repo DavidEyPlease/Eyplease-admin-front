@@ -6,23 +6,31 @@ import { Slider } from "@/uishadcn/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/uishadcn/ui/toggle-group";
 
 import { Zone, PhotoZone, TextZone, Border, Shadow, RGB, RGBA } from "../layout-types";
-import { ZonePatch, SHAPE_OPTIONS, FONT_OPTIONS, WEIGHT_OPTIONS, DATA_KEY_OPTIONS } from "../layout-helpers";
+import { ZonePatch, SHAPE_OPTIONS, FONT_OPTIONS, WEIGHT_OPTIONS, DataKeyOption } from "../layout-helpers";
 import Field from "./Field";
 
 interface PropPanelProps {
     z: Zone;
+    zones: Zone[];
     update: (id: string, patch: ZonePatch) => void;
     updateNested: (id: string, key: "border" | "shadow", patch: Partial<Border> | Partial<Shadow>) => void;
     onDelete: () => void;
     logos: { name: string; url: string }[];
+    dataKeyOptions: DataKeyOption[];
 }
+
+// Radix Select forbids an empty-string item value, so use a sentinel for "none".
+const FLOW_NONE = "__none__";
 
 /**
  * Right-hand property editor for the selected zone. The Dropdowns are
  * uncontrolled (the shared Dropdown component uses `defaultValue`), so the
  * parent remounts this panel via `key={z.id}` when the selection changes.
  */
-export default function PropPanel({ z, update, updateNested, onDelete, logos }: PropPanelProps) {
+export default function PropPanel({ z, zones, update, updateNested, onDelete, logos, dataKeyOptions }: PropPanelProps) {
+    const flowCandidates = zones
+        .filter((zz): zz is PhotoZone | TextZone => zz.type !== "logo" && zz.id !== z.id)
+        .map((zz) => ({ value: zz.data_key, label: zz.data_key }));
     const hex = (rgb: RGB | RGBA) => "#" + rgb.slice(0, 3).map((v) => v.toString(16).padStart(2, "0")).join("");
     const fromHex = (h: string): RGB => { const n = h.replace("#", ""); return [parseInt(n.slice(0, 2), 16), parseInt(n.slice(2, 4), 16), parseInt(n.slice(4, 6), 16)]; };
 
@@ -37,7 +45,7 @@ export default function PropPanel({ z, update, updateNested, onDelete, logos }: 
                         <Dropdown
                             placeholder="Selecciona un dato"
                             value={z.data_key.slice(prefix.length)}
-                            items={DATA_KEY_OPTIONS}
+                            items={dataKeyOptions}
                             onChange={(v) => update(z.id, { data_key: prefix + v })}
                         />
                     </Field>
@@ -133,6 +141,37 @@ export default function PropPanel({ z, update, updateNested, onDelete, logos }: 
                         <Checkbox checked={!!z.uppercase} onCheckedChange={(c) => update(z.id, { uppercase: c === true })} />
                         MAYÚSCULAS
                     </label>
+
+                    <Field label="Fluir debajo de">
+                        <Dropdown
+                            placeholder="(posición fija)"
+                            value={z.flow_below ?? FLOW_NONE}
+                            items={[{ value: FLOW_NONE, label: "(posición fija)" }, ...flowCandidates]}
+                            onChange={(v) => update(z.id, v === FLOW_NONE
+                                ? { flow_below: undefined, flow_gap: undefined }
+                                : { flow_below: v, flow_gap: z.flow_gap ?? 24 })}
+                        />
+                    </Field>
+                    {z.flow_below && (
+                        <Field label="Separación debajo (px)">
+                            <Input type="number" value={z.flow_gap ?? 24} onChange={(e) => update(z.id, { flow_gap: +e.target.value })} />
+                        </Field>
+                    )}
+
+                    <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Checkbox
+                            checked={!!z.auto_fit}
+                            onCheckedChange={(c) => update(z.id, c === true
+                                ? { auto_fit: true, min_size: z.min_size ?? Math.max(12, Math.round(z.size * 0.5)) }
+                                : { auto_fit: undefined, min_size: undefined })}
+                        />
+                        Auto-ajustar tamaño a una línea
+                    </label>
+                    {z.auto_fit && (
+                        <Field label="Tamaño mínimo">
+                            <Input type="number" value={z.min_size ?? 0} onChange={(e) => update(z.id, { min_size: +e.target.value })} />
+                        </Field>
+                    )}
                 </>
             )}
 

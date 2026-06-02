@@ -150,8 +150,11 @@ export function bgLabel(bg: BgInfo): string {
 }
 
 // ---- Dropdown option lists (label/value pairs for the Dropdown component) ----
-// Controlled vocabulary for zone data_key (what the renderer binds at render time).
-export const DATA_KEY_OPTIONS = [
+export type DataKeyOption = { value: string; label: string };
+
+// Default controlled vocabulary for zone data_key (what the renderer binds at
+// render time). Used for any background without a section-specific override.
+export const DATA_KEY_OPTIONS: DataKeyOption[] = [
     { value: "client_photo", label: "Foto cliente" },
     { value: "client_name", label: "Nombre cliente" },
     { value: "client_logo", label: "Logo cliente" },
@@ -161,6 +164,36 @@ export const DATA_KEY_OPTIONS = [
     { value: "missing_points", label: "Puntos faltantes" },
     { value: "birthday", label: "Fecha cumpleaños" },
 ];
+
+// Section-specific data_key vocabularies. When a background matches an entry
+// here, the editor shows ONLY these options for its zones (the generic list is
+// hidden). Keyed per group by `${kind}/${asset}`, so a cover and a section with
+// the same slug can differ. Add new sections here to give them custom keys.
+export const SECTION_DATA_KEYS: Partial<Record<TemplateGroup, Record<string, DataKeyOption[]>>> = {
+    unit: {
+        // Cuadro de honor (sección): reina, princesa y segunda princesa.
+        "section/honor_roll": [
+            { value: "queen_photo", label: "Reina · Foto" },
+            { value: "queen_name", label: "Reina · Nombre" },
+            { value: "queen_points", label: "Reina · Puntos" },
+            { value: "princess_photo", label: "Princesa · Foto" },
+            { value: "princess_name", label: "Princesa · Nombre" },
+            { value: "princess_points", label: "Princesa · Puntos" },
+            { value: "second_princess_photo", label: "Segunda princesa · Foto" },
+            { value: "second_princess_name", label: "Segunda princesa · Nombre" },
+            { value: "second_princess_points", label: "Segunda princesa · Puntos" },
+        ],
+    },
+};
+
+/**
+ * data_key options for a given background: a section-specific list when one is
+ * configured in SECTION_DATA_KEYS, otherwise the generic DATA_KEY_OPTIONS.
+ */
+export function dataKeyOptionsFor(bg?: BgInfo): DataKeyOption[] {
+    const override = bg && SECTION_DATA_KEYS[bg.group]?.[`${bg.kind}/${bg.asset}`];
+    return override ?? DATA_KEY_OPTIONS;
+}
 export const SHAPE_OPTIONS = [
     { value: "circle", label: "Círculo" },
     { value: "rounded_rect", label: "Rect. redondeado" },

@@ -22,6 +22,16 @@ export interface TextZone {
     align: "left" | "center" | "right"; valign: "top" | "middle" | "bottom";
     font: string; weight: number; size: number; color: RGB;
     line_height?: number; tracking?: number; uppercase?: boolean; static?: string;
+    // Vertical flow (renderer-side): when set, render this text below the zone
+    // whose data_key === flow_below, measuring that zone's real height and
+    // adding flow_gap px. Lets points sit a constant gap under a name that may
+    // wrap to 1 or 2 lines. `y` is ignored by the renderer when flow_below is set.
+    flow_below?: string;
+    flow_gap?: number;
+    // Auto-fit (renderer-side): shrink the font from `size` down to `min_size`
+    // until the text fits the box width (avoids long names wrapping).
+    auto_fit?: boolean;
+    min_size?: number;
 }
 export interface LogoZone {
     id: string; type: "logo"; src: string;
