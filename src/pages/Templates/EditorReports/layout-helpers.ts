@@ -183,6 +183,13 @@ export const SECTION_DATA_KEYS: Partial<Record<TemplateGroup, Record<string, Dat
             { value: "second_princess_name", label: "Segunda princesa · Nombre" },
             { value: "second_princess_points", label: "Segunda princesa · Puntos" },
         ],
+        // Nuevos inicios (listado): por persona, foto + nombre del nuevo inicio +
+        // nombre de la iniciadora. Se usan como items[i].<campo> en cada fila.
+        "section/new_beginnings": [
+            { value: "photo", label: "Nuevo inicio · Foto" },
+            { value: "name", label: "Nuevo inicio · Nombre" },
+            { value: "initiator", label: "Iniciadora · Nombre" },
+        ],
     },
 };
 
