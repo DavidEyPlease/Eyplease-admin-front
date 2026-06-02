@@ -20,7 +20,7 @@ import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTHS_OPTIONS } from "@/constants/app"
 import { Field, FieldLabel } from "@/uishadcn/ui/field"
 import useFetchQuery from "@/hooks/useFetchQuery"
-import UploadTemplateFile from "./UploadTemplateFile"
+import UploadTemplateFiles from "./UploadTemplateFiles"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -307,7 +307,7 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                 <Separator />
 
                 {item && (
-                    <UploadTemplateFile template={item} onSuccess={onSuccess} />
+                    <UploadTemplateFiles template={item} onSuccess={onSuccess} />
                 )}
 
                 <Button

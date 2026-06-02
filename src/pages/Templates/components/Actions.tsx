@@ -1,5 +1,6 @@
 import { AlertConfirmDelete } from "@/components/generics/AlertConfirm"
 import { API_ROUTES } from "@/constants/api"
+import { APP_ROUTES } from "@/constants/app"
 import { BROWSER_EVENTS } from "@/constants/browserEvents"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { ITemplate } from "@/interfaces/templates"
@@ -7,13 +8,15 @@ import useTemplatesStore from "@/store/templates"
 import { Button } from "@/uishadcn/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/uishadcn/ui/dropdown-menu"
 import { publishEvent } from "@/utils/events"
-import { EditIcon, EyeIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon } from "lucide-react"
+import { EditIcon, EyeIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon, WandSparklesIcon } from "lucide-react"
+import { useNavigate } from "react-router"
 
 interface Props {
     template: ITemplate | null
 }
 
 const TemplateActions = ({ template }: Props) => {
+    const navigate = useNavigate()
     const { setSelectedTemplate } = useTemplatesStore(state => state)
 
     const { request, requestState } = useRequestQuery({
@@ -50,6 +53,12 @@ const TemplateActions = ({ template }: Props) => {
                     Gestionar Clientes
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {template?.template_group === 'reports' && (
+                    <DropdownMenuItem onClick={() => navigate(APP_ROUTES.TEMPLATES.EDITOR_REPORTS.replace(':id', template?.id || ''))}>
+                        <WandSparklesIcon className="w-4 h-4 mr-2" />
+                        Editor
+                    </DropdownMenuItem>
+                )}
 
                 <AlertConfirmDelete
                     trigger={

@@ -46,6 +46,9 @@ export const API_ROUTES = {
         UPLOAD_TEMPLATE: '/templates/{id}/upload-template',
         PREVIEW_TEMPLATE: '/templates/{id}/preview',
         GET_JOB_PREVIEW: '/templates/job-preview',
+        ANALYZE_WITH_AI: '/templates/{id}/analyze-with-ai',
+        EYRENDER_PREVIEW: '/templates/{id}/eyrender-preview',
+        GET_EYRENDER_JOB: '/templates/eyrender-job/{jobId}',
     },
     PERMISSIONS: {
         GET_ALL_ACCESS: '/roles/accesses',

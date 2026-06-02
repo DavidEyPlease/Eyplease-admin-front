@@ -21,6 +21,7 @@ interface FileUploaderProps {
 
 const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.doc,.docx,.xls,.xlsx', disableUpload, onUploadFiles }: FileUploaderProps) => {
     const [files, setFiles] = useState<File[]>([])
+    const [isDragging, setIsDragging] = useState(false)
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +30,42 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
             const files = Array.from(selectedFiles)
             setFiles(files)
             onUploadFiles(files)
+        }
+    }
+
+    const acceptsFile = (file: File) => {
+        const accepts = fileAccepts.split(',').map(a => a.trim()).filter(Boolean)
+        if (accepts.length === 0) return true
+        return accepts.some(accept => {
+            if (accept.startsWith('.')) {
+                return file.name.toLowerCase().endsWith(accept.toLowerCase())
+            }
+            if (accept.endsWith('/*')) {
+                return file.type.startsWith(accept.slice(0, -1))
+            }
+            return file.type === accept
+        })
+    }
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        if (disableUpload) return
+        setIsDragging(true)
+    }
+
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        setIsDragging(false)
+    }
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        setIsDragging(false)
+        if (disableUpload) return
+        const droppedFiles = Array.from(event.dataTransfer.files).filter(acceptsFile)
+        if (droppedFiles.length > 0) {
+            setFiles(droppedFiles)
+            onUploadFiles(droppedFiles)
         }
     }
 
@@ -59,7 +96,16 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className={cn("border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors", disableUpload && 'opacity-50 cursor-not-allowed')}>
+                <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={cn(
+                        "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors",
+                        isDragging && 'border-indigo-500 bg-indigo-50',
+                        disableUpload && 'opacity-50 cursor-not-allowed'
+                    )}
+                >
                     {loading ? (
                         <Spinner className="mx-auto" color='primary' />
                     ) : (
@@ -112,20 +158,6 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
                         </Button> */}
                     </div>
                 ))}
-
-                {/* <Button
-                    className="w-full" disabled={!files || disableUpload}
-                    variant={files ? "default" : "secondary"}
-                    onClick={() => files && onUploadFiles(files)}
-                >
-                    <UploadIcon className="mr-2 h-4 w-4" />
-                    {files ? buttonText : "Selecciona un archivo"}
-                </Button> */}
-
-                {/* <div className="text-xs text-muted-foreground">
-                    <p>• Los archivos se procesan automáticamente</p>
-                    <p>• Recibirás una notificación al completarse</p>
-                </div> */}
             </CardContent>
         </Card>
     )

@@ -57,6 +57,7 @@ const DropdownGroup = ({ placeholder = 'Seleccionar', label, groups, disabled, v
                                         <CommandItem
                                             key={item.value}
                                             value={item.value}
+                                            keywords={[item.label]}
                                             onSelect={() => {
                                                 onChange?.(item.value);
                                                 setOpen(false)

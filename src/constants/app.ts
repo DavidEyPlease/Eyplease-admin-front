@@ -21,6 +21,7 @@ export const APP_ROUTES = {
     },
     TEMPLATES: {
         REPORTS: '/templates/reports',
+        EDITOR_REPORTS: '/templates/reports/editor/:id',
         POSTS: '/templates/posts'
     },
     CONFIGURATIONS: {

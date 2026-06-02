@@ -15,7 +15,7 @@ import { queryKeys } from "@/utils/queryKeys"
 import { INewsletterSectionItem } from "@/interfaces/common"
 import { TEMPLATE_ASSET_TYPE_OPTIONS, TemplateFilterKeys, TemplateFilters } from "./page-utils"
 import TemplatesList from "./List"
-import UploadTemplateFile from "./components/UploadTemplateFile"
+import UploadTemplateFile from "./components/UploadTemplateFiles"
 
 const PostsTemplatesPage = () => {
 

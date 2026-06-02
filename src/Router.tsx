@@ -28,6 +28,7 @@ import PostsPage from "./pages/Posts"
 import FullScreenLoader from "./components/generics/FullScreenLoader"
 import PostsTemplatesPage from "./pages/Templates/Posts"
 import ReportsTemplatesPage from "./pages/Templates/Reports"
+import TemplateReportEditorPage from "./pages/Templates/EditorReports"
 
 const Router = () => {
     const { isLogged, pending: sessionLoading, getMe } = useAuth();
@@ -58,6 +59,7 @@ const Router = () => {
 
                 <Route path={APP_ROUTES.TEMPLATES.REPORTS} element={<ReportsTemplatesPage />} />
                 <Route path={APP_ROUTES.TEMPLATES.POSTS} element={<PostsTemplatesPage />} />
+                <Route path={APP_ROUTES.TEMPLATES.EDITOR_REPORTS} element={<TemplateReportEditorPage />} />
 
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLANS} element={<PlansPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLAN_DETAIL} element={<PlanDetailPage />} />

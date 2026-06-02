@@ -15,6 +15,7 @@ import TemplateCover from "../components/TemplateCover"
 import TemplateForm from "../components/TemplateForm"
 import TemplateDetail from "../components/TemplateDetail"
 import ManageClients from "../components/ManageClients"
+import AIEditor from "../components/AIEditor"
 import { Badge } from "@/uishadcn/ui/badge"
 import FieldValue from "@/components/generics/FieldValue"
 import SwitchAction from "../components/SwitchAction"
@@ -67,6 +68,13 @@ const TemplateDetailPage = () => {
                         items={[
                             { label: 'Plantilla', value: 'template' },
                             { label: 'Editar', value: 'edit' },
+                            {
+                                label: 'Editor IA',
+                                value: 'ai-editor',
+                                disabled: template?.template_group === 'reports'
+                                    || !template?.template_file_url
+                                    || !template?.reference_file_url
+                            },
                             { label: 'Ver Fondos', value: 'backgrounds', disabled: template?.template_group !== 'reports' },
                             { label: 'Gestionar Clientes', value: 'manage-clients', disabled: template?.template_group !== 'reports' },
                             // { label: 'Configuración Nexrender', value: 'nexrender-configuration', disabled: template?.template_group === 'reports' },
@@ -114,6 +122,10 @@ const TemplateDetailPage = () => {
 
                             {activeTab === 'manage-clients' && template && (
                                 <ManageClients template={template} />
+                            )}
+
+                            {activeTab === 'ai-editor' && template && (
+                                <AIEditor template={template} />
                             )}
 
                             {/* {activeTab === 'nexrender-configuration' && template && (
