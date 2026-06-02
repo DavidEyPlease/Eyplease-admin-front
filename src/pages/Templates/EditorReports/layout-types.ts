@@ -40,8 +40,11 @@ export const FONT_MAP: Record<string, { family: string; italic: boolean }> = {
     "DancingScript": { family: "Dancing Script", italic: false },
 };
 
-export const layoutKey = (b: { group: string; format: string; asset: string }) =>
-    `${b.group}/${b.format}/${b.asset}`;
+// Storage key — MUST match the Python renderer: group/format/kind/asset.
+// `kind` ("cover" | "section") is part of the key so a cover and a section that
+// share the same asset slug (e.g. "honor_roll") get distinct layouts.
+export const layoutKey = (b: { group: string; format: string; kind: string; asset: string }) =>
+    `${b.group}/${b.format}/${b.kind}/${b.asset}`;
 
 // Box(top-left, editor) <-> anchor(renderer) conversion for text
 export function textToRenderer(z: TextZone): TextZone {

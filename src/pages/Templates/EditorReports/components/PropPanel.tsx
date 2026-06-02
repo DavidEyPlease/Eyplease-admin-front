@@ -6,7 +6,7 @@ import { Slider } from "@/uishadcn/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/uishadcn/ui/toggle-group";
 
 import { Zone, PhotoZone, TextZone, Border, Shadow, RGB, RGBA } from "../layout-types";
-import { ZonePatch, SHAPE_OPTIONS, FONT_OPTIONS, WEIGHT_OPTIONS } from "../layout-helpers";
+import { ZonePatch, SHAPE_OPTIONS, FONT_OPTIONS, WEIGHT_OPTIONS, DATA_KEY_OPTIONS } from "../layout-helpers";
 import Field from "./Field";
 
 interface PropPanelProps {
@@ -28,9 +28,21 @@ export default function PropPanel({ z, update, updateNested, onDelete, logos }: 
 
     return (
         <div className="space-y-3">
-            {z.type !== "logo" && (
-                <Field label="data_key"><Input value={z.data_key} onChange={(e) => update(z.id, { data_key: e.target.value })} /></Field>
-            )}
+            {z.type !== "logo" && (() => {
+                // Listing rows use "items[n].<key>" — keep the prefix and let the
+                // dropdown operate on the bare key so the same options work for both.
+                const prefix = z.data_key.match(/^items\[\d+\]\./)?.[0] ?? "";
+                return (
+                    <Field label={`data_key${prefix ? ` · ${prefix.replace(/\.$/, "")}` : ""}`}>
+                        <Dropdown
+                            placeholder="Selecciona un dato"
+                            value={z.data_key.slice(prefix.length)}
+                            items={DATA_KEY_OPTIONS}
+                            onChange={(v) => update(z.id, { data_key: prefix + v })}
+                        />
+                    </Field>
+                );
+            })()}
 
             <div className="grid grid-cols-2 gap-2">
                 <Field label="X"><Input type="number" value={z.x} onChange={(e) => update(z.id, { x: +e.target.value })} /></Field>

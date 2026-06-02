@@ -196,8 +196,8 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
     };
 
     // ---- Add / remove / clipboard ----
-    const addPhoto = () => { const z: PhotoZone = { id: newId("foto"), type: "photo", data_key: "foto", x: Math.round(bgW / 2 - 140), y: Math.round(bgH / 2 - 140), w: 280, h: 280, ...photoDefaults() }; setZones((zs) => [...zs, z]); setSelIds([z.id]); };
-    const addText = () => { const z: TextZone = { id: newId("txt"), type: "text", data_key: "nombre", x: Math.round(bgW / 2 - 300), y: Math.round(bgH / 2), w: 600, align: "center", valign: "top", ...nameDefaults() }; setZones((zs) => [...zs, z]); setSelIds([z.id]); };
+    const addPhoto = () => { const z: PhotoZone = { id: newId("foto"), type: "photo", data_key: "photo", x: Math.round(bgW / 2 - 140), y: Math.round(bgH / 2 - 140), w: 280, h: 280, ...photoDefaults() }; setZones((zs) => [...zs, z]); setSelIds([z.id]); };
+    const addText = () => { const z: TextZone = { id: newId("txt"), type: "text", data_key: "name", x: Math.round(bgW / 2 - 300), y: Math.round(bgH / 2), w: 600, align: "center", valign: "top", ...nameDefaults() }; setZones((zs) => [...zs, z]); setSelIds([z.id]); };
     const addLogo = () => { const src = logos[0]?.url || DEFAULT_LOGO_URL; const z: LogoZone = { id: newId("logo"), type: "logo", src, x: Math.round(bgW / 2 - 150), y: Math.round(bgH * 0.04), w: 300, h: 90, fit: "contain" }; setZones((zs) => [...zs, z]); setSelIds([z.id]); };
     const addRow = () => {
         const fotoId = newId("foto"), nomId = newId("nom"), metId = newId("met");
@@ -210,9 +210,9 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
             const baseY = Math.round(bgH * 0.30) + n * Math.round(bgH * 0.135);
             const px = Math.round(bgW * 0.11), d = 240, tx = px + d + 50;
             return [...zs,
-            { id: fotoId, type: "photo", data_key: `items[${n}].foto`, x: px, y: baseY, w: d, h: d, ...photoDefaults() } as PhotoZone,
-            { id: nomId, type: "text", data_key: `items[${n}].nombre`, x: tx, y: baseY + 40, w: bgW - tx - 80, align: "left", valign: "top", ...nameDefaults() } as TextZone,
-            { id: metId, type: "text", data_key: `items[${n}].metrica`, x: tx, y: baseY + 130, w: bgW - tx - 80, align: "left", valign: "top", ...metricDefaults() } as TextZone];
+            { id: fotoId, type: "photo", data_key: `items[${n}].photo`, x: px, y: baseY, w: d, h: d, ...photoDefaults() } as PhotoZone,
+            { id: nomId, type: "text", data_key: `items[${n}].name`, x: tx, y: baseY + 40, w: bgW - tx - 80, align: "left", valign: "top", ...nameDefaults() } as TextZone,
+            { id: metId, type: "text", data_key: `items[${n}].points`, x: tx, y: baseY + 130, w: bgW - tx - 80, align: "left", valign: "top", ...metricDefaults() } as TextZone];
         });
         setSelIds([fotoId]);
     };

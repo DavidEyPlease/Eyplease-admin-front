@@ -150,6 +150,17 @@ export function bgLabel(bg: BgInfo): string {
 }
 
 // ---- Dropdown option lists (label/value pairs for the Dropdown component) ----
+// Controlled vocabulary for zone data_key (what the renderer binds at render time).
+export const DATA_KEY_OPTIONS = [
+    { value: "client_photo", label: "Foto cliente" },
+    { value: "client_name", label: "Nombre cliente" },
+    { value: "client_logo", label: "Logo cliente" },
+    { value: "name", label: "Nombre vendedor(a)" },
+    { value: "photo", label: "Foto vendedor(a)" },
+    { value: "points", label: "Puntos" },
+    { value: "missing_points", label: "Puntos faltantes" },
+    { value: "birthday", label: "Fecha cumpleaños" },
+];
 export const SHAPE_OPTIONS = [
     { value: "circle", label: "Círculo" },
     { value: "rounded_rect", label: "Rect. redondeado" },
@@ -183,10 +194,10 @@ export function sampleText(dataKey: string): string {
 }
 
 export const photoDefaults = () => ({
-    shape: "circle" as const,
+    shape: "rounded_rect" as const,
+    radius: 36,
     fit: "cover" as const,
-    border: { color: [201, 167, 78] as RGB, width: 6, double: true, gap: 7, inner_width: 2 },
     shadow: { blur: 22, color: [40, 50, 35, 90] as [number, number, number, number], offset: [0, 10] as [number, number] },
 });
-export const nameDefaults = () => ({ font: "PlayfairDisplay-Italic", weight: 600, size: 46, color: [42, 74, 54] as RGB, line_height: 1.05 });
-export const metricDefaults = () => ({ font: "Inter", weight: 600, size: 30, color: [161, 133, 74] as RGB, tracking: 1 });
+export const nameDefaults = () => ({ font: "PlayfairDisplay-Italic", weight: 600, size: 46, color: [255, 255, 255] as RGB, line_height: 1.05 });
+export const metricDefaults = () => ({ font: "Inter", weight: 600, size: 30, color: [255, 255, 255] as RGB, tracking: 1 });
