@@ -207,8 +207,14 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
                 .filter((m): m is RegExpMatchArray => !!m)
                 .map((m) => parseInt(m[1]));
             const n = idxs.length ? Math.max(...idxs) + 1 : 0;
-            const baseY = Math.round(bgH * 0.30) + n * Math.round(bgH * 0.135);
             const px = Math.round(bgW * 0.11), d = 240, tx = px + d + 50;
+            // Stack rows down the canvas, but never past the bottom edge — beyond
+            // bgH a zone renders outside the Konva stage and can't be seen or
+            // dragged. Overflow rows cascade up a little so each stays visible and
+            // individually selectable (drag them into place from there).
+            const maxY = Math.max(0, bgH - d - 20);
+            let baseY = Math.round(bgH * 0.30) + n * Math.round(bgH * 0.135);
+            if (baseY > maxY) baseY = maxY - (n % 5) * 40;
             return [...zs,
             { id: fotoId, type: "photo", data_key: `items[${n}].photo`, x: px, y: baseY, w: d, h: d, ...photoDefaults() } as PhotoZone,
             { id: nomId, type: "text", data_key: `items[${n}].name`, x: tx, y: baseY + 40, w: bgW - tx - 80, align: "left", valign: "top", ...nameDefaults() } as TextZone,
