@@ -52,6 +52,16 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
 
     const selectedBg = filteredBgs.find((b) => layoutKey(b) === bgKey);
 
+    const bgItems = (kind: "cover" | "section") =>
+        filteredBgs
+            .filter((b) => b.kind === kind)
+            .map((b) => ({
+                value: layoutKey(b),
+                label: `${(layoutsRef.current[layoutKey(b)]?.zones?.length ?? 0) > 0 ? "• " : ""}${bgName(b)}`,
+            }));
+    const coverItems = bgItems("cover");
+    const sectionItems = bgItems("section");
+
     return (
         <div className="flex h-[calc(100vh-120px)] overflow-hidden rounded-xl border text-foreground">
             {/* Left panel */}
@@ -64,32 +74,30 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
                     {formats.map((f) => <ToggleGroupItem key={f} value={f} className="text-xs font-semibold">{FORMAT_LABELS[f] ?? f}</ToggleGroupItem>)}
                 </ToggleGroup>
 
+                {/*
+                  Two separate pickers (covers vs sections) sharing the same
+                  selection. Keyed by group+format so each (uncontrolled) picker
+                  remounts when switching group/format resets bgKey.
+                */}
                 <div className="mt-3">
-                    <Label className="text-[11px] text-muted-foreground">Imagen ({filteredBgs.length})</Label>
-                    {/*
-                      Keyed by group+format so the (uncontrolled) picker
-                      remounts and reflects the new default whenever switching
-                      group/format resets bgKey programmatically.
-                    */}
+                    <Label className="text-[11px] text-muted-foreground">Portadas ({coverItems.length})</Label>
                     <DropdownGroup
-                        key={`${group}-${format}`}
+                        key={`cover-${group}-${format}`}
+                        className="mt-1.5"
+                        placeholder="Selecciona una portada"
+                        value={bgKey}
+                        groups={[{ groupName: "", items: coverItems }]}
+                        onChange={selectBg}
+                    />
+                </div>
+                <div className="mt-3">
+                    <Label className="text-[11px] text-muted-foreground">Fondos de secciones ({sectionItems.length})</Label>
+                    <DropdownGroup
+                        key={`section-${group}-${format}`}
                         className="mt-1.5"
                         placeholder="Selecciona un fondo"
                         value={bgKey}
-                        groups={[
-                            { groupName: "Portadas", kind: "cover" as const },
-                            { groupName: "Fondos de secciones", kind: "section" as const },
-                        ]
-                            .map(({ groupName, kind }) => ({
-                                groupName,
-                                items: filteredBgs
-                                    .filter((b) => b.kind === kind)
-                                    .map((b) => ({
-                                        value: layoutKey(b),
-                                        label: `${(layoutsRef.current[layoutKey(b)]?.zones?.length ?? 0) > 0 ? "• " : ""}${bgName(b)}`,
-                                    })),
-                            }))
-                            .filter((g) => g.items.length > 0)}
+                        groups={[{ groupName: "", items: sectionItems }]}
                         onChange={selectBg}
                     />
                 </div>
