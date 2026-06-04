@@ -1,6 +1,6 @@
 import { Stage, Layer, Image as KImage, Rect, Transformer } from "react-konva";
 import { X, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { BgInfo, Layout, layoutKey } from "./layout-types";
 import { EyrenderLayer } from "@/interfaces/templates";
@@ -113,6 +113,57 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
         scrollRef.current.scrollTop = pendingScroll.current.top;
         pendingScroll.current = null;
     }, [S]);
+
+    // ---- Pan (hand tool): drag to navigate when zoomed in ----
+    // Activated by the middle mouse button, or by holding Space + left drag.
+    // It moves the scroll position instead of any zone, so it never conflicts
+    // with selection/marquee (those stay on a plain left drag).
+    const [spaceHeld, setSpaceHeld] = useState(false);
+    const spaceRef = useRef(false);
+    const panRef = useRef<null | { x: number; y: number; left: number; top: number }>(null);
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const isTyping = () => {
+            const t = (document.activeElement?.tagName || "").toLowerCase();
+            return t === "input" || t === "select" || t === "textarea";
+        };
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.code === "Space" && !isTyping()) { e.preventDefault(); spaceRef.current = true; setSpaceHeld(true); }
+        };
+        const onKeyUp = (e: KeyboardEvent) => {
+            if (e.code === "Space") { spaceRef.current = false; setSpaceHeld(false); }
+        };
+        // Capture phase so we intercept the press before Konva starts a marquee.
+        const onDown = (e: MouseEvent) => {
+            if (e.button !== 1 && !(e.button === 0 && spaceRef.current)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            panRef.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
+            const onMove = (me: MouseEvent) => {
+                if (!panRef.current) return;
+                el.scrollLeft = panRef.current.left - (me.clientX - panRef.current.x);
+                el.scrollTop = panRef.current.top - (me.clientY - panRef.current.y);
+            };
+            const onUp = () => {
+                panRef.current = null;
+                setSpaceHeld(spaceRef.current);
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onUp);
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+        };
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("keyup", onKeyUp);
+        el.addEventListener("mousedown", onDown, { capture: true });
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            window.removeEventListener("keyup", onKeyUp);
+            el.removeEventListener("mousedown", onDown, { capture: true } as EventListenerOptions);
+        };
+    }, []);
 
     // Posts mode: emit the current zones as Remotion layers on every change.
     // Gated on bgImg so the initial empty->loaded transition doesn't fire a
@@ -244,7 +295,7 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
                         </span>
                     </div>
                 )}
-                <div ref={scrollRef} className="flex-1 overflow-auto">
+                <div ref={scrollRef} className={cn("flex-1 overflow-auto", spaceHeld && "cursor-grab active:cursor-grabbing")}>
                     <div className="flex min-h-full min-w-full items-center justify-center p-6">
                 {bgImg && (
                     <Stage
