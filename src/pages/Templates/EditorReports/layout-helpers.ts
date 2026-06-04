@@ -1,6 +1,6 @@
 import type Konva from "konva";
 
-import { PhotoZone, TextZone, LogoZone, RGB, BgInfo, TemplateGroup } from "./layout-types";
+import { PhotoZone, TextZone, LogoZone, RGB, BgInfo, TemplateGroup, Zone, FONT_MAP } from "./layout-types";
 
 /** Patch object accepted by the zone `update` callbacks. */
 export type ZonePatch = Partial<PhotoZone> | Partial<TextZone> | Partial<LogoZone>;
@@ -165,6 +165,20 @@ export const DATA_KEY_OPTIONS: DataKeyOption[] = [
     { value: "birthday", label: "Fecha cumpleaños" },
 ];
 
+// Cuadro de honor: reina, princesa y segunda princesa (foto/nombre/puntos).
+// Shared between the reports section override and the posts per-group override.
+export const HONOR_ROLL_DATA_KEYS: DataKeyOption[] = [
+    { value: "queen_photo", label: "Reina · Foto" },
+    { value: "queen_name", label: "Reina · Nombre" },
+    { value: "queen_points", label: "Reina · Puntos" },
+    { value: "princess_photo", label: "Princesa · Foto" },
+    { value: "princess_name", label: "Princesa · Nombre" },
+    { value: "princess_points", label: "Princesa · Puntos" },
+    { value: "second_princess_photo", label: "Segunda princesa · Foto" },
+    { value: "second_princess_name", label: "Segunda princesa · Nombre" },
+    { value: "second_princess_points", label: "Segunda princesa · Puntos" },
+];
+
 // Section-specific data_key vocabularies. When a background matches an entry
 // here, the editor shows ONLY these options for its zones (the generic list is
 // hidden). Keyed per group by `${kind}/${asset}`, so a cover and a section with
@@ -172,17 +186,7 @@ export const DATA_KEY_OPTIONS: DataKeyOption[] = [
 export const SECTION_DATA_KEYS: Partial<Record<TemplateGroup, Record<string, DataKeyOption[]>>> = {
     unit: {
         // Cuadro de honor (sección): reina, princesa y segunda princesa.
-        "section/honor_roll": [
-            { value: "queen_photo", label: "Reina · Foto" },
-            { value: "queen_name", label: "Reina · Nombre" },
-            { value: "queen_points", label: "Reina · Puntos" },
-            { value: "princess_photo", label: "Princesa · Foto" },
-            { value: "princess_name", label: "Princesa · Nombre" },
-            { value: "princess_points", label: "Princesa · Puntos" },
-            { value: "second_princess_photo", label: "Segunda princesa · Foto" },
-            { value: "second_princess_name", label: "Segunda princesa · Nombre" },
-            { value: "second_princess_points", label: "Segunda princesa · Puntos" },
-        ],
+        "section/honor_roll": HONOR_ROLL_DATA_KEYS,
         // Nuevos inicios (listado): por persona, foto + nombre del nuevo inicio +
         // nombre de la iniciadora. Se usan como items[i].<campo> en cada fila.
         "section/new_beginnings": [
@@ -200,6 +204,18 @@ export const SECTION_DATA_KEYS: Partial<Record<TemplateGroup, Record<string, Dat
 export function dataKeyOptionsFor(bg?: BgInfo): DataKeyOption[] {
     const override = bg && SECTION_DATA_KEYS[bg.group]?.[`${bg.kind}/${bg.asset}`];
     return override ?? DATA_KEY_OPTIONS;
+}
+
+// Posts editor: the data_key vocabulary is chosen by the template's
+// `template_group` (there's a single background, so no per-section override).
+export const POSTS_DATA_KEYS: Record<string, DataKeyOption[]> = {
+    honor_roll: HONOR_ROLL_DATA_KEYS,
+    honor_roll_national: HONOR_ROLL_DATA_KEYS,
+};
+
+/** data_key options for a posts template, keyed by its template_group. */
+export function dataKeyOptionsForGroup(templateGroup?: string | null): DataKeyOption[] {
+    return (templateGroup && POSTS_DATA_KEYS[templateGroup]) || DATA_KEY_OPTIONS;
 }
 export const SHAPE_OPTIONS = [
     { value: "circle", label: "Círculo" },
@@ -231,6 +247,60 @@ export function sampleText(dataKey: string): string {
     if (k.includes("metrica") || k.includes("puntos")) return "1,240 puntos";
     if (k.includes("subtitulo") || k.includes("rol")) return "1ER LUGAR";
     return dataKey || "Texto";
+}
+
+// ---- Text layout preview (auto_fit + flow_below) ----
+// Mirrors what the Remotion renderer does so the canvas reflects the config.
+let _measureCtx: CanvasRenderingContext2D | null = null;
+function measureTextWidth(text: string, z: TextZone, size: number): number {
+    if (!_measureCtx) _measureCtx = document.createElement("canvas").getContext("2d");
+    const fm = FONT_MAP[z.font] || { family: "Inter", italic: false };
+    if (!_measureCtx) return text.length * size * 0.5;
+    _measureCtx.font = `${fm.italic ? "italic " : ""}${z.weight || 400} ${size}px ${fm.family}`;
+    let w = _measureCtx.measureText(text).width;
+    if (z.tracking) w += z.tracking * Math.max(0, text.length - 1);
+    return w;
+}
+const zoneText = (z: TextZone) => (z.uppercase ? sampleText(z.data_key).toUpperCase() : sampleText(z.data_key));
+
+/** Effective font size for a text zone, shrunk to fit its width when auto_fit. */
+function fittedSize(z: TextZone): number {
+    const base = z.size || 32;
+    if (!z.auto_fit) return base;
+    const w = measureTextWidth(zoneText(z), z, base);
+    if (w <= z.w || w === 0) return base;
+    return Math.max(z.min_size ?? 8, Math.floor((base * z.w) / w));
+}
+
+/** Rendered height of a zone (used to place flow_below followers). */
+function zoneHeight(z: Zone): number {
+    if (z.type !== "text") return z.h;
+    const size = fittedSize(z);
+    const lines = z.auto_fit ? 1 : Math.max(1, Math.ceil(measureTextWidth(zoneText(z), z, size) / (z.w || 1)));
+    return lines * size * (z.line_height || 1.15);
+}
+
+export interface TextRender { y: number; size: number; }
+
+/**
+ * Per-text-zone effective {y, size} reflecting auto_fit (shrink to width) and
+ * flow_below (sit under the anchor zone + gap). Zones without those options
+ * keep their stored y/size. Approximates the renderer for editor preview.
+ */
+export function computeTextRenders(zones: Zone[]): Record<string, TextRender> {
+    const byKey: Record<string, Zone> = {};
+    for (const z of zones) if (z.type !== "logo" && z.data_key) byKey[z.data_key] = z;
+
+    const out: Record<string, TextRender> = {};
+    for (const z of zones) {
+        if (z.type !== "text") continue;
+        const size = fittedSize(z);
+        let y = z.y;
+        const anchor = z.flow_below ? byKey[z.flow_below] : undefined;
+        if (anchor) y = anchor.y + zoneHeight(anchor) + (z.flow_gap ?? 0);
+        out[z.id] = { y, size };
+    }
+    return out;
 }
 
 export const photoDefaults = () => ({

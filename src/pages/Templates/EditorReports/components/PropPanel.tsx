@@ -57,6 +57,12 @@ export default function PropPanel({ z, zones, update, updateNested, onDelete, lo
                 <Field label="Y"><Input type="number" value={z.y} onChange={(e) => update(z.id, { y: +e.target.value })} /></Field>
             </div>
 
+            {z.type !== "text" && (
+                <Field label={`Opacidad (${Math.round((z.opacity ?? 1) * 100)}%)`}>
+                    <Slider min={0} max={1} step={0.05} value={[z.opacity ?? 1]} onValueChange={([v]) => update(z.id, { opacity: v })} />
+                </Field>
+            )}
+
             {z.type === "photo" && (
                 <>
                     <div className="grid grid-cols-2 gap-2">

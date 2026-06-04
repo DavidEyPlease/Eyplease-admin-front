@@ -14,7 +14,7 @@ export interface PhotoZone {
     id: string; type: "photo"; data_key: string;
     x: number; y: number; w: number; h: number;
     shape: "circle" | "rounded_rect" | "rect"; radius?: number; fit?: "cover" | "contain";
-    border?: Border; shadow?: Shadow;
+    border?: Border; shadow?: Shadow; opacity?: number;
 }
 export interface TextZone {
     id: string; type: "text"; data_key: string;
@@ -35,7 +35,7 @@ export interface TextZone {
 }
 export interface LogoZone {
     id: string; type: "logo"; src: string;
-    x: number; y: number; w: number; h: number; fit?: "contain" | "cover";
+    x: number; y: number; w: number; h: number; fit?: "contain" | "cover"; opacity?: number;
 }
 export type Zone = PhotoZone | TextZone | LogoZone;
 

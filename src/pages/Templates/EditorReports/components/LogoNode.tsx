@@ -22,7 +22,7 @@ export default function LogoNode({ z, scale, multi, onSelect, onDragStart, onDra
     }
     return (
         <Group
-            x={z.x * scale} y={z.y * scale} draggable
+            x={z.x * scale} y={z.y * scale} opacity={z.opacity ?? 1} draggable
             ref={(n) => { if (n) setRef(z.id, n); }}
             onClick={(e) => onSelect(z.id, e.evt.shiftKey || e.evt.metaKey || e.evt.ctrlKey)}
             onTap={() => onSelect(z.id, false)}

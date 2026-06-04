@@ -20,6 +20,9 @@ export type RenderConfiguration = {
 
 export type EyrenderLayerBase = {
     id?: string
+    // Dynamic data binding: the backend replaces text/src by this key before
+    // sending the payload to the Remotion API.
+    data_key?: string
     x: number
     y: number
     width?: number
@@ -35,6 +38,8 @@ export type EyrenderImageLayer = EyrenderLayerBase & {
     fit?: 'cover' | 'contain' | 'fill'
     clipShape?: 'none' | 'circle' | 'rounded'
     borderRadius?: number
+    border?: { width: number; color: string; style?: string }
+    shadow?: { offsetX: number; offsetY: number; blur: number; color: string; spread?: number }
 }
 
 export type EyrenderTextLayer = EyrenderLayerBase & {
@@ -49,6 +54,13 @@ export type EyrenderTextLayer = EyrenderLayerBase & {
     lineHeight?: number
     letterSpacing?: number
     maxWidth?: number
+    // Vertical flow: render this text below the layer whose data_key ===
+    // flow_below, at flow_gap px under its rendered bottom (y is then ignored).
+    flow_below?: string
+    flow_gap?: number
+    // Auto-fit: shrink fontSize down to min_size until the text fits `width`.
+    auto_fit?: boolean
+    min_size?: number
 }
 
 export type EyrenderLayer = EyrenderImageLayer | EyrenderTextLayer

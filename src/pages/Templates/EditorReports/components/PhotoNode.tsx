@@ -30,7 +30,7 @@ export default function PhotoNode({ z, scale: S, multi, onSelect, onDragStart, o
     const bcol = z.border ? `rgb(${z.border.color.join(",")})` : "transparent";
     return (
         <Group
-            ref={(n) => { if (n) setRef(z.id, n); }} x={z.x * S} y={z.y * S} draggable
+            ref={(n) => { if (n) setRef(z.id, n); }} x={z.x * S} y={z.y * S} opacity={z.opacity ?? 1} draggable
             onClick={(e) => onSelect(z.id, e.evt.shiftKey || e.evt.metaKey || e.evt.ctrlKey)}
             onTap={() => onSelect(z.id, false)}
             onDragStart={(e) => onDragStart(z.id, e.target)} onDragMove={(e) => onDragMove(z.id, e.target)} onDragEnd={(e) => onDragEnd(z.id, e.target)}
