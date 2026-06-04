@@ -32,7 +32,11 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
     const [bgKey, setBgKey] = useState<string>("");
     const [zones, setZones] = useState<Zone[]>([]);
     const [selIds, setSelIds] = useState<string[]>([]);
-    const [scale, setScale] = useState(0.3);
+    // Effective on-screen scale = fitScale (auto, fits the viewport) × zoom
+    // (user-controlled). Every coordinate conversion uses the product `S`, so
+    // zooming transparently reuses all the drag/transform/marquee math.
+    const [fitScale, setFitScale] = useState(0.3);
+    const [zoom, setZoom] = useState(1);
     const [status, setStatus] = useState("");
     const [clipboard, setClipboard] = useState<Zone[] | null>(null);
     const [marquee, setMarquee] = useState<null | { x1: number; y1: number; x2: number; y2: number }>(null);
@@ -67,7 +71,7 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
     const [bgImg] = useImage(bg?.url || "");
     const bgW = bgImg?.naturalWidth || 1152;
     const bgH = bgImg?.naturalHeight || 2048;
-    const S = scale;
+    const S = fitScale * zoom;
 
     function commitCurrent() {
         if (!bgKey || !bgImg) return;
@@ -99,24 +103,35 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bgKey]);
 
-    // Fit the stage to the viewport when the background image loads.
+    // Fit the stage to the viewport when the background image loads (resets zoom).
     useEffect(() => {
         if (!bgImg) return;
         const maxH = window.innerHeight - 200, maxW = window.innerWidth - 640;
-        setScale(Math.min(maxH / bgImg.naturalHeight, maxW / bgImg.naturalWidth, 0.6));
+        setFitScale(Math.min(maxH / bgImg.naturalHeight, maxW / bgImg.naturalWidth, 0.6));
+        setZoom(1);
     }, [bgImg]);
+
+    // ---- Zoom controls (multiplier on top of the fit scale) ----
+    const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
+    const zoomTo = useCallback((z: number) => setZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z))), []);
+    const zoomIn = useCallback(() => zoomTo(zoom * 1.25), [zoom, zoomTo]);
+    const zoomOut = useCallback(() => zoomTo(zoom / 1.25), [zoom, zoomTo]);
+    const zoomReset = useCallback(() => setZoom(1), []);
 
     // Keyboard: undo (cmd/ctrl+z) and delete the current selection.
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+            if ((e.metaKey || e.ctrlKey) && (e.key === "=" || e.key === "+")) { e.preventDefault(); zoomIn(); return; }
+            if ((e.metaKey || e.ctrlKey) && e.key === "-") { e.preventDefault(); zoomOut(); return; }
+            if ((e.metaKey || e.ctrlKey) && e.key === "0") { e.preventDefault(); zoomReset(); return; }
             const tag = (document.activeElement?.tagName || "").toLowerCase();
             if (tag === "input" || tag === "select" || tag === "textarea") return;
             if ((e.key === "Delete" || e.key === "Backspace") && selIds.length) { e.preventDefault(); setZones((zs) => zs.filter((z) => !selIds.includes(z.id))); setSelIds([]); }
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [selIds, undo]);
+    }, [selIds, undo, zoomIn, zoomOut, zoomReset]);
 
     // Bind the Konva transformer to the single selected node.
     useEffect(() => {
@@ -255,6 +270,7 @@ export function useLayoutEditor({ backgrounds, initialLayouts, saveLayouts, logo
         // background selection
         groups, formats, group, format, bgKey, filteredBgs, layoutsRef,
         bgImg, bgW, bgH, scale: S,
+        zoom, zoomIn, zoomOut, zoomReset, zoomTo, ZOOM_MIN, ZOOM_MAX,
         selectGroup, selectFormat, selectBg,
         // zones
         zones, selIds, sel,

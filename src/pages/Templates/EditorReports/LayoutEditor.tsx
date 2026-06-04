@@ -1,6 +1,6 @@
 import { Stage, Layer, Image as KImage, Rect, Transformer } from "react-konva";
-import { X } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { X, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { BgInfo, Layout, layoutKey } from "./layout-types";
 import { EyrenderLayer } from "@/interfaces/templates";
@@ -53,6 +53,7 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
     const {
         groups, formats, group, format, bgKey, filteredBgs, layoutsRef,
         bgImg, bgW, bgH, scale: S,
+        zoom, zoomIn, zoomOut, zoomReset, zoomTo, ZOOM_MIN, ZOOM_MAX,
         selectGroup, selectFormat, selectBg,
         zones, selIds, sel,
         toggleSelect, del, update, updateNested,
@@ -67,6 +68,51 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
 
     // Effective y/size per text zone (auto_fit + flow_below) for canvas preview.
     const textRenders = useMemo(() => computeTextRenders(zones), [zones]);
+
+    // ---- Zoom: Ctrl/Cmd + wheel, anchored to the pointer ----
+    const scrollRef = useRef<HTMLDivElement>(null);
+    // After a wheel-zoom we restore the scroll so the point under the cursor
+    // stays put. The Stage size only reflects the new zoom on the next render,
+    // so we stash the target and apply it in a layout effect.
+    const pendingScroll = useRef<{ left: number; top: number } | null>(null);
+
+    // Native (non-passive) wheel listener so preventDefault actually blocks the
+    // browser's page zoom; React's synthetic onWheel is passive at the root.
+    // `zoom` is read through a ref to keep the listener stable across renders.
+    const zoomRef = useRef(zoom);
+    zoomRef.current = zoom;
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const onWheel = (e: WheelEvent) => {
+            if (!e.ctrlKey && !e.metaKey) return; // plain wheel = normal scroll
+            e.preventDefault();
+            const rect = el.getBoundingClientRect();
+            const z = zoomRef.current;
+            const ratio = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+            const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z * ratio));
+            const applied = next / z;
+            if (applied === 1) return;
+            // Content coords under the cursor (before zoom) scale by `applied`;
+            // keep the same screen position by adjusting scroll to match.
+            const cx = el.scrollLeft + (e.clientX - rect.left);
+            const cy = el.scrollTop + (e.clientY - rect.top);
+            pendingScroll.current = {
+                left: cx * applied - (e.clientX - rect.left),
+                top: cy * applied - (e.clientY - rect.top),
+            };
+            zoomTo(next);
+        };
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => el.removeEventListener("wheel", onWheel);
+    }, [zoomTo, ZOOM_MIN, ZOOM_MAX]);
+
+    useLayoutEffect(() => {
+        if (!pendingScroll.current || !scrollRef.current) return;
+        scrollRef.current.scrollLeft = pendingScroll.current.left;
+        scrollRef.current.scrollTop = pendingScroll.current.top;
+        pendingScroll.current = null;
+    }, [S]);
 
     // Posts mode: emit the current zones as Remotion layers on every change.
     // Gated on bgImg so the initial empty->loaded transition doesn't fire a
@@ -183,7 +229,7 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
             </aside>
 
             {/* Canvas */}
-            <div className="flex flex-1 flex-col overflow-hidden bg-background">
+            <div className="relative flex flex-1 flex-col overflow-hidden bg-background">
                 {!isPosts && selectedBg && (
                     <div className="flex flex-wrap items-center gap-2 border-b bg-card/50 px-4 py-2.5">
                         <span className="text-sm font-semibold text-foreground">{bgName(selectedBg)}</span>
@@ -198,7 +244,8 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
                         </span>
                     </div>
                 )}
-                <div className="flex flex-1 items-center justify-center overflow-auto">
+                <div ref={scrollRef} className="flex-1 overflow-auto">
+                    <div className="flex min-h-full min-w-full items-center justify-center p-6">
                 {bgImg && (
                     <Stage
                         width={bgW * S} height={bgH * S} className="shadow-2xl"
@@ -220,7 +267,27 @@ export default function LayoutEditor({ backgrounds, initialLayouts, savingLayout
                         </Layer>
                     </Stage>
                 )}
+                    </div>
                 </div>
+
+                {/* Zoom controls (also: Ctrl/Cmd + scroll, Cmd/Ctrl +/-/0) */}
+                {bgImg && (
+                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border bg-card/95 px-1.5 py-1 shadow-lg backdrop-blur">
+                        <button onClick={zoomOut} disabled={zoom <= ZOOM_MIN} className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40" aria-label="Alejar" title="Alejar (Ctrl/Cmd -)">
+                            <ZoomOut className="size-4" />
+                        </button>
+                        <button onClick={zoomReset} className="min-w-12 rounded-md px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-foreground hover:bg-secondary" title="Restablecer (Ctrl/Cmd 0)">
+                            {Math.round(S * 100)}%
+                        </button>
+                        <button onClick={zoomIn} disabled={zoom >= ZOOM_MAX} className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40" aria-label="Acercar" title="Acercar (Ctrl/Cmd +)">
+                            <ZoomIn className="size-4" />
+                        </button>
+                        <div className="mx-0.5 h-4 w-px bg-border" />
+                        <button onClick={zoomReset} className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label="Ajustar a la pantalla" title="Ajustar a la pantalla">
+                            <Maximize2 className="size-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Right panel */}
