@@ -12,6 +12,8 @@ interface Props {
     onChange: (layers: EyrenderLayer[], canvas: { width: number; height: number }) => void;
     /** Template group; selects the data_key vocabulary (e.g. honor_roll). */
     templateGroup?: string | null;
+    /** Template subgroup; honor_roll keys only apply when "consolidated". */
+    templateSubgroup?: string | null;
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * with the output expressed as Remotion layers. Reuses LayoutEditor in
  * `mode="posts"`, feeding it a synthetic one-background dataset.
  */
-export default function PostsLayoutEditor({ backgroundUrl, initialLayers, onChange, templateGroup }: Props) {
+export default function PostsLayoutEditor({ backgroundUrl, initialLayers, onChange, templateGroup, templateSubgroup }: Props) {
     // Capture the initial layers once: the hook reads initialLayouts only at
     // mount, and onChange keeps the draft in sync afterwards.
     const initialRef = useRef(initialLayers);
@@ -43,7 +45,7 @@ export default function PostsLayoutEditor({ backgroundUrl, initialLayers, onChan
             saveLayouts={async () => { }}
             logos={[]}
             onLayersChange={onChange}
-            dataKeyOptions={dataKeyOptionsForGroup(templateGroup)}
+            dataKeyOptions={dataKeyOptionsForGroup(templateGroup, templateSubgroup)}
         />
     );
 }

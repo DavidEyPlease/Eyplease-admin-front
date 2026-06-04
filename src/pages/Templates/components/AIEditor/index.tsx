@@ -240,6 +240,7 @@ const AIEditor = ({ template }: IProps) => {
                     initialLayers={layersTemplate}
                     onChange={handleLayersChange}
                     templateGroup={template.template_group}
+                    templateSubgroup={template.template_subgroup}
                 />
             )}
         </div>

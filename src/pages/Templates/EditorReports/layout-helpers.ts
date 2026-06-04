@@ -207,15 +207,24 @@ export function dataKeyOptionsFor(bg?: BgInfo): DataKeyOption[] {
 }
 
 // Posts editor: the data_key vocabulary is chosen by the template's
-// `template_group` (there's a single background, so no per-section override).
+// `template_group` + `template_subgroup` (single background, no per-section
+// override). The honor_roll keys (reina/princesa) only make sense for the
+// consolidated subgroup, so they're gated on both fields.
 export const POSTS_DATA_KEYS: Record<string, DataKeyOption[]> = {
     honor_roll: HONOR_ROLL_DATA_KEYS,
     honor_roll_national: HONOR_ROLL_DATA_KEYS,
 };
 
-/** data_key options for a posts template, keyed by its template_group. */
-export function dataKeyOptionsForGroup(templateGroup?: string | null): DataKeyOption[] {
-    return (templateGroup && POSTS_DATA_KEYS[templateGroup]) || DATA_KEY_OPTIONS;
+/**
+ * data_key options for a posts template, keyed by its template_group and
+ * template_subgroup. The honor_roll vocabulary is only offered when the group
+ * is honor_roll(_national) AND the subgroup is "consolidated"; otherwise the
+ * generic DATA_KEY_OPTIONS apply.
+ */
+export function dataKeyOptionsForGroup(templateGroup?: string | null, templateSubgroup?: string | null): DataKeyOption[] {
+    const override = templateGroup && POSTS_DATA_KEYS[templateGroup];
+    if (override && templateSubgroup === "consolidated") return override;
+    return DATA_KEY_OPTIONS;
 }
 export const SHAPE_OPTIONS = [
     { value: "circle", label: "Círculo" },
