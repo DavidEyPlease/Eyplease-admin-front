@@ -120,7 +120,7 @@ const TaskActivity = ({ taskId }: TaskActivityProps) => {
                                 <div className="flex-1 min-w-0">
                                     <div className="text-sm flex flex-col">
                                         <div>
-                                            <span className="font-semibold me-2">{activity.user.name}</span>
+                                            <span className="font-semibold me-2">{activity.user?.name}</span>
                                             {activityType && <span className="text-gray-500 text-xs">{activityType}: </span>}
                                         </div>
                                         <div
