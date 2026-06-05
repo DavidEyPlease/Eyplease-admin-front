@@ -31,25 +31,32 @@ const AIEditor = ({ template }: IProps) => {
     // Load the editor fonts on demand (instead of in the root index.html).
     useEffect(() => { void ensureEditorFonts() }, [])
 
-    const [draft, setDraft] = useState<AIDraft | null>(
-        template.ai_draft_json ??
-        (template.render_configuration?.layersTemplate
-            ? {
-                compositionId: template.render_configuration.compositionId || "still-composer",
-                canvas: template.render_configuration.canvas || DEFAULT_CANVAS,
-                layersTemplate: template.render_configuration.layersTemplate,
+    const [draft, setDraft] = useState<AIDraft | null>(() => {
+        // `render_configuration` is the authoritative, rendered config and the
+        // only thing the editor saves. Prefer it whenever it actually has layers
+        // so a stale/empty `ai_draft_json` (a cached AI analysis the editor never
+        // writes back) can't shadow a real saved configuration. Fall back to
+        // `ai_draft_json` only for the "analyzed but not yet saved" case.
+        const rc = template.render_configuration
+        if (rc?.layersTemplate?.length) {
+            return {
+                compositionId: rc.compositionId || "still-composer",
+                canvas: rc.canvas || DEFAULT_CANVAS,
+                layersTemplate: rc.layersTemplate,
                 analyzed_at: template.ai_analyzed_at,
             }
-            : null)
-    )
+        }
+        return template.ai_draft_json ?? null
+    })
     const [mode, setMode] = useState<EditorMode>("edit")
     const [dirty, setDirty] = useState(false)
     const [jsonValue, setJsonValue] = useState("")
     const [jsonError, setJsonError] = useState<string | null>(null)
 
-    const { request: analyzeRequest, requestState: analyzeState } = useRequestQuery({
-        onError: (e) => { toast.error(`Error al analizar con IA: ${e.message}`) },
-    })
+    // Análisis con IA deshabilitado de momento.
+    // const { request: analyzeRequest, requestState: analyzeState } = useRequestQuery({
+    //     onError: (e) => { toast.error(`Error al analizar con IA: ${e.message}`) },
+    // })
     const { request: saveRequest, requestState: saveState } = useRequestQuery({
         onSuccess: () => {
             toast.success("Configuración guardada")
@@ -83,19 +90,20 @@ const AIEditor = ({ template }: IProps) => {
     }, [])
 
     // ---- Actions ----
-    const onAnalyzeWithAI = async (force = false) => {
-        try {
-            const url = API_ROUTES.TEMPLATES.ANALYZE_WITH_AI.replace("{id}", template.id)
-            const res = await analyzeRequest<{ force: boolean }, AIDraft>("POST", url, { force })
-            if (res?.data) {
-                layersBaselineRef.current = null
-                setDraft(res.data)
-                setDirty(false)
-                if (res.data.cached) toast.info("Análisis recuperado de caché")
-                else toast.success("Análisis de IA completado")
-            }
-        } catch { /* toast in onError */ }
-    }
+    // Análisis con IA deshabilitado de momento.
+    // const onAnalyzeWithAI = async (force = false) => {
+    //     try {
+    //         const url = API_ROUTES.TEMPLATES.ANALYZE_WITH_AI.replace("{id}", template.id)
+    //         const res = await analyzeRequest<{ force: boolean }, AIDraft>("POST", url, { force })
+    //         if (res?.data) {
+    //             layersBaselineRef.current = null
+    //             setDraft(res.data)
+    //             setDirty(false)
+    //             if (res.data.cached) toast.info("Análisis recuperado de caché")
+    //             else toast.success("Análisis de IA completado")
+    //         }
+    //     } catch { /* toast in onError */ }
+    // }
 
     const onSave = async () => {
         const renderConfig: RenderConfiguration = {
@@ -176,7 +184,6 @@ const AIEditor = ({ template }: IProps) => {
     }
 
     const layerCount = useMemo(() => layersTemplate.length, [layersTemplate])
-    const hasAIDraft = layerCount > 0
 
     // ---- Render ----
     if (!filesReady) {
@@ -195,14 +202,11 @@ const AIEditor = ({ template }: IProps) => {
     return (
         <div className="space-y-4">
             <EditorToolbar
-                hasAIDraft={hasAIDraft}
                 layerCount={layerCount}
                 analyzedAt={draft?.analyzed_at}
                 dirty={dirty}
                 mode={mode}
-                analyzing={analyzeState.loading}
                 saving={saveState.loading}
-                onAnalyze={() => onAnalyzeWithAI(hasAIDraft)}
                 onTogglePreview={() => setMode((m) => m === "preview" ? "edit" : "preview")}
                 onToggleJson={() => mode === "json" ? setMode("edit") : openJsonEditor()}
                 onSave={onSave}

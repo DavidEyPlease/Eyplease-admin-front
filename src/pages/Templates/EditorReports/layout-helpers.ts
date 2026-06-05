@@ -316,7 +316,6 @@ export const photoDefaults = () => ({
     shape: "rounded_rect" as const,
     radius: 36,
     fit: "cover" as const,
-    shadow: { blur: 22, color: [40, 50, 35, 90] as [number, number, number, number], offset: [0, 10] as [number, number] },
 });
 export const nameDefaults = () => ({ font: "PlayfairDisplay-Italic", weight: 600, size: 46, color: [255, 255, 255] as RGB, line_height: 1.05 });
 export const metricDefaults = () => ({ font: "Inter", weight: 600, size: 30, color: [255, 255, 255] as RGB, tracking: 1 });
