@@ -53,14 +53,21 @@ const STATUS_LABELS: Record<string, { label: string; variant: "secondary" | "def
     },
 }
 
-const POLL_SECONDS = 2
-const TIMEOUT_SECONDS = 60
+const VIDEO_POLL_SECONDS = 10
+const IMAGE_POLL_SECONDS = 2
+const TIMEOUT_SECONDS = 180
+
+const getPollIntervalSeconds = (assetType: ITemplate["template_asset_type"]) =>
+    assetType === "video" ? VIDEO_POLL_SECONDS : IMAGE_POLL_SECONDS
 
 const isTerminalStatus = (status: JobStatus) => status === "done" || status === "failed"
 
 const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps) => {
+    const isVideo = template.template_asset_type === "video"
+    const pollSeconds = getPollIntervalSeconds(template.template_asset_type)
+
     const [response, setResponse] = useState<IPreviewResponse | null>(null)
-    const [secondsLeft, setSecondsLeft] = useState<number>(POLL_SECONDS)
+    const [secondsLeft, setSecondsLeft] = useState<number>(pollSeconds)
     const [elapsed, setElapsed] = useState<number>(0)
 
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -102,16 +109,16 @@ const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps)
 
     const startPolling = (jobId: string) => {
         clearTimers()
-        setSecondsLeft(POLL_SECONDS)
+        setSecondsLeft(pollSeconds)
         setElapsed(0)
 
         countdownRef.current = setInterval(() => {
-            setSecondsLeft(prev => (prev <= 1 ? POLL_SECONDS : prev - 1))
+            setSecondsLeft(prev => (prev <= 1 ? pollSeconds : prev - 1))
         }, 1000)
 
         intervalRef.current = setInterval(() => {
             fetchJob(jobId)
-        }, POLL_SECONDS * 1000)
+        }, pollSeconds * 1000)
 
         timeoutRef.current = setInterval(() => {
             setElapsed(prev => {
@@ -146,7 +153,7 @@ const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps)
     const onReset = () => {
         clearTimers()
         setResponse(null)
-        setSecondsLeft(POLL_SECONDS)
+        setSecondsLeft(pollSeconds)
         setElapsed(0)
     }
 
@@ -159,7 +166,7 @@ const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps)
     const isFinished = response?.status === "done"
     const isError = response?.status === "failed"
     const isPolling = !!response && !isTerminalStatus(response.status)
-    const progressValue = isPolling ? ((POLL_SECONDS - secondsLeft) / POLL_SECONDS) * 100 : 0
+    const progressValue = isPolling ? ((pollSeconds - secondsLeft) / pollSeconds) * 100 : 0
 
     return (
         <div className="p-4 border border-dashed border-gray-300 rounded-md aspect-square max-w-lg mx-auto flex items-center justify-center relative">
@@ -224,11 +231,23 @@ const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps)
 
                     <div className="flex-1 min-h-0 flex items-center justify-center bg-muted/30 rounded-md overflow-hidden">
                         {isFinished && response.result?.s3Url ? (
-                            <img
-                                src={response.result.s3Url}
-                                alt={`Preview ${template.name}`}
-                                className="w-full h-full object-contain"
-                            />
+                            isVideo ? (
+                                <video
+                                    src={response.result.s3Url}
+                                    className="w-full h-full object-contain"
+                                    controls
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                />
+                            ) : (
+                                <img
+                                    src={response.result.s3Url}
+                                    alt={`Preview ${template.name}`}
+                                    className="w-full h-full object-contain"
+                                />
+                            )
                         ) : isError ? (
                             <div className="flex flex-col items-center text-destructive p-4 text-center">
                                 <AlertCircleIcon className="w-8 h-8 mb-2" />
