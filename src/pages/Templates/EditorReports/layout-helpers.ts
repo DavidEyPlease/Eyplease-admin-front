@@ -162,6 +162,7 @@ export const DATA_KEY_OPTIONS: DataKeyOption[] = [
     { value: "photo", label: "Foto vendedor(a)" },
     { value: "points", label: "Puntos" },
     { value: "missing_points", label: "Puntos faltantes" },
+    { value: "missing_next_points", label: "Puntos siguientes faltantes" },
     { value: "birthday", label: "Fecha cumpleaños" },
 ];
 
