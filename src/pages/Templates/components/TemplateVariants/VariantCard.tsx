@@ -14,15 +14,13 @@ import {
     DropdownMenuTrigger,
 } from "@/uishadcn/ui/dropdown-menu"
 import { ITemplateVariant } from "@/interfaces/templates"
-import TemplatePreview, {
-    KIND_ICONS,
-    KIND_LABELS,
-} from "../TemplatePreview"
+import TemplatePreview from "../TemplatePreview"
 import {
     useDeleteTemplateVariant,
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
 import VariantFilesPreviewModal from "./VariantFilesPreviewModal"
+import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
 
 interface VariantCardProps {
     templateId: string
