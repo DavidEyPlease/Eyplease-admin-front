@@ -1,6 +1,7 @@
 import Modal from "@/components/common/Modal"
 import { ITemplateVariant } from "@/interfaces/templates"
-import TemplatePreview, { KIND_LABELS } from "../TemplatePreview"
+import TemplatePreview from "../TemplatePreview"
+import { KIND_LABELS } from "../../page-utils"
 
 interface VariantFilesPreviewModalProps {
     variant: ITemplateVariant | null

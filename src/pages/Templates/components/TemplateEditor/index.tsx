@@ -12,10 +12,9 @@ import {
 
 import AIEditor from "../AIEditor"
 import VariantFormModal from "../TemplateVariants/VariantFormModal"
-import { KIND_LABELS } from "../TemplatePreview"
 import VariantSidebarCard from "./VariantSidebarCard"
 import VideoEditor from "./VideoEditor"
-import { Separator } from "@/uishadcn/ui/separator"
+import { KIND_LABELS } from "../../page-utils"
 
 interface TemplateEditorProps {
     template: ITemplate

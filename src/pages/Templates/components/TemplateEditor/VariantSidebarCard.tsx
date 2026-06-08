@@ -14,15 +14,13 @@ import {
 import { cn } from "@/lib/utils"
 import { ITemplateVariant } from "@/interfaces/templates"
 
-import TemplatePreview, {
-    KIND_ICONS,
-    KIND_LABELS,
-} from "../TemplatePreview"
 import VariantFilesPreviewModal from "../TemplateVariants/VariantFilesPreviewModal"
 import {
     useDeleteTemplateVariant,
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
+import TemplatePreview from "../TemplatePreview"
+import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
 
 interface VariantSidebarCardProps {
     templateId: string

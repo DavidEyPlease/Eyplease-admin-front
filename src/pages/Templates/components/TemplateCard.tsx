@@ -6,13 +6,8 @@ import { ITemplate } from "@/interfaces/templates"
 import { APP_ROUTES } from "@/constants/app"
 import SwitchAction from "./SwitchAction"
 import TemplateActions from "./Actions"
-import TemplatePreview, {
-    KIND_ICONS,
-    KIND_LABELS,
-    monthLabelFor,
-    resolveBadgeKinds,
-    resolvePreviewUrl,
-} from "./TemplatePreview"
+import { KIND_ICONS, KIND_LABELS, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
+import TemplatePreview from "./TemplatePreview"
 
 interface TemplateCardProps {
     template: ITemplate

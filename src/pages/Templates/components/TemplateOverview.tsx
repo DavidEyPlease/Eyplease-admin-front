@@ -13,13 +13,8 @@ import { publishEvent } from "@/utils/events"
 
 import SwitchAction from "./SwitchAction"
 import TemplateForm from "./TemplateForm"
-import TemplatePreview, {
-    KIND_ICONS,
-    KIND_LABELS,
-    monthLabelFor,
-    resolveBadgeKinds,
-    resolvePreviewUrl,
-} from "./TemplatePreview"
+import TemplatePreview from "./TemplatePreview"
+import { KIND_ICONS, KIND_LABELS, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
 
 interface TemplateOverviewProps {
     template: ITemplate

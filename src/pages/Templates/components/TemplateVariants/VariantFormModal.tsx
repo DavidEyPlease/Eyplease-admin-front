@@ -17,11 +17,9 @@ import {
     useCreateTemplateVariant,
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
-import {
-    KIND_ICONS,
-    KIND_LABELS,
-} from "../TemplatePreview"
+
 import VariantFilesPreviewModal from "./VariantFilesPreviewModal"
+import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
 
 interface UploadStatusProps {
     loaded: boolean
@@ -179,8 +177,6 @@ const VariantFormModal = ({ template, variant, open, onOpenChange }: VariantForm
         if (!variant) return null
         const KindIcon = KIND_ICONS[variant.kind]
         const updateLoading = updateState.loading || uploadingKey !== null
-
-        console.log(variant.template_file_url)
 
         return (
             <div className="flex flex-col gap-6">

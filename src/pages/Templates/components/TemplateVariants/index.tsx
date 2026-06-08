@@ -8,9 +8,9 @@ import {
     ITemplateVariant,
     TemplateVariantKind,
 } from "@/interfaces/templates"
-import { KIND_LABELS } from "../TemplatePreview"
 import VariantCard from "./VariantCard"
 import VariantFormModal from "./VariantFormModal"
+import { KIND_LABELS } from "../../page-utils"
 
 interface TemplateVariantsTabProps {
     template: ITemplate
