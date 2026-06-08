@@ -79,6 +79,83 @@ export type AIDraft = {
     analyzed_at?: string | null
 }
 
+// Kinds supported by template_variants. Free-form string at the DB level;
+// these are the values currently allowed by the backend form requests.
+export type TemplateVariantKind = 'image' | 'video' | 'pdf' | 'pptx'
+
+/**
+ * Layer hints exposed by a TemplatePreset. The AI analyzer treats these
+ * as "the layers this template has" and only infers their positions,
+ * sizes and styles — never their existence or count.
+ */
+export interface ITemplatePresetLayer {
+    id: string
+    type: 'image' | 'text'
+    data_key: string
+    src?: string | null
+    text?: string
+    clip_shape_hint?: 'rounded' | 'circle' | 'none'
+}
+
+export interface ITemplatePresetScene {
+    order: number
+    name: string
+    layers: ITemplatePresetLayer[]
+}
+
+/**
+ * Reusable layer composition fetched from the backend catalog
+ * (App\Constants\TemplatePresets). Linear presets carry `layers`;
+ * `top3_honor_board` and similar multi-scene presets carry `scenes`.
+ */
+export interface ITemplatePreset {
+    slug: string
+    name: string
+    reference_sample_count: number
+    is_multi_scene: boolean
+    layers?: ITemplatePresetLayer[]
+    scenes?: ITemplatePresetScene[]
+}
+
+/**
+ * Concrete representation of a Template in a specific output format. One
+ * Template owns at most one variant per kind. Mirrors the backend model
+ * TemplateVariant; render_configuration is opaque (its shape depends on
+ * the kind / render engine).
+ */
+export interface ITemplateVariant extends IBaseDBProperties {
+    template_id: string
+    kind: TemplateVariantKind
+    render_configuration: RenderConfiguration | null
+    template_file_uri: string | null
+    // Backend accessor: materialised public URL from the S3 key.
+    template_file_url: string | null
+    // The backend column stores an S3 key here despite the name; the
+    // accessor materialises the public URL. We receive the URL.
+    reference_file_url: string | null
+    ai_draft_json: AIDraft | null
+    ai_analyzed_at: string | null
+    ai_image_hash: string | null
+    enabled: boolean
+}
+
+export interface ITemplateVariantCreate {
+    kind: TemplateVariantKind
+    render_configuration?: RenderConfiguration | null
+    template_file_uri?: string | null
+    reference_file_url?: string | null
+    enabled?: boolean
+}
+
+// `kind` is intentionally NOT updatable on the backend (would invalidate
+// the UNIQUE (template_id, kind) constraint). Recreate to change it.
+export interface ITemplateVariantUpdate {
+    render_configuration?: RenderConfiguration | null
+    template_file_uri?: string | null
+    reference_file_url?: string | null
+    enabled?: boolean
+}
+
 export interface ITemplate extends IBaseDBProperties {
     name: string
     picture: NullishFile
@@ -86,6 +163,9 @@ export interface ITemplate extends IBaseDBProperties {
     template_group: string
     template_subgroup: string | null
     template_asset_type: 'image' | 'video' | null
+    // Conceptual layer composition slug used by the AI analyzer. Shared
+    // across all variants of this template. Null when no AI flow applies.
+    preset_slug: string | null
     clients_count: number
     enabled_all_clients: boolean
     render_provider_id: string | null
@@ -114,6 +194,9 @@ export interface ITemplate extends IBaseDBProperties {
     metadata?: {
         pink_circle_months?: string
     }
+    // Eager-loaded by the backend on /templates/{id}. Optional on list
+    // endpoints (which omit it for payload size).
+    variants?: ITemplateVariant[]
 }
 
 export interface ITemplateUpdate {
@@ -121,4 +204,5 @@ export interface ITemplateUpdate {
     picture?: string
     active?: boolean
     enabled_all_clients?: boolean
+    preset_slug?: string | null
 }

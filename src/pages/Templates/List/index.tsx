@@ -25,9 +25,15 @@ interface TemplatesListProps {
     isLoading: boolean
     templates: ITemplate[]
     defaultViewMode?: 'grid' | 'table'
+    /**
+     * When true, hides the grid/table toggle in the page header and forces
+     * the list to always render in `defaultViewMode`. Posts uses this to
+     * keep a card-only experience; Reports keeps the toggle.
+     */
+    lockViewMode?: boolean
 }
 
-const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table' }: TemplatesListProps) => {
+const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table', lockViewMode = false }: TemplatesListProps) => {
     const { setHeaderActions } = useHeaderActions()
     const [viewMode, setViewMode] = useState<'grid' | 'table'>(defaultViewMode)
     const [deleteState, setDeleteState] = useState<'initial' | 'loading' | 'success'>('initial')
@@ -41,6 +47,11 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table' }: Temp
     } = useTemplatesStore(state => state)
 
     useEffect(() => {
+        if (lockViewMode) {
+            setHeaderActions(null)
+            return
+        }
+
         setHeaderActions(
             <DynamicTabs
                 value={viewMode}
@@ -51,13 +62,16 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table' }: Temp
                 ]}
             />
         )
-    }, [viewMode, setHeaderActions])
+    }, [viewMode, setHeaderActions, lockViewMode])
+
+    // Locked grid never displays the table selection; clear any leftovers.
+    const effectiveViewMode: 'grid' | 'table' = lockViewMode ? defaultViewMode : viewMode
 
     useEffect(() => {
-        if (viewMode !== 'table' && selectedTemplates.length > 0) {
+        if (effectiveViewMode !== 'table' && selectedTemplates.length > 0) {
             resetSelection()
         }
-    }, [viewMode])
+    }, [effectiveViewMode])
 
     const { request } = useRequestQuery({
         invalidateQueries: [queryKeys.list('config/templates')],
@@ -86,12 +100,12 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table' }: Temp
         <>
             <SkeletonLayout
                 loading={isLoading}
-                variant={viewMode}
-                count={viewMode === 'table' ? 8 : 6}
+                variant={effectiveViewMode}
+                count={effectiveViewMode === 'table' ? 8 : 6}
                 columns={5}
                 gridClassName="md:grid-cols-2 lg:grid-cols-3"
             >
-                {viewMode === 'table' ? (
+                {effectiveViewMode === 'table' ? (
                     <TemplatesTableList
                         items={templates ?? []}
                         isLoading={isLoading}

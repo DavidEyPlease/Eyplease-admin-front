@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table"
-import { ITemplate } from "@/interfaces/templates"
+import { ITemplate, TemplateVariantKind } from "@/interfaces/templates"
 import TemplateActions from "./Actions"
 import { Badge } from "@/uishadcn/ui/badge"
 import { UsersIcon } from "lucide-react"
@@ -8,28 +8,65 @@ import SwitchAction from "./SwitchAction"
 import { Link } from "react-router"
 import { APP_ROUTES } from "@/constants/app"
 
+// Human-friendly labels for the variant badges shown next to a template's
+// name. Kept in this file because the only consumer is the list column.
+const VARIANT_KIND_LABELS: Record<TemplateVariantKind, string> = {
+    image: "Imagen",
+    video: "Video",
+    pdf: "PDF",
+    pptx: "PPTX",
+}
+
+/**
+ * Returns the list of kinds to show as badges for a template. Prefers
+ * the new model (enabled variants) and falls back to the legacy
+ * `template_asset_type` for unmigrated rows so the UI keeps working
+ * during the manual data migration.
+ */
+const resolveBadgeKinds = (template: ITemplate): TemplateVariantKind[] => {
+    if (template.variants && template.variants.length > 0) {
+        return template.variants
+            .filter(variant => variant.enabled)
+            .map(variant => variant.kind)
+    }
+
+    return template.template_asset_type ? [template.template_asset_type] : []
+}
+
 export const templatesColumns: ColumnDef<ITemplate>[] = [
     {
         id: "name",
         header: "Plantilla",
-        cell: ({ row }) => (
-            <div className="flex flex-wrap items-center gap-x-5">
-                {row.original.template_group === 'reports' && (
-                    <TemplateCover
-                        templateId={row.original.id}
-                        cover={row.original.picture}
-                        templateName={row.original.name}
-                    />
-                )}
-                <div className="flex flex-col">
-                    <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
-                        {row.original.name}
-                    </Link>
-                    {row.original.template_asset_type && <span className="text-xs text-muted-foreground">Recurso: {row.original.template_asset_type}</span>}
-                    <span className="text-xs text-muted-foreground">Mes: {row.original.month}</span>
+        cell: ({ row }) => {
+            const kinds = resolveBadgeKinds(row.original)
+
+            return (
+                <div className="flex flex-wrap items-center gap-x-5">
+                    {row.original.template_group === 'reports' && (
+                        <TemplateCover
+                            templateId={row.original.id}
+                            cover={row.original.picture}
+                            templateName={row.original.name}
+                        />
+                    )}
+                    <div className="flex flex-col gap-y-1">
+                        <Link className="font-medium underline" to={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', row.original.id)}>
+                            {row.original.name}
+                        </Link>
+                        {kinds.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                                {kinds.map(kind => (
+                                    <Badge key={kind} variant="outline" className="text-xs">
+                                        {VARIANT_KIND_LABELS[kind] ?? kind}
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
+                        <span className="text-xs text-muted-foreground">Mes: {row.original.month}</span>
+                    </div>
                 </div>
-            </div>
-        ),
+            )
+        },
         enableSorting: false,
         enableHiding: false,
     },

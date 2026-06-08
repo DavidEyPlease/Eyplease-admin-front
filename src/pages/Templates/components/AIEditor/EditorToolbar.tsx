@@ -25,7 +25,8 @@ interface IProps {
 
 /**
  * Top action bar: layer-count / status badges on the left, editor actions
- * (preview / JSON / save) on the right.
+ * (preview / JSON / save) on the right. Compact size so it doesn't push
+ * the editor canvas too far down on shorter viewports.
  */
 const EditorToolbar = ({
     layerCount,
@@ -37,52 +38,41 @@ const EditorToolbar = ({
     onToggleJson,
     onSave,
 }: IProps) => (
-    <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-                <Badge variant="default" className="bg-emerald-600">
-                    <CheckCircle2Icon className="w-3.5 h-3.5 mr-1" />
+    <Card className="py-0">
+        <CardContent className="flex flex-wrap items-center justify-between gap-2 px-3">
+            <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="default" className="bg-emerald-600 h-6">
+                    <CheckCircle2Icon className="w-3 h-3 mr-1" />
                     {layerCount} capa{layerCount === 1 ? "" : "s"}
                 </Badge>
-                {analyzedAt && (
-                    <span className="text-xs text-muted-foreground">
+                {/* {analyzedAt && (
+                    <span className="text-[11px] text-muted-foreground">
                         Analizado el {formatDate(new Date(analyzedAt))}
                     </span>
-                )}
+                )} */}
                 {dirty && (
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-900">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-900 h-6">
                         Cambios sin guardar
                     </Badge>
                 )}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                {/* Análisis con IA deshabilitado de momento.
                 <Button
-                    variant={hasAIDraft ? "outline" : undefined}
-                    text={
-                        <>
-                            {hasAIDraft
-                                ? <RefreshCwIcon className="w-4 h-4 mr-2" />
-                                : <SparklesIcon className="w-4 h-4 mr-2" />}
-                            {hasAIDraft ? "Re-analizar con IA" : "Analizar con IA"}
-                        </>
-                    }
-                    loading={analyzing}
-                    onClick={onAnalyze}
-                /> */}
-                <Button
+                    size="sm"
                     variant="outline"
-                    text={<><EyeIcon className="w-4 h-4 mr-2" />{mode === "preview" ? "Volver al editor" : "Vista previa"}</>}
+                    text={<><EyeIcon className="w-3.5 h-3.5 mr-1.5" />{mode === "preview" ? "Volver al editor" : "Vista previa"}</>}
                     onClick={onTogglePreview}
                 />
                 <Button
+                    size="sm"
                     variant="outline"
-                    text={<><Code2Icon className="w-4 h-4 mr-2" />{mode === "json" ? "Volver al editor" : "Editar JSON"}</>}
+                    text={<><Code2Icon className="w-3.5 h-3.5 mr-1.5" />{mode === "json" ? "Volver al editor" : "Editar JSON"}</>}
                     onClick={onToggleJson}
                 />
                 <Button
+                    size="sm"
                     color="primary"
-                    text={<><SaveIcon className="w-4 h-4 mr-2" />Guardar</>}
+                    text={<><SaveIcon className="w-3.5 h-3.5 mr-1.5" />Guardar</>}
                     disabled={!dirty}
                     loading={saving}
                     onClick={onSave}

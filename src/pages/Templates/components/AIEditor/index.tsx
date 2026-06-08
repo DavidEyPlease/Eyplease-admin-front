@@ -10,6 +10,7 @@ import {
     AIDraft,
     EyrenderLayer,
     ITemplate,
+    ITemplateVariant,
     RenderConfiguration,
 } from "@/interfaces/templates"
 import { publishEvent } from "@/utils/events"
@@ -25,38 +26,44 @@ import { EditorMode } from "./types"
 
 interface IProps {
     template: ITemplate
+    /**
+     * When provided, the editor reads/writes against the variant instead of
+     * the template-level legacy columns. Background comes from
+     * `variant.template_file_url`; save targets the variant endpoint.
+     */
+    variant?: ITemplateVariant | null
 }
 
-const AIEditor = ({ template }: IProps) => {
+const AIEditor = ({ template, variant = null }: IProps) => {
     // Load the editor fonts on demand (instead of in the root index.html).
     useEffect(() => { void ensureEditorFonts() }, [])
 
+    // Single source of truth resolver. Variants take precedence; otherwise
+    // fall back to template-level columns to keep legacy rows working.
+    const sourceRender = variant?.render_configuration ?? template.render_configuration
+    const sourceDraft = variant?.ai_draft_json ?? template.ai_draft_json
+    const sourceAnalyzedAt = variant?.ai_analyzed_at ?? template.ai_analyzed_at
+    const backgroundUrl = variant?.template_file_url ?? template.template_file_url ?? ""
+
     const [draft, setDraft] = useState<AIDraft | null>(() => {
-        // `render_configuration` is the authoritative, rendered config and the
-        // only thing the editor saves. Prefer it whenever it actually has layers
-        // so a stale/empty `ai_draft_json` (a cached AI analysis the editor never
-        // writes back) can't shadow a real saved configuration. Fall back to
-        // `ai_draft_json` only for the "analyzed but not yet saved" case.
-        const rc = template.render_configuration
-        if (rc?.layersTemplate?.length) {
+        // Prefer the saved `render_configuration` whenever it actually has
+        // layers — a stale `ai_draft_json` (cached analysis the editor
+        // never wrote back) must not shadow a real saved config.
+        if (sourceRender?.layersTemplate?.length) {
             return {
-                compositionId: rc.compositionId || "still-composer",
-                canvas: rc.canvas || DEFAULT_CANVAS,
-                layersTemplate: rc.layersTemplate,
-                analyzed_at: template.ai_analyzed_at,
+                compositionId: sourceRender.compositionId || "still-composer",
+                canvas: sourceRender.canvas || DEFAULT_CANVAS,
+                layersTemplate: sourceRender.layersTemplate,
+                analyzed_at: sourceAnalyzedAt,
             }
         }
-        return template.ai_draft_json ?? null
+        return sourceDraft ?? null
     })
     const [mode, setMode] = useState<EditorMode>("edit")
     const [dirty, setDirty] = useState(false)
     const [jsonValue, setJsonValue] = useState("")
     const [jsonError, setJsonError] = useState<string | null>(null)
 
-    // Análisis con IA deshabilitado de momento.
-    // const { request: analyzeRequest, requestState: analyzeState } = useRequestQuery({
-    //     onError: (e) => { toast.error(`Error al analizar con IA: ${e.message}`) },
-    // })
     const { request: saveRequest, requestState: saveState } = useRequestQuery({
         onSuccess: () => {
             toast.success("Configuración guardada")
@@ -65,7 +72,15 @@ const AIEditor = ({ template }: IProps) => {
         onError: (e) => { toast.error(`Error al guardar: ${e.message}`) },
     })
 
-    const filesReady = !!template.template_file_url && !!template.reference_file_url
+    // For variants (image flow) we only need the clean background to start
+    // editing — the AI analysis pipeline is not used for image variants
+    // because the layout is fully built in the Konva editor. For legacy
+    // (no variant) we still require both files since the AI path lives
+    // on the template-level columns.
+    const filesReady = variant
+        ? !!variant.template_file_url
+        : !!template.template_file_url && !!template.reference_file_url
+
     const layersTemplate = draft?.layersTemplate ?? []
 
     // ---- Konva editor (posts) bridge ----
@@ -90,20 +105,17 @@ const AIEditor = ({ template }: IProps) => {
     }, [])
 
     // ---- Actions ----
-    // Análisis con IA deshabilitado de momento.
-    // const onAnalyzeWithAI = async (force = false) => {
-    //     try {
-    //         const url = API_ROUTES.TEMPLATES.ANALYZE_WITH_AI.replace("{id}", template.id)
-    //         const res = await analyzeRequest<{ force: boolean }, AIDraft>("POST", url, { force })
-    //         if (res?.data) {
-    //             layersBaselineRef.current = null
-    //             setDraft(res.data)
-    //             setDirty(false)
-    //             if (res.data.cached) toast.info("Análisis recuperado de caché")
-    //             else toast.success("Análisis de IA completado")
-    //         }
-    //     } catch { /* toast in onError */ }
-    // }
+    /**
+     * Resolves the save endpoint. Variant context targets the nested
+     * variant resource; legacy falls back to the template UPDATE route.
+     */
+    const buildSaveUrl = () => (
+        variant
+            ? API_ROUTES.TEMPLATES.VARIANTS.UPDATE
+                .replace("{templateId}", template.id)
+                .replace("{variantId}", variant.id)
+            : API_ROUTES.TEMPLATES.UPDATE.replace("{id}", template.id)
+    )
 
     const onSave = async () => {
         const renderConfig: RenderConfiguration = {
@@ -112,10 +124,9 @@ const AIEditor = ({ template }: IProps) => {
             layersTemplate,
         }
         try {
-            const url = API_ROUTES.TEMPLATES.UPDATE.replace("{id}", template.id)
-            const res = await saveRequest<{ render_configuration: RenderConfiguration }, ITemplate>(
+            const res = await saveRequest<{ render_configuration: RenderConfiguration }, ITemplate | ITemplateVariant>(
                 "PUT",
-                url,
+                buildSaveUrl(),
                 { render_configuration: renderConfig }
             )
             if (res?.data) {
@@ -132,7 +143,7 @@ const AIEditor = ({ template }: IProps) => {
 
     // ---- Manual JSON editor of render_configuration ----
     const buildRenderConfig = (): RenderConfiguration =>
-        template.render_configuration ?? {
+        sourceRender ?? {
             compositionId: draft?.compositionId ?? "still-composer",
             canvas: draft?.canvas ?? DEFAULT_CANVAS,
             layersTemplate: draft?.layersTemplate ?? [],
@@ -163,10 +174,9 @@ const AIEditor = ({ template }: IProps) => {
         }
         setJsonError(null)
         try {
-            const url = API_ROUTES.TEMPLATES.UPDATE.replace("{id}", template.id)
-            const res = await saveRequest<{ render_configuration: RenderConfiguration }, ITemplate>(
+            const res = await saveRequest<{ render_configuration: RenderConfiguration }, ITemplate | ITemplateVariant>(
                 "PUT",
-                url,
+                buildSaveUrl(),
                 { render_configuration: parsed }
             )
             if (res?.data) {
@@ -190,17 +200,18 @@ const AIEditor = ({ template }: IProps) => {
         return (
             <Alert variant="default">
                 <AlertCircleIcon className="h-4 w-4" />
-                <AlertTitle>Faltan archivos para usar el editor</AlertTitle>
+                <AlertTitle>Falta el archivo base para usar el editor</AlertTitle>
                 <AlertDescription>
-                    Sube la plantilla vacía y la imagen de referencia en la pestaña{" "}
-                    <strong>Editar</strong> antes de iniciar el editor con IA.
+                    {variant
+                        ? "Sube la plantilla limpia en la variante antes de iniciar el editor."
+                        : "Sube la plantilla vacía y la imagen de referencia en la pestaña Editar antes de iniciar el editor con IA."}
                 </AlertDescription>
             </Alert>
         )
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             <EditorToolbar
                 layerCount={layerCount}
                 analyzedAt={draft?.analyzed_at}
@@ -220,6 +231,7 @@ const AIEditor = ({ template }: IProps) => {
                     <CardContent>
                         <EyrenderPreviewTemplate
                             template={template}
+                            variant={variant}
                             disabled={dirty}
                             disabledReason={dirty ? "Guarda los cambios antes de generar la vista previa." : undefined}
                         />
@@ -240,7 +252,7 @@ const AIEditor = ({ template }: IProps) => {
             ) : (
                 <PostsLayoutEditor
                     key={draft?.analyzed_at || "empty"}
-                    backgroundUrl={template.template_file_url || ""}
+                    backgroundUrl={backgroundUrl}
                     initialLayers={layersTemplate}
                     onChange={handleLayersChange}
                     templateGroup={template.template_group}
