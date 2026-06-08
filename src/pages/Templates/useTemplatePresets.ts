@@ -1,5 +1,5 @@
 import { API_ROUTES } from "@/constants/api"
-import useFetchQuery from "@/hooks/useFetchQuery"
+import useFetchQuery, { UseFetchResult } from "@/hooks/useFetchQuery"
 import { ITemplatePreset } from "@/interfaces/templates"
 import { queryKeys } from "@/utils/queryKeys"
 
@@ -13,7 +13,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000
  * per session under normal use; shared across every component that uses
  * the hook thanks to react-query's cache.
  */
-const useTemplatePresets = () => {
+const useTemplatePresets = (): UseFetchResult<ITemplatePreset[]> => {
     return useFetchQuery<ITemplatePreset[]>(API_ROUTES.TEMPLATES.PRESETS, {
         customQueryKey: queryKeys.list("template-presets"),
         staleTime: ONE_HOUR_MS,
