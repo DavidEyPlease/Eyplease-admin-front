@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, QueryKey } from '@tanstack/react-query'
 import HttpService from '@/services/http'
 import { ApiResponse } from '@/interfaces/common'
 
-interface UseFetchResult<T> {
+export interface UseFetchResult<T> {
     response: T | undefined,
     loading: boolean,
     isRefetching: boolean,
@@ -13,7 +13,7 @@ interface UseFetchResult<T> {
     fetchRetry: () => void
 }
 
-interface UseFetchOptions {
+export interface UseFetchOptions {
     queryParams?: QueryParams
     customQueryKey?: QueryKey
     // additional options for react-query
