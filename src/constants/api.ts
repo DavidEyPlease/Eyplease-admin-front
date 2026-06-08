@@ -49,6 +49,17 @@ export const API_ROUTES = {
         ANALYZE_WITH_AI: '/templates/{id}/analyze-with-ai',
         EYRENDER_PREVIEW: '/templates/{id}/eyrender-preview',
         GET_EYRENDER_JOB: '/templates/eyrender-job/{jobId}',
+        // Static catalog of AI layer composition presets (backed by
+        // App\Constants\TemplatePresets on the API).
+        PRESETS: '/templates/presets',
+        // Variants — concrete representations of the template (image,
+        // video, pdf, pptx...). Nested under a Template.
+        VARIANTS: {
+            CREATE: '/templates/{templateId}/variants',
+            DETAIL: '/templates/{templateId}/variants/{variantId}',
+            UPDATE: '/templates/{templateId}/variants/{variantId}',
+            DELETE: '/templates/{templateId}/variants/{variantId}',
+        },
     },
     PERMISSIONS: {
         GET_ALL_ACCESS: '/roles/accesses',

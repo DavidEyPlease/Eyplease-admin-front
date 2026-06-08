@@ -4,26 +4,24 @@ const GenericMetadataSchema = z.object({
     pink_circle_months: z.string().nullable().optional(),
 })
 
+// `template_asset_type` was removed from the create/edit form: the new
+// TemplateVariant model is the source of truth for the output format(s)
+// each template supports. The column still exists for backwards compat
+// with legacy rows but is no longer set from this form.
 export const TemplateSchema = z.object({
     name: z.string().min(3, { message: "El nombre es requerido" }).max(255),
     active: z.boolean(),
     template_group: z.string('El grupo de la plantilla es requerido').nonempty('El grupo de la plantilla es requerido'),
     template_subgroup: z.string().nullable().optional(),
-    template_asset_type: z.enum(['image', 'video']).nullable().optional(),
     enabled_all_clients: z.boolean(),
     font_color: z.string().nullable().optional(),
     month: z.int('El mes de la plantilla es requerido'),
     metadata: GenericMetadataSchema.optional(),
-}).superRefine((val, ctx) => {
-    // Si el grupo no es 'reports' y el asset_type está vacío/undefined
-    if (val.template_group !== 'reports' && !val.template_asset_type) {
-        ctx.addIssue({
-            code: 'custom',
-            message: "El tipo de asset es requerido para este grupo de plantilla",
-            input: val.template_asset_type,
-        });
-    }
-});
+    // AI preset slug — declares the layer composition the analyzer
+    // must detect. Must live in the schema or Zod strips it on submit
+    // (the dropdown lives in the form but never reaches the backend).
+    preset_slug: z.string().nullable().optional(),
+})
 
 export const FORM_DEFAULT_VALUES = {
     name: "",
@@ -31,12 +29,12 @@ export const FORM_DEFAULT_VALUES = {
     template_group: "",
     template_subgroup: null,
     font_color: null,
-    template_asset_type: null,
     enabled_all_clients: false,
     month: 0,
     metadata: {
         pink_circle_months: null,
-    }
+    },
+    preset_slug: null,
 }
 
 export const RENDER_ASSETS_TYPES = [

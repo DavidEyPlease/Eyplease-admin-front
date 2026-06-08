@@ -15,12 +15,10 @@ import Switch from "@/components/common/Inputs/Switch"
 import { ApiResponse, INewsletterSectionItem } from "@/interfaces/common"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/uishadcn/ui/select"
 import useAuthStore from "@/store/auth"
-import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTHS_OPTIONS } from "@/constants/app"
-import { Field, FieldLabel } from "@/uishadcn/ui/field"
 import useFetchQuery from "@/hooks/useFetchQuery"
-import UploadTemplateFiles from "./UploadTemplateFiles"
+import useTemplatePresets from "../useTemplatePresets"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -43,7 +41,14 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
     );
 
     const { request, requestState } = useRequestQuery({
-        invalidateQueries: [queryKeys.list('config/templates')],
+        // Invalidate every cache key that may show this template's data:
+        //   - the legacy `config/templates` list (used by some screens)
+        //   - the detail (so the open Detail page refreshes after edits
+        //     like changing preset_slug, name, group, etc.)
+        invalidateQueries: [
+            queryKeys.list('config/templates'),
+            ...(item ? [queryKeys.detail('templates', item.id)] : []),
+        ],
         onSuccess: (response: ApiResponse<ITemplate>) => {
             toast.success(`Plantilla guardada`);
             if (!item) form.reset();
@@ -72,6 +77,10 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
         enabled: !!form.watch('template_group') && !['reports', 'customers-birthdays'].includes(form.watch('template_group')),
         customQueryKey: queryKeys.list('newsletter_section_items', { section: form.watch('template_group') })
     })
+
+    // AI presets catalog — cached app-wide by useTemplatePresets.
+    const { response: presets } = useTemplatePresets()
+    const presetOptions = presets?.map(preset => ({ label: preset.name, value: preset.slug })) ?? []
 
     useEffect(() => {
         return () => {
@@ -206,66 +215,43 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                     </div>
                 }
 
-                <div className="grid md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="template_asset_type"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Tipo de recurso</FormLabel>
-                                <FormControl>
-                                    <RadioGroup
-                                        value={field.value}
-                                        onValueChange={e => field.onChange(e as 'image' | 'video')}
-                                        className="w-fit"
-                                    >
-                                        <Field
-                                            orientation="horizontal"
-                                            data-invalid={Boolean(form.formState?.errors?.template_asset_type)}
-                                            data-disabled={!templateGroupValue || templateGroupValue === 'reports'}
-                                        >
-                                            <RadioGroupItem
-                                                value="image"
-                                                id="r1"
-                                                disabled={!templateGroupValue || templateGroupValue === 'reports'}
-                                                aria-invalid={Boolean(form.formState?.errors?.template_asset_type)}
-                                            />
-                                            <FieldLabel htmlFor="r1">Imagen</FieldLabel>
-                                        </Field>
-                                        <Field
-                                            orientation="horizontal"
-                                            data-invalid={Boolean(form.formState?.errors?.template_asset_type)}
-                                            data-disabled={!templateGroupValue || templateGroupValue === 'reports'}
-                                        >
-                                            <RadioGroupItem
-                                                value="video"
-                                                id="r2"
-                                                disabled={!templateGroupValue || templateGroupValue === 'reports'}
-                                                aria-invalid={Boolean(form.formState?.errors?.template_asset_type)}
-                                            />
-                                            <FieldLabel htmlFor="r2">Video</FieldLabel>
-                                        </Field>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="font_color"
-                        disabled={templateGroupValue !== 'reports'}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Color de la fuente</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Ingresa el color de la fuente" {...field} value={field.value || ''} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                <FormField
+                    control={form.control}
+                    name="preset_slug"
+                    render={({ field }) => (
+                        <FormItem>
+                            <Dropdown
+                                className="max-w-md"
+                                label="Preset de IA"
+                                disabled={templateGroupValue === 'reports'}
+                                placeholder="Selecciona un preset"
+                                value={field.value ?? ''}
+                                onChange={value => field.onChange(value || null)}
+                                error={form.formState?.errors?.preset_slug?.message}
+                                items={presetOptions}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Composición de capas que la IA usará al analizar las variantes.
+                            </p>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="font_color"
+                    disabled={templateGroupValue !== 'reports'}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Color de la fuente</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ingresa el color de la fuente" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <FormField
@@ -305,10 +291,6 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                 </div>
 
                 <Separator />
-
-                {item && (
-                    <UploadTemplateFiles template={item} onSuccess={onSuccess} />
-                )}
 
                 <Button
                     text='Guardar'

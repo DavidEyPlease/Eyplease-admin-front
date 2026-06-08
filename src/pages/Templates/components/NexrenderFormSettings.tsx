@@ -47,7 +47,9 @@ const NexrenderFormSettings = ({ template }: NexrenderFormSettingsProps) => {
     });
 
     const { request, requestState } = useRequestQuery({
-        invalidateQueries: [queryKeys.detail(`template`, template.id)],
+        // Plural matches the key used in Detail/index.tsx; previously
+        // singular which silently failed to invalidate.
+        invalidateQueries: [queryKeys.detail('templates', template.id)],
         onSuccess: () => {
             toast.success(`Configuración guardada`);
         },

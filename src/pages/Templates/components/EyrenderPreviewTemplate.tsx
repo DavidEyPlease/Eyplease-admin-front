@@ -7,15 +7,18 @@ import { Badge } from "@/uishadcn/ui/badge"
 import { Progress } from "@/uishadcn/ui/progress"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { API_ROUTES } from "@/constants/api"
-import { ITemplate } from "@/interfaces/templates"
+import { ITemplate, ITemplateVariant } from "@/interfaces/templates"
 
 interface IProps {
     template: ITemplate
     /**
-     * Optional: if the parent already has unsaved edits in the canvas, it
-     * can pass the live `layersTemplate` to preview without persisting first.
-     * For now we keep it simple and always preview the persisted template.
+     * When provided, the preview targets the specific variant: asset type
+     * derives from `variant.kind` (used for the polling cadence + final
+     * media element) and the request sends `?variant_id=<id>` so the
+     * backend resolves the variant's render_configuration instead of the
+     * legacy template-level one.
      */
+    variant?: ITemplateVariant | null
     disabled?: boolean
     disabledReason?: string
 }
@@ -57,14 +60,21 @@ const VIDEO_POLL_SECONDS = 10
 const IMAGE_POLL_SECONDS = 2
 const TIMEOUT_SECONDS = 180
 
-const getPollIntervalSeconds = (assetType: ITemplate["template_asset_type"]) =>
+const getPollIntervalSeconds = (assetType: "image" | "video" | null | undefined) =>
     assetType === "video" ? VIDEO_POLL_SECONDS : IMAGE_POLL_SECONDS
 
 const isTerminalStatus = (status: JobStatus) => status === "done" || status === "failed"
 
-const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps) => {
-    const isVideo = template.template_asset_type === "video"
-    const pollSeconds = getPollIntervalSeconds(template.template_asset_type)
+const EyrenderPreviewTemplate = ({ template, variant = null, disabled, disabledReason }: IProps) => {
+    // Variant kind takes precedence over the legacy template_asset_type so
+    // the polling cadence and final media element match the actual output
+    // format of this specific job.
+    const variantAssetType = variant?.kind === "video" || variant?.kind === "image"
+        ? variant.kind
+        : null
+    const assetType: "image" | "video" | null = variantAssetType ?? template.template_asset_type
+    const isVideo = assetType === "video"
+    const pollSeconds = getPollIntervalSeconds(assetType)
 
     const [response, setResponse] = useState<IPreviewResponse | null>(null)
     const [secondsLeft, setSecondsLeft] = useState<number>(pollSeconds)
@@ -135,7 +145,8 @@ const EyrenderPreviewTemplate = ({ template, disabled, disabledReason }: IProps)
 
     const onTestTemplate = async () => {
         try {
-            const url = API_ROUTES.TEMPLATES.EYRENDER_PREVIEW.replace("{id}", template.id)
+            const baseUrl = API_ROUTES.TEMPLATES.EYRENDER_PREVIEW.replace("{id}", template.id)
+            const url = variant ? `${baseUrl}?variant_id=${variant.id}` : baseUrl
             const res = await startRequest<undefined, IPreviewResponse>("POST", url)
             if (res?.data) {
                 setResponse(res.data)
