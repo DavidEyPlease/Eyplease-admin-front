@@ -16,7 +16,7 @@ export const TemplateSchema = z.object({
     enabled_all_clients: z.boolean(),
     font_color: z.string().nullable().optional(),
     month: z.int('El mes de la plantilla es requerido'),
-    metadata: GenericMetadataSchema.optional(),
+    metadata: GenericMetadataSchema.optional().nullable(),
     // AI preset slug — declares the layer composition the analyzer
     // must detect. Must live in the schema or Zod strips it on submit
     // (the dropdown lives in the form but never reaches the backend).

@@ -64,10 +64,11 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
         if (item) {
             endpoint = API_ROUTES.TEMPLATES.UPDATE.replace('{id}', item.id)
         }
+        const { metadata, ...rest } = values
         await request<FormType, ITemplate>(
             item ? 'PUT' : 'POST',
             endpoint,
-            values
+            { ...rest, ...(metadata ? { metadata } : {}) }
         )
     }
 
