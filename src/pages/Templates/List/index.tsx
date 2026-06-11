@@ -147,6 +147,18 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table', lockVi
             </Modal>
 
             <Modal
+                title={`Clonar plantilla: ${selectedTemplate?.name}`}
+                description="Crea una copia con toda la configuración de variantes. Ajusta los datos antes de guardar."
+                open={actionDialogOpen === 'clone'}
+                size="xxl"
+                onOpenChange={() => {
+                    setSelectedTemplate(null)
+                }}
+            >
+                <TemplateForm cloneFrom={selectedTemplate || null} onSuccess={() => setSelectedTemplate(null)} />
+            </Modal>
+
+            <Modal
                 title={`Vista de Plantilla: ${selectedTemplate?.name}`}
                 description="Fondos disponibles"
                 open={actionDialogOpen === 'view'}

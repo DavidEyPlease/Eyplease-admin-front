@@ -8,7 +8,7 @@ import useTemplatesStore from "@/store/templates"
 import { Button } from "@/uishadcn/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/uishadcn/ui/dropdown-menu"
 import { publishEvent } from "@/utils/events"
-import { EditIcon, EyeIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon, WandSparklesIcon } from "lucide-react"
+import { CopyIcon, EditIcon, EyeIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon, WandSparklesIcon } from "lucide-react"
 import { useNavigate } from "react-router"
 
 interface Props {
@@ -47,6 +47,15 @@ const TemplateActions = ({ template }: Props) => {
                     <EditIcon className="w-4 h-4 mr-2" />
                     Editar
                 </DropdownMenuItem>
+                {/* Clone only applies to posts templates: they carry their
+                    config in variants. Reports templates use a different
+                    S3-backed background structure and aren't clonable here. */}
+                {template?.template_group !== 'reports' && (
+                    <DropdownMenuItem onClick={() => setSelectedTemplate(template, 'clone')}>
+                        <CopyIcon className="w-4 h-4 mr-2" />
+                        Clonar
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setSelectedTemplate(template, 'manageClient')}>
                     <UsersIcon className="w-4 h-4 mr-2" />

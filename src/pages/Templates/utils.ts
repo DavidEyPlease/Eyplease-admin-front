@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ITemplate } from "@/interfaces/templates"
 
 const GenericMetadataSchema = z.object({
     pink_circle_months: z.string().nullable().optional(),
@@ -21,6 +22,40 @@ export const TemplateSchema = z.object({
     // must detect. Must live in the schema or Zod strips it on submit
     // (the dropdown lives in the form but never reaches the backend).
     preset_slug: z.string().nullable().optional(),
+})
+
+// The backend caps the template name at 50 chars (the create form schema
+// allows more, but the API rejects anything longer).
+const MAX_TEMPLATE_NAME_LENGTH = 50
+const CLONE_NAME_SUFFIX = " (copia)"
+
+/**
+ * Suggested name for a cloned template: original + " (copia)", trimmed so the
+ * suffix always survives within the backend's 50-char limit.
+ */
+export const buildCloneName = (name: string): string => {
+    const candidate = `${name}${CLONE_NAME_SUFFIX}`
+    if (candidate.length <= MAX_TEMPLATE_NAME_LENGTH) return candidate
+
+    const baseMaxLength = MAX_TEMPLATE_NAME_LENGTH - CLONE_NAME_SUFFIX.length
+    return `${name.slice(0, baseMaxLength).trimEnd()}${CLONE_NAME_SUFFIX}`
+}
+
+/**
+ * Pre-fill values for the create-template form when cloning: every editable
+ * field copied from the source, with a suggested clone name. The variant
+ * configuration is cloned server-side and isn't part of this form.
+ */
+export const buildCloneFormValues = (template: ITemplate): z.infer<typeof TemplateSchema> => ({
+    name: buildCloneName(template.name),
+    active: template.active,
+    template_group: template.template_group,
+    template_subgroup: template.template_subgroup ?? null,
+    enabled_all_clients: template.enabled_all_clients,
+    font_color: template.font_color ?? null,
+    month: template.month,
+    metadata: template.metadata ?? { pink_circle_months: null },
+    preset_slug: template.preset_slug ?? null,
 })
 
 export const FORM_DEFAULT_VALUES = {

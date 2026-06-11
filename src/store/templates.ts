@@ -4,7 +4,7 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { create } from 'zustand'
 
 type SelectedTemplate = ITemplate | null
-type SelectedActionTemplate = 'view' | 'edit' | 'manageClient' | null
+type SelectedActionTemplate = 'view' | 'edit' | 'manageClient' | 'clone' | null
 type RowSelectionUpdater = RowSelectionState | ((old: RowSelectionState) => RowSelectionState)
 
 export type StoreTemplatesFilters = {

@@ -37,6 +37,7 @@ export const API_ROUTES = {
     TEMPLATES: {
         LIST: '/templates',
         CREATE: '/templates',
+        CLONE: '/templates/{id}/clone',
         DETAIL: '/templates/{id}',
         UPDATE: '/templates/{id}',
         DELETE: '/templates/{id}',

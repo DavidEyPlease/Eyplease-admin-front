@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { queryKeys } from "@/utils/queryKeys"
 import { useEffect } from "react"
 import { ITemplate } from "@/interfaces/templates"
-import { FORM_DEFAULT_VALUES, PINK_CIRCLE_MONTHS_OPTIONS, TemplateSchema } from "../utils"
+import { buildCloneFormValues, FORM_DEFAULT_VALUES, PINK_CIRCLE_MONTHS_OPTIONS, TemplateSchema } from "../utils"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import Button from "@/components/common/Button"
 import Switch from "@/components/common/Inputs/Switch"
@@ -22,6 +22,10 @@ import useTemplatePresets from "../useTemplatePresets"
 
 interface TemplateFormProps {
     item?: ITemplate | null
+    // When set, the form runs in "clone" mode: pre-filled with the source
+    // template's data but submitting creates a brand-new template and the
+    // backend replicates the source's variant configuration.
+    cloneFrom?: ITemplate | null
     isReportsTemplates?: boolean
     onSuccess?: (template: ITemplate) => void;
 }
@@ -33,43 +37,53 @@ const parseTemplateMonth = (month: number) => {
     return month.toString();
 }
 
-const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps) => {
+const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: TemplateFormProps) => {
     const { utilData } = useAuthStore(state => state)
+    const isClone = Boolean(cloneFrom)
     const form = useCustomForm(
         TemplateSchema,
-        item ?? { ...FORM_DEFAULT_VALUES, template_group: isReportsTemplates ? 'reports' : '' }
+        item
+            ?? (cloneFrom
+                ? buildCloneFormValues(cloneFrom)
+                : { ...FORM_DEFAULT_VALUES, template_group: isReportsTemplates ? 'reports' : '' })
     );
 
     const { request, requestState } = useRequestQuery({
         // Invalidate every cache key that may show this template's data:
         //   - the legacy `config/templates` list (used by some screens)
+        //   - the posts/reports lists, so a created/cloned template shows up
+        //     without a manual refetch
         //   - the detail (so the open Detail page refreshes after edits
         //     like changing preset_slug, name, group, etc.)
         invalidateQueries: [
             queryKeys.list('config/templates'),
+            queryKeys.list('templates/posts'),
+            queryKeys.list('templates/reports'),
             ...(item ? [queryKeys.detail('templates', item.id)] : []),
         ],
         onSuccess: (response: ApiResponse<ITemplate>) => {
-            toast.success(`Plantilla guardada`);
+            toast.success(isClone ? 'Plantilla clonada' : 'Plantilla guardada');
             if (!item) form.reset();
             onSuccess?.(response.data);
         },
         onError: (error) => {
-            toast.error(`Error al guardar la plantilla: ${error.message}`);
+            toast.error(`Error al ${isClone ? 'clonar' : 'guardar'} la plantilla: ${error.message}`);
         }
     })
 
     const onSubmit = async (values: FormType) => {
-        let endpoint = API_ROUTES.TEMPLATES.CREATE
-        if (item) {
-            endpoint = API_ROUTES.TEMPLATES.UPDATE.replace('{id}', item.id)
-        }
         const { metadata, ...rest } = values
-        await request<FormType, ITemplate>(
-            item ? 'PUT' : 'POST',
-            endpoint,
-            { ...rest, ...(metadata ? { metadata } : {}) }
-        )
+        const body = { ...rest, ...(metadata ? { metadata } : {}) }
+
+        if (item) {
+            await request<FormType, ITemplate>('PUT', API_ROUTES.TEMPLATES.UPDATE.replace('{id}', item.id), body)
+            return
+        }
+        if (cloneFrom) {
+            await request<FormType, ITemplate>('POST', API_ROUTES.TEMPLATES.CLONE.replace('{id}', cloneFrom.id), body)
+            return
+        }
+        await request<FormType, ITemplate>('POST', API_ROUTES.TEMPLATES.CREATE, body)
     }
 
     const {
@@ -294,7 +308,7 @@ const TemplateForm = ({ item, isReportsTemplates, onSuccess }: TemplateFormProps
                 <Separator />
 
                 <Button
-                    text='Guardar'
+                    text={isClone ? 'Clonar plantilla' : 'Guardar'}
                     type="submit"
                     color="primary"
                     rounded
