@@ -52,6 +52,9 @@ export const APP_ROUTES = {
     },
     POSTS: {
         PUBLISH: '/posts/publish',
+    },
+    FINANCES: {
+        DASHBOARD: '/finanzas',
     }
 }
 
@@ -72,6 +75,13 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         requiredPermission: true,
         permissionKeys: [PermissionKeys.CLIENTS],
         icon: 'gallery',
+    },
+    {
+        key: PermissionKeys.FINANCES,
+        label: 'Finanzas',
+        path: APP_ROUTES.FINANCES.DASHBOARD,
+        permissionKeys: [PermissionKeys.FINANCES],
+        icon: 'finances',
     },
     {
         key: PermissionKeys.TRAININGS,
