@@ -79,9 +79,17 @@ export const tableColumns: ColumnDef<IClient>[] = [
         id: 'email',
         accessorKey: 'email',
         size: 220,
-        minSize: 200,
+        minSize: 260,
         header: 'Correo',
         cell: ({ row }) => row.original.user?.email
+    },
+    {
+        id: 'phone',
+        accessorKey: 'user.phone',
+        size: 220,
+        minSize: 260,
+        header: 'Teléfono',
+        cell: ({ row }) => row.original.user?.phone
     },
     {
         id: 'createdAt',

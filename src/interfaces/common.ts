@@ -5,10 +5,22 @@ import { ITaskStatus, ITaskType } from "./tasks";
 import { ITrainingCategory } from "./training";
 import { IUser } from "./users"
 
+export interface Country {
+    code: string
+    name: string
+    dial: string
+    flag: string
+}
+
 export const CountriesKeys = {
     MX: 'MEX',
     US: 'USA',
     CO: 'COL',
+    AR: 'AR',
+    CL: 'CL',
+    PE: 'PE',
+    EC: 'EC',
+    ES: 'ES'
 } as const;
 export type CountriesKeys = typeof CountriesKeys[keyof typeof CountriesKeys];
 

@@ -53,6 +53,7 @@ export interface IClientUpdate {
     active?: boolean
     platform_guest_account?: string | null
     external_company_pw?: string | null
+    phone?: string | null
 }
 
 export type ClientFilterKeys = keyof IClientFilters

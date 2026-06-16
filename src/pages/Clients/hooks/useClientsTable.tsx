@@ -4,6 +4,7 @@ import { CSSProperties, useEffect, useMemo, useState } from "react"
 import { tableColumns } from "../List/components/Table/TableColumns"
 import { IClient } from "@/interfaces/clients"
 import EditableTextCell from "../List/components/Table/EditableTextCell"
+import EditablePhoneCell from "../List/components/Table/EditablePhoneCell"
 
 interface UseClientsTableProps {
     items: IClient[]
@@ -17,6 +18,7 @@ declare module "@tanstack/react-table" {
 
 const EDITABLE_COLUMN_IDS = new Set([
     'accountPw',
+    'phone',
     'guestAccount',
 ])
 
@@ -87,7 +89,7 @@ const useClientsTable = ({ items }: UseClientsTableProps) => {
 
             return {
                 ...column,
-                cell: EditableTextCell,
+                cell: columnId === 'phone' ? EditablePhoneCell : EditableTextCell,
             }
         })
     }, [])

@@ -1,4 +1,4 @@
-import { CountriesKeys, MenuItem, RoleKeys, UserTypeKeys } from "@/interfaces/common"
+import { CountriesKeys, Country, MenuItem, RoleKeys, UserTypeKeys } from "@/interfaces/common"
 import { PermissionKeys } from "@/interfaces/permissions"
 import { UserRequestStatusTypes } from "@/interfaces/requestService"
 import { TaskStatusTypes } from "@/interfaces/tasks"
@@ -261,3 +261,16 @@ export const COUNTRIES_LIST = [
     { label: 'Estados Unidos', value: CountriesKeys.US },
     { label: 'Colombia', value: CountriesKeys.CO },
 ]
+
+export const COUNTRIES: Country[] = [
+    { code: 'MX', name: 'México', dial: '+52', flag: '🇲🇽' },
+    { code: 'CO', name: 'Colombia', dial: '+57', flag: '🇨🇴' },
+    { code: 'US', name: 'Estados Unidos', dial: '+1', flag: '🇺🇸' },
+    { code: 'AR', name: 'Argentina', dial: '+54', flag: '🇦🇷' },
+    { code: 'CL', name: 'Chile', dial: '+56', flag: '🇨🇱' },
+    { code: 'PE', name: 'Perú', dial: '+51', flag: '🇵🇪' },
+    { code: 'EC', name: 'Ecuador', dial: '+593', flag: '🇪🇨' },
+    { code: 'ES', name: 'España', dial: '+34', flag: '🇪🇸' },
+]
+
+export const DEFAULT_COUNTRY_CODE = 'MX'
