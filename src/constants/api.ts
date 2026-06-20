@@ -114,6 +114,7 @@ export const API_ROUTES = {
             DELETE: '/finance/expenses/{id}',
         },
         PAYMENTS: {
+            LIST: '/finance/payments',
             CREATE: '/finance/payments',
         },
     },

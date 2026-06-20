@@ -29,7 +29,7 @@ interface ApiFinanceClient {
     payments: Record<string, ApiPayment>
 }
 
-type PaginatedClients = PaginationResponse<ApiFinanceClient>
+type PaginatedClients = PaginationResponse<ApiFinanceClient> & { total_overdue?: number }
 
 const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     id: c.id,
@@ -94,6 +94,8 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15 }:
         totalPages: response?.last_page ?? 1,
         totalItems: response?.total_items ?? 0,
         perPage: response?.per_page ?? perPage,
+        // Overdue total across all matching clients, not just this page.
+        totalOverdue: response?.total_overdue ?? 0,
         loading,
         isRefetching,
         error,

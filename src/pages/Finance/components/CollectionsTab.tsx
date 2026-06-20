@@ -35,7 +35,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
 
-    const { clients, totalPages, totalItems, perPage, loading } = useFinanceClientsPage({ year, page, search })
+    const { clients, totalPages, totalItems, perPage, totalOverdue, loading } = useFinanceClientsPage({ year, page, search })
     const { markPayment, marking } = useMarkPayment()
     const periods = useMemo(() => periodsForYear(year), [year])
 
@@ -67,7 +67,6 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         return { client, overduePeriods, overdueAmount }
     }), [clients, periods])
 
-    const pageOverdueTotal = rows.reduce((acc, r) => acc + r.overdueAmount, 0)
     const manageRow = rows.find((r) => r.client.id === manageId)
 
     type Row = OverdueInfo
@@ -175,8 +174,8 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 {rows.length > 0 && (
                                     <tfoot>
                                         <tr className="border-t border-slate-100 bg-slate-50/50 text-sm">
-                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={4}>{totalItems} clientes en retraso · subtotal de esta página</td>
-                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(pageOverdueTotal)}</td>
+                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={4}>{totalItems} clientes en retraso · total retrasado</td>
+                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(totalOverdue)}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>

@@ -24,10 +24,10 @@ const mxn = new Intl.NumberFormat("es-MX", {
 })
 
 export const formatMoney = (n: number | null | undefined) =>
-    n === null || n === undefined ? "—" : mxn.format(n)
+    Number.isFinite(n) ? mxn.format(n as number) : "—"
 
 export const formatPct = (n: number | null | undefined) =>
-    n === null || n === undefined ? "—" : `${Math.round(n)}%`
+    Number.isFinite(n) ? `${Math.round(n as number)}%` : "—"
 
 // ---- Projection / break-even ----
 

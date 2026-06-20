@@ -27,6 +27,52 @@ export interface FinanceClient {
     payments: Record<string, MonthlyPayment>
 }
 
+export type PaymentSource = "manual" | "whatsapp_bot" | "stripe" | "import" | "system"
+export type PaymentMethod = "stripe" | "transfer" | "card" | "cash"
+
+/** One row of the payment ledger returned by GET /finance/payments. */
+export interface PaymentRecord {
+    id: string
+    userId: string
+    /** consultant_code of the payer (null if the user has no network person). */
+    account: string | null
+    clientName: string | null
+    /** Period 'YYYY-MM' the payment covers. */
+    period: string
+    amount: number
+    currency: string
+    status: PaymentStatus
+    method: PaymentMethod | null
+    source: PaymentSource | null
+    /** ISO datetime when it was collected (null until paid). */
+    paidAt: string | null
+    receiptUrl: string | null
+    note: string | null
+    createdAt: string | null
+}
+
+/** Display labels (UI is in Spanish; the stored values stay in English). */
+export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string> = {
+    paid: "Pagado",
+    overdue: "Vencido",
+    pending: "Pendiente",
+}
+
+export const PAYMENT_SOURCE_LABELS: Record<PaymentSource, string> = {
+    manual: "Manual",
+    whatsapp_bot: "WhatsApp",
+    stripe: "Stripe",
+    import: "Importado",
+    system: "Sistema",
+}
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+    stripe: "Stripe",
+    transfer: "Transferencia",
+    card: "Tarjeta",
+    cash: "Efectivo",
+}
+
 export type ExpenseCategory = "tools" | "team" | "other"
 
 export interface ExpenseItem {
@@ -78,6 +124,8 @@ export interface FinanceSummary {
     year: number
     month: number
     active_clients: number
+    /** Average monthly churn rate (decimal 0-1) from client snapshots. */
+    churn_rate: number
     plan_distribution: PlanDistributionItem[]
     month_summary: SummaryMonth
     months: SummaryMonth[]

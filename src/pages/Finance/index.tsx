@@ -1,16 +1,19 @@
 import { useState } from "react"
 
+import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTH_LABELS } from "@/utils/finance"
 import SummaryTab from "./components/SummaryTab"
 import CollectionsTab from "./components/CollectionsTab"
 import ExpensesTab from "./components/ExpensesTab"
 import BalanceTab from "./components/BalanceTab"
 import ProjectionTab from "./components/ProjectionTab"
+import PaymentsTab from "./components/PaymentsTab"
 import ClientDrawer from "./components/ClientDrawer"
 
 const TABS = [
     { key: "resumen", label: "Resumen" },
     { key: "cobranza", label: "Cobranza" },
+    { key: "pagos", label: "Pagos" },
     { key: "gastos", label: "Gastos" },
     { key: "balance", label: "Balance" },
     { key: "proyeccion", label: "Proyección" },
@@ -19,6 +22,8 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"]
 
 const YEARS = [2026, 2027]
+const MONTH_OPTIONS = MONTH_LABELS.map((label, idx) => ({ label, value: String(idx + 1) }))
+const YEAR_OPTIONS = YEARS.map((y) => ({ label: String(y), value: String(y) }))
 
 const FinancePage = () => {
     const [tab, setTab] = useState<TabKey>("resumen")
@@ -26,7 +31,6 @@ const FinancePage = () => {
     const [period, setPeriod] = useState({ year: 2026, month: new Date().getMonth() + 1 })
 
     const showPeriod = tab === "resumen" || tab === "gastos" || tab === "balance"
-    const selectCls = "rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-600 outline-none focus:border-[#5B47E0]"
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
@@ -37,16 +41,12 @@ const FinancePage = () => {
                 </div>
                 {showPeriod && (
                     <div className="flex flex-wrap items-center gap-2">
-                        <select value={period.month} onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))} className={selectCls}>
-                            {MONTH_LABELS.map((label, idx) => (
-                                <option key={idx} value={idx + 1}>{label}</option>
-                            ))}
-                        </select>
-                        <select value={period.year} onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))} className={selectCls}>
-                            {YEARS.map((y) => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
+                        <div className="w-36">
+                            <Dropdown placeholder="Mes" value={String(period.month)} items={MONTH_OPTIONS} onChange={(v) => setPeriod((p) => ({ ...p, month: Number(v) }))} />
+                        </div>
+                        <div className="w-28">
+                            <Dropdown placeholder="Año" value={String(period.year)} items={YEAR_OPTIONS} onChange={(v) => setPeriod((p) => ({ ...p, year: Number(v) }))} />
+                        </div>
                     </div>
                 )}
             </div>
@@ -72,6 +72,7 @@ const FinancePage = () => {
 
             {tab === "resumen" && <SummaryTab period={period} />}
             {tab === "cobranza" && <CollectionsTab year={period.year} onOpenDetail={setDetailId} />}
+            {tab === "pagos" && <PaymentsTab year={period.year} />}
             {tab === "gastos" && <ExpensesTab period={period} />}
             {tab === "balance" && <BalanceTab period={period} />}
             {tab === "proyeccion" && <ProjectionTab period={period} />}

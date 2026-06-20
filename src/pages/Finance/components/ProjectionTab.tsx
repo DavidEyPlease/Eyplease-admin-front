@@ -57,7 +57,11 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
     const monthlyExpenses = monthsWithExpense > 0 ? Math.round(balance.year_expense / monthsWithExpense) : 0
 
     const defaultTicket = realizedArpu || expectedTicket
-    const [churn, setChurn] = useState(0) // in %, no history yet → starts at 0
+    // churn_rate can be null until snapshots accumulate; coerce so the math never goes NaN.
+    const churnRate = Number.isFinite(summary.churn_rate) ? summary.churn_rate : 0
+    const defaultChurn = Math.max(0, Math.round(churnRate * 1000) / 10) // decimal → % with 1 decimal
+    const churnMax = Math.max(15, Math.ceil(defaultChurn)) // expand the slider so high rates are representable
+    const [churn, setChurn] = useState(defaultChurn)
     const [ticket, setTicket] = useState(defaultTicket)
 
     const projection = useMemo(
@@ -75,10 +79,10 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
     const hasCollections = realizedArpu > 0
 
     const resetSim = () => {
-        setChurn(0)
+        setChurn(defaultChurn)
         setTicket(defaultTicket)
     }
-    const dirty = churn !== 0 || ticket !== defaultTicket
+    const dirty = churn !== defaultChurn || ticket !== defaultTicket
 
     return (
         <div className="grid gap-y-6">
@@ -101,7 +105,7 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
                     value={formatPct(churn)}
                     accent="amber"
                     icon={<TrendingDownIcon className="h-5 w-5" />}
-                    sub="Sin histórico aún (se calculará con snapshots)"
+                    sub="Promedio mensual (snapshots)"
                 />
                 <KpiTile
                     label={`Resultado proyectado (${PROJECTION_MONTHS}m)`}
@@ -130,9 +134,9 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
                             <span className="text-slate-500">Churn mensual</span>
                             <span className="font-semibold text-[#5B47E0]">{churn.toFixed(1)}%</span>
                         </div>
-                        <input type="range" min={0} max={15} step={0.5} value={churn} onChange={(e) => setChurn(Number(e.target.value))}
+                        <input type="range" min={0} max={churnMax} step={0.5} value={churn} onChange={(e) => setChurn(Number(e.target.value))}
                             className="w-full accent-[#5B47E0]" />
-                        <div className="mt-1 flex justify-between text-[11px] text-slate-400"><span>0%</span><span>15%</span></div>
+                        <div className="mt-1 flex justify-between text-[11px] text-slate-400"><span>0%</span><span>{churnMax}%</span></div>
                     </div>
                     <div>
                         <div className="mb-1.5 flex items-center justify-between text-sm">
