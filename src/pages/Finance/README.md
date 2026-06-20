@@ -17,8 +17,8 @@ Por eso este módulo usa una **base de datos editable local** sembrada desde
 - `src/store/finanzas.ts` — store Zustand persistido en `localStorage` (`EyFinanzasDB_v1`).
   Las ediciones del usuario (estatus de pago, recordatorios) viven aquí.
 - `src/utils/finanzas.ts` — KPIs, lógica de cobranza, generador de mensajes de recordatorio.
-- `components/ResumenTab.tsx` — KPIs + gráficas (ingreso vs gasto, churn/retraso, desglose de gastos).
-- `components/CobranzaTab.tsx` — clientes en retraso + recordatorios.
+- `components/SummaryTab.tsx` — KPIs + gráficas (ingreso vs gasto, churn/retraso, desglose de gastos).
+- `components/CollectionsTab.tsx` — clientes en retraso + recordatorios.
 - `components/CarteraTab.tsx` — listado completo + cruce con la API por `consultant_code`.
 
 ## Cómo conectarlo a la API real (Alejandro)
@@ -30,7 +30,7 @@ Cuando existan los endpoints de cobranza en el backend (modelos `Payment` / `Inv
    `FinanceClient[]` + `MonthlySummary[]` (ver tipos en `src/interfaces/finanzas.ts`).
 2. En `pages/Finanzas/index.tsx`, tras cargar la data de la API, llamar:
    ```ts
-   useFinanzasStore.getState().hydrate(clients, summary)
+   useFinanceStore.getState().hydrate(clients, summary)
    ```
 3. Cambiar las acciones de edición (`updatePayment`, `markReminderSent`) para que hagan
    `PATCH`/`POST` al backend además de actualizar el store local.

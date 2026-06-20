@@ -1,8 +1,8 @@
-// Primitivas visuales del panel de Finanzas — estética clara y "tech".
-// Paleta de marca Eyplease+: violeta #5B47E0 + cyan #5DD9D2 sobre base clara.
+// Visual primitives for the Finance panel — clean, "tech" aesthetic.
+// Eyplease+ brand palette: violet #5B47E0 + cyan #5DD9D2 over a light base.
 import { cn } from "@/lib/utils"
 
-export const BRAND = {
+const BRAND = {
     violet: "#5B47E0",
     violetSoft: "#8B7BF0",
     cyan: "#5DD9D2",
@@ -20,7 +20,7 @@ const ACCENT: Record<Accent, { chip: string; text: string; ring: string }> = {
     slate: { chip: "bg-slate-100 text-slate-600", text: "text-slate-900", ring: "ring-slate-400/10" },
 }
 
-/** Tarjeta base: blanca, esquinas suaves, sombra tenue. */
+/** Base card: white, soft corners, subtle shadow. */
 export const Panel = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <div
         className={cn(
@@ -41,7 +41,7 @@ interface KpiTileProps {
     accent?: Accent
 }
 
-/** Tile métrico moderno: etiqueta, número grande, chip de icono, subtítulo. */
+/** Modern metric tile: label, big number, icon chip, subtitle. */
 export const KpiTile = ({ label, value, sub, icon, accent = "violet" }: KpiTileProps) => {
     const a = ACCENT[accent]
     return (
@@ -58,7 +58,7 @@ export const KpiTile = ({ label, value, sub, icon, accent = "violet" }: KpiTileP
     )
 }
 
-/** Tile protagónico con degradado de marca. */
+/** Hero tile with brand gradient. */
 export const HeroTile = ({ label, value, sub, icon }: KpiTileProps) => (
     <div className="relative overflow-hidden rounded-2xl p-5 text-white shadow-[0_18px_40px_-18px_rgba(91,71,224,0.6)]"
         style={{ backgroundImage: `linear-gradient(135deg, ${BRAND.violet} 0%, #6B5BE8 55%, ${BRAND.cyan} 140%)` }}>
@@ -74,7 +74,7 @@ export const HeroTile = ({ label, value, sub, icon }: KpiTileProps) => (
     </div>
 )
 
-/** Encabezado de panel/sección. */
+/** Panel/section header. */
 export const PanelHeader = ({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) => (
     <div className="flex items-start justify-between gap-3 px-5 pt-5">
         <div>
@@ -85,21 +85,27 @@ export const PanelHeader = ({ title, desc, action }: { title: string; desc?: str
     </div>
 )
 
-/** Pill de estatus de pago con colores suaves. */
+/** Payment status pill with soft colors. */
+const STATUS_PILL_LABELS: Record<string, string> = {
+    paid: "Pagado",
+    overdue: "Retraso",
+    pending: "Pendiente",
+}
+
 export const StatusPill = ({ status }: { status: string | null | undefined }) => {
-    const s = (status ?? "").toLowerCase()
-    const map = s.includes("realizado")
+    const s = status ?? ""
+    const map = s === "paid"
         ? "bg-emerald-50 text-emerald-600"
-        : s.includes("retraso")
+        : s === "overdue"
             ? "bg-rose-50 text-rose-600"
-            : s.includes("pendiente")
+            : s === "pending"
                 ? "bg-amber-50 text-amber-600"
                 : "bg-slate-100 text-slate-400"
-    const label = status || "—"
+    const label = STATUS_PILL_LABELS[s] ?? "—"
     return <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", map)}>{label}</span>
 }
 
-/** Pill pequeño para mes en retraso. */
+/** Small pill for an overdue month. */
 export const MonthChip = ({ children, tone = "rose" }: { children: React.ReactNode; tone?: "rose" | "amber" }) => (
     <span className={cn(
         "inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium",
@@ -109,7 +115,7 @@ export const MonthChip = ({ children, tone = "rose" }: { children: React.ReactNo
     </span>
 )
 
-/** Botón gradiente de marca. */
+/** Brand gradient button. */
 export const BtnPrimary = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button
         {...props}
@@ -124,7 +130,7 @@ export const BtnPrimary = ({ className, children, ...props }: React.ButtonHTMLAt
     </button>
 )
 
-/** Botón contorno claro. */
+/** Light outline button. */
 export const BtnGhost = ({ className, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button
         {...props}

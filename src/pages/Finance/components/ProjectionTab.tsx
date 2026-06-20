@@ -12,57 +12,73 @@ import {
     YAxis,
 } from "recharts"
 
-import { MonthlySummary } from "@/interfaces/finanzas"
-import useFinanzasStore from "@/store/finanzas"
-import {
-    breakEvenClients,
-    computeMonthlyChurn,
-    formatMoney,
-    formatPct,
-    lastSummary,
-    projectForward,
-    revenueByPlan,
-} from "@/utils/finanzas"
+import Spinner from "@/components/common/Spinner"
+import { FinanceBalance, FinanceSummary } from "@/interfaces/finance"
+import { breakEvenClients, formatMoney, formatPct, projectForward } from "@/utils/finance"
+import { useFinanceSummary } from "../useFinanceSummary"
+import { useFinanceBalance } from "../useFinanceBalance"
 import { HeroTile, KpiTile, Panel, PanelHeader } from "./ui"
 
 const VIOLET = "#5B47E0"
 const SLATE = "#94A3B8"
+const PROJECTION_MONTHS = 6
 const axis = { tick: { fill: "#94A3B8", fontSize: 12 }, axisLine: false, tickLine: false }
 const tooltipStyle = {
     contentStyle: { borderRadius: 12, border: "1px solid #E2E8F0", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
 }
 
-const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
-    const { clients } = useFinanzasStore()
-    const last = lastSummary(summary)
+const ProjectionTab = ({ period }: { period: { year: number; month: number } }) => {
+    const { summary, loading: loadingSummary } = useFinanceSummary(period.year, period.month)
+    const { balance, loading: loadingBalance } = useFinanceBalance(period.year)
 
-    const baseChurn = useMemo(() => computeMonthlyChurn(summary), [summary])
-    const listTicket = Math.round(last?.["Ticket promedio"] ?? 0)
-    const expenses = Math.round(last?.["Gastos Totales"] ?? 0)
-    const currentClients = last?.["Clientes totales"] ?? 0
-    // Ingreso realmente cobrado por cliente (≠ ticket de lista por la cobranza pendiente).
-    const realizedArpu = currentClients > 0 ? Math.round((last?.["Ingreso"] ?? 0) / currentClients) : 0
+    if (loadingSummary || loadingBalance || !summary || !balance) {
+        return <Panel className="p-12"><Spinner size="md" color="primary" /></Panel>
+    }
 
-    const [churn, setChurn] = useState(Math.round(baseChurn * 1000) / 10) // en %
-    const [ticket, setTicket] = useState(realizedArpu)
+    return <ProjectionView summary={summary} balance={balance} startMonth={period.month} year={period.year} />
+}
+
+interface ProjectionViewProps {
+    summary: FinanceSummary
+    balance: FinanceBalance
+    startMonth: number
+    year: number
+}
+
+const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewProps) => {
+    const currentClients = summary.active_clients
+    // Expected monthly billing = sum of agreed amounts across active clients.
+    const expectedMonthly = summary.plan_distribution.reduce((acc, p) => acc + p.revenue, 0)
+    const expectedTicket = currentClients > 0 ? Math.round(expectedMonthly / currentClients) : 0
+    // Revenue actually collected per client this month (0 until payments exist).
+    const realizedArpu = currentClients > 0 ? Math.round(summary.month_summary.income / currentClients) : 0
+    // Representative fixed monthly cost = average over months that have expenses.
+    const monthsWithExpense = balance.months.filter((m) => m.expense > 0).length
+    const monthlyExpenses = monthsWithExpense > 0 ? Math.round(balance.year_expense / monthsWithExpense) : 0
+
+    const defaultTicket = realizedArpu || expectedTicket
+    const [churn, setChurn] = useState(0) // in %, no history yet → starts at 0
+    const [ticket, setTicket] = useState(defaultTicket)
 
     const projection = useMemo(
-        () => projectForward({ summary, monthlyChurn: churn / 100, avgTicket: ticket, monthlyExpenses: expenses, months: 6 }),
-        [summary, churn, ticket, expenses]
+        () => projectForward({ startClients: currentClients, startMonth, monthlyChurn: churn / 100, avgTicket: ticket, monthlyExpenses, months: PROJECTION_MONTHS }),
+        [currentClients, startMonth, churn, ticket, monthlyExpenses]
     )
 
-    const beNow = breakEvenClients(expenses, realizedArpu)
-    const beSim = breakEvenClients(expenses, ticket)
+    const beSim = breakEvenClients(monthlyExpenses, ticket)
+    const beExpected = breakEvenClients(monthlyExpenses, expectedTicket)
     const gap = currentClients - beSim
     const month6 = projection[projection.length - 1]
-    const planRevenue = useMemo(() => revenueByPlan(clients), [clients])
+    const planRevenue = summary.plan_distribution
     const maxPlanRev = Math.max(...planRevenue.map((p) => p.revenue), 1)
+    const ticketMax = Math.max(expectedTicket + 200, 600)
+    const hasCollections = realizedArpu > 0
 
     const resetSim = () => {
-        setChurn(Math.round(baseChurn * 1000) / 10)
-        setTicket(realizedArpu)
+        setChurn(0)
+        setTicket(defaultTicket)
     }
-    const dirty = churn !== Math.round(baseChurn * 1000) / 10 || ticket !== realizedArpu
+    const dirty = churn !== 0 || ticket !== defaultTicket
 
     return (
         <div className="grid gap-y-6">
@@ -70,7 +86,7 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
                 <HeroTile
                     label="Punto de equilibrio"
                     value={`${beSim} clientes`}
-                    sub={`Cobrando ${formatMoney(ticket)}/cliente para cubrir ${formatMoney(expenses)}/mes`}
+                    sub={`Cobrando ${formatMoney(ticket)}/cliente para cubrir ${formatMoney(monthlyExpenses)}/mes`}
                     icon={<TargetIcon className="h-5 w-5" />}
                 />
                 <KpiTile
@@ -82,17 +98,17 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
                 />
                 <KpiTile
                     label="Churn mensual"
-                    value={formatPct(baseChurn * 100)}
+                    value={formatPct(churn)}
                     accent="amber"
                     icon={<TrendingDownIcon className="h-5 w-5" />}
-                    sub="Promedio histórico ene–may"
+                    sub="Sin histórico aún (se calculará con snapshots)"
                 />
                 <KpiTile
-                    label="Resultado proyectado (6m)"
-                    value={formatMoney(month6?.resultado ?? 0)}
-                    accent={(month6?.resultado ?? 0) < 0 ? "rose" : "emerald"}
+                    label={`Resultado proyectado (${PROJECTION_MONTHS}m)`}
+                    value={formatMoney(month6?.result ?? 0)}
+                    accent={(month6?.result ?? 0) < 0 ? "rose" : "emerald"}
                     icon={<TargetIcon className="h-5 w-5" />}
-                    sub={`Con ${month6?.clientes ?? 0} clientes en ${month6?.label}`}
+                    sub={`Con ${month6?.clients ?? 0} clientes en ${month6?.label}`}
                 />
             </div>
 
@@ -123,11 +139,11 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
                             <span className="text-slate-500">Ingreso cobrado por cliente</span>
                             <span className="font-semibold text-[#0E9E97]">{formatMoney(ticket)}</span>
                         </div>
-                        <input type="range" min={300} max={listTicket + 200} step={10} value={ticket} onChange={(e) => setTicket(Number(e.target.value))}
+                        <input type="range" min={300} max={ticketMax} step={10} value={ticket} onChange={(e) => setTicket(Number(e.target.value))}
                             className="w-full accent-[#5DD9D2]" />
                         <div className="mt-1 flex justify-between text-[11px] text-slate-400">
                             <span>{formatMoney(300)}</span>
-                            <span>Ticket de lista: {formatMoney(listTicket)}</span>
+                            <span>Ticket esperado: {formatMoney(expectedTicket)}</span>
                         </div>
                     </div>
                 </div>
@@ -135,7 +151,7 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <Panel>
-                    <PanelHeader title="Proyección a 6 meses" desc="La distancia entre la línea morada (ingreso) y la gris (gasto fijo) es tu pérdida o ganancia mensual." />
+                    <PanelHeader title={`Proyección a ${PROJECTION_MONTHS} meses`} desc="La distancia entre la línea morada (ingreso) y la gris (gasto fijo) es tu pérdida o ganancia mensual." />
                     <div className="p-4 pt-2">
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={projection}>
@@ -144,9 +160,9 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
                                 <YAxis {...axis} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
                                 <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} />
                                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                                <ReferenceLine y={expenses} stroke={SLATE} strokeDasharray="5 5" />
-                                <Line type="monotone" dataKey="ingreso" name="Ingreso proyectado" stroke={VIOLET} strokeWidth={3} dot={{ r: 3, fill: VIOLET }} />
-                                <Line type="monotone" dataKey="gasto" name="Gasto fijo" stroke={SLATE} strokeWidth={2} dot={false} />
+                                <ReferenceLine y={monthlyExpenses} stroke={SLATE} strokeDasharray="5 5" />
+                                <Line type="monotone" dataKey="income" name="Ingreso proyectado" stroke={VIOLET} strokeWidth={3} dot={{ r: 3, fill: VIOLET }} />
+                                <Line type="monotone" dataKey="expense" name="Gasto fijo" stroke={SLATE} strokeWidth={2} dot={false} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -154,7 +170,7 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
 
                 <Panel className="p-5">
                     <h3 className="text-sm font-semibold text-slate-800">Ingreso por plan</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">Cuánto aporta cada plan al ingreso mensual teórico.</p>
+                    <p className="mt-0.5 text-xs text-slate-400">Cuánto aporta cada plan al ingreso mensual esperado.</p>
                     <div className="mt-4 space-y-3">
                         {planRevenue.map((p) => (
                             <div key={p.plan}>
@@ -169,10 +185,19 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
                         ))}
                     </div>
                     <div className="mt-5 rounded-xl bg-rose-50/60 p-3 text-xs text-slate-600">
-                        Hoy cobras <b className="text-slate-800">{formatMoney(realizedArpu)}</b> por cliente (tu ticket de lista es {formatMoney(listTicket)} —
-                        la diferencia es lo que pierdes por cobranza). A ese ingreso real necesitas <b className="text-slate-800">{beNow} clientes</b> para no perder
-                        y tienes {currentClients}: <b className="text-rose-600">te faltan {Math.max(0, beNow - currentClients)}</b>. Si cobraras tu ticket completo,
-                        el equilibrio bajaría a {breakEvenClients(expenses, listTicket)} clientes.
+                        {hasCollections ? (
+                            <>
+                                Hoy cobras <b className="text-slate-800">{formatMoney(realizedArpu)}</b> por cliente (el acordado es {formatMoney(expectedTicket)} —
+                                la diferencia es lo que pierdes por cobranza). A ese ingreso real necesitas <b className="text-slate-800">{breakEvenClients(monthlyExpenses, realizedArpu)} clientes</b> para
+                                no perder y tienes {currentClients}. Si cobraras el total acordado, el equilibrio bajaría a {beExpected} clientes.
+                            </>
+                        ) : (
+                            <>
+                                Aún no hay pagos cobrados en {year}, así que el ingreso real por cliente es <b className="text-slate-800">{formatMoney(0)}</b>. Por
+                                ticket esperado (<b className="text-slate-800">{formatMoney(expectedTicket)}</b>) tu equilibrio está en <b className="text-slate-800">{beExpected} clientes</b> y
+                                tienes {currentClients}. Registra los pagos del periodo para ver el ingreso real.
+                            </>
+                        )}
                     </div>
                 </Panel>
             </div>
@@ -180,4 +205,4 @@ const ProyeccionTab = ({ summary }: { summary: MonthlySummary[] }) => {
     )
 }
 
-export default ProyeccionTab
+export default ProjectionTab

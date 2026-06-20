@@ -54,7 +54,7 @@ export const APP_ROUTES = {
         PUBLISH: '/posts/publish',
     },
     FINANCES: {
-        DASHBOARD: '/finanzas',
+        DASHBOARD: '/finance',
     }
 }
 
