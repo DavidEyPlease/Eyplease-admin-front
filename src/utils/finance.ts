@@ -20,7 +20,8 @@ export const periodsForYear = (year: number) => Array.from({ length: 12 }, (_, i
 const mxn = new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
 })
 
 export const formatMoney = (n: number | null | undefined) =>
