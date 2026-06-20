@@ -102,5 +102,21 @@ export const API_ROUTES = {
     POSTS: {
         PUBLISH_NEWSLETTER: '/posts/publish-newsletter',
     },
+    FINANCE: {
+        CLIENTS: '/finance/clients',
+        CLIENT_DETAIL: '/finance/clients/{id}',
+        SUMMARY: '/finance/summary',
+        BALANCE: '/finance/balance',
+        EXPENSES: {
+            LIST: '/finance/expenses',
+            CREATE: '/finance/expenses',
+            UPDATE: '/finance/expenses/{id}',
+            DELETE: '/finance/expenses/{id}',
+        },
+        PAYMENTS: {
+            LIST: '/finance/payments',
+            CREATE: '/finance/payments',
+        },
+    },
     NETWORK_PERSONS: '/network-persons',
 }
