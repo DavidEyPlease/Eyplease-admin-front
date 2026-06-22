@@ -56,9 +56,9 @@ const STATUS_LABELS: Record<string, { label: string; variant: "secondary" | "def
     },
 }
 
-const VIDEO_POLL_SECONDS = 10
-const IMAGE_POLL_SECONDS = 2
-const TIMEOUT_SECONDS = 180
+const VIDEO_POLL_SECONDS = 20
+const IMAGE_POLL_SECONDS = 5
+const TIMEOUT_SECONDS = 300
 
 const getPollIntervalSeconds = (assetType: "image" | "video" | null | undefined) =>
     assetType === "video" ? VIDEO_POLL_SECONDS : IMAGE_POLL_SECONDS
