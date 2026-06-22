@@ -1,11 +1,6 @@
-import { useState } from "react"
-import { PlusIcon, RotateCcwIcon } from "lucide-react"
+import { RotateCcwIcon } from "lucide-react"
 
 import useTemplates from "./useTemplates"
-import Button from "@/components/common/Button"
-import Modal from "@/components/common/Modal"
-import TemplateForm from "./components/TemplateForm"
-import SearchInput from "@/components/generics/SearchInput"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import useAuthStore from "@/store/auth"
 import useFetchQuery from "@/hooks/useFetchQuery"
@@ -16,7 +11,7 @@ import { queryKeys } from "@/utils/queryKeys"
 import { INewsletterSectionItem } from "@/interfaces/common"
 import { TEMPLATE_ASSET_TYPE_OPTIONS, TemplateFilterKeys, TemplateFilters } from "./page-utils"
 import TemplatesList from "./List"
-import UploadTemplateFile from "./components/UploadTemplateFiles"
+import TemplatesHeader from "./components/TemplatesHeader"
 
 // Filter keys that count as "active" when present and non-empty. Excludes
 // the technical base filter `not_template_group` which always carries
@@ -41,8 +36,6 @@ const PostsTemplatesPage = () => {
         onApplyFilters,
     } = useTemplates('posts')
     const { utilData } = useAuthStore(state => state)
-
-    const [openForm, setOpenForm] = useState(false)
 
     const templateGroupOptions = [
         { label: 'Cumpleaños Mis Clientes', value: 'customers-birthdays' },
@@ -81,46 +74,12 @@ const PostsTemplatesPage = () => {
 
     return (
         <div className="space-y-5">
-            <div className="flex items-center justify-between gap-x-3">
-                <div className="flex-1">
-                    <SearchInput
-                        placeholder="Buscar plantillas..."
-                        value={search}
-                        onSubmitSearch={setSearch}
-                    />
-                </div>
-                <Button
-                    rounded
-                    text={
-                        <>
-                            <PlusIcon className="w-4 h-4 mr-2" />
-                            Nueva Plantilla
-                        </>
-                    }
-                    onClick={() => setOpenForm(!openForm)}
-                />
-                <Modal
-                    title="Crear nueva plantilla"
-                    description="Crea una nueva plantilla de boletín para tus clientes"
-                    open={openForm}
-                    size="xxl"
-                    onOpenChange={() => {
-                        setSelectedTemplate(null)
-                        setOpenForm(false)
-                    }}
-                >
-                    {selectedTemplate ? (
-                        <UploadTemplateFile template={selectedTemplate} onSuccess={() => setOpenForm(false)} />
-                    ) : (
-                        <TemplateForm
-                            isReportsTemplates={false}
-                            onSuccess={template => {
-                                setSelectedTemplate(template)
-                            }}
-                        />
-                    )}
-                </Modal>
-            </div>
+            <TemplatesHeader
+                search={search}
+                onSearch={setSearch}
+                selectedTemplate={selectedTemplate}
+                onSelectTemplate={setSelectedTemplate}
+            />
 
             <div className="flex flex-col gap-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

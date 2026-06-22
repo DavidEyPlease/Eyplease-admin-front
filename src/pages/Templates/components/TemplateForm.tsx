@@ -37,16 +37,30 @@ const parseTemplateMonth = (month: number) => {
     return month.toString();
 }
 
+const GROUP_REPORTS = [
+    {
+        label: 'Reportes de boletín',
+        value: 'reports'
+    },
+    {
+        label: 'Boletín anual',
+        value: 'annual_report'
+    },
+]
+
 const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: TemplateFormProps) => {
     const { utilData } = useAuthStore(state => state)
     const isClone = Boolean(cloneFrom)
     const form = useCustomForm(
         TemplateSchema,
         item
-            ?? (cloneFrom
-                ? buildCloneFormValues(cloneFrom)
-                : { ...FORM_DEFAULT_VALUES, template_group: isReportsTemplates ? 'reports' : '' })
+        ?? (cloneFrom
+            ? buildCloneFormValues(cloneFrom)
+            : { ...FORM_DEFAULT_VALUES, template_group: isReportsTemplates ? 'reports' : '' })
     );
+
+    const templateGroupValue = form.watch('template_group');
+    const subGroupEnabled = !['reports', 'annual_report', 'customers-birthdays'].includes(templateGroupValue)
 
     const { request, requestState } = useRequestQuery({
         // Invalidate every cache key that may show this template's data:
@@ -89,7 +103,7 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
     const {
         response: subGroups,
     } = useFetchQuery<INewsletterSectionItem[]>(API_ROUTES.GET_NEWSLETTER_SECTION_ITEMS.replace('{sectionKey}', form.watch('template_group')), {
-        enabled: !!form.watch('template_group') && !['reports', 'customers-birthdays'].includes(form.watch('template_group')),
+        enabled: !!form.watch('template_group') && subGroupEnabled,
         customQueryKey: queryKeys.list('newsletter_section_items', { section: form.watch('template_group') })
     })
 
@@ -104,11 +118,7 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
         }
     }, [])
 
-    const templateGroups = [
-        {
-            label: 'Reportes de boletín',
-            value: 'reports'
-        },
+    const templateGroups = isReportsTemplates ? GROUP_REPORTS : [
         {
             label: 'Cumpleaños Mis Clientes',
             value: 'customers-birthdays'
@@ -120,8 +130,6 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
             }))
         }).flat()
     ]
-
-    const templateGroupValue = form.watch('template_group');
 
     return (
         <Form {...form}>
@@ -166,7 +174,6 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
                             <FormItem>
                                 <FormLabel>Grupo</FormLabel>
                                 <Select
-                                    disabled={Boolean(item) || isReportsTemplates}
                                     onValueChange={field.onChange}
                                     value={field.value}
                                 >
@@ -193,7 +200,7 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
                                 <Dropdown
                                     className="max-w-xs"
                                     label="Subgrupo"
-                                    disabled={!templateGroupValue || templateGroupValue === 'reports'}
+                                    disabled={!templateGroupValue || !subGroupEnabled}
                                     placeholder="Selecciona un subgrupo"
                                     value={field.value || ''}
                                     onChange={field.onChange}
@@ -230,33 +237,34 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
                     </div>
                 }
 
-                <FormField
-                    control={form.control}
-                    name="preset_slug"
-                    render={({ field }) => (
-                        <FormItem>
-                            <Dropdown
-                                className="max-w-md"
-                                label="Preset de IA"
-                                disabled={templateGroupValue === 'reports'}
-                                placeholder="Selecciona un preset"
-                                value={field.value ?? ''}
-                                onChange={value => field.onChange(value || null)}
-                                error={form.formState?.errors?.preset_slug?.message}
-                                items={presetOptions}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Composición de capas que la IA usará al analizar las variantes.
-                            </p>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                {!isReportsTemplates && (
+                    <FormField
+                        control={form.control}
+                        name="preset_slug"
+                        render={({ field }) => (
+                            <FormItem>
+                                <Dropdown
+                                    className="max-w-md"
+                                    label="Preset de IA"
+                                    placeholder="Selecciona un preset"
+                                    value={field.value ?? ''}
+                                    onChange={value => field.onChange(value || null)}
+                                    error={form.formState?.errors?.preset_slug?.message}
+                                    items={presetOptions}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Composición de capas que la IA usará al analizar las variantes.
+                                </p>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
 
                 <FormField
                     control={form.control}
                     name="font_color"
-                    disabled={templateGroupValue !== 'reports'}
+                    disabled={!['reports', 'annual_report'].includes(templateGroupValue)}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Color de la fuente</FormLabel>
