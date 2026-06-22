@@ -81,3 +81,5 @@ export const monthLabelFor = (month: number): string => {
     const padded = month < 10 ? `0${month}` : `${month}`
     return MONTHS_OPTIONS.find(option => option.value === padded)?.label ?? padded
 }
+
+export const TEMPLATE_GROUP_REPORTS = ['reports', 'annual_report']

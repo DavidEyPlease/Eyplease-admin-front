@@ -9,7 +9,7 @@ import { API_ROUTES } from "@/constants/api"
 import { MONTHS_OPTIONS } from "@/constants/app"
 import { queryKeys } from "@/utils/queryKeys"
 import { INewsletterSectionItem } from "@/interfaces/common"
-import { TEMPLATE_ASSET_TYPE_OPTIONS, TemplateFilterKeys, TemplateFilters } from "./page-utils"
+import { TEMPLATE_ASSET_TYPE_OPTIONS, TEMPLATE_GROUP_REPORTS, TemplateFilterKeys, TemplateFilters } from "./page-utils"
 import TemplatesList from "./List"
 import TemplatesHeader from "./components/TemplatesHeader"
 
@@ -52,7 +52,7 @@ const PostsTemplatesPage = () => {
     const { response: subGroups } = useFetchQuery<INewsletterSectionItem[]>(
         API_ROUTES.GET_NEWSLETTER_SECTION_ITEMS.replace('{sectionKey}', filters?.template_group || ''),
         {
-            enabled: Boolean(filters?.template_group && !['customers-birthdays', 'reports'].includes(filters?.template_group)),
+            enabled: Boolean(filters?.template_group && !['customers-birthdays', ...TEMPLATE_GROUP_REPORTS].includes(filters?.template_group)),
             customQueryKey: queryKeys.list('newsletter_section_items', { section: filters?.template_group }),
         }
     )

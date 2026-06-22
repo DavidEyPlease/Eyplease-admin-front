@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { publishEvent } from "@/utils/events"
 import { CopyIcon, EditIcon, EyeIcon, MoreHorizontalIcon, Trash2Icon, UsersIcon, WandSparklesIcon } from "lucide-react"
 import { useNavigate } from "react-router"
+import { TEMPLATE_GROUP_REPORTS } from "../page-utils"
 
 interface Props {
     template: ITemplate | null
@@ -50,7 +51,7 @@ const TemplateActions = ({ template }: Props) => {
                 {/* Clone only applies to posts templates: they carry their
                     config in variants. Reports templates use a different
                     S3-backed background structure and aren't clonable here. */}
-                {template?.template_group !== 'reports' && (
+                {template && !TEMPLATE_GROUP_REPORTS.includes(template.template_group) && (
                     <DropdownMenuItem onClick={() => setSelectedTemplate(template, 'clone')}>
                         <CopyIcon className="w-4 h-4 mr-2" />
                         Clonar
@@ -62,7 +63,7 @@ const TemplateActions = ({ template }: Props) => {
                     Gestionar Clientes
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {template?.template_group === 'reports' && (
+                {template && TEMPLATE_GROUP_REPORTS.includes(template.template_group) && (
                     <DropdownMenuItem onClick={() => navigate(APP_ROUTES.TEMPLATES.EDITOR_REPORTS.replace(':id', template?.id || ''))}>
                         <WandSparklesIcon className="w-4 h-4 mr-2" />
                         Editor

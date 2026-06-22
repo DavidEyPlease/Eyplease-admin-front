@@ -7,6 +7,7 @@ import TemplateCover from "./TemplateCover"
 import SwitchAction from "./SwitchAction"
 import { Link } from "react-router"
 import { APP_ROUTES } from "@/constants/app"
+import { TEMPLATE_GROUP_REPORTS } from "../page-utils"
 
 // Human-friendly labels for the variant badges shown next to a template's
 // name. Kept in this file because the only consumer is the list column.
@@ -42,7 +43,7 @@ export const templatesColumns: ColumnDef<ITemplate>[] = [
 
             return (
                 <div className="flex flex-wrap items-center gap-x-5">
-                    {row.original.template_group === 'reports' && (
+                    {TEMPLATE_GROUP_REPORTS.includes(row.original.template_group) && (
                         <TemplateCover
                             templateId={row.original.id}
                             cover={row.original.picture}

@@ -19,6 +19,7 @@ import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTHS_OPTIONS } from "@/constants/app"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import useTemplatePresets from "../useTemplatePresets"
+import { TEMPLATE_GROUP_REPORTS } from "../page-utils"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -60,7 +61,7 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
     );
 
     const templateGroupValue = form.watch('template_group');
-    const subGroupEnabled = !['reports', 'annual_report', 'customers-birthdays'].includes(templateGroupValue)
+    const subGroupEnabled = ![...TEMPLATE_GROUP_REPORTS, 'customers-birthdays'].includes(templateGroupValue)
 
     const { request, requestState } = useRequestQuery({
         // Invalidate every cache key that may show this template's data:
@@ -264,7 +265,7 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
                 <FormField
                     control={form.control}
                     name="font_color"
-                    disabled={!['reports', 'annual_report'].includes(templateGroupValue)}
+                    disabled={!TEMPLATE_GROUP_REPORTS.includes(templateGroupValue)}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Color de la fuente</FormLabel>
