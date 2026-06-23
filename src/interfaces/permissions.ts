@@ -14,6 +14,7 @@ export const PermissionKeys = {
     CLIENTS: 'clients',
     CONFIGURATION: 'configurations',
     PLANS: 'plans',
+    PROMOTIONS: 'promotions',
     TEMPLATES: 'templates',
     TEMPLATES_PUBLICATION: 'publication_templates',
     TASKS: 'tasks',

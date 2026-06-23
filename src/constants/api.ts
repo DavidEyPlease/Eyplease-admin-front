@@ -26,6 +26,8 @@ export const API_ROUTES = {
         GET_NETWORK: '/clients/{id}/network',
         SET_PLAN: '/clients/{id}/set-plan',
         SET_TEMPLATE: '/clients/{id}/set-template',
+        SET_PROMOTION: '/clients/{id}/set-promotion',
+        REMOVE_PROMOTION: '/clients/{id}/promotion',
         UPDATE_NETWORK: '/clients/{id}/update-network',
         SET_STATUS: '/clients/{id}/change-status',
     },
@@ -33,6 +35,12 @@ export const API_ROUTES = {
         LIST: '/plans',
         DETAIL: '/plans/{id}',
         UPDATE: '/plans/{id}',
+    },
+    PROMOTIONS: {
+        LIST: '/promotions',
+        CREATE: '/promotions',
+        UPDATE: '/promotions/{id}',
+        DELETE: '/promotions/{id}',
     },
     TEMPLATES: {
         LIST: '/templates',

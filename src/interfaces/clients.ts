@@ -1,6 +1,16 @@
 import { EypleaseFile } from "./files"
 import { IPlan } from "./plans"
+import { DiscountType } from "./promotion"
 import { IUser } from "./users"
+
+/** Per-client applied promotion snapshot (null when none). */
+export interface ClientPromotion {
+    promotion_id: string | null
+    name: string | null
+    discount_type: DiscountType
+    discount: number
+    expires_at: string
+}
 
 export interface IClient {
     id: string
@@ -19,6 +29,7 @@ export interface IClient {
     start_date: string | null
     last_order_date: string | null
     user: IUser & { plan: IPlan | null }
+    promotion: ClientPromotion | null
 }
 
 export type IClientListItem = IClient

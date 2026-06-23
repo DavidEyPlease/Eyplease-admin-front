@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import PlanBadge from "@/pages/Configurations/Plans/components/PlanBadge";
 import { formatDate } from "@/utils/dates";
 import QuickActionsClient from "../../../components/QuickActions";
+import ClientPromotionCell from "./ClientPromotionCell";
 
 export const tableColumns: ColumnDef<IClient>[] = [
     {
@@ -61,6 +62,15 @@ export const tableColumns: ColumnDef<IClient>[] = [
         header: 'Plan',
         cell: ({ row }) => (
             <PlanBadge plan={row.original.user?.plan} />
+        )
+    },
+    {
+        id: 'promotion',
+        size: 220,
+        minSize: 180,
+        header: 'Promoción',
+        cell: ({ row }) => (
+            <ClientPromotionCell client={row.original} />
         )
     },
     {
