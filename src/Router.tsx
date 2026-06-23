@@ -15,7 +15,6 @@ import ResetPasswordPage from "./pages/Auth/ResetPassword"
 import ClientsListPage from "./pages/Clients/List"
 import PlansPage from "./pages/Configurations/Plans/List"
 import PlanDetailPage from "./pages/Configurations/Plans/Detail"
-import PromotionsPage from "./pages/Configurations/Promotions"
 import ClientDetailPage from "./pages/Clients/Detail"
 import TasksPage from "./pages/Tasks"
 import PermissionsPage from "./pages/Configurations/Permissions"
@@ -65,7 +64,6 @@ const Router = () => {
 
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLANS} element={<PlansPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PLAN_DETAIL} element={<PlanDetailPage />} />
-                <Route path={APP_ROUTES.CONFIGURATIONS.PROMOTIONS} element={<PromotionsPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL} element={<TemplateDetailPage />} />
                 <Route path={APP_ROUTES.CONFIGURATIONS.PERMISSIONS} element={<PermissionsPage />} />
                 <Route path={APP_ROUTES.TASKS.LIST} element={<TasksPage />} />

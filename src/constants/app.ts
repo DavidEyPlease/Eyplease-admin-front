@@ -27,7 +27,6 @@ export const APP_ROUTES = {
     CONFIGURATIONS: {
         PLANS: '/configurations/plans',
         PLAN_DETAIL: '/configurations/plans/:id',
-        PROMOTIONS: '/configurations/promotions',
         TEMPLATE_DETAIL: '/configurations/templates/:id',
         PERMISSIONS: '/configurations/permissions',
     },
@@ -179,13 +178,6 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
                 path: APP_ROUTES.CONFIGURATIONS.PLANS,
                 requiredPermission: true,
                 permissionKeys: [PermissionKeys.PLANS],
-            },
-            {
-                key: PermissionKeys.PROMOTIONS,
-                label: "Promociones",
-                path: APP_ROUTES.CONFIGURATIONS.PROMOTIONS,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.PROMOTIONS],
             },
             {
                 key: PermissionKeys.PERMISSIONS,

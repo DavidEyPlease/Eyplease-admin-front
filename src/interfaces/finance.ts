@@ -1,10 +1,22 @@
 // Finance / Collections module types.
 
+import { DiscountType } from "./promotion"
+
 export type PaymentStatus = "paid" | "overdue" | "pending" | null
 
 export interface MonthlyPayment {
     amount: number | null
     status: PaymentStatus
+}
+
+/** Per-client applied promotion snapshot (kept in snake_case from the API). */
+export interface FinanceClientPromotion {
+    promotion_id: string | null
+    name: string | null
+    discount_type: DiscountType
+    discount: number
+    /** Deadline 'YYYY-MM-DD'. */
+    expires_at: string
 }
 
 export interface FinanceClient {
@@ -19,10 +31,14 @@ export interface FinanceClient {
     paymentDay: number | null
     /** Debt (>0) or credit (<0) in MXN. */
     balance: number
-    /** Agreed fixed monthly payment (billing profile agreed_payment, falling back to plan price). */
+    /** Fixed monthly payment = the client's plan price (plans.price). */
     fixedPayment: number | null
+    /** 'stripe' = has a stripe_id (Cashier); 'manual' = billed by the dues job. */
+    billingType: "stripe" | "manual"
     /** Phone for WhatsApp. */
     phone?: string | null
+    /** Applied promotion snapshot, or null when the client has none. */
+    promotion: FinanceClientPromotion | null
     /** Payments keyed by period 'YYYY-MM'. */
     payments: Record<string, MonthlyPayment>
 }

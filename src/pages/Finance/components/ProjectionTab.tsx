@@ -47,7 +47,7 @@ interface ProjectionViewProps {
 
 const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewProps) => {
     const currentClients = summary.active_clients
-    // Expected monthly billing = sum of agreed amounts across active clients.
+    // Expected monthly billing = sum of plan prices across active clients.
     const expectedMonthly = summary.plan_distribution.reduce((acc, p) => acc + p.revenue, 0)
     const expectedTicket = currentClients > 0 ? Math.round(expectedMonthly / currentClients) : 0
     // Revenue actually collected per client this month (0 until payments exist).

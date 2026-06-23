@@ -14,7 +14,7 @@ import useCustomForm from "@/hooks/useCustomForm"
 import { ClientPromotion, IClient } from "@/interfaces/clients"
 import { DISCOUNT_TYPE_OPTIONS } from "@/interfaces/promotion"
 import { formatMoney } from "@/utils/finance"
-import usePromotions from "@/pages/Configurations/Promotions/usePromotions"
+import usePromotions from "@/pages/Finance/Promotions/usePromotions"
 import useClientPromotion from "@/pages/Clients/hooks/useClientPromotion"
 import {
     buildClientPromotionDefaults,

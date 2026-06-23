@@ -25,7 +25,7 @@ const STATUS_OPTIONS = [
 const formatDiscount = (promotion: Promotion) =>
     promotion.discountType === "percent" ? `${promotion.discount}%` : formatMoney(promotion.discount)
 
-const PromotionsPage = () => {
+const PromotionsTab = () => {
     const { promotions, loading, createPromotion, updatePromotion, deletePromotion, mutating } = usePromotions()
 
     const [status, setStatus] = useState<string>(ALL)
@@ -140,10 +140,7 @@ const PromotionsPage = () => {
     return (
         <div className="grid gap-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900">Promociones</h1>
-                    <p className="mt-0.5 text-sm text-slate-400">Crea y administra los descuentos disponibles.</p>
-                </div>
+                <p className="text-sm text-slate-400">Crea y administra los descuentos disponibles para aplicar a tus clientes.</p>
                 <Button
                     text={<span className="flex items-center gap-1.5"><PlusIcon className="h-4 w-4" /> Nueva promoción</span>}
                     color="primary"
@@ -180,4 +177,4 @@ const PromotionsPage = () => {
     )
 }
 
-export default PromotionsPage
+export default PromotionsTab

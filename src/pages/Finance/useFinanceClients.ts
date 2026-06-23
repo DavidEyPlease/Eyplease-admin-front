@@ -4,7 +4,7 @@ import { API_ROUTES } from "@/constants/api"
 import { PaginationResponse } from "@/interfaces/common"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import useRequestQuery from "@/hooks/useRequestQuery"
-import { FinanceClient, MonthlyPayment, PaymentStatus } from "@/interfaces/finance"
+import { FinanceClient, FinanceClientPromotion, MonthlyPayment, PaymentStatus } from "@/interfaces/finance"
 import { queryKeys } from "@/utils/queryKeys"
 import { replaceRecordIdInPath } from "@/utils"
 
@@ -22,10 +22,12 @@ interface ApiFinanceClient {
     name: string
     plan: string | null
     fixed_payment: number | null
+    billing_type: "stripe" | "manual"
     app_status: string | null
     payment_day: number | null
     phone: string | null
     balance: number
+    promotion: FinanceClientPromotion | null
     payments: Record<string, ApiPayment>
 }
 
@@ -37,10 +39,12 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     name: c.name,
     plan: c.plan ?? null,
     fixedPayment: c.fixed_payment ?? null,
+    billingType: c.billing_type ?? "manual",
     appStatus: c.app_status ?? null,
     paymentDay: c.payment_day ?? null,
     phone: c.phone ?? null,
     balance: c.balance ?? 0,
+    promotion: c.promotion ?? null,
     payments: Object.entries(c.payments ?? {}).reduce<Record<string, MonthlyPayment>>((acc, [period, p]) => {
         acc[period] = { amount: p.amount ?? null, status: p.status ?? null }
         return acc
@@ -72,17 +76,19 @@ export interface UseFinanceClientsPageParams {
     page: number
     search?: string
     perPage?: number
+    /** Filter by billing source; omit for all. */
+    billingType?: "stripe" | "manual"
 }
 
 /**
  * Paginated, active-only client list for the Collections tab.
  */
-export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15 }: UseFinanceClientsPageParams) => {
+export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType }: UseFinanceClientsPageParams) => {
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
-            queryParams: { year, page, perPage, search, only_overdue: 1 },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, onlyOverdue: true }),
+            queryParams: { year, page, perPage, search, billing_type: billingType, only_overdue: 1 },
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, onlyOverdue: true }),
         }
     )
 
