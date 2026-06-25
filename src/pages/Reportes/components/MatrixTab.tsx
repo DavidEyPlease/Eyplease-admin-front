@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 
 import { Panel } from "./ui"
-import { useReportGrid } from "../useReports"
+import { useReportGrid, GridRow } from "../useReports"
 import { SECTION_CATALOG, BOLETIN_PLANS, statusMeta } from "../reports.constants"
 
 const PLAN_OPTIONS = [
@@ -24,7 +24,7 @@ const MatrixTab = ({ period }: { period: string }) => {
     const { rows, loading } = useReportGrid(period)
     const [plan, setPlan] = useState("all")
     const [q, setQ] = useState("")
-    const [onlyIssues, setOnlyIssues] = useState(false)
+    const [view, setView] = useState<"all" | "pending" | "complete">("all")
 
     // Columnas: en "Todos" solo los reportes de Unidad COMUNES a todos los planes
     // (omite Aniversarios y las Nacional). Por plan, las de su derecho.
@@ -38,13 +38,19 @@ const MatrixTab = ({ period }: { period: string }) => {
 
     const visibleRows = useMemo(() => {
         const needle = q.trim().toLowerCase()
+        const matchesView = (c: GridRow) => {
+            if (view === "all") return true
+            const entitled = sections.filter((s) => c.cells[s.key] !== "na")
+            const hasPending = entitled.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.key]))
+            return view === "pending" ? hasPending : entitled.length > 0 && !hasPending
+        }
         return rows.filter(
             (c) =>
                 (plan === "all" || c.plan === plan) &&
                 (!needle || c.name.toLowerCase().includes(needle) || c.account.toLowerCase().includes(needle)) &&
-                (!onlyIssues || sections.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.key])))
+                matchesView(c)
         )
-    }, [rows, plan, q, onlyIssues, sections])
+    }, [rows, plan, q, view, sections])
 
     const groups = useMemo(
         () =>
@@ -79,9 +85,18 @@ const MatrixTab = ({ period }: { period: string }) => {
                         placeholder="Buscar cliente o cuenta…"
                         className="w-48 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5B47E0]"
                     />
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                        <input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} className="accent-[#5B47E0]" /> Solo con pendientes
-                    </label>
+                    <div className="inline-flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium">
+                        {([["all", "Todos"], ["pending", "Les falta"], ["complete", "Completos"]] as const).map(([v, label]) => (
+                            <button
+                                key={v}
+                                onClick={() => setView(v)}
+                                className={`rounded-md px-2.5 py-1 transition ${view === v ? "text-white" : "text-slate-500 hover:text-slate-800"}`}
+                                style={view === v ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
