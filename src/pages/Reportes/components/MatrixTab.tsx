@@ -129,7 +129,10 @@ const MatrixTab = ({ period }: { period: string }) => {
                             {visibleRows.map((c) => (
                                 <tr key={c.uid} className="border-t border-slate-50 hover:bg-slate-50/60">
                                     <td className="sticky left-0 z-10 bg-white px-3 py-1.5">
-                                        <div className="text-sm font-medium text-slate-700">{c.name}</div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm font-medium text-slate-700">{c.name}</span>
+                                            {!c.active && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-400">inactivo</span>}
+                                        </div>
                                         <div className="text-[11px] text-slate-400">{c.account} · {c.plan.replace("Plan ", "")}</div>
                                     </td>
                                     {sections.map((s, i) => {

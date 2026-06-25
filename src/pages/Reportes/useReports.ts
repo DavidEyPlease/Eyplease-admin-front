@@ -31,7 +31,7 @@ interface ApiClient {
     id: string
     name?: string
     account?: string
-    user?: { id?: string; username?: string; plan?: { name?: string } | null }
+    user?: { id?: string; username?: string; active?: number | boolean; plan?: { name?: string } | null }
 }
 
 /* ----------------------------- Hooks base ----------------------------- */
@@ -50,10 +50,13 @@ const usePeriodUploads = (period: string) => {
     return { uploads: response?.items ?? [], loading, isRefetching }
 }
 
-const useActiveClients = () => {
+// Todos los clientes (sin filtrar por active): el flag "active" es poco fiable
+// para boletín — hay clientes marcados inactivos que sí suben su boletín. El
+// filtrado real se hace en buildGrid (plan + actividad).
+const useAllClients = () => {
     const { response, loading, isRefetching } = useFetchQuery<PaginationResponse<ApiClient>>(API_ROUTES.CLIENTS.LIST, {
-        queryParams: { active: true, perPage: 1000 },
-        customQueryKey: queryKeys.list("report-active-clients", { active: true }),
+        queryParams: { perPage: 1000 },
+        customQueryKey: queryKeys.list("report-clients", { all: true }),
     })
     return { clients: response?.items ?? [], loading, isRefetching }
 }
@@ -64,6 +67,7 @@ export interface GridRow {
     name: string
     account: string
     plan: string
+    active: boolean
     cells: Record<string, string>
 }
 export interface SectionStat {
@@ -84,7 +88,7 @@ export interface DailyStat {
  * estadísticas por sección (cargados/esperados) y el indicador diario.
  */
 export const useReportGrid = (period: string) => {
-    const { clients, loading: lc } = useActiveClients()
+    const { clients, loading: lc } = useAllClients()
     const { uploads, loading: lu } = usePeriodUploads(period)
 
     const data = useMemo(() => {
@@ -105,8 +109,12 @@ export const useReportGrid = (period: string) => {
                 name: c.name ?? "—",
                 account: c.account ?? c.user?.username ?? "",
                 plan: c.user?.plan?.name ?? "",
+                active: !!(c.user?.active),
             }))
-            .filter((c) => BOLETIN_PLANS.includes(c.plan))
+            // Plan con boletín y, además, activo O con algún reporte ya cargado
+            // este periodo (así no se oculta a quien sí tiene boletín aunque
+            // el sistema lo marque inactivo).
+            .filter((c) => BOLETIN_PLANS.includes(c.plan) && (c.active || status.has(c.uid)))
             .sort((a, b) => a.name.localeCompare(b.name))
 
         const stats: Record<string, SectionStat> = {}
