@@ -5,7 +5,7 @@ import SummaryTab from "./components/SummaryTab"
 import MatrixTab from "./components/MatrixTab"
 import RejectionsTab from "./components/RejectionsTab"
 import RunTab from "./components/RunTab"
-import { buildPeriodOptions, currentPeriod } from "./reports.constants"
+import { buildPeriodOptions, defaultPeriod } from "./reports.constants"
 
 const TABS = [
     { key: "resumen", label: "Resumen" },
@@ -20,7 +20,7 @@ const PERIOD_OPTIONS = buildPeriodOptions()
 
 const ReportsPage = () => {
     const [tab, setTab] = useState<TabKey>("resumen")
-    const [period, setPeriod] = useState<string>(currentPeriod())
+    const [period, setPeriod] = useState<string>(defaultPeriod())
 
     const showPeriod = tab !== "correr"
 

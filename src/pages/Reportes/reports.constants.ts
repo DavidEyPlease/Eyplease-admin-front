@@ -99,3 +99,12 @@ export const currentPeriod = (): string => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
 }
+
+/** Mes por defecto: el ANTERIOR (último ciclo de boletín cerrado). El mes en
+ * curso suele estar incompleto porque los reportes de cierre se suben a fin de
+ * mes; arrancar ahí haría parecer que a todos les faltan reportes. */
+export const defaultPeriod = (): string => {
+    const now = new Date()
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+}
