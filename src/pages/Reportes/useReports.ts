@@ -111,10 +111,9 @@ export const useReportGrid = (period: string) => {
                 plan: c.user?.plan?.name ?? "",
                 active: !!(c.user?.active),
             }))
-            // Plan con boletín y, además, activo O con algún reporte ya cargado
-            // este periodo (así no se oculta a quien sí tiene boletín aunque
-            // el sistema lo marque inactivo).
-            .filter((c) => BOLETIN_PLANS.includes(c.plan) && (c.active || status.has(c.uid)))
+            // Todos los clientes en un plan con boletín (el flag active no es
+            // fiable para esto). Los inactivos se marcan con etiqueta en la matriz.
+            .filter((c) => BOLETIN_PLANS.includes(c.plan))
             .sort((a, b) => a.name.localeCompare(b.name))
 
         const stats: Record<string, SectionStat> = {}
