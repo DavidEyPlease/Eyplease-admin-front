@@ -75,7 +75,7 @@ const SummaryTab = ({ period }: { period: string }) => {
         <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <HeroTile label="Avance del mes" value={pct === null ? "—" : `${pct}%`} sub="Reportes cargados correctamente" />
-                <KpiTile label="Clientes activos" value={metrics?.active_clients ?? "—"} sub={`${metrics?.inactive ?? 0} inactivos`} accent="violet" />
+                <KpiTile label="Clientes con boletín" value={loading ? "…" : rows.length} sub="Básico, Ejecutivo, Elite y Nacional" accent="violet" />
                 <KpiTile label="Faltantes" value={metrics?.missing_reports ?? "—"} sub="según la plataforma" accent="rose" />
                 <KpiTile label="Rechazados" value={loading ? "…" : totFailed} sub={`subidas con error en ${periodLabel(period)}`} accent="rose" />
             </div>
