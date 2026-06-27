@@ -55,6 +55,9 @@ export const APP_ROUTES = {
     },
     FINANCES: {
         DASHBOARD: '/finance',
+    },
+    REPORTS: {
+        DASHBOARD: '/reportes',
     }
 }
 
@@ -82,6 +85,13 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         path: APP_ROUTES.FINANCES.DASHBOARD,
         permissionKeys: [PermissionKeys.FINANCES],
         icon: 'finances',
+    },
+    {
+        key: PermissionKeys.REPORTS_MONITOR,
+        label: 'Reportes',
+        path: APP_ROUTES.REPORTS.DASHBOARD,
+        permissionKeys: [PermissionKeys.REPORTS_MONITOR],
+        icon: 'reportsMonitor',
     },
     {
         key: PermissionKeys.TRAININGS,
