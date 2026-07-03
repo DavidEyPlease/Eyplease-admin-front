@@ -75,6 +75,10 @@ export const ASSET_LABELS: Record<TemplateGroup, Record<string, string>> = {
         club2000: "Club 2000 puntos",
         club2500: "Club 2500 puntos",
         club3000: "Club 3000 puntos",
+        // Boletín anual (annual_report): comparte slugs unidad/nacional
+        // summary: "Resumen",
+        sales_queen: "Reina de ventas",
+        initiation_queen: "Reina de inicios",
     },
     national: {
         // Covers
@@ -132,6 +136,12 @@ export const ASSET_LABELS: Record<TemplateGroup, Record<string, string>> = {
         tsr_2: "TSR 2do lugar",
         tsr_target1: "TSR target 1er lugar",
         tsr_target2: "TSR target 2do lugar",
+        // Boletín anual (annual_report): cuts y new_director ya están arriba
+        // summary: "Resumen",
+        sales_queen: "Reina de ventas",
+        initiation_queen: "Reina de inicios",
+        unit_production_queen: "Reina producción de unidad",
+        unit_initiation_queen: "Reina inicios de unidad",
     },
 };
 
