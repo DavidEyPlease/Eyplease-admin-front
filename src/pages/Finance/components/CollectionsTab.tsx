@@ -357,15 +357,22 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </div>
 
                                 {showTransfer && methods?.transfer && (
-                                    <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                                        <p><span className="text-slate-400">Banco:</span> <b>{methods.transfer.bank}</b></p>
-                                        <p><span className="text-slate-400">Beneficiario:</span> <b>{methods.transfer.beneficiary}</b></p>
-                                        <p className="flex items-center gap-1.5">
-                                            <span className="text-slate-400">CLABE:</span> <b>{methods.transfer.clabe}</b>
-                                            <button onClick={() => { navigator.clipboard.writeText(methods.transfer.clabe.replace(/\s/g, "")); toast.success("CLABE copiada") }} className="text-slate-400 hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
-                                        </p>
+                                    <div className="mt-2 space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                                        {methods.transfer.accounts.map((acc, i) => (
+                                            <div key={i} className="rounded-lg bg-slate-50 p-2">
+                                                <div className="flex items-center justify-between">
+                                                    <b className="text-slate-700">{acc.bank}</b>
+                                                    <span className="text-[11px] uppercase text-slate-400">{acc.numberType}</span>
+                                                </div>
+                                                <p className="text-slate-500">{acc.beneficiary}</p>
+                                                <p className="flex items-center gap-1.5">
+                                                    <b className="tracking-wide text-slate-800">{acc.number}</b>
+                                                    <button onClick={() => { navigator.clipboard.writeText(acc.number.replace(/\s/g, "")); toast.success(`${acc.bank} copiado`) }} className="text-slate-400 hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
+                                                </p>
+                                            </div>
+                                        ))}
                                         <p className="pt-1 text-slate-400">{methods.transfer.instructions}</p>
-                                        <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-2 w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
+                                        <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-1 w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
                                             <CheckIcon className="mr-1 inline h-4 w-4" /> Marcar pagado por transferencia
                                         </button>
                                     </div>
