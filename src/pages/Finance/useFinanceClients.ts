@@ -12,6 +12,7 @@ const CLIENTS_ENTITY = "finance-clients"
 
 interface ApiPayment {
     amount: number | null
+    paid?: number | null
     status: PaymentStatus
     paid_at?: string | null
 }
@@ -46,7 +47,7 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     balance: c.balance ?? 0,
     promotion: c.promotion ?? null,
     payments: Object.entries(c.payments ?? {}).reduce<Record<string, MonthlyPayment>>((acc, [period, p]) => {
-        acc[period] = { amount: p.amount ?? null, status: p.status ?? null }
+        acc[period] = { amount: p.amount ?? null, paid: p.paid ?? null, status: p.status ?? null }
         return acc
     }, {}),
 })
@@ -112,7 +113,10 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
 export interface MarkPaymentInput {
     account: string
     period: string
-    status: "paid" | "overdue" | "pending"
+    /** Opcional: si se omite y viene `amount`, el backend registra un abono y deriva el estatus
+     *  (paid / partial / overdue) según lo acumulado vs. lo esperado. */
+    status?: "paid" | "partial" | "overdue" | "pending"
+    /** Monto del pago o abono. */
     amount?: number
     method?: "stripe" | "transfer" | "card" | "cash"
     source?: "manual" | "whatsapp_bot" | "stripe" | "import"

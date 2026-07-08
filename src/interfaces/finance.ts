@@ -2,10 +2,13 @@
 
 import { DiscountType } from "./promotion"
 
-export type PaymentStatus = "paid" | "overdue" | "pending" | null
+export type PaymentStatus = "paid" | "partial" | "overdue" | "pending" | null
 
 export interface MonthlyPayment {
+    /** Monto esperado del periodo (precio del paquete / cuota). */
     amount: number | null
+    /** Suma de abonos registrados para el periodo (pagos parciales). */
+    paid?: number | null
     status: PaymentStatus
 }
 
@@ -70,6 +73,7 @@ export interface PaymentRecord {
 /** Display labels (UI is in Spanish; the stored values stay in English). */
 export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string> = {
     paid: "Pagado",
+    partial: "Parcial",
     overdue: "Vencido",
     pending: "Pendiente",
 }

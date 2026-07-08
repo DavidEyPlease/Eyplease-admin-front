@@ -47,6 +47,20 @@ export const formatChargeDate = (paymentDay: number | null | undefined, now: Dat
     return d ? chargeDateFmt.format(d) : "—"
 }
 
+// ---- Pagos parciales / abonos ----
+
+interface PeriodLike { amount: number | null; paid?: number | null; status: string | null }
+
+/** Monto abonado en el periodo. */
+export const periodPaid = (p?: PeriodLike | null) => p?.paid ?? 0
+
+/** Restante por cobrar del periodo (esperado − abonado); 0 si ya está pagado. */
+export const periodRemaining = (p: PeriodLike | null | undefined, fallbackDue = 0): number => {
+    if (!p || p.status === "paid") return 0
+    const due = p.amount ?? fallbackDue
+    return Math.max(0, due - (p.paid ?? 0))
+}
+
 // ---- Projection / break-even ----
 
 export interface ProjectionInput {

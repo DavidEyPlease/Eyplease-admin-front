@@ -15,7 +15,7 @@ import Spinner from "@/components/common/Spinner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import UIPagination from "@/components/generics/Pagination"
 import { FinanceClient, FinanceClientPromotion } from "@/interfaces/finance"
-import { formatChargeDate, formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
+import { formatChargeDate, formatMoney, periodLabel, periodPaid, periodRemaining, periodsForYear } from "@/utils/finance"
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, MonthChip, Panel } from "./ui"
@@ -97,6 +97,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
     const [stripeLoading, setStripeLoading] = useState(false)
     const [showTransfer, setShowTransfer] = useState(false)
+    const [abono, setAbono] = useState<Record<string, string>>({}) // monto de abono por periodo
 
     useEffect(() => {
         FinanceService.getPaymentMethods().then(setMethods).catch(() => { })
@@ -111,12 +112,16 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     // Reset to the first page when the year changes.
     useEffect(() => { setPage(1) }, [year])
 
-    const closeManage = () => { setManageId(null); setShowTransfer(false) }
+    const closeManage = () => { setManageId(null); setShowTransfer(false); setAbono({}) }
 
     const rows: OverdueInfo[] = useMemo(() => clients.map((client) => {
-        const overduePeriods = periods.filter((p) => client.payments[p]?.status === "overdue")
+        // Un periodo cuenta como "por cobrar" si está en retraso o parcialmente pagado.
+        const overduePeriods = periods.filter((p) => {
+            const s = client.payments[p]?.status
+            return s === "overdue" || s === "partial"
+        })
         const overdueAmount =
-            overduePeriods.reduce((acc, p) => acc + (client.payments[p]?.amount ?? client.fixedPayment ?? 0), 0)
+            overduePeriods.reduce((acc, p) => acc + periodRemaining(client.payments[p], client.fixedPayment ?? 0), 0)
             || (client.balance > 0 ? client.balance : 0)
         return { client, overduePeriods, overdueAmount }
     }), [clients, periods])
@@ -174,9 +179,22 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         closeManage()
     }
 
+    // Registra un abono (pago parcial) de un periodo; el backend acumula y deriva el estatus.
+    const registerAbono = async (account: string, period: string) => {
+        const amount = Number(abono[period])
+        if (!amount || amount <= 0) return
+        await markPayment({ account, period, amount, source: "manual" })
+        toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabel(period)}`)
+        setAbono((prev) => ({ ...prev, [period]: "" }))
+    }
+
     const overdueChips = (row: Row) => {
         if (row.overduePeriods.length) {
-            return row.overduePeriods.map((p) => <MonthChip key={p}>{periodLabel(p).slice(0, 3)}</MonthChip>)
+            return row.overduePeriods.map((p) => (
+                <MonthChip key={p} tone={row.client.payments[p]?.status === "partial" ? "amber" : "rose"}>
+                    {periodLabel(p).slice(0, 3)}
+                </MonthChip>
+            ))
         }
         if (row.client.balance > 0) return <MonthChip tone="amber">Saldo</MonthChip>
         return <span className="text-xs text-emerald-600">Al día</span>
@@ -354,20 +372,43 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 )}
                             </div>
 
-                            {/* Mark by month (manual) */}
+                            {/* Por mes: registrar abono (pago parcial) o marcar pagado */}
                             <div className="space-y-2">
-                                <p className="text-xs text-slate-400">Marca meses pagados manualmente:</p>
-                                {manageRow.overduePeriods.length ? manageRow.overduePeriods.map((p) => (
-                                    <div key={p} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2.5">
-                                        <span className="text-sm font-medium text-slate-700">{periodLabel(p)}</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-sm text-slate-500">{formatMoney(manageRow.client.payments[p]?.amount ?? manageRow.client.fixedPayment ?? 0)}</span>
-                                            <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
-                                                <CheckIcon className="h-3.5 w-3.5" /> Pagado
-                                            </button>
+                                <p className="text-xs text-slate-400">Registra un abono (pago parcial) o marca el mes como pagado:</p>
+                                {manageRow.overduePeriods.length ? manageRow.overduePeriods.map((p) => {
+                                    const pay = manageRow.client.payments[p]
+                                    const remaining = periodRemaining(pay, manageRow.client.fixedPayment ?? 0)
+                                    const paidSoFar = periodPaid(pay)
+                                    return (
+                                        <div key={p} className="rounded-xl border border-slate-100 px-3 py-2.5">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-700">{periodLabel(p)}</span>
+                                                <div className="text-right">
+                                                    <span className="text-sm font-semibold text-rose-600">{formatMoney(remaining)}</span>
+                                                    <span className="text-xs text-slate-400"> restante</span>
+                                                    {paidSoFar > 0 && <div className="text-[11px] text-sky-600">Abonado {formatMoney(paidSoFar)}</div>}
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <div className="flex flex-1 items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 focus-within:border-[#5B47E0]">
+                                                    <span className="text-sm text-slate-400">$</span>
+                                                    <input
+                                                        type="number" min={0} placeholder="Abono"
+                                                        value={abono[p] ?? ""}
+                                                        onChange={(e) => setAbono((prev) => ({ ...prev, [p]: e.target.value }))}
+                                                        className="w-full min-w-0 bg-transparent text-right text-sm text-slate-800 outline-none"
+                                                    />
+                                                </div>
+                                                <button onClick={() => registerAbono(manageRow.client.id, p)} disabled={marking || !Number(abono[p])} className="rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50">
+                                                    Abonar
+                                                </button>
+                                                <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
+                                                    <CheckIcon className="h-3.5 w-3.5" /> Pagado
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )) : (
+                                    )
+                                }) : (
                                     <p className="rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">Este cliente está al día.</p>
                                 )}
                             </div>
