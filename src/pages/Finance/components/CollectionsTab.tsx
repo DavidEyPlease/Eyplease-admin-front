@@ -15,7 +15,7 @@ import Spinner from "@/components/common/Spinner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import UIPagination from "@/components/generics/Pagination"
 import { FinanceClient, FinanceClientPromotion } from "@/interfaces/finance"
-import { formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
+import { formatChargeDate, formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, MonthChip, Panel } from "./ui"
@@ -27,6 +27,15 @@ const BILLING_OPTIONS = [
     { label: "Todos", value: BILLING_ALL },
     { label: "Stripe", value: "stripe" },
     { label: "Manual", value: "manual" },
+]
+
+const MONTHS_ALL = "all"
+const OVERDUE_MONTHS_OPTIONS = [
+    { label: "Todos los meses", value: MONTHS_ALL },
+    { label: "1 mes de retraso", value: "1" },
+    { label: "2 meses", value: "2" },
+    { label: "3 meses", value: "3" },
+    { label: "4+ meses", value: "4" },
 ]
 
 const WhatsappIcon = ({ className }: { className?: string }) => (
@@ -70,11 +79,15 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
     const [billing, setBilling] = useState<string>(BILLING_ALL)
+    const [monthsFilter, setMonthsFilter] = useState<string>(MONTHS_ALL)
+    const [minAmount, setMinAmount] = useState<number>(0)
 
     const { clients, totalPages, totalItems, perPage, totalOverdue, loading } = useFinanceClientsPage({
         year,
         page,
         search,
+        // Cargamos toda la cartera morosa (conjunto acotado) para filtrar por monto/meses del lado cliente.
+        perPage: 300,
         billingType: billing === BILLING_ALL ? undefined : (billing as "stripe" | "manual"),
     })
     const { markPayment, marking } = useMarkPayment()
@@ -107,6 +120,15 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
             || (client.balance > 0 ? client.balance : 0)
         return { client, overduePeriods, overdueAmount }
     }), [clients, periods])
+
+    // Filtros del lado cliente: por meses de retraso y por monto mínimo retrasado.
+    const visibleRows = useMemo(() => rows.filter((r) => {
+        const n = r.overduePeriods.length
+        const matchMonths = monthsFilter === MONTHS_ALL || (monthsFilter === "4" ? n >= 4 : n === Number(monthsFilter))
+        return matchMonths && r.overdueAmount >= minAmount
+    }), [rows, monthsFilter, minAmount])
+    const visibleTotal = useMemo(() => visibleRows.reduce((acc, r) => acc + r.overdueAmount, 0), [visibleRows])
+    const filtersActive = monthsFilter !== MONTHS_ALL || minAmount > 0
 
     const manageRow = rows.find((r) => r.client.id === manageId)
 
@@ -173,14 +195,24 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 <span className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-[#5B47E0] sm:flex">Abrir <ExternalLinkIcon className="h-4 w-4" /></span>
             </a>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative w-full sm:max-w-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="relative w-full sm:max-w-xs">
                     <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input placeholder="Buscar por nombre o cuenta..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15" />
                 </div>
-                <div className="w-full sm:w-48">
+                <div className="w-full sm:w-44">
                     <Dropdown placeholder="Tipo de cliente" value={billing} items={BILLING_OPTIONS} onChange={(v) => { setBilling(v); setPage(1) }} />
                 </div>
+                <div className="w-full sm:w-48">
+                    <Dropdown placeholder="Meses de retraso" value={monthsFilter} items={OVERDUE_MONTHS_OPTIONS} onChange={setMonthsFilter} />
+                </div>
+                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus-within:border-[#5B47E0]">
+                    <span className="whitespace-nowrap text-slate-400">Retraso mín. $</span>
+                    <input type="number" min={0} step={100} value={minAmount || ""} onChange={(e) => setMinAmount(Number(e.target.value) || 0)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
+                </div>
+                {filtersActive && (
+                    <button onClick={() => { setMonthsFilter(MONTHS_ALL); setMinAmount(0) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
+                )}
             </div>
 
             {loading ? (
@@ -196,6 +228,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <th className="px-5 py-3 font-semibold">Nombre</th>
                                         <th className="px-5 py-3 font-semibold">Cuenta</th>
                                         <th className="px-5 py-3 font-semibold">Plan</th>
+                                        <th className="px-5 py-3 font-semibold">Próximo cobro</th>
                                         <th className="px-5 py-3 font-semibold">Promoción</th>
                                         <th className="px-5 py-3 font-semibold">Meses de retraso</th>
                                         <th className="px-5 py-3 text-right font-semibold">Total retrasado</th>
@@ -203,7 +236,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {rows.length ? rows.map((row) => (
+                                    {visibleRows.length ? visibleRows.map((row) => (
                                         <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-slate-50 transition hover:bg-slate-50/60">
                                             <td className="px-5 py-3.5 font-medium text-slate-800">
                                                 <div className="flex items-center gap-2">
@@ -213,6 +246,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             </td>
                                             <td className="px-5 py-3.5 text-slate-500">{row.client.id}</td>
                                             <td className="px-5 py-3.5 text-slate-600">{row.client.plan ?? "—"}</td>
+                                            <td className="px-5 py-3.5 text-slate-600">{row.client.paymentDay ? formatChargeDate(row.client.paymentDay) : "—"}</td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
                                                 <div className="flex flex-wrap gap-1">{overdueChips(row)}</div>
@@ -221,14 +255,16 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0]">Gestionar</span></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={7} className="py-16 text-center text-slate-400">Sin clientes en retraso. 🎉</td></tr>
+                                        <tr><td colSpan={8} className="py-16 text-center text-slate-400">{filtersActive ? "Sin resultados con estos filtros." : "Sin clientes en retraso. 🎉"}</td></tr>
                                     )}
                                 </tbody>
-                                {rows.length > 0 && (
+                                {visibleRows.length > 0 && (
                                     <tfoot>
                                         <tr className="border-t border-slate-100 bg-slate-50/50 text-sm">
-                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={5}>{totalItems} clientes en retraso · total retrasado</td>
-                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(totalOverdue)}</td>
+                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={6}>
+                                                {filtersActive ? `${visibleRows.length} de ${totalItems} · filtrado` : `${totalItems} clientes en retraso`}
+                                            </td>
+                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(filtersActive ? visibleTotal : totalOverdue)}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -239,7 +275,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
                     {/* Mobile: cards */}
                     <div className="grid grid-cols-1 gap-3 md:hidden">
-                        {rows.length ? rows.map((row) => (
+                        {visibleRows.length ? visibleRows.map((row) => (
                             <button key={row.client.id} onClick={() => setManageId(row.client.id)} className="w-full text-left">
                                 <Panel className="flex items-center gap-3 p-4">
                                     <div className="min-w-0 flex-1">
@@ -248,6 +284,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <BillingTypeChip type={row.client.billingType} />
                                         </div>
                                         <p className="text-xs text-slate-400">{row.client.id} · {row.client.plan ?? "—"}</p>
+                                        {row.client.paymentDay && <p className="text-xs text-[#5B47E0]">Cobro: {formatChargeDate(row.client.paymentDay)}</p>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
                                         <div className="mt-1.5 flex flex-wrap gap-1">{overdueChips(row)}</div>
                                     </div>
@@ -258,7 +295,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </Panel>
                             </button>
                         )) : (
-                            <Panel className="p-10 text-center text-slate-400">Sin clientes en retraso. 🎉</Panel>
+                            <Panel className="p-10 text-center text-slate-400">{filtersActive ? "Sin resultados con estos filtros." : "Sin clientes en retraso. 🎉"}</Panel>
                         )}
                     </div>
 

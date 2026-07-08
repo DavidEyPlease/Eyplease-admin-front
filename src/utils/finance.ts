@@ -30,6 +30,23 @@ export const formatMoney = (n: number | null | undefined) =>
 export const formatPct = (n: number | null | undefined) =>
     Number.isFinite(n) ? `${Math.round(n as number)}%` : "—"
 
+/** Next charge date from a client's payment day (1-31): the upcoming occurrence from today. */
+export const nextChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): Date | null => {
+    if (!paymentDay || paymentDay < 1 || paymentDay > 31) return null
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    let d = new Date(now.getFullYear(), now.getMonth(), paymentDay)
+    if (d.getTime() < today.getTime()) d = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay)
+    return d
+}
+
+const chargeDateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" })
+
+/** Human next charge date: "5 ago" (or "—"). */
+export const formatChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): string => {
+    const d = nextChargeDate(paymentDay, now)
+    return d ? chargeDateFmt.format(d) : "—"
+}
+
 // ---- Projection / break-even ----
 
 export interface ProjectionInput {
