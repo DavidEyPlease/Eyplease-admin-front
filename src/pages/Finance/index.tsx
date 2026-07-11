@@ -9,6 +9,7 @@ import BalanceTab from "./components/BalanceTab"
 import ProjectionTab from "./components/ProjectionTab"
 import PaymentsTab from "./components/PaymentsTab"
 import PromotionsTab from "./Promotions/PromotionsTab"
+import PaymentMethodsTab from "./PaymentMethods/PaymentMethodsTab"
 import ClientDrawer from "./components/ClientDrawer"
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
     { key: "balance", label: "Balance" },
     { key: "proyeccion", label: "Proyección" },
     { key: "promociones", label: "Promociones" },
+    { key: "metodos-pago", label: "Métodos de pago" },
 ] as const
 
 type TabKey = (typeof TABS)[number]["key"]
@@ -79,6 +81,7 @@ const FinancePage = () => {
             {tab === "balance" && <BalanceTab period={period} />}
             {tab === "proyeccion" && <ProjectionTab period={period} />}
             {tab === "promociones" && <PromotionsTab />}
+            {tab === "metodos-pago" && <PaymentMethodsTab />}
 
             <ClientDrawer clientId={detailId} year={period.year} onClose={() => setDetailId(null)} />
         </div>

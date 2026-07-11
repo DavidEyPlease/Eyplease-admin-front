@@ -1,10 +1,10 @@
-// Finance service — mock layer for the endpoints not built yet (payment-methods
-// config + Stripe checkout). Clients, summary, balance, expenses and payments
-// already go through the real API via their react-query hooks.
+// Finance service — payment-methods config + Stripe checkout. Clients, summary,
+// balance, expenses and payments go through the real API via their react-query
+// hooks. Set USE_MOCK to true only for local demos without a backend.
 import HttpService from "@/services/http"
 import { ApiResponse } from "@/interfaces/common"
 
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 export interface TransferAccount {
     bank: string
@@ -51,15 +51,15 @@ export const FinanceService = {
         return res.data
     },
 
-    async createStripeCheckout(account: string, period: string, amount: number, concept?: string): Promise<CheckoutResult> {
+    async createStripeCheckout(account: string, periods: string[], amount: number, concept?: string): Promise<CheckoutResult> {
         if (USE_MOCK) {
             return delay({
-                checkout_url: `https://checkout.stripe.com/c/pay/mock_${account}_${period}`,
+                checkout_url: `https://checkout.stripe.com/c/pay/mock_${account}_${periods[0] ?? ""}`,
                 session_id: `cs_mock_${account}`,
             })
         }
         const res = await HttpService.post<ApiResponse<CheckoutResult>>("/finance/payments/checkout", {
-            account, period, amount, concept,
+            account, periods, amount, concept,
         })
         return res.data
     },

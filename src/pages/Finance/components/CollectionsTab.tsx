@@ -80,15 +80,24 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [search, setSearch] = useState("")
     const [billing, setBilling] = useState<string>(BILLING_ALL)
     const [monthsFilter, setMonthsFilter] = useState<string>(MONTHS_ALL)
+    const [minAmountInput, setMinAmountInput] = useState("")
     const [minAmount, setMinAmount] = useState<number>(0)
+
+    // "4" en el dropdown = 4+ (sólo mínimo); el resto es un rango exacto de meses.
+    const monthsRange = useMemo(() => {
+        if (monthsFilter === MONTHS_ALL) return { min: undefined, max: undefined }
+        const n = Number(monthsFilter)
+        return n >= 4 ? { min: 4, max: undefined } : { min: n, max: n }
+    }, [monthsFilter])
 
     const { clients, totalPages, totalItems, perPage, totalOverdue, loading } = useFinanceClientsPage({
         year,
         page,
         search,
-        // Cargamos toda la cartera morosa (conjunto acotado) para filtrar por monto/meses del lado cliente.
-        perPage: 300,
         billingType: billing === BILLING_ALL ? undefined : (billing as "stripe" | "manual"),
+        overdueMonthsMin: monthsRange.min,
+        overdueMonthsMax: monthsRange.max,
+        minOverdue: minAmount || undefined,
     })
     const { markPayment, marking } = useMarkPayment()
     const periods = useMemo(() => periodsForYear(year), [year])
@@ -109,6 +118,12 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         return () => clearTimeout(id)
     }, [searchInput])
 
+    // Debounced server-side min-amount filter.
+    useEffect(() => {
+        const id = setTimeout(() => { setMinAmount(Number(minAmountInput) || 0); setPage(1) }, 400)
+        return () => clearTimeout(id)
+    }, [minAmountInput])
+
     // Reset to the first page when the year changes.
     useEffect(() => { setPage(1) }, [year])
 
@@ -126,14 +141,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         return { client, overduePeriods, overdueAmount }
     }), [clients, periods])
 
-    // Filtros del lado cliente: por meses de retraso y por monto mínimo retrasado.
-    const visibleRows = useMemo(() => rows.filter((r) => {
-        const n = r.overduePeriods.length
-        const matchMonths = monthsFilter === MONTHS_ALL || (monthsFilter === "4" ? n >= 4 : n === Number(monthsFilter))
-        return matchMonths && r.overdueAmount >= minAmount
-    }), [rows, monthsFilter, minAmount])
-    const visibleTotal = useMemo(() => visibleRows.reduce((acc, r) => acc + r.overdueAmount, 0), [visibleRows])
-    const filtersActive = monthsFilter !== MONTHS_ALL || minAmount > 0
+    // Los filtros (tipo, meses, monto) se aplican server-side; sólo derivamos si
+    // hay alguno activo para el mensaje de estado vacío.
+    const filtersActive = billing !== BILLING_ALL || monthsFilter !== MONTHS_ALL || minAmount > 0
 
     const manageRow = rows.find((r) => r.client.id === manageId)
 
@@ -159,7 +169,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         setStripeLoading(true)
         try {
             const res = await FinanceService.createStripeCheckout(
-                row.client.id, latestPeriod(row), row.overdueAmount,
+                row.client.id,
+                row.overduePeriods.length ? row.overduePeriods : [latestPeriod(row)],
+                row.overdueAmount,
                 `Adeudo Eyplease+ · ${row.overduePeriods.length} mes(es)`
             )
             navigator.clipboard.writeText(res.checkout_url)
@@ -222,14 +234,14 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     <Dropdown placeholder="Tipo de cliente" value={billing} items={BILLING_OPTIONS} onChange={(v) => { setBilling(v); setPage(1) }} />
                 </div>
                 <div className="w-full sm:w-48">
-                    <Dropdown placeholder="Meses de retraso" value={monthsFilter} items={OVERDUE_MONTHS_OPTIONS} onChange={setMonthsFilter} />
+                    <Dropdown placeholder="Meses de retraso" value={monthsFilter} items={OVERDUE_MONTHS_OPTIONS} onChange={(v) => { setMonthsFilter(v); setPage(1) }} />
                 </div>
                 <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus-within:border-[#5B47E0]">
                     <span className="whitespace-nowrap text-slate-400">Retraso mín. $</span>
-                    <input type="number" min={0} step={100} value={minAmount || ""} onChange={(e) => setMinAmount(Number(e.target.value) || 0)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
+                    <input type="number" min={0} step={100} value={minAmountInput} onChange={(e) => setMinAmountInput(e.target.value)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
                 </div>
                 {filtersActive && (
-                    <button onClick={() => { setMonthsFilter(MONTHS_ALL); setMinAmount(0) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
+                    <button onClick={() => { setBilling(BILLING_ALL); setMonthsFilter(MONTHS_ALL); setMinAmountInput(""); setPage(1) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
                 )}
             </div>
 
@@ -254,7 +266,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {visibleRows.length ? visibleRows.map((row) => (
+                                    {rows.length ? rows.map((row) => (
                                         <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-slate-50 transition hover:bg-slate-50/60">
                                             <td className="px-5 py-3.5 font-medium text-slate-800">
                                                 <div className="flex items-center gap-2">
@@ -276,13 +288,13 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <tr><td colSpan={8} className="py-16 text-center text-slate-400">{filtersActive ? "Sin resultados con estos filtros." : "Sin clientes en retraso. 🎉"}</td></tr>
                                     )}
                                 </tbody>
-                                {visibleRows.length > 0 && (
+                                {rows.length > 0 && (
                                     <tfoot>
                                         <tr className="border-t border-slate-100 bg-slate-50/50 text-sm">
                                             <td className="px-5 py-3 font-medium text-slate-500" colSpan={6}>
-                                                {filtersActive ? `${visibleRows.length} de ${totalItems} · filtrado` : `${totalItems} clientes en retraso`}
+                                                {totalItems} {totalItems === 1 ? "cliente en retraso" : "clientes en retraso"} · total por cobrar
                                             </td>
-                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(filtersActive ? visibleTotal : totalOverdue)}</td>
+                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(totalOverdue)}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -293,7 +305,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
                     {/* Mobile: cards */}
                     <div className="grid grid-cols-1 gap-3 md:hidden">
-                        {visibleRows.length ? visibleRows.map((row) => (
+                        {rows.length ? rows.map((row) => (
                             <button key={row.client.id} onClick={() => setManageId(row.client.id)} className="w-full text-left">
                                 <Panel className="flex items-center gap-3 p-4">
                                     <div className="min-w-0 flex-1">
