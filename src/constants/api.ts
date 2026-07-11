@@ -125,6 +125,13 @@ export const API_ROUTES = {
             LIST: '/finance/payments',
             CREATE: '/finance/payments',
         },
+        PAYMENT_METHODS: {
+            CONFIG: '/finance/payment-methods/config',
+            SETTINGS: '/finance/payment-methods/settings',
+            ACCOUNTS_CREATE: '/finance/payment-methods/accounts',
+            ACCOUNTS_UPDATE: '/finance/payment-methods/accounts/{id}',
+            ACCOUNTS_DELETE: '/finance/payment-methods/accounts/{id}',
+        },
     },
     NETWORK_PERSONS: '/network-persons',
 }

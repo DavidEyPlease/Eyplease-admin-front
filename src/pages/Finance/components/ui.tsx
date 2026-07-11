@@ -88,6 +88,7 @@ export const PanelHeader = ({ title, desc, action }: { title: string; desc?: str
 /** Payment status pill with soft colors. */
 const STATUS_PILL_LABELS: Record<string, string> = {
     paid: "Pagado",
+    partial: "Parcial",
     overdue: "Retraso",
     pending: "Pendiente",
 }
@@ -96,11 +97,13 @@ export const StatusPill = ({ status }: { status: string | null | undefined }) =>
     const s = status ?? ""
     const map = s === "paid"
         ? "bg-emerald-50 text-emerald-600"
-        : s === "overdue"
-            ? "bg-rose-50 text-rose-600"
-            : s === "pending"
-                ? "bg-amber-50 text-amber-600"
-                : "bg-slate-100 text-slate-400"
+        : s === "partial"
+            ? "bg-sky-50 text-sky-600"
+            : s === "overdue"
+                ? "bg-rose-50 text-rose-600"
+                : s === "pending"
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-slate-100 text-slate-400"
     const label = STATUS_PILL_LABELS[s] ?? "—"
     return <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", map)}>{label}</span>
 }

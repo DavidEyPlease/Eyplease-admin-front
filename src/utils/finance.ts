@@ -30,6 +30,37 @@ export const formatMoney = (n: number | null | undefined) =>
 export const formatPct = (n: number | null | undefined) =>
     Number.isFinite(n) ? `${Math.round(n as number)}%` : "—"
 
+/** Next charge date from a client's payment day (1-31): the upcoming occurrence from today. */
+export const nextChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): Date | null => {
+    if (!paymentDay || paymentDay < 1 || paymentDay > 31) return null
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    let d = new Date(now.getFullYear(), now.getMonth(), paymentDay)
+    if (d.getTime() < today.getTime()) d = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay)
+    return d
+}
+
+const chargeDateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" })
+
+/** Human next charge date: "5 ago" (or "—"). */
+export const formatChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): string => {
+    const d = nextChargeDate(paymentDay, now)
+    return d ? chargeDateFmt.format(d) : "—"
+}
+
+// ---- Pagos parciales / abonos ----
+
+interface PeriodLike { amount: number | null; paid?: number | null; status: string | null }
+
+/** Monto abonado en el periodo. */
+export const periodPaid = (p?: PeriodLike | null) => p?.paid ?? 0
+
+/** Restante por cobrar del periodo (esperado − abonado); 0 si ya está pagado. */
+export const periodRemaining = (p: PeriodLike | null | undefined, fallbackDue = 0): number => {
+    if (!p || p.status === "paid") return 0
+    const due = p.amount ?? fallbackDue
+    return Math.max(0, due - (p.paid ?? 0))
+}
+
 // ---- Projection / break-even ----
 
 export interface ProjectionInput {

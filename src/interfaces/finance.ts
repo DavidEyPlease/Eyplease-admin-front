@@ -2,10 +2,13 @@
 
 import { DiscountType } from "./promotion"
 
-export type PaymentStatus = "paid" | "overdue" | "pending" | null
+export type PaymentStatus = "paid" | "partial" | "overdue" | "pending" | null
 
 export interface MonthlyPayment {
+    /** Monto esperado del periodo (precio del paquete / cuota). */
     amount: number | null
+    /** Suma de abonos registrados para el periodo (pagos parciales). */
+    paid?: number | null
     status: PaymentStatus
 }
 
@@ -46,6 +49,53 @@ export interface FinanceClient {
 export type PaymentSource = "manual" | "whatsapp_bot" | "stripe" | "import" | "system"
 export type PaymentMethod = "stripe" | "transfer" | "card" | "cash"
 
+// ---- Payment methods management (Finanzas > Métodos de pago) ----
+
+export type PaymentAccountType = "clabe" | "tarjeta"
+
+/** A collection (transfer) account managed from the panel. */
+export interface PaymentAccount {
+    id: string
+    bank: string
+    beneficiary: string
+    number: string
+    numberType: PaymentAccountType
+    isActive: boolean
+    sortOrder: number
+}
+
+/** Payload sent to the API on create/update (snake_case, as the backend expects). */
+export interface PaymentAccountPayload {
+    bank: string
+    beneficiary: string
+    number: string
+    number_type: PaymentAccountType
+    is_active?: boolean
+    sort_order?: number
+}
+
+/** Global collection settings (toggles + transfer instructions). */
+export interface PaymentSettings {
+    stripeEnabled: boolean
+    transferEnabled: boolean
+    transferInstructions: string
+}
+
+export interface PaymentSettingsPayload {
+    stripe_enabled?: boolean
+    transfer_enabled?: boolean
+    transfer_instructions?: string
+}
+
+export const PAYMENT_ACCOUNT_TYPE_LABELS: Record<PaymentAccountType, string> = {
+    clabe: "CLABE",
+    tarjeta: "Tarjeta",
+}
+
+export const PAYMENT_ACCOUNT_TYPE_OPTIONS = (Object.keys(PAYMENT_ACCOUNT_TYPE_LABELS) as PaymentAccountType[]).map(
+    (value) => ({ value, label: PAYMENT_ACCOUNT_TYPE_LABELS[value] })
+)
+
 /** One row of the payment ledger returned by GET /finance/payments. */
 export interface PaymentRecord {
     id: string
@@ -70,6 +120,7 @@ export interface PaymentRecord {
 /** Display labels (UI is in Spanish; the stored values stay in English). */
 export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string> = {
     paid: "Pagado",
+    partial: "Parcial",
     overdue: "Vencido",
     pending: "Pendiente",
 }

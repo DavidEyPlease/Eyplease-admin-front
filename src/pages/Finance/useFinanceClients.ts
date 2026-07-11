@@ -12,6 +12,7 @@ const CLIENTS_ENTITY = "finance-clients"
 
 interface ApiPayment {
     amount: number | null
+    paid?: number | null
     status: PaymentStatus
     paid_at?: string | null
 }
@@ -46,7 +47,7 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     balance: c.balance ?? 0,
     promotion: c.promotion ?? null,
     payments: Object.entries(c.payments ?? {}).reduce<Record<string, MonthlyPayment>>((acc, [period, p]) => {
-        acc[period] = { amount: p.amount ?? null, status: p.status ?? null }
+        acc[period] = { amount: p.amount ?? null, paid: p.paid ?? null, status: p.status ?? null }
         return acc
     }, {}),
 })
@@ -78,17 +79,29 @@ export interface UseFinanceClientsPageParams {
     perPage?: number
     /** Filter by billing source; omit for all. */
     billingType?: "stripe" | "manual"
+    /** Inclusive range of overdue months (server-side). */
+    overdueMonthsMin?: number
+    overdueMonthsMax?: number
+    /** Minimum remaining amount to collect (server-side). */
+    minOverdue?: number
 }
 
 /**
  * Paginated, active-only client list for the Collections tab.
  */
-export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType }: UseFinanceClientsPageParams) => {
+export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue }: UseFinanceClientsPageParams) => {
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
-            queryParams: { year, page, perPage, search, billing_type: billingType, only_overdue: 1 },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, onlyOverdue: true }),
+            queryParams: {
+                year, page, perPage, search,
+                billing_type: billingType,
+                overdue_months_min: overdueMonthsMin,
+                overdue_months_max: overdueMonthsMax,
+                min_overdue: minOverdue,
+                only_overdue: 1,
+            },
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, onlyOverdue: true }),
         }
     )
 
@@ -112,7 +125,10 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
 export interface MarkPaymentInput {
     account: string
     period: string
-    status: "paid" | "overdue" | "pending"
+    /** Opcional: si se omite y viene `amount`, el backend registra un abono y deriva el estatus
+     *  (paid / partial / overdue) según lo acumulado vs. lo esperado. */
+    status?: "paid" | "partial" | "overdue" | "pending"
+    /** Monto del pago o abono. */
     amount?: number
     method?: "stripe" | "transfer" | "card" | "cash"
     source?: "manual" | "whatsapp_bot" | "stripe" | "import"

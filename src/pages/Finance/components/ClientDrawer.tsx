@@ -1,8 +1,9 @@
-import { PhoneIcon } from "lucide-react"
+import { CalendarClockIcon, PhoneIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import SideModal from "@/components/common/SideModal"
 import Spinner from "@/components/common/Spinner"
-import { formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
+import { formatChargeDate, formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
 import { MarkPaymentInput, useFinanceClient, useMarkPayment } from "../useFinanceClients"
 import { StatusPill } from "./ui"
 
@@ -30,6 +31,14 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
         markPayment({ account: client.id, period, status: status as MarkPaymentInput["status"], source: "manual" })
     }
 
+    // Ajusta el monto de un periodo (ej. precios/promociones distintas en meses pasados).
+    const onAmountChange = (period: string, amount: number | null) => {
+        if (!client) return
+        const status = (client.payments[period]?.status ?? "pending") as MarkPaymentInput["status"]
+        markPayment({ account: client.id, period, status, amount: amount ?? 0, source: "manual" })
+        toast.success(`Monto de ${periodLabel(period)} actualizado`)
+    }
+
     return (
         <SideModal
             open={!!clientId}
@@ -54,6 +63,11 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                         </Row>
                         <Row label="Pago fijo">{formatMoney(client.fixedPayment)}</Row>
                         <Row label="Día de pago">{client.paymentDay ?? "—"}</Row>
+                        <Row label="Próximo cobro">
+                            <span className="inline-flex items-center gap-1.5 text-[#5B47E0]">
+                                <CalendarClockIcon className="h-4 w-4" /> {formatChargeDate(client.paymentDay)}
+                            </span>
+                        </Row>
                         <Row label="Saldo">
                             <span className={client.balance > 0 ? "text-rose-600" : "text-slate-500"}>
                                 {client.balance > 0 ? formatMoney(client.balance) : client.balance < 0 ? `+${formatMoney(-client.balance)}` : "—"}
@@ -77,18 +91,32 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
 
                     {/* Payment history */}
                     <section>
-                        <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Historial de pagos</h4>
+                        <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Historial de pagos</h4>
+                        <p className="mb-2 text-xs text-slate-400">Ajusta el monto de cada mes (ej. periodos con precio o promoción distinta).</p>
                         <div className="rounded-xl border border-slate-200/70 bg-white">
                             {periods.map((period) => {
                                 const p = client.payments[period]
                                 return (
-                                    <div key={period} className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 text-sm last:border-0">
-                                        <span className="w-24 text-slate-600">{periodLabel(period)}</span>
-                                        <span className="flex-1 text-slate-400">{p?.amount != null ? formatMoney(p.amount) : "—"}</span>
+                                    <div key={period} className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 text-sm last:border-0">
+                                        <span className="w-16 shrink-0 text-slate-600">{periodLabel(period)}</span>
+                                        <div className="flex flex-1 items-center gap-1">
+                                            <span className="text-slate-400">$</span>
+                                            <input
+                                                type="number"
+                                                key={`${period}-${p?.amount ?? ""}`}
+                                                defaultValue={p?.amount ?? ""}
+                                                placeholder="—"
+                                                onBlur={(e) => {
+                                                    const v = e.target.value === "" ? null : Number(e.target.value)
+                                                    if (v !== (p?.amount ?? null)) onAmountChange(period, v)
+                                                }}
+                                                className="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-right text-slate-800 outline-none hover:border-slate-200 focus:border-[#5B47E0] focus:bg-white"
+                                            />
+                                        </div>
                                         <select
                                             value={p?.status ?? ""}
                                             onChange={(e) => onStatusChange(period, e.target.value)}
-                                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 outline-none focus:border-[#5B47E0]"
+                                            className="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 outline-none focus:border-[#5B47E0]"
                                         >
                                             <option value="">—</option>
                                             {STATUS_OPTIONS.map((o) => (

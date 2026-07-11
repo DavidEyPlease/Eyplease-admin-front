@@ -15,7 +15,7 @@ import Spinner from "@/components/common/Spinner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import UIPagination from "@/components/generics/Pagination"
 import { FinanceClient, FinanceClientPromotion } from "@/interfaces/finance"
-import { formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
+import { formatChargeDate, formatMoney, periodLabel, periodPaid, periodRemaining, periodsForYear } from "@/utils/finance"
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, MonthChip, Panel } from "./ui"
@@ -27,6 +27,15 @@ const BILLING_OPTIONS = [
     { label: "Todos", value: BILLING_ALL },
     { label: "Stripe", value: "stripe" },
     { label: "Manual", value: "manual" },
+]
+
+const MONTHS_ALL = "all"
+const OVERDUE_MONTHS_OPTIONS = [
+    { label: "Todos los meses", value: MONTHS_ALL },
+    { label: "1 mes de retraso", value: "1" },
+    { label: "2 meses", value: "2" },
+    { label: "3 meses", value: "3" },
+    { label: "4+ meses", value: "4" },
 ]
 
 const WhatsappIcon = ({ className }: { className?: string }) => (
@@ -70,12 +79,25 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
     const [billing, setBilling] = useState<string>(BILLING_ALL)
+    const [monthsFilter, setMonthsFilter] = useState<string>(MONTHS_ALL)
+    const [minAmountInput, setMinAmountInput] = useState("")
+    const [minAmount, setMinAmount] = useState<number>(0)
+
+    // "4" en el dropdown = 4+ (sólo mínimo); el resto es un rango exacto de meses.
+    const monthsRange = useMemo(() => {
+        if (monthsFilter === MONTHS_ALL) return { min: undefined, max: undefined }
+        const n = Number(monthsFilter)
+        return n >= 4 ? { min: 4, max: undefined } : { min: n, max: n }
+    }, [monthsFilter])
 
     const { clients, totalPages, totalItems, perPage, totalOverdue, loading } = useFinanceClientsPage({
         year,
         page,
         search,
         billingType: billing === BILLING_ALL ? undefined : (billing as "stripe" | "manual"),
+        overdueMonthsMin: monthsRange.min,
+        overdueMonthsMax: monthsRange.max,
+        minOverdue: minAmount || undefined,
     })
     const { markPayment, marking } = useMarkPayment()
     const periods = useMemo(() => periodsForYear(year), [year])
@@ -84,6 +106,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
     const [stripeLoading, setStripeLoading] = useState(false)
     const [showTransfer, setShowTransfer] = useState(false)
+    const [abono, setAbono] = useState<Record<string, string>>({}) // monto de abono por periodo
 
     useEffect(() => {
         FinanceService.getPaymentMethods().then(setMethods).catch(() => { })
@@ -95,18 +118,32 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         return () => clearTimeout(id)
     }, [searchInput])
 
+    // Debounced server-side min-amount filter.
+    useEffect(() => {
+        const id = setTimeout(() => { setMinAmount(Number(minAmountInput) || 0); setPage(1) }, 400)
+        return () => clearTimeout(id)
+    }, [minAmountInput])
+
     // Reset to the first page when the year changes.
     useEffect(() => { setPage(1) }, [year])
 
-    const closeManage = () => { setManageId(null); setShowTransfer(false) }
+    const closeManage = () => { setManageId(null); setShowTransfer(false); setAbono({}) }
 
     const rows: OverdueInfo[] = useMemo(() => clients.map((client) => {
-        const overduePeriods = periods.filter((p) => client.payments[p]?.status === "overdue")
+        // Un periodo cuenta como "por cobrar" si está en retraso o parcialmente pagado.
+        const overduePeriods = periods.filter((p) => {
+            const s = client.payments[p]?.status
+            return s === "overdue" || s === "partial"
+        })
         const overdueAmount =
-            overduePeriods.reduce((acc, p) => acc + (client.payments[p]?.amount ?? client.fixedPayment ?? 0), 0)
+            overduePeriods.reduce((acc, p) => acc + periodRemaining(client.payments[p], client.fixedPayment ?? 0), 0)
             || (client.balance > 0 ? client.balance : 0)
         return { client, overduePeriods, overdueAmount }
     }), [clients, periods])
+
+    // Los filtros (tipo, meses, monto) se aplican server-side; sólo derivamos si
+    // hay alguno activo para el mensaje de estado vacío.
+    const filtersActive = billing !== BILLING_ALL || monthsFilter !== MONTHS_ALL || minAmount > 0
 
     const manageRow = rows.find((r) => r.client.id === manageId)
 
@@ -132,7 +169,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         setStripeLoading(true)
         try {
             const res = await FinanceService.createStripeCheckout(
-                row.client.id, latestPeriod(row), row.overdueAmount,
+                row.client.id,
+                row.overduePeriods.length ? row.overduePeriods : [latestPeriod(row)],
+                row.overdueAmount,
                 `Adeudo Eyplease+ · ${row.overduePeriods.length} mes(es)`
             )
             navigator.clipboard.writeText(res.checkout_url)
@@ -152,9 +191,22 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         closeManage()
     }
 
+    // Registra un abono (pago parcial) de un periodo; el backend acumula y deriva el estatus.
+    const registerAbono = async (account: string, period: string) => {
+        const amount = Number(abono[period])
+        if (!amount || amount <= 0) return
+        await markPayment({ account, period, amount, source: "manual" })
+        toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabel(period)}`)
+        setAbono((prev) => ({ ...prev, [period]: "" }))
+    }
+
     const overdueChips = (row: Row) => {
         if (row.overduePeriods.length) {
-            return row.overduePeriods.map((p) => <MonthChip key={p}>{periodLabel(p).slice(0, 3)}</MonthChip>)
+            return row.overduePeriods.map((p) => (
+                <MonthChip key={p} tone={row.client.payments[p]?.status === "partial" ? "amber" : "rose"}>
+                    {periodLabel(p).slice(0, 3)}
+                </MonthChip>
+            ))
         }
         if (row.client.balance > 0) return <MonthChip tone="amber">Saldo</MonthChip>
         return <span className="text-xs text-emerald-600">Al día</span>
@@ -173,14 +225,24 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 <span className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-[#5B47E0] sm:flex">Abrir <ExternalLinkIcon className="h-4 w-4" /></span>
             </a>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative w-full sm:max-w-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="relative w-full sm:max-w-xs">
                     <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input placeholder="Buscar por nombre o cuenta..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15" />
                 </div>
-                <div className="w-full sm:w-48">
+                <div className="w-full sm:w-44">
                     <Dropdown placeholder="Tipo de cliente" value={billing} items={BILLING_OPTIONS} onChange={(v) => { setBilling(v); setPage(1) }} />
                 </div>
+                <div className="w-full sm:w-48">
+                    <Dropdown placeholder="Meses de retraso" value={monthsFilter} items={OVERDUE_MONTHS_OPTIONS} onChange={(v) => { setMonthsFilter(v); setPage(1) }} />
+                </div>
+                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus-within:border-[#5B47E0]">
+                    <span className="whitespace-nowrap text-slate-400">Retraso mín. $</span>
+                    <input type="number" min={0} step={100} value={minAmountInput} onChange={(e) => setMinAmountInput(e.target.value)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
+                </div>
+                {filtersActive && (
+                    <button onClick={() => { setBilling(BILLING_ALL); setMonthsFilter(MONTHS_ALL); setMinAmountInput(""); setPage(1) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
+                )}
             </div>
 
             {loading ? (
@@ -196,6 +258,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <th className="px-5 py-3 font-semibold">Nombre</th>
                                         <th className="px-5 py-3 font-semibold">Cuenta</th>
                                         <th className="px-5 py-3 font-semibold">Plan</th>
+                                        <th className="px-5 py-3 font-semibold">Próximo cobro</th>
                                         <th className="px-5 py-3 font-semibold">Promoción</th>
                                         <th className="px-5 py-3 font-semibold">Meses de retraso</th>
                                         <th className="px-5 py-3 text-right font-semibold">Total retrasado</th>
@@ -213,6 +276,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             </td>
                                             <td className="px-5 py-3.5 text-slate-500">{row.client.id}</td>
                                             <td className="px-5 py-3.5 text-slate-600">{row.client.plan ?? "—"}</td>
+                                            <td className="px-5 py-3.5 text-slate-600">{row.client.paymentDay ? formatChargeDate(row.client.paymentDay) : "—"}</td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
                                                 <div className="flex flex-wrap gap-1">{overdueChips(row)}</div>
@@ -221,13 +285,15 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0]">Gestionar</span></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={7} className="py-16 text-center text-slate-400">Sin clientes en retraso. 🎉</td></tr>
+                                        <tr><td colSpan={8} className="py-16 text-center text-slate-400">{filtersActive ? "Sin resultados con estos filtros." : "Sin clientes en retraso. 🎉"}</td></tr>
                                     )}
                                 </tbody>
                                 {rows.length > 0 && (
                                     <tfoot>
                                         <tr className="border-t border-slate-100 bg-slate-50/50 text-sm">
-                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={5}>{totalItems} clientes en retraso · total retrasado</td>
+                                            <td className="px-5 py-3 font-medium text-slate-500" colSpan={6}>
+                                                {totalItems} {totalItems === 1 ? "cliente en retraso" : "clientes en retraso"} · total por cobrar
+                                            </td>
                                             <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(totalOverdue)}</td>
                                             <td></td>
                                         </tr>
@@ -248,6 +314,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <BillingTypeChip type={row.client.billingType} />
                                         </div>
                                         <p className="text-xs text-slate-400">{row.client.id} · {row.client.plan ?? "—"}</p>
+                                        {row.client.paymentDay && <p className="text-xs text-[#5B47E0]">Cobro: {formatChargeDate(row.client.paymentDay)}</p>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
                                         <div className="mt-1.5 flex flex-wrap gap-1">{overdueChips(row)}</div>
                                     </div>
@@ -258,7 +325,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </Panel>
                             </button>
                         )) : (
-                            <Panel className="p-10 text-center text-slate-400">Sin clientes en retraso. 🎉</Panel>
+                            <Panel className="p-10 text-center text-slate-400">{filtersActive ? "Sin resultados con estos filtros." : "Sin clientes en retraso. 🎉"}</Panel>
                         )}
                     </div>
 
@@ -302,35 +369,65 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </div>
 
                                 {showTransfer && methods?.transfer && (
-                                    <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                                        <p><span className="text-slate-400">Banco:</span> <b>{methods.transfer.bank}</b></p>
-                                        <p><span className="text-slate-400">Beneficiario:</span> <b>{methods.transfer.beneficiary}</b></p>
-                                        <p className="flex items-center gap-1.5">
-                                            <span className="text-slate-400">CLABE:</span> <b>{methods.transfer.clabe}</b>
-                                            <button onClick={() => { navigator.clipboard.writeText(methods.transfer.clabe.replace(/\s/g, "")); toast.success("CLABE copiada") }} className="text-slate-400 hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
-                                        </p>
+                                    <div className="mt-2 space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                                        {methods.transfer.accounts.map((acc, i) => (
+                                            <div key={i} className="rounded-lg bg-slate-50 p-2">
+                                                <div className="flex items-center justify-between">
+                                                    <b className="text-slate-700">{acc.bank}</b>
+                                                    <span className="text-[11px] uppercase text-slate-400">{acc.numberType}</span>
+                                                </div>
+                                                <p className="text-slate-500">{acc.beneficiary}</p>
+                                                <p className="flex items-center gap-1.5">
+                                                    <b className="tracking-wide text-slate-800">{acc.number}</b>
+                                                    <button onClick={() => { navigator.clipboard.writeText(acc.number.replace(/\s/g, "")); toast.success(`${acc.bank} copiado`) }} className="text-slate-400 hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
+                                                </p>
+                                            </div>
+                                        ))}
                                         <p className="pt-1 text-slate-400">{methods.transfer.instructions}</p>
-                                        <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-2 w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
+                                        <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-1 w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
                                             <CheckIcon className="mr-1 inline h-4 w-4" /> Marcar pagado por transferencia
                                         </button>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Mark by month (manual) */}
+                            {/* Por mes: registrar abono (pago parcial) o marcar pagado */}
                             <div className="space-y-2">
-                                <p className="text-xs text-slate-400">Marca meses pagados manualmente:</p>
-                                {manageRow.overduePeriods.length ? manageRow.overduePeriods.map((p) => (
-                                    <div key={p} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2.5">
-                                        <span className="text-sm font-medium text-slate-700">{periodLabel(p)}</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-sm text-slate-500">{formatMoney(manageRow.client.payments[p]?.amount ?? manageRow.client.fixedPayment ?? 0)}</span>
-                                            <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
-                                                <CheckIcon className="h-3.5 w-3.5" /> Pagado
-                                            </button>
+                                <p className="text-xs text-slate-400">Registra un abono (pago parcial) o marca el mes como pagado:</p>
+                                {manageRow.overduePeriods.length ? manageRow.overduePeriods.map((p) => {
+                                    const pay = manageRow.client.payments[p]
+                                    const remaining = periodRemaining(pay, manageRow.client.fixedPayment ?? 0)
+                                    const paidSoFar = periodPaid(pay)
+                                    return (
+                                        <div key={p} className="rounded-xl border border-slate-100 px-3 py-2.5">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-700">{periodLabel(p)}</span>
+                                                <div className="text-right">
+                                                    <span className="text-sm font-semibold text-rose-600">{formatMoney(remaining)}</span>
+                                                    <span className="text-xs text-slate-400"> restante</span>
+                                                    {paidSoFar > 0 && <div className="text-[11px] text-sky-600">Abonado {formatMoney(paidSoFar)}</div>}
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <div className="flex flex-1 items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 focus-within:border-[#5B47E0]">
+                                                    <span className="text-sm text-slate-400">$</span>
+                                                    <input
+                                                        type="number" min={0} placeholder="Abono"
+                                                        value={abono[p] ?? ""}
+                                                        onChange={(e) => setAbono((prev) => ({ ...prev, [p]: e.target.value }))}
+                                                        className="w-full min-w-0 bg-transparent text-right text-sm text-slate-800 outline-none"
+                                                    />
+                                                </div>
+                                                <button onClick={() => registerAbono(manageRow.client.id, p)} disabled={marking || !Number(abono[p])} className="rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50">
+                                                    Abonar
+                                                </button>
+                                                <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
+                                                    <CheckIcon className="h-3.5 w-3.5" /> Pagado
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )) : (
+                                    )
+                                }) : (
                                     <p className="rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">Este cliente está al día.</p>
                                 )}
                             </div>
