@@ -13,6 +13,7 @@ import {
 } from "@/uishadcn/ui/dialog"
 import Spinner from "@/components/common/Spinner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
+import DateInput from "@/components/common/Inputs/DateInput"
 import UIPagination from "@/components/generics/Pagination"
 import { FinanceClient, FinanceClientPromotion } from "@/interfaces/finance"
 import { formatChargeDate, formatMoney, periodLabel, periodPaid, periodRemaining, periodsForYear } from "@/utils/finance"
@@ -82,6 +83,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [monthsFilter, setMonthsFilter] = useState<string>(MONTHS_ALL)
     const [minAmountInput, setMinAmountInput] = useState("")
     const [minAmount, setMinAmount] = useState<number>(0)
+    const [payDate, setPayDate] = useState<Date | undefined>()
 
     // "4" en el dropdown = 4+ (sólo mínimo); el resto es un rango exacto de meses.
     const monthsRange = useMemo(() => {
@@ -98,6 +100,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         overdueMonthsMin: monthsRange.min,
         overdueMonthsMax: monthsRange.max,
         minOverdue: minAmount || undefined,
+        paymentDay: payDate ? dayjs(payDate).date() : undefined,
     })
     const { markPayment, marking } = useMarkPayment()
     const periods = useMemo(() => periodsForYear(year), [year])
@@ -143,7 +146,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     // Los filtros (tipo, meses, monto) se aplican server-side; sólo derivamos si
     // hay alguno activo para el mensaje de estado vacío.
-    const filtersActive = billing !== BILLING_ALL || monthsFilter !== MONTHS_ALL || minAmount > 0
+    const filtersActive = billing !== BILLING_ALL || monthsFilter !== MONTHS_ALL || minAmount > 0 || Boolean(payDate)
 
     const manageRow = rows.find((r) => r.client.id === manageId)
 
@@ -240,8 +243,14 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     <span className="whitespace-nowrap text-slate-400">Retraso mín. $</span>
                     <input type="number" min={0} step={100} value={minAmountInput} onChange={(e) => setMinAmountInput(e.target.value)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
                 </div>
+                <DateInput
+                    value={payDate}
+                    onChange={(date) => { setPayDate(date); setPage(1) }}
+                    placeholder="Día de pago"
+                    className="w-full sm:w-auto"
+                />
                 {filtersActive && (
-                    <button onClick={() => { setBilling(BILLING_ALL); setMonthsFilter(MONTHS_ALL); setMinAmountInput(""); setPage(1) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
+                    <button onClick={() => { setBilling(BILLING_ALL); setMonthsFilter(MONTHS_ALL); setMinAmountInput(""); setPayDate(undefined); setPage(1) }} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
                 )}
             </div>
 
@@ -258,7 +267,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <th className="px-5 py-3 font-semibold">Nombre</th>
                                         <th className="px-5 py-3 font-semibold">Cuenta</th>
                                         <th className="px-5 py-3 font-semibold">Plan</th>
-                                        <th className="px-5 py-3 font-semibold">Próximo cobro</th>
+                                        <th className="px-5 py-3 font-semibold">Día de pago</th>
                                         <th className="px-5 py-3 font-semibold">Promoción</th>
                                         <th className="px-5 py-3 font-semibold">Meses de retraso</th>
                                         <th className="px-5 py-3 text-right font-semibold">Total retrasado</th>
@@ -276,7 +285,14 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             </td>
                                             <td className="px-5 py-3.5 text-slate-500">{row.client.id}</td>
                                             <td className="px-5 py-3.5 text-slate-600">{row.client.plan ?? "—"}</td>
-                                            <td className="px-5 py-3.5 text-slate-600">{row.client.paymentDay ? formatChargeDate(row.client.paymentDay) : "—"}</td>
+                                            <td className="px-5 py-3.5 text-slate-600">
+                                                {row.client.paymentDay ? (
+                                                    <div className="flex flex-col leading-tight">
+                                                        <span className="font-medium text-slate-700">Día {row.client.paymentDay}</span>
+                                                        <span className="text-xs text-slate-400">próx. {formatChargeDate(row.client.paymentDay)}</span>
+                                                    </div>
+                                                ) : "—"}
+                                            </td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
                                                 <div className="flex flex-wrap gap-1">{overdueChips(row)}</div>
@@ -314,7 +330,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <BillingTypeChip type={row.client.billingType} />
                                         </div>
                                         <p className="text-xs text-slate-400">{row.client.id} · {row.client.plan ?? "—"}</p>
-                                        {row.client.paymentDay && <p className="text-xs text-[#5B47E0]">Cobro: {formatChargeDate(row.client.paymentDay)}</p>}
+                                        {row.client.paymentDay && <p className="text-xs text-[#5B47E0]">Día {row.client.paymentDay} · próx. {formatChargeDate(row.client.paymentDay)}</p>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
                                         <div className="mt-1.5 flex flex-wrap gap-1">{overdueChips(row)}</div>
                                     </div>

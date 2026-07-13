@@ -84,12 +84,14 @@ export interface UseFinanceClientsPageParams {
     overdueMonthsMax?: number
     /** Minimum remaining amount to collect (server-side). */
     minOverdue?: number
+    /** Filter by exact payment day (day of month 1-31, server-side). */
+    paymentDay?: number
 }
 
 /**
  * Paginated, active-only client list for the Collections tab.
  */
-export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue }: UseFinanceClientsPageParams) => {
+export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay }: UseFinanceClientsPageParams) => {
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
@@ -99,9 +101,10 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
                 overdue_months_min: overdueMonthsMin,
                 overdue_months_max: overdueMonthsMax,
                 min_overdue: minOverdue,
+                payment_day: paymentDay,
                 only_overdue: 1,
             },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, onlyOverdue: true }),
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, onlyOverdue: true }),
         }
     )
 
