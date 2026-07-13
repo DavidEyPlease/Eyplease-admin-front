@@ -39,6 +39,11 @@ export const ASSET_LABELS: Record<TemplateGroup, Record<string, string>> = {
         start_page: "Hoja inicial",
         end_page: "Hoja final",
         honor_roll: "Cuadro de honor",
+        // El cuadro de honor horizontal se parte en 3 fondos (reina + 2 princesas); el
+        // vertical usa solo "honor_roll" con los 3. bgName() renombra el "honor_roll"
+        // horizontal de sección a "Cuadro honor reina"; honor_roll2/3 solo existen ahí.
+        honor_roll2: "Cuadro honor 1 Princesa",
+        honor_roll3: "Cuadro honor 2 Princesa",
         initiators: "Iniciadoras",
         new_beginnings: "Nuevos inicios",
         birthdays: "Cumpleaños",
@@ -147,6 +152,11 @@ export const ASSET_LABELS: Record<TemplateGroup, Record<string, string>> = {
 
 /** Bare Spanish name for a background, falling back to the raw asset slug. */
 export function bgName(bg: BgInfo): string {
+    // El "honor_roll" de sección es la reina solo en horizontal (fondo 1er lugar); en
+    // vertical es el cuadro completo con los 3, así que ahí conserva "Cuadro de honor".
+    if (bg.asset === "honor_roll" && bg.kind === "section" && bg.format === "horizontal") {
+        return "Cuadro honor reina";
+    }
     return ASSET_LABELS[bg.group]?.[bg.asset] || bg.asset;
 }
 
@@ -196,8 +206,13 @@ export const HONOR_ROLL_DATA_KEYS: DataKeyOption[] = [
 // the same slug can differ. Add new sections here to give them custom keys.
 export const SECTION_DATA_KEYS: Partial<Record<TemplateGroup, Record<string, DataKeyOption[]>>> = {
     unit: {
-        // Cuadro de honor (sección): reina, princesa y segunda princesa.
+        // Cuadro de honor (sección): reina, princesa y segunda princesa. El vertical usa
+        // un solo fondo (honor_roll) con los 3; el horizontal lo parte en honor_roll
+        // (reina) / honor_roll2 (1ª princesa) / honor_roll3 (2ª princesa). Los tres
+        // comparten el mismo vocabulario para que cada layout elija sus claves.
         "section/honor_roll": HONOR_ROLL_DATA_KEYS,
+        "section/honor_roll2": HONOR_ROLL_DATA_KEYS,
+        "section/honor_roll3": HONOR_ROLL_DATA_KEYS,
         // Nuevos inicios (listado): por persona, foto + nombre del nuevo inicio +
         // nombre de la iniciadora. Se usan como items[i].<campo> en cada fila.
         "section/new_beginnings": [
