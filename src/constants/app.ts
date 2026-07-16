@@ -80,6 +80,7 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         key: PermissionKeys.FINANCES,
         label: 'Finanzas',
         path: APP_ROUTES.FINANCES.DASHBOARD,
+        requiredPermission: true,
         permissionKeys: [PermissionKeys.FINANCES],
         icon: 'finances',
     },
