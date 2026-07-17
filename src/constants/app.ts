@@ -91,6 +91,7 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         key: PermissionKeys.REPORTS_MONITOR,
         label: 'Reportes',
         path: APP_ROUTES.REPORTS.DASHBOARD,
+        requiredPermission: true,
         permissionKeys: [PermissionKeys.REPORTS_MONITOR],
         icon: 'reportsMonitor',
     },
