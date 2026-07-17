@@ -26,6 +26,7 @@ import EditClientPage from "./pages/Clients/Edit"
 import NewsletterReportListPage from "./pages/NewsletterReports/List"
 import PostsPage from "./pages/Posts"
 import FinancePage from "./pages/Finance"
+import ReportsPage from "./pages/Reportes"
 import FullScreenLoader from "./components/generics/FullScreenLoader"
 import PostsTemplatesPage from "./pages/Templates/Posts"
 import ReportsTemplatesPage from "./pages/Templates/Reports"
@@ -76,6 +77,7 @@ const Router = () => {
                 <Route path={APP_ROUTES.POSTS.PUBLISH} element={<PostsPage />} />
 
                 <Route path={APP_ROUTES.FINANCES.DASHBOARD} element={<FinancePage />} />
+                <Route path={APP_ROUTES.REPORTS.DASHBOARD} element={<ReportsPage />} />
             </Route>
         </Routes>
     )
