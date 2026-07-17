@@ -1,0 +1,167 @@
+import { useMemo, useState } from "react"
+
+import { Panel } from "./ui"
+import { useClientsStatus, ClientStatus } from "../useReports"
+import { statusMeta } from "../reports.constants"
+
+const LEGEND = [
+    { c: "bg-emerald-500", t: "Subido" },
+    { c: "bg-rose-500", t: "Rechazado" },
+    { c: "bg-amber-400", t: "Procesando" },
+    { c: "bg-slate-200", t: "Falta" },
+    { c: "border border-slate-200 bg-white", t: "No aplica a su plan" },
+]
+
+const GROUPS = [
+    ["unit", "Unidad", "#5B47E0"],
+    ["national", "Nacional", "#0E9E97"],
+] as const
+
+const MatrixTab = ({ period }: { period: string }) => {
+    const { sections, clients, loading } = useClientsStatus(period)
+    const [plan, setPlan] = useState("all")
+    const [q, setQ] = useState("")
+    const [view, setView] = useState<"all" | "pending" | "complete">("all")
+
+    // Planes disponibles = los que realmente tienen los clientes (sin hardcode).
+    const boletinPlans = useMemo(() => [...new Set(clients.map((c) => c.plan))].sort((a, b) => a.localeCompare(b)), [clients])
+    const planOptions = useMemo(
+        () => [{ label: "Todos los planes", value: "all" }, ...boletinPlans.map((p) => ({ label: `Solo ${p.replace("Plan ", "")}`, value: p }))],
+        [boletinPlans]
+    )
+
+    // Columnas: en "Todos" solo los reportes de Unidad comunes a TODOS los planes con clientes
+    // (omite Aniversarios y las Nacional). Por plan, las de su derecho.
+    const cols = useMemo(
+        () =>
+            sections.filter((s) =>
+                plan === "all" ? s.group === "unit" && boletinPlans.every((p) => s.plans.includes(p)) : s.plans.includes(plan)
+            ),
+        [sections, plan, boletinPlans]
+    )
+
+    const visibleRows = useMemo(() => {
+        const needle = q.trim().toLowerCase()
+        const matchesView = (c: ClientStatus) => {
+            if (view === "all") return true
+            const entitled = cols.filter((s) => c.cells[s.section_key] !== undefined)
+            const hasPending = entitled.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.section_key]))
+            return view === "pending" ? hasPending : entitled.length > 0 && !hasPending
+        }
+        return clients.filter(
+            (c) =>
+                (plan === "all" || c.plan === plan) &&
+                (!needle || c.name.toLowerCase().includes(needle) || c.account.toLowerCase().includes(needle)) &&
+                matchesView(c)
+        )
+    }, [clients, plan, q, view, cols])
+
+    const groups = useMemo(
+        () =>
+            GROUPS.map(([group, label, color]) => ({ group, label, color, list: cols.filter((s) => s.group === group) })).filter((g) => g.list.length),
+        [cols]
+    )
+    const divider = (i: number) => (i > 0 && cols[i - 1].group !== cols[i].group ? " border-l-2 border-slate-300" : "")
+
+    return (
+        <Panel>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
+                <div>
+                    <h3 className="text-sm font-semibold text-slate-800">Estado por cliente y reporte</h3>
+                    <p className="mt-0.5 text-xs text-slate-400">Una celda por sección a la que su plan da derecho. Pasa el cursor para el detalle.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        value={plan}
+                        onChange={(e) => setPlan(e.target.value)}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 outline-none focus:border-[#5B47E0]"
+                    >
+                        {planOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <input
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        placeholder="Buscar cliente o cuenta…"
+                        className="w-48 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5B47E0]"
+                    />
+                    <div className="inline-flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium">
+                        {([["all", "Todos"], ["pending", "Les falta"], ["complete", "Completos"]] as const).map(([v, label]) => (
+                            <button
+                                key={v}
+                                onClick={() => setView(v)}
+                                className={`rounded-md px-2.5 py-1 transition ${view === v ? "text-white" : "text-slate-500 hover:text-slate-800"}`}
+                                style={view === v ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 px-5 pt-3 text-[11px] text-slate-500">
+                {LEGEND.map((l) => (
+                    <span key={l.t} className="flex items-center gap-1"><i className={`inline-block h-3 w-3 rounded-sm ${l.c}`} /> {l.t}</span>
+                ))}
+            </div>
+
+            <div className="overflow-auto px-5 py-4">
+                {loading ? (
+                    <div className="py-10 text-center text-sm text-slate-400">Cargando…</div>
+                ) : !visibleRows.length ? (
+                    <div className="py-10 text-center text-sm text-slate-400">Sin clientes para mostrar.</div>
+                ) : (
+                    <table className="min-w-full border-collapse text-sm">
+                        <thead>
+                            <tr>
+                                <th rowSpan={2} className="sticky left-0 z-10 bg-white px-3 py-2 text-left align-bottom text-xs font-semibold text-slate-500">
+                                    Cliente ({visibleRows.length})
+                                </th>
+                                {groups.map((g, gi) => (
+                                    <th
+                                        key={g.group}
+                                        colSpan={g.list.length}
+                                        className={`px-1.5 pb-1 pt-2 text-center${gi > 0 ? " border-l-2 border-slate-300" : ""}`}
+                                    >
+                                        <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: g.color }}>
+                                            {g.label}
+                                        </span>
+                                    </th>
+                                ))}
+                            </tr>
+                            <tr>
+                                {cols.map((s, i) => (
+                                    <th key={s.section_key} className={`px-1.5 py-2 text-center align-bottom${divider(i)}`}>
+                                        <div className="mx-auto h-24 whitespace-nowrap text-[11px] font-medium text-slate-500" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }} title={s.name}>
+                                            {s.name}
+                                        </div>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {visibleRows.map((c) => (
+                                <tr key={c.id} className="border-t border-slate-50 hover:bg-slate-50/60">
+                                    <td className="sticky left-0 z-10 bg-white px-3 py-1.5">
+                                        <div className="text-sm font-medium text-slate-700">{c.name}</div>
+                                        <div className="text-[11px] text-slate-400">{c.account} · {c.plan.replace("Plan ", "")}</div>
+                                    </td>
+                                    {cols.map((s, i) => {
+                                        const m = statusMeta(c.cells[s.section_key] ?? "na")
+                                        return (
+                                            <td key={s.section_key} className={`px-1.5 py-1.5 text-center${divider(i)}`}>
+                                                <span className={`mx-auto inline-block h-5 w-5 rounded ${m.dot}`} title={`${s.name}: ${m.label}`} />
+                                            </td>
+                                        )
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </Panel>
+    )
+}
+
+export default MatrixTab
