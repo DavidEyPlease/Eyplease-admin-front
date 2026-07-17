@@ -102,6 +102,11 @@ export const API_ROUTES = {
         PUBLISH: '/trainings/{id}/publish',
     },
     REPORTS: {
+        SUMMARY: '/reports/summary',
+        SUMMARY_MISSING: '/reports/summary/missing',
+        CLIENTS_STATUS: '/reports/clients-status',
+        REJECTED: '/reports/rejected',
+        EARLY_DAILY: '/reports/early-daily',
         GET_UPLOADS: '/reports/uploads',
         UPLOAD: '/reports/upload',
         PENDING_UPLOADS: '/reports/pending-uploads',

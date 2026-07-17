@@ -8,10 +8,10 @@ import RunTab from "./components/RunTab"
 import { buildPeriodOptions, defaultPeriod } from "./reports.constants"
 
 const TABS = [
-    { key: "resumen", label: "Resumen" },
-    { key: "estado", label: "Estado por cliente" },
-    { key: "rechazos", label: "Rechazos" },
-    { key: "correr", label: "Correr programas" },
+    { key: "summary", label: "Resumen" },
+    { key: "status-by-client", label: "Estado por cliente" },
+    { key: "rejections", label: "Rechazos" },
+    { key: "dispatch-imports", label: "Correr programas" },
 ] as const
 
 type TabKey = (typeof TABS)[number]["key"]
@@ -19,10 +19,10 @@ type TabKey = (typeof TABS)[number]["key"]
 const PERIOD_OPTIONS = buildPeriodOptions()
 
 const ReportsPage = () => {
-    const [tab, setTab] = useState<TabKey>("resumen")
+    const [tab, setTab] = useState<TabKey>("summary")
     const [period, setPeriod] = useState<string>(defaultPeriod())
 
-    const showPeriod = tab !== "correr"
+    const showPeriod = tab !== "dispatch-imports"
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
@@ -56,10 +56,10 @@ const ReportsPage = () => {
                 </div>
             </div>
 
-            {tab === "resumen" && <SummaryTab period={period} />}
-            {tab === "estado" && <MatrixTab period={period} />}
-            {tab === "rechazos" && <RejectionsTab period={period} />}
-            {tab === "correr" && <RunTab />}
+            {tab === "summary" && <SummaryTab period={period} />}
+            {tab === "status-by-client" && <MatrixTab period={period} />}
+            {tab === "rejections" && <RejectionsTab period={period} />}
+            {tab === "dispatch-imports" && <RunTab />}
         </div>
     )
 }

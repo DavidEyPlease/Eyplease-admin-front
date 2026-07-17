@@ -1,16 +1,8 @@
 import { useMemo, useState } from "react"
 
 import { Panel } from "./ui"
-import { useReportGrid, GridRow } from "../useReports"
-import { SECTION_CATALOG, BOLETIN_PLANS, statusMeta } from "../reports.constants"
-
-const PLAN_OPTIONS = [
-    { label: "Todos los planes", value: "all" },
-    { label: "Solo Básico", value: "Plan Básico" },
-    { label: "Solo Ejecutivo", value: "Plan Ejecutivo" },
-    { label: "Solo Elite", value: "Plan Elite" },
-    { label: "Solo Nacional", value: "Plan Nacional" },
-]
+import { useClientsStatus, ClientStatus } from "../useReports"
+import { statusMeta } from "../reports.constants"
 
 const LEGEND = [
     { c: "bg-emerald-500", t: "Subido" },
@@ -20,49 +12,56 @@ const LEGEND = [
     { c: "border border-slate-200 bg-white", t: "No aplica a su plan" },
 ]
 
+const GROUPS = [
+    ["unit", "Unidad", "#5B47E0"],
+    ["national", "Nacional", "#0E9E97"],
+] as const
+
 const MatrixTab = ({ period }: { period: string }) => {
-    const { rows, loading } = useReportGrid(period)
+    const { sections, clients, loading } = useClientsStatus(period)
     const [plan, setPlan] = useState("all")
     const [q, setQ] = useState("")
     const [view, setView] = useState<"all" | "pending" | "complete">("all")
 
-    // Columnas: en "Todos" solo los reportes de Unidad COMUNES a todos los planes
+    // Planes disponibles = los que realmente tienen los clientes (sin hardcode).
+    const boletinPlans = useMemo(() => [...new Set(clients.map((c) => c.plan))].sort((a, b) => a.localeCompare(b)), [clients])
+    const planOptions = useMemo(
+        () => [{ label: "Todos los planes", value: "all" }, ...boletinPlans.map((p) => ({ label: `Solo ${p.replace("Plan ", "")}`, value: p }))],
+        [boletinPlans]
+    )
+
+    // Columnas: en "Todos" solo los reportes de Unidad comunes a TODOS los planes con clientes
     // (omite Aniversarios y las Nacional). Por plan, las de su derecho.
-    const sections = useMemo(
+    const cols = useMemo(
         () =>
-            SECTION_CATALOG.filter((s) =>
-                plan === "all" ? s.nl === "unit" && BOLETIN_PLANS.every((p) => s.plans.includes(p)) : s.plans.includes(plan)
+            sections.filter((s) =>
+                plan === "all" ? s.group === "unit" && boletinPlans.every((p) => s.plans.includes(p)) : s.plans.includes(plan)
             ),
-        [plan]
+        [sections, plan, boletinPlans]
     )
 
     const visibleRows = useMemo(() => {
         const needle = q.trim().toLowerCase()
-        const matchesView = (c: GridRow) => {
+        const matchesView = (c: ClientStatus) => {
             if (view === "all") return true
-            const entitled = sections.filter((s) => c.cells[s.key] !== "na")
-            const hasPending = entitled.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.key]))
+            const entitled = cols.filter((s) => c.cells[s.section_key] !== undefined)
+            const hasPending = entitled.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.section_key]))
             return view === "pending" ? hasPending : entitled.length > 0 && !hasPending
         }
-        return rows.filter(
+        return clients.filter(
             (c) =>
                 (plan === "all" || c.plan === plan) &&
                 (!needle || c.name.toLowerCase().includes(needle) || c.account.toLowerCase().includes(needle)) &&
                 matchesView(c)
         )
-    }, [rows, plan, q, view, sections])
+    }, [clients, plan, q, view, cols])
 
     const groups = useMemo(
         () =>
-            ([
-                ["unit", "Unidad", "#5B47E0"],
-                ["national", "Nacional", "#0E9E97"],
-            ] as const)
-                .map(([nl, label, color]) => ({ nl, label, color, cols: sections.filter((s) => s.nl === nl) }))
-                .filter((g) => g.cols.length),
-        [sections]
+            GROUPS.map(([group, label, color]) => ({ group, label, color, list: cols.filter((s) => s.group === group) })).filter((g) => g.list.length),
+        [cols]
     )
-    const divider = (i: number) => (i > 0 && sections[i - 1].nl !== sections[i].nl ? " border-l-2 border-slate-300" : "")
+    const divider = (i: number) => (i > 0 && cols[i - 1].group !== cols[i].group ? " border-l-2 border-slate-300" : "")
 
     return (
         <Panel>
@@ -77,7 +76,7 @@ const MatrixTab = ({ period }: { period: string }) => {
                         onChange={(e) => setPlan(e.target.value)}
                         className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 outline-none focus:border-[#5B47E0]"
                     >
-                        {PLAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        {planOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                     <input
                         value={q}
@@ -120,8 +119,8 @@ const MatrixTab = ({ period }: { period: string }) => {
                                 </th>
                                 {groups.map((g, gi) => (
                                     <th
-                                        key={g.nl}
-                                        colSpan={g.cols.length}
+                                        key={g.group}
+                                        colSpan={g.list.length}
                                         className={`px-1.5 pb-1 pt-2 text-center${gi > 0 ? " border-l-2 border-slate-300" : ""}`}
                                     >
                                         <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: g.color }}>
@@ -131,8 +130,8 @@ const MatrixTab = ({ period }: { period: string }) => {
                                 ))}
                             </tr>
                             <tr>
-                                {sections.map((s, i) => (
-                                    <th key={s.key} className={`px-1.5 py-2 text-center align-bottom${divider(i)}`}>
+                                {cols.map((s, i) => (
+                                    <th key={s.section_key} className={`px-1.5 py-2 text-center align-bottom${divider(i)}`}>
                                         <div className="mx-auto h-24 whitespace-nowrap text-[11px] font-medium text-slate-500" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }} title={s.name}>
                                             {s.name}
                                         </div>
@@ -142,18 +141,15 @@ const MatrixTab = ({ period }: { period: string }) => {
                         </thead>
                         <tbody>
                             {visibleRows.map((c) => (
-                                <tr key={c.uid} className="border-t border-slate-50 hover:bg-slate-50/60">
+                                <tr key={c.id} className="border-t border-slate-50 hover:bg-slate-50/60">
                                     <td className="sticky left-0 z-10 bg-white px-3 py-1.5">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-sm font-medium text-slate-700">{c.name}</span>
-                                            {!c.active && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-400">inactivo</span>}
-                                        </div>
+                                        <div className="text-sm font-medium text-slate-700">{c.name}</div>
                                         <div className="text-[11px] text-slate-400">{c.account} · {c.plan.replace("Plan ", "")}</div>
                                     </td>
-                                    {sections.map((s, i) => {
-                                        const m = statusMeta(c.cells[s.key])
+                                    {cols.map((s, i) => {
+                                        const m = statusMeta(c.cells[s.section_key] ?? "na")
                                         return (
-                                            <td key={s.key} className={`px-1.5 py-1.5 text-center${divider(i)}`}>
+                                            <td key={s.section_key} className={`px-1.5 py-1.5 text-center${divider(i)}`}>
                                                 <span className={`mx-auto inline-block h-5 w-5 rounded ${m.dot}`} title={`${s.name}: ${m.label}`} />
                                             </td>
                                         )

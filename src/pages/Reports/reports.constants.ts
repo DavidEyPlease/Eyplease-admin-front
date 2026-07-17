@@ -1,52 +1,5 @@
-// Catálogo de reportes de Mary Kay + derecho por plan.
-// El derecho está verificado contra plan_accesses de la API:
-//   - Secciones de Unidad: Básico, Ejecutivo, Elite, Nacional.
-//   - Aniversarios (Unidad): solo Elite y Nacional.
-//   - Secciones Nacional: solo Plan Nacional.
-//   - Tempraneras (early) NO va por plan -> indicador diario aparte.
-
-export const PLAN = {
-    B: "Plan Básico",
-    EJ: "Plan Ejecutivo",
-    EL: "Plan Elite",
-    NAC: "Plan Nacional",
-} as const
-
-export const BOLETIN_PLANS: string[] = [PLAN.B, PLAN.EJ, PLAN.EL, PLAN.NAC]
-const ELITE_NAC: string[] = [PLAN.EL, PLAN.NAC]
-const ONLY_NAC: string[] = [PLAN.NAC]
-
-export type NewsletterGroup = "unit" | "national"
-
-export interface SectionDef {
-    key: string
-    name: string
-    nl: NewsletterGroup
-    plans: string[]
-}
-
-export const SECTION_CATALOG: SectionDef[] = [
-    // Unidad
-    { key: "unity_monthly_personal_sales", name: "Ventas personales", nl: "unit", plans: BOLETIN_PLANS },
-    { key: "initiators", name: "Iniciadoras", nl: "unit", plans: BOLETIN_PLANS },
-    { key: "pink_circle", name: "Círculo rosa", nl: "unit", plans: BOLETIN_PLANS },
-    { key: "group_production", name: "Producción de grupo", nl: "unit", plans: BOLETIN_PLANS },
-    { key: "birthdays", name: "Cumpleaños", nl: "unit", plans: BOLETIN_PLANS },
-    { key: "anniversaries", name: "Aniversarios", nl: "unit", plans: ELITE_NAC },
-    // Nacional (solo Plan Nacional)
-    { key: "area_recognition", name: "Reconocimiento de Área", nl: "national", plans: ONLY_NAC },
-    { key: "national_monthly_personal_sales", name: "Ventas personales", nl: "national", plans: ONLY_NAC },
-    { key: "national_group_production", name: "Producción de grupo", nl: "national", plans: ONLY_NAC },
-    { key: "diq", name: "Directoras en calificación", nl: "national", plans: ONLY_NAC },
-    { key: "sales_cut", name: "Corte de Ventas", nl: "national", plans: ONLY_NAC },
-    { key: "target_unit_club", name: "Corte de unidad", nl: "national", plans: ONLY_NAC },
-    { key: "national_initiation_cut", name: "Corte de inicios", nl: "national", plans: ONLY_NAC },
-    { key: "tsr", name: "Trofeo Sobre Ruedas", nl: "national", plans: ONLY_NAC },
-    { key: "national_birthdays", name: "Cumpleaños", nl: "national", plans: ONLY_NAC },
-    { key: "national_anniversaries", name: "Aniversarios", nl: "national", plans: ONLY_NAC },
-]
-
-export const DAILY_KEY = "early" // Tempraneras (ventas personales del día / ordenantes)
+// Constantes de presentación del módulo de Reportes. El catálogo de secciones y el derecho
+// por plan ya NO viven aquí: los resuelve el backend (endpoints /reports/*).
 
 export const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 

@@ -8,6 +8,13 @@ import { NetworkRankGroupType } from "@/interfaces/vendors"
 import { queryKeys } from "@/utils/queryKeys"
 import { useQueryClient } from "@tanstack/react-query"
 
+export interface UploadReportParams {
+    userId: string
+    yearMonth: string
+    sectionId: string
+    file: File
+}
+
 const useReportUpload = () => {
     const queryClient = useQueryClient();
 
@@ -47,19 +54,26 @@ const useReportUpload = () => {
         }
     })
 
+    // Carga central de un reporte para un (cliente, sección, mes) explícitos. La reusan el
+    // formulario manual y el modal de faltantes del resumen; el parseo de errores de validación
+    // (conflict_users / headings) y el feedback viven en el onError de arriba.
+    const upload = async ({ userId, yearMonth, sectionId, file: reportFile }: UploadReportParams) => {
+        const formData = new FormData()
+        formData.append('user_id', userId)
+        formData.append('year_month', yearMonth)
+        formData.append('newsletter_section_id', sectionId)
+        formData.append('file', reportFile)
+
+        await request('POST', API_ROUTES.REPORTS.UPLOAD, formData)
+    }
+
     const onSubmit = async () => {
         if (!selectedClient || !selectedMonth || !selectedNewsletter || !file) {
             toast.error('Por favor completa todos los campos y adjunta un archivo')
             return
         }
 
-        const formData = new FormData()
-        formData.append('user_id', selectedClient)
-        formData.append('year_month', selectedMonth)
-        formData.append('newsletter_section_id', selectedNewsletter)
-        formData.append('file', file)
-
-        await request('POST', API_ROUTES.REPORTS.UPLOAD, formData)
+        await upload({ userId: selectedClient, yearMonth: selectedMonth, sectionId: selectedNewsletter, file })
     }
 
     const onUpdateNetwork = async (clientId: string, rolSelected: NetworkRankGroupType, file: File) => {
@@ -88,6 +102,7 @@ const useReportUpload = () => {
         setFile,
         uploadError,
         setUploadError,
+        upload,
         onSubmit,
         onUpdateNetwork
     }
