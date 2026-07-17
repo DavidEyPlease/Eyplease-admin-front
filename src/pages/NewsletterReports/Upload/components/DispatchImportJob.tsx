@@ -10,20 +10,30 @@ import { Checkbox } from "@/uishadcn/ui/checkbox"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/uishadcn/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group"
 import { Separator } from "@/uishadcn/ui/separator"
+import { Switch } from "@/uishadcn/ui/switch"
 import { useState } from "react"
 
 const DispatchImportJob = () => {
     const { selectedMonth, setSelectedMonth } = useReportUpload()
     const { utilData } = useAuthStore(state => state)
-    const [dispatchData, setDispatchData] = useState<{ type: string, sections: string[] }>({
+    const [dispatchData, setDispatchData] = useState<{ type: string, sections: string[], onlyNew: boolean }>({
         type: '',
-        sections: []
+        sections: [],
+        onlyNew: false
     })
     const { request, requestState } = useRequestQuery()
 
     const onDispatch = async () => {
         console.log('Dispatching import job with data:', dispatchData)
-        await request('POST', API_ROUTES.REPORTS.DISPATCH_IMPORT_JOB, { ...dispatchData, month: parseInt(selectedMonth) })
+        await request(
+            'POST',
+            API_ROUTES.REPORTS.DISPATCH_IMPORT_JOB,
+            {
+                ...dispatchData,
+                month: parseInt(selectedMonth),
+                only_new: dispatchData.onlyNew
+            }
+        )
     }
 
     const newsletterGroups = utilData.newsletters.map(n => ({
@@ -46,7 +56,7 @@ const DispatchImportJob = () => {
                 <RadioGroup
                     defaultValue={dispatchData.type}
                     className="max-w-sm col-span-1 h-max"
-                    onValueChange={e => setDispatchData({ type: e, sections: [] })}
+                    onValueChange={e => setDispatchData({ type: e, sections: [], onlyNew: false })}
                 >
                     {newsletterGroups.map(group => (
                         <FieldLabel htmlFor={group.key} key={group.key}>
@@ -111,6 +121,24 @@ const DispatchImportJob = () => {
                                 </FieldGroup>
                             </FieldSet>
                             <Separator />
+
+                            <FieldGroup className="w-full max-w-sm">
+                                <FieldLabel htmlFor="only-new-import">
+                                    <Field orientation="horizontal">
+                                        <FieldContent>
+                                            <FieldTitle>Importar solo nuevos</FieldTitle>
+                                            <FieldDescription>
+                                                Si activas esta opción, solo se importarán los registros que no existan en la base de datos. Los registros existentes no se actualizarán.
+                                            </FieldDescription>
+                                        </FieldContent>
+                                        <Switch
+                                            id="only-new-import"
+                                            checked={dispatchData.onlyNew}
+                                            onCheckedChange={checked => setDispatchData(prev => ({ ...prev, onlyNew: checked }))}
+                                        />
+                                    </Field>
+                                </FieldLabel>
+                            </FieldGroup>
 
                             <Button
                                 text='Importar'
