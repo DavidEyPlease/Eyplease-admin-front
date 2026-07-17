@@ -111,30 +111,30 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         permissionKeys: [PermissionKeys.TASKS],
         icon: 'tasks',
     },
-    {
-        key: PermissionKeys.NEWSLETTER_REPORTS,
-        label: "Boletines",
-        path: '',
-        icon: 'reportUploads',
-        requiredPermission: true,
-        permissionKeys: [PermissionKeys.NEWSLETTER_REPORTS],
-        children: [
-            {
-                key: PermissionKeys.NEWSLETTER_REPORT_UPLOADS,
-                label: "Cargar boletines",
-                path: APP_ROUTES.NEWSLETTER_REPORTS.UPLOADS,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.NEWSLETTER_REPORT_UPLOADS],
-            },
-            {
-                key: PermissionKeys.NEWSLETTER_REPORT_LIST,
-                label: "Reporte de cargas",
-                path: APP_ROUTES.NEWSLETTER_REPORTS.LIST,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.NEWSLETTER_REPORT_LIST],
-            },
-        ]
-    },
+    // {
+    //     key: PermissionKeys.NEWSLETTER_REPORTS,
+    //     label: "Boletines",
+    //     path: '',
+    //     icon: 'reportUploads',
+    //     requiredPermission: true,
+    //     permissionKeys: [PermissionKeys.NEWSLETTER_REPORTS],
+    //     children: [
+    //         {
+    //             key: PermissionKeys.NEWSLETTER_REPORT_UPLOADS,
+    //             label: "Cargar boletines",
+    //             path: APP_ROUTES.NEWSLETTER_REPORTS.UPLOADS,
+    //             requiredPermission: true,
+    //             permissionKeys: [PermissionKeys.NEWSLETTER_REPORT_UPLOADS],
+    //         },
+    //         {
+    //             key: PermissionKeys.NEWSLETTER_REPORT_LIST,
+    //             label: "Reporte de cargas",
+    //             path: APP_ROUTES.NEWSLETTER_REPORTS.LIST,
+    //             requiredPermission: true,
+    //             permissionKeys: [PermissionKeys.NEWSLETTER_REPORT_LIST],
+    //         },
+    //     ]
+    // },
     {
         key: PermissionKeys.PUBLISH_POSTS,
         label: "Publicaciones",
