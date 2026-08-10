@@ -21,6 +21,8 @@ export interface UseFetchOptions {
     cacheTime?: number
     enabled?: boolean
     refetchOnWindowFocus?: boolean
+    // Polling: intervalo fijo (ms) o funcion sobre la data actual (false = detener).
+    refetchInterval?: number | false | ((data: unknown) => number | false)
 }
 
 type QueryParams = { paginationToken?: string | null, perPage?: number, search?: string, page?: number } | Record<string, any>
@@ -33,6 +35,7 @@ export default function useFetchQuery<T>(url: string, options: UseFetchOptions =
         cacheTime,
         enabled = true,
         refetchOnWindowFocus = false,
+        refetchInterval,
     } = options
     const queryClient = useQueryClient()
 
@@ -65,6 +68,9 @@ export default function useFetchQuery<T>(url: string, options: UseFetchOptions =
         gcTime: cacheTime,
         enabled,
         refetchOnWindowFocus,
+        refetchInterval: typeof refetchInterval === 'function'
+            ? (query) => refetchInterval(query.state.data)
+            : refetchInterval,
     })
 
     const setData = (newData: T) => {

@@ -169,3 +169,59 @@ export const useDispatchImport = () => {
     const dispatch = (body: DispatchImportInput) => request("POST", API_ROUTES.REPORTS.DISPATCH_IMPORT_JOB, body)
     return { dispatch, dispatching: requestState.loading }
 }
+
+/* ----------------------------- Descarga bajo demanda (worker) ----------------------------- */
+export type DownloadRunStatus = "queued" | "running" | "completed" | "failed" | "rejected"
+
+export interface DownloadRunResult {
+    total: number
+    uploaded: number
+    failed: number
+    skipped: number
+}
+
+export interface DownloadRun {
+    run_id: string
+    process: "monthly" | "daily" | "bulletins"
+    sections: string[] | null
+    clients: string[] | null
+    reset: boolean
+    status: DownloadRunStatus
+    result: DownloadRunResult | null
+    error: string | null
+    queued_at: string | null
+    finished_at: string | null
+}
+
+export interface DispatchDownloadRunInput {
+    sections: string[]
+    clients?: string[]
+    reset?: boolean
+}
+
+const ACTIVE_RUN_STATUSES: DownloadRunStatus[] = ["queued", "running"]
+const RUNS_POLL_INTERVAL_MS = 5000
+const DOWNLOAD_RUNS_QUERY_KEY = queryKeys.generic("report-download-runs")
+
+/**
+ * Historial de corridas de descarga. El backend sincroniza los runs activos con el
+ * estado que publica el worker en Redis; aquí solo se hace polling mientras haya
+ * alguno en cola o corriendo.
+ */
+export const useDownloadRuns = () => {
+    const { response, loading } = useFetchQuery<DownloadRun[]>(API_ROUTES.REPORTS.DOWNLOAD_RUNS, {
+        customQueryKey: DOWNLOAD_RUNS_QUERY_KEY,
+        refetchInterval: (data) => {
+            const runs = data as DownloadRun[] | undefined
+            return runs?.some((run) => ACTIVE_RUN_STATUSES.includes(run.status)) ? RUNS_POLL_INTERVAL_MS : false
+        },
+    })
+    return { runs: response ?? [], loading }
+}
+
+/* Dispara la descarga en el worker (una orden por proceso; responde los runs creados). */
+export const useDispatchDownloadRun = () => {
+    const { request, requestState } = useRequestQuery({ invalidateQueries: [DOWNLOAD_RUNS_QUERY_KEY] })
+    const dispatch = (body: DispatchDownloadRunInput) => request("POST", API_ROUTES.REPORTS.DOWNLOAD_RUNS, body)
+    return { dispatch, dispatching: requestState.loading }
+}
