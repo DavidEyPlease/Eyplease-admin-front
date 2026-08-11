@@ -56,9 +56,35 @@
    --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
    --sidebar-border: oklch(0.92 0.004 286.32);
    --sidebar-ring: oklch(0.606 0.25 292.717);
+
+   /* Marca Eyplease+: violeta → cyan. Antes vivía duplicado en Reports/ui.tsx y Finance/ui.tsx */
+   --brand-violet: #5B47E0;
+   --brand-violet-mid: #6B5BE8;
+   --brand-violet-soft: #EEEBFC;
+   --brand-cyan: #5DD9D2;
+   --brand-cyan-ink: #0E9E97;
 }
 
 @theme inline {
+  /* Colores de marca */
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-violet-mid: var(--brand-violet-mid);
+  --color-brand-violet-soft: var(--brand-violet-soft);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-cyan-ink: var(--brand-cyan-ink);
+
+  /* Degradados de marca: el completo (héroes), el de botón y las variantes direccionales */
+  --background-image-brand-gradient: linear-gradient(135deg, var(--brand-violet) 0%, var(--brand-violet-mid) 55%, var(--brand-cyan) 140%);
+  --background-image-brand-gradient-btn: linear-gradient(135deg, var(--brand-violet), var(--brand-violet-mid));
+  --background-image-brand-gradient-r: linear-gradient(90deg, var(--brand-violet), var(--brand-violet-mid));
+  --background-image-brand-gradient-v: linear-gradient(180deg, var(--brand-violet), var(--brand-cyan));
+
+  /* Elevación */
+  --shadow-brand-glow: 0 8px 20px -8px color-mix(in srgb, var(--brand-violet) 70%, transparent);
+  --shadow-brand-glow-lg: 0 18px 40px -18px color-mix(in srgb, var(--brand-violet) 60%, transparent);
+  --shadow-panel: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -16px color-mix(in srgb, var(--brand-violet) 20%, transparent);
+  --shadow-panel-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 34px -18px color-mix(in srgb, var(--brand-violet) 30%, transparent);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

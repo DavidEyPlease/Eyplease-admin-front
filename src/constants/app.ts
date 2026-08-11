@@ -51,7 +51,7 @@ export const APP_ROUTES = {
         LIST: '/newsletter-reports/list',
     },
     POSTS: {
-        PUBLISH: '/posts/publish',
+        DASHBOARD: '/posts',
     },
     FINANCES: {
         DASHBOARD: '/finance',
@@ -138,19 +138,10 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
     {
         key: PermissionKeys.PUBLISH_POSTS,
         label: "Publicaciones",
-        path: '',
+        path: APP_ROUTES.POSTS.DASHBOARD,
         icon: 'posts',
         requiredPermission: true,
         permissionKeys: [PermissionKeys.PUBLISH_POSTS],
-        children: [
-            {
-                key: PermissionKeys.PUBLISH_POSTS,
-                label: "Publicar",
-                path: APP_ROUTES.POSTS.PUBLISH,
-                requiredPermission: true,
-                permissionKeys: [PermissionKeys.PUBLISH_POSTS],
-            }
-        ]
     },
     {
         key: PermissionKeys.TEMPLATES,

@@ -74,7 +74,7 @@ const Router = () => {
 
                 <Route path={APP_ROUTES.HOME.PROFILE} element={<ProfilePage />} />
 
-                <Route path={APP_ROUTES.POSTS.PUBLISH} element={<PostsPage />} />
+                <Route path={APP_ROUTES.POSTS.DASHBOARD} element={<PostsPage />} />
 
                 <Route path={APP_ROUTES.FINANCES.DASHBOARD} element={<FinancePage />} />
                 <Route path={APP_ROUTES.REPORTS.DASHBOARD} element={<ReportsPage />} />

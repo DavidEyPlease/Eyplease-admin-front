@@ -1,180 +1,92 @@
-import Button from "@/components/common/Button";
-import Dropdown from "@/components/common/Inputs/Dropdown";
-import DropdownGroup from "@/components/common/Inputs/DropdownGroup";
-import { API_ROUTES } from "@/constants/api";
-import { MONTHS_OPTIONS } from "@/constants/app";
-import useRequestQuery from "@/hooks/useRequestQuery";
-import useAuthStore from "@/store/auth";
-import { Card, CardContent } from "@/uishadcn/ui/card";
-import { Checkbox } from "@/uishadcn/ui/checkbox";
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet, FieldTitle } from "@/uishadcn/ui/field";
-import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group";
-import { Separator } from "@/uishadcn/ui/separator";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState } from 'react'
+import { GaugeIcon, GridIcon } from 'lucide-react'
+
+import { PostArtifact } from '@/interfaces/posts'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/uishadcn/ui/tabs'
+import ControlCenter from './components/ControlCenter'
+import Coverage from './components/Coverage'
+import { defaultPeriod } from './page-utils'
+import { useClientCoverage, usePostRenderRuns, usePostsCoverage, usePublishPosts } from './usePosts'
+
+const TABS = [
+    { value: 'control', label: 'Centro de control', icon: <GaugeIcon /> },
+    { value: 'coverage', label: 'Cobertura', icon: <GridIcon /> },
+]
 
 const PostsPage = () => {
-    const { utilData } = useAuthStore(state => state)
-    const { request, requestState } = useRequestQuery()
-    const [newsletter, setNewsletter] = useState<string>('')
-    const [selectedSections, setSelectedSections] = useState<string[]>([])
-    const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
-    const [artifacts, setArtifacts] = useState<string[]>([])
+    const [period, setPeriod] = useState(defaultPeriod)
+    const [page, setPage] = useState(1)
+    const [search, setSearch] = useState('')
 
-    const newsletterGroups = utilData.newsletters.map(n => ({
-        groupName: n.name,
-        key: n.code,
-        items: n.sections.filter(i => i.has_publish_posts).map(s => ({
-            label: s.name,
-            value: s.sectionKey
-        }))
-    }))
+    const { coverage, loading, isRefetching } = usePostsCoverage(period)
+    const { clientCoverage, loading: loadingClients, updating: updatingClients } = useClientCoverage(period, page, undefined, search)
+    const { runs, loading: loadingRuns } = usePostRenderRuns()
+    const { publish, publishing } = usePublishPosts(period)
 
-    const onDispatch = async () => {
-        try {
-            if (!newsletter || !selectedMonth || !selectedSections.length || !artifacts.length) return
-            await request('POST', API_ROUTES.POSTS.PUBLISH_NEWSLETTER, {
-                section_keys: selectedSections,
-                month: selectedMonth,
-                artifacts
-            })
-            toast.success('Publicaciones ejecutadas correctamente')
-        } catch (error) {
-            toast.error('Error al ejecutar las publicaciones')
-        }
+    const onPublish = (sectionKeys: string[], artifacts: PostArtifact[]) => {
+        publish(sectionKeys, artifacts)
+    }
+
+    const onPeriodChange = (next: string) => {
+        setPeriod(next)
+        setPage(1)
+    }
+
+    const onSearch = (next: string) => {
+        setSearch(next)
+        setPage(1)
     }
 
     return (
-        <Card>
-            <CardContent className="space-y-4">
-                <RadioGroup
-                    defaultValue={newsletter}
-                    className="max-w-2xl h-max"
-                    onValueChange={e => {
-                        setNewsletter(e)
-                        setSelectedSections([])
-                    }}
-                >
-                    <div className="flex gap-4">
-                        {newsletterGroups.map(group => (
-                            <FieldLabel htmlFor={group.key} key={group.key}>
-                                <Field orientation="horizontal">
-                                    <FieldContent>
-                                        <FieldTitle>{group.groupName}</FieldTitle>
-                                        <FieldDescription>
-                                            Ejecutar publicaciones de {group.groupName} en segundo plano
-                                        </FieldDescription>
-                                    </FieldContent>
-                                    <RadioGroupItem value={group.key} id={group.key} />
-                                </Field>
-                            </FieldLabel>
-                        ))}
-                    </div>
-                </RadioGroup>
-                <div className="space-y-4">
-                    {newsletter && (
-                        <>
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <Dropdown
-                                    label="Mes de la publicación"
-                                    placeholder="Selecciona un mes"
-                                    value={(selectedMonth || '').toString()}
-                                    className="w-max"
-                                    onChange={e => setSelectedMonth(parseInt(e))}
-                                    items={MONTHS_OPTIONS.map(c => ({
-                                        value: c.value,
-                                        label: c.label
-                                    }))}
-                                />
-                                <FieldSet>
-                                    <FieldLegend variant="label">
-                                        Selecciona los archivos a generar:
-                                    </FieldLegend>
-                                    <FieldGroup className="gap-3">
-                                        {[{ label: 'Imagen', value: 'image' }, { label: 'Video', value: 'video' }].map(artifact => (
-                                            <Field orientation="horizontal" key={artifact.value}>
-                                                <Checkbox
-                                                    checked={artifacts.includes(artifact.value)}
-                                                    onCheckedChange={checked => {
-                                                        if (checked) {
-                                                            setArtifacts([...artifacts, artifact.value])
-                                                        } else {
-                                                            setArtifacts(prev => prev.filter(a => a !== artifact.value))
-                                                        }
-                                                    }}
-                                                />
-                                                <FieldLabel
-                                                    className="font-normal"
-                                                >
-                                                    {artifact.label}
-                                                </FieldLabel>
-                                            </Field>
-                                        ))}
-                                    </FieldGroup>
-                                </FieldSet>
+        <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex items-center gap-2.5">
+                <span className="h-7 w-1.5 rounded-full bg-brand-gradient-v" />
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Publicaciones</h1>
+            </div>
 
-                                <FieldSet>
-                                    <FieldLegend variant="label">
-                                        Selecciona la sección a publicar:
-                                    </FieldLegend>
-                                    <RadioGroup
-                                        defaultValue={selectedSections[0] || ''}
-                                        onValueChange={e => setSelectedSections([e])}
-                                    >
-                                        {newsletterGroups.find(g => g.key === newsletter)?.items.map(section => (
-                                            <Field orientation="horizontal" key={section.value}>
-                                                <RadioGroupItem value={section.value} id={section.value} />
-                                                <FieldLabel htmlFor={section.value} className="font-normal">
-                                                    {section.label}
-                                                </FieldLabel>
-                                            </Field>
-                                        ))}
-                                    </RadioGroup>
-                                    {/* <FieldGroup className="gap-3">
-                                    {newsletterGroups.find(g => g.key === newsletter)?.items.map(section => (
-                                        <Field orientation="horizontal" key={section.value}>
-                                            <Checkbox
-                                                id={section.value}
-                                                name={section.value}
-                                                checked={selectedSections.includes(section.value)}
-                                                onCheckedChange={checked => {
-                                                    if (checked) {
-                                                        setSelectedSections([...selectedSections, section.value])
-                                                    } else {
-                                                        setSelectedSections(prev => prev.filter(s => s !== section.value))
-                                                    }
-                                                }}
-                                            />
-                                            <FieldLabel
-                                                htmlFor={section.value}
-                                                className="font-normal"
-                                            >
-                                                {section.label}
-                                            </FieldLabel>
-                                        </Field>
-                                    ))}
-                                </FieldGroup> */}
-                                </FieldSet>
-                            </div>
+            <Tabs defaultValue={TABS[0].value} className="gap-4">
+                <TabsList>
+                    {TABS.map(tab => (
+                        <TabsTrigger key={tab.value} value={tab.value}>
+                            {tab.icon}
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
-                            <Separator className="my-4" />
+                <TabsContent value="control">
+                    <ControlCenter
+                        coverage={coverage}
+                        runs={runs}
+                        loading={loading}
+                        isRefetching={isRefetching}
+                        loadingRuns={loadingRuns}
+                        publishing={publishing}
+                        period={period}
+                        onPeriodChange={onPeriodChange}
+                        onPublish={onPublish}
+                    />
+                </TabsContent>
 
-                            <div className="text-center">
-                                <Button
-                                    text='Publicar'
-                                    type="submit"
-                                    color="primary"
-                                    rounded
-                                    loading={requestState.loading}
-                                    onClick={onDispatch}
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                <TabsContent value="coverage">
+                    <Coverage
+                        coverage={coverage}
+                        clientCoverage={clientCoverage}
+                        loading={loading}
+                        loadingClients={loadingClients}
+                        updatingClients={updatingClients}
+                        publishing={publishing}
+                        period={period}
+                        search={search}
+                        onPeriodChange={onPeriodChange}
+                        onSearch={onSearch}
+                        onChangePage={setPage}
+                        onPublish={onPublish}
+                    />
+                </TabsContent>
+            </Tabs>
+        </div>
     )
 }
 
-export default PostsPage;
+export default PostsPage
