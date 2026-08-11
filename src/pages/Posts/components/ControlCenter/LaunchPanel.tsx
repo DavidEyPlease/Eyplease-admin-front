@@ -83,9 +83,9 @@ const LaunchPanel = ({ sections, publishing, onPublish }: Props) => {
                 <div className="flex gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-[11.5px] leading-relaxed font-medium text-blue-900">
                     <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
                     <span>
-                        Se encolarán <b>{jobsToQueue} jobs</b>
-                        {pendingPieces !== null && <> para <b>{formatNumber(pendingPieces)} piezas pendientes</b></>}.
-                        Quien ya tenga ese archivo se omite: solo se renderiza lo que falta.
+                        Se lanzarán <b>{jobsToQueue} procesos</b>
+                        {pendingPieces !== null && <> para <b>{formatNumber(pendingPieces)} archivos pendientes</b></>}.
+                        Quien ya tenga su archivo se omite: solo se crea lo que falta.
                     </span>
                 </div>
 

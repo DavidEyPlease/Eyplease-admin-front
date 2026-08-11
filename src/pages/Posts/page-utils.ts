@@ -59,9 +59,15 @@ export const getPublishDisabledReason = (section: ISectionCoverage) => {
     const hasIncompleteFiles = getMissingVideo(section) > 0 || section.with_image < section.posts
 
     return hasIncompleteFiles
-        ? 'Sin piezas pendientes. Lo que falta es de personas que ya no son elegibles, así que publicar no generaría nada.'
-        : 'Todo publicado: no queda ninguna pieza por generar en este periodo.'
+        ? 'No falta nada por crear. Los archivos incompletos son de personas que ya no aparecen en el reporte, así que publicar no los generaría.'
+        : 'Todo listo: no falta ningún archivo por crear en este periodo.'
 }
+
+/** Las secciones diarias renderizan el día siguiente, así que el conteo va un día por delante. */
+export const getCadenceHint = (section: ISectionCoverage) =>
+    section.cadence === 'daily'
+        ? `Se prepara un día antes: el lote de las ${section.scheduled_at} crea las publicaciones de mañana.`
+        : 'Se publica a inicios de mes con los datos del mes anterior.'
 
 export const formatPeriodLabel = (period: string) => {
     const [year, month] = period.split('-').map(Number)

@@ -5,7 +5,7 @@ import { Badge } from '@/uishadcn/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/uishadcn/ui/tooltip'
 import { ISectionCoverage } from '@/interfaces/posts'
 import { cn } from '@/lib/utils'
-import { formatNumber, formatRelativeTime, getPublishDisabledReason, getSectionHealth } from '../../page-utils'
+import { formatNumber, formatRelativeTime, getCadenceHint, getPublishDisabledReason, getSectionHealth } from '../../page-utils'
 
 /** Fila métrica: icono + etiqueta, barra y "hechas/total". El total SIEMPRE es posts creados. */
 const MetricRow = ({ icon, label, value, total }: { icon: React.ReactNode, label: string, value: number, total: number }) => {
@@ -41,8 +41,8 @@ const SectionCard = ({ section, publishing, onPublish }: Props) => {
     const disabledReason = getPublishDisabledReason(section)
     const publishHint = disabledReason
         ?? (section.pending === null
-            ? 'Genera las piezas que falten. La cobertura de este periodo aún no se ha calculado.'
-            : `Genera las piezas que faltan (${formatNumber(section.pending)} pendientes)`)
+            ? 'Crea los archivos que falten. Todavía no se ha revisado cuántos son.'
+            : `Crea los ${formatNumber(section.pending)} archivos que faltan`)
 
     return (
         <Panel className={cn('flex flex-col gap-3 p-4 transition-shadow hover:shadow-panel-hover', health.tone !== 'ok' && 'border-amber-200/80')}>
@@ -50,7 +50,14 @@ const SectionCard = ({ section, publishing, onPublish }: Props) => {
                 <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-semibold tracking-tight text-foreground">{section.name}</h3>
                     <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-                        {section.cadence === 'daily' ? `Diaria · ${section.scheduled_at}` : 'Mensual'}
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="cursor-help underline decoration-dotted underline-offset-2">
+                                    {section.cadence === 'daily' ? `Diaria · ${section.scheduled_at}` : 'Mensual'}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-56">{getCadenceHint(section)}</TooltipContent>
+                        </Tooltip>
                         {subsections.length > 0 && ` · ${subsections.length} subsecciones`}
                     </p>
                 </div>

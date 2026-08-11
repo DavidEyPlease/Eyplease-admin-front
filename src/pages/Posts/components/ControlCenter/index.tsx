@@ -76,8 +76,8 @@ const ControlCenter = ({ coverage, runs, loading, isRefetching, loadingRuns, pub
                     <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
                         <ClockIcon className="size-3" />
                         {coverage.snapshot_at
-                            ? `Cobertura calculada ${formatRelativeTime(coverage.snapshot_at)}`
-                            : 'Cobertura sin calcular en este periodo'}
+                            ? `Lo que falta por crear se revisó ${formatRelativeTime(coverage.snapshot_at)}`
+                            : 'Todavía no se ha revisado qué falta por crear'}
                     </span>
                 </div>
             </div>
@@ -116,14 +116,12 @@ const ControlCenter = ({ coverage, runs, loading, isRefetching, loadingRuns, pub
                 <KpiTile
                     label="Por generar"
                     value={totals.hasPendingData ? formatNumber(totals.pending) : '—'}
-                    sub={totals.hasPendingData
-                        ? 'archivos que faltan por renderizar'
-                        : 'sin calcular · falta correr el snapshot'}
+                    sub={totals.hasPendingData ? 'imágenes y videos por crear' : 'sin calcular todavía'}
                     accent="slate"
                     icon={<ClockIcon className="size-4" />}
                     hint={totals.hasPendingData
-                        ? 'Archivos (imagen y video por separado) que los jobs generarían si publicas ahora. Quien ya tiene su archivo no se cuenta. Sale del snapshot de cobertura, no de la consulta en vivo.'
-                        : 'Todavía no hay snapshot de cobertura para este periodo. Lo calcula el comando posts:snapshot-coverage, que corre cada hora.'}
+                        ? 'Imágenes y videos que se crearían si publicas ahora. Cada archivo cuenta aparte: si a una persona le falta imagen y video, suma 2. Las secciones diarias se preparan un día antes, así que aquí ya está lo de mañana.'
+                        : 'Este número se calcula solo, cada hora. Aún no se ha calculado para este periodo.'}
                 />
             </div>
 
