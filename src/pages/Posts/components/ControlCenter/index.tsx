@@ -73,12 +73,12 @@ const ControlCenter = ({ coverage, runs, loading, isRefetching, loadingRuns, pub
                             Actualizando…
                         </span>
                     )}
-                    {coverage.snapshot_at && (
-                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                            <ClockIcon className="size-3" />
-                            Cobertura calculada {formatRelativeTime(coverage.snapshot_at)}
-                        </span>
-                    )}
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                        <ClockIcon className="size-3" />
+                        {coverage.snapshot_at
+                            ? `Cobertura calculada ${formatRelativeTime(coverage.snapshot_at)}`
+                            : 'Cobertura sin calcular en este periodo'}
+                    </span>
                 </div>
             </div>
 
@@ -102,23 +102,28 @@ const ControlCenter = ({ coverage, runs, loading, isRefetching, loadingRuns, pub
                 <KpiTile
                     label="Sin video"
                     value={formatNumber(totals.missingVideo)}
-                    sub="imagen generada, video no"
+                    sub="Publicaciones sin video generado"
                     accent="rose"
                     icon={<VideoIcon className="size-4" />}
                 />
                 <KpiTile
                     label="Sin publicar"
                     value={totals.emptySections}
-                    sub="secciones con 0 posts este mes"
+                    sub="secciones con 0 publicaciones este mes"
                     accent="amber"
                     icon={<AlertTriangleIcon className="size-4" />}
                 />
                 <KpiTile
-                    label="Pendientes"
+                    label="Por generar"
                     value={totals.hasPendingData ? formatNumber(totals.pending) : '—'}
-                    sub="elegibles sin publicación"
+                    sub={totals.hasPendingData
+                        ? 'archivos que faltan por renderizar'
+                        : 'sin calcular · falta correr el snapshot'}
                     accent="slate"
                     icon={<ClockIcon className="size-4" />}
+                    hint={totals.hasPendingData
+                        ? 'Archivos (imagen y video por separado) que los jobs generarían si publicas ahora. Quien ya tiene su archivo no se cuenta. Sale del snapshot de cobertura, no de la consulta en vivo.'
+                        : 'Todavía no hay snapshot de cobertura para este periodo. Lo calcula el comando posts:snapshot-coverage, que corre cada hora.'}
                 />
             </div>
 

@@ -45,6 +45,24 @@ export const getSectionHealth = (section: ISectionCoverage) => {
 export const getMissingVideo = (section: ISectionCoverage) =>
     section.artifacts.includes('video') ? section.posts - section.with_video : 0
 
+/**
+ * Publicar solo genera lo que falta: `pending` viene del snapshot y ya es el
+ * resultado del fetchData() de cada job, que excluye a quien ya tiene el archivo.
+ * Si es 0, el botón no generaría nada. Sin snapshot (`null`) no se puede afirmar,
+ * así que se deja habilitado.
+ *
+ * @returns Motivo por el que no hay nada que publicar, o null si sí lo hay.
+ */
+export const getPublishDisabledReason = (section: ISectionCoverage) => {
+    if (section.pending === null || section.pending > 0) return null
+
+    const hasIncompleteFiles = getMissingVideo(section) > 0 || section.with_image < section.posts
+
+    return hasIncompleteFiles
+        ? 'Sin piezas pendientes. Lo que falta es de personas que ya no son elegibles, así que publicar no generaría nada.'
+        : 'Todo publicado: no queda ninguna pieza por generar en este periodo.'
+}
+
 export const formatPeriodLabel = (period: string) => {
     const [year, month] = period.split('-').map(Number)
     const label = new Date(year, month - 1, 1).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })

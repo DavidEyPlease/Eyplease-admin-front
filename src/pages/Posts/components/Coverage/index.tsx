@@ -50,7 +50,7 @@ const Coverage = ({
                 icon: <AlertTriangleIcon className="size-4" />,
                 tone: 'border-rose-200 bg-rose-50 text-rose-600',
                 title: `${section.name} sin publicaciones`,
-                detail: 'Sección completa vacía · no se ha lanzado este mes',
+                detail: 'Sección completa vacía · no se ha publicado este mes',
                 action: 'Publicar sección',
                 onAction: () => onPublish([section.section_key], section.artifacts),
             })

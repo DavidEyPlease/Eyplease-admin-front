@@ -1,6 +1,9 @@
 // Primitivas visuales de marca Eyplease+ (violeta → cyan).
 // Los colores y sombras viven en los tokens de index.css: brand-violet, brand-cyan,
 // bg-brand-gradient, shadow-panel, shadow-brand-glow. No hardcodear hex aquí.
+import { InfoIcon } from "lucide-react"
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/uishadcn/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 /** Tarjeta base: blanca, esquinas suaves, sombra tenue. */
@@ -26,16 +29,28 @@ interface KpiTileProps {
     sub?: React.ReactNode
     icon?: React.ReactNode
     accent?: Accent
+    /** Explica de dónde sale la métrica; se muestra en un tooltip junto a la etiqueta. */
+    hint?: string
 }
 
 /** Tile métrico: etiqueta, número grande, chip de icono, subtítulo. */
-export const KpiTile = ({ label, value, sub, icon, accent = "violet" }: KpiTileProps) => {
+export const KpiTile = ({ label, value, sub, icon, accent = "violet", hint }: KpiTileProps) => {
     const a = ACCENT[accent]
 
     return (
         <Panel className={cn("p-5 ring-1 ring-inset", a.ring)}>
             <div className="flex items-start justify-between gap-3">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{label}</span>
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                    {label}
+                    {hint && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <InfoIcon className="size-3 cursor-help opacity-60" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-64 normal-case">{hint}</TooltipContent>
+                        </Tooltip>
+                    )}
+                </span>
                 {icon && <span className={cn("flex size-9 items-center justify-center rounded-xl", a.chip)}>{icon}</span>}
             </div>
             <div className={cn("mt-3 text-3xl font-bold tracking-tight", a.text)}>{value}</div>

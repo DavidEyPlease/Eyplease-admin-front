@@ -44,7 +44,7 @@ const LaunchPanel = ({ sections, publishing, onPublish }: Props) => {
         <Panel className="overflow-hidden">
             <header className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
                 <SendIcon className="size-4 text-muted-foreground" />
-                <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Lanzar publicación</h3>
+                <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Ejecutar publicación</h3>
             </header>
 
             <div className="flex flex-col gap-3.5 p-4">

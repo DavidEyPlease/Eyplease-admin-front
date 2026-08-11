@@ -5,7 +5,7 @@ import { Badge } from '@/uishadcn/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/uishadcn/ui/tooltip'
 import { ISectionCoverage } from '@/interfaces/posts'
 import { cn } from '@/lib/utils'
-import { formatNumber, formatRelativeTime, getSectionHealth } from '../../page-utils'
+import { formatNumber, formatRelativeTime, getPublishDisabledReason, getSectionHealth } from '../../page-utils'
 
 /** Fila métrica: icono + etiqueta, barra y "hechas/total". El total SIEMPRE es posts creados. */
 const MetricRow = ({ icon, label, value, total }: { icon: React.ReactNode, label: string, value: number, total: number }) => {
@@ -38,6 +38,11 @@ const SectionCard = ({ section, publishing, onPublish }: Props) => {
     const health = getSectionHealth(section)
     const hasVideo = section.artifacts.includes('video')
     const subsections = section.subsections
+    const disabledReason = getPublishDisabledReason(section)
+    const publishHint = disabledReason
+        ?? (section.pending === null
+            ? 'Genera las piezas que falten. La cobertura de este periodo aún no se ha calculado.'
+            : `Genera las piezas que faltan (${formatNumber(section.pending)} pendientes)`)
 
     return (
         <Panel className={cn('flex flex-col gap-3 p-4 transition-shadow hover:shadow-panel-hover', health.tone !== 'ok' && 'border-amber-200/80')}>
@@ -99,10 +104,18 @@ const SectionCard = ({ section, publishing, onPublish }: Props) => {
                     <ClockIcon className="size-3 shrink-0" />
                     {formatRelativeTime(section.last_activity_at)}
                 </span>
-                <BtnPrimary className="px-3 py-1.5 text-xs" disabled={publishing} onClick={onPublish}>
-                    <SendIcon className="size-3" />
-                    Publicar
-                </BtnPrimary>
+                {/* Un botón deshabilitado no dispara eventos: el tooltip cuelga del wrapper */}
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className="shrink-0">
+                            <BtnPrimary className="px-3 py-1.5 text-xs" disabled={publishing || !!disabledReason} onClick={onPublish}>
+                                <SendIcon className="size-3" />
+                                Publicar
+                            </BtnPrimary>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-56">{publishHint}</TooltipContent>
+                </Tooltip>
             </div>
         </Panel>
     )
