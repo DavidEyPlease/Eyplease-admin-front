@@ -1,4 +1,4 @@
-import { IClient } from "@/interfaces/clients"
+import { IClientListItem } from "@/interfaces/clients"
 import { ClientsService } from "@/services/clients.service"
 import { CellContext } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
@@ -37,7 +37,7 @@ const EditablePhoneCell = ({
     row: { index, original },
     column: { id },
     table,
-}: CellContext<IClient, unknown>) => {
+}: CellContext<IClientListItem, unknown>) => {
     const rawValue = getValue()
     const { validate } = usePhoneValidation()
 

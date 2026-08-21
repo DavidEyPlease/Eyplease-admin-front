@@ -70,6 +70,8 @@ export type CodeVerificationMethods = typeof CodeVerificationMethods[keyof typeo
 
 export type HttpMethods = 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'GET'
 
+export type SortOrder = 'asc' | 'desc'
+
 export type QueryParams<T> = {
     search?: string
     filters?: Partial<T>

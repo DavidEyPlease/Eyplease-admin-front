@@ -1,54 +1,35 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/uishadcn/ui/table"
-import { getPinningClasses, getPinningStyles, isEditableColumn, useClientsTable } from "../../../hooks/useClientsTable"
+import { Skeleton } from "@/uishadcn/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { flexRender } from "@tanstack/react-table"
-import { PencilLineIcon } from "lucide-react"
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon, PencilLineIcon } from "lucide-react"
 import { tableColumns } from "./TableColumns"
-import { IClient } from "@/interfaces/clients"
+import { IClientListItem } from "@/interfaces/clients"
+import { SortOrder } from "@/interfaces/common"
+import useClientsTable from "@/pages/Clients/hooks/useClientsTable"
+import { getPinningClasses, getPinningStyles, isEditableColumn } from "@/pages/Clients/utils"
+
+const SKELETON_ROWS = 8
 
 interface ClientsTableListProps {
-    items: IClient[]
+    items: IClientListItem[]
+    isLoading?: boolean
+    sortBy: string
+    sortOrder: SortOrder
+    onSortChange: (_sortBy: string, _sortOrder: SortOrder) => void
 }
 
-const ClientsTableList = ({ items }: ClientsTableListProps) => {
-    const { table } = useClientsTable({ items })
+const SortIcon = ({ direction }: { direction: false | 'asc' | 'desc' }) => {
+    if (direction === 'asc') return <ArrowUpIcon className="size-3.5" />
+    if (direction === 'desc') return <ArrowDownIcon className="size-3.5" />
+    return <ChevronsUpDownIcon className="size-3.5 opacity-40" />
+}
+
+const ClientsTableList = ({ items, isLoading, sortBy, sortOrder, onSortChange }: ClientsTableListProps) => {
+    const { table } = useClientsTable({ items, sortBy, sortOrder, onSortChange })
 
     return (
         <div className="flex flex-col gap-4">
-            {/* <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-max">
-                        <Columns2Icon />
-                        <span className="hidden lg:inline">Customizar Columnas</span>
-                        <span className="lg:hidden">Columnas</span>
-                        <ChevronDownIcon />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                    {table
-                        .getAllColumns()
-                        .filter(
-                            (column) =>
-                                typeof column.accessorFn !== "undefined" &&
-                                column.getCanHide() && !column.getIsPinned()
-                        )
-                        .map((column) => {
-                            return (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    className="capitalize"
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) =>
-                                        column.toggleVisibility(!!value)
-                                    }
-                                    onSelect={(e) => e.preventDefault()}
-                                >
-                                    {TRANSLATE_COLUMNS[column.id as keyof typeof TRANSLATE_COLUMNS] || column.id}
-                                </DropdownMenuCheckboxItem>
-                            )
-                        })}
-                </DropdownMenuContent>
-            </DropdownMenu> */}
             <div className="overflow-x-auto rounded-lg border w-full max-w-full">
                 <Table>
                     <TableHeader className="bg-muted sticky top-0 z-10">
@@ -56,6 +37,7 @@ const ClientsTableList = ({ items }: ClientsTableListProps) => {
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     const editable = isEditableColumn(header.column.id)
+                                    const sortable = header.column.getCanSort()
 
                                     return (
                                         <TableHead
@@ -69,11 +51,19 @@ const ClientsTableList = ({ items }: ClientsTableListProps) => {
                                         >
                                             {header.isPlaceholder
                                                 ? null
-                                                : <span className="inline-flex items-center gap-1.5">
+                                                : <span
+                                                    className={cn(
+                                                        'inline-flex items-center gap-1.5',
+                                                        sortable && 'cursor-pointer select-none hover:text-foreground'
+                                                    )}
+                                                    role={sortable ? 'button' : undefined}
+                                                    onClick={sortable ? header.column.getToggleSortingHandler() : undefined}
+                                                >
                                                     {flexRender(
                                                         header.column.columnDef.header,
                                                         header.getContext()
                                                     )}
+                                                    {sortable && <SortIcon direction={header.column.getIsSorted()} />}
                                                     {editable && (
                                                         <span
                                                             title="Columna editable"
@@ -95,7 +85,31 @@ const ClientsTableList = ({ items }: ClientsTableListProps) => {
                             "**:data-[slot=table-cell]:first:w-8"
                         )}
                     >
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            Array.from({ length: SKELETON_ROWS }).map((_, rowIndex) => (
+                                <TableRow key={`skeleton-${rowIndex}`}>
+                                    {table.getVisibleLeafColumns().map((column) => (
+                                        <TableCell
+                                            key={column.id}
+                                            className={cn('p-4', getPinningClasses(column))}
+                                            style={getPinningStyles(column)}
+                                        >
+                                            {column.id === 'account' ? (
+                                                <div className="flex gap-x-2 items-center">
+                                                    <Skeleton className="size-10 rounded-full shrink-0" />
+                                                    <div className="flex flex-col gap-1.5 w-full">
+                                                        <Skeleton className="h-3.5 w-3/4" />
+                                                        <Skeleton className="h-3 w-1/2" />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <Skeleton className="h-4 w-full" />
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => {
                                 const planColor = row.original.user?.plan?.color
                                 return (
@@ -113,7 +127,7 @@ const ClientsTableList = ({ items }: ClientsTableListProps) => {
                                                 <TableCell
                                                     key={cell.id}
                                                     className={cn(
-                                                        'p-4',
+                                                        'p-3',
                                                         getPinningClasses(cell.column),
                                                     )}
                                                     style={{

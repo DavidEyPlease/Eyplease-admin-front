@@ -32,7 +32,10 @@ export interface IClient {
     promotion: ClientPromotion | null
 }
 
-export type IClientListItem = IClient
+export type IClientListItem = IClient & {
+    current_month_points: number
+    previous_month_points: number
+}
 
 export interface IBasicClient {
     id: string

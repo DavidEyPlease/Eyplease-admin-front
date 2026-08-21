@@ -1,9 +1,9 @@
 import FadeInGrid from "@/components/generics/FadeInGrid"
 import { ClientCard } from "./ClientCard"
-import { IClient } from "@/interfaces/clients"
+import { IClientListItem } from "@/interfaces/clients"
 
 interface IClientsGridListProps {
-    items: IClient[]
+    items: IClientListItem[]
 }
 
 const ClientsGridList = ({ items }: IClientsGridListProps) => {

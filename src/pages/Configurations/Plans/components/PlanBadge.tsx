@@ -10,7 +10,7 @@ const PlanBadge = ({ plan }: PlanBadgeProps) => {
     return (
         <Badge
             variant={plan ? "default" : "secondary"}
-            className={cn(plan ? 'text-white' : '', 'hover:not-hover:')}
+            className={cn('w-max text-[10px]', plan ? 'text-white' : '', 'hover:not-hover:')}
             style={{
                 backgroundColor: plan?.color
             }}

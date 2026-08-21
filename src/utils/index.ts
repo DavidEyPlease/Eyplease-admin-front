@@ -85,3 +85,6 @@ export const setVariablesInString = (str: string, variables: Record<string, stri
     // Replace ${variable} in the string with the corresponding value from the variables object
     return str.replace(/\${([^}]*)}/g, (r, k) => variables[k] || '')
 }
+
+export const formatPoints = (value: number | null | undefined) =>
+    Number.isFinite(value) ? (value as number).toLocaleString('es-MX') : '0'

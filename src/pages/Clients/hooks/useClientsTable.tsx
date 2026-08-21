@@ -1,104 +1,68 @@
-import { cn } from "@/lib/utils"
-import { Column, ColumnDef, ColumnFiltersState, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table"
-import { CSSProperties, useEffect, useMemo, useState } from "react"
+import { ColumnDef, ColumnFiltersState, OnChangeFn, SortingState, getCoreRowModel, getFilteredRowModel, useReactTable } from "@tanstack/react-table"
+import { useEffect, useMemo, useState } from "react"
 import { tableColumns } from "../List/components/Table/TableColumns"
-import { IClient } from "@/interfaces/clients"
+import { IClientListItem } from "@/interfaces/clients"
+import { SortOrder } from "@/interfaces/common"
 import EditableTextCell from "../List/components/Table/EditableTextCell"
 import EditablePhoneCell from "../List/components/Table/EditablePhoneCell"
+import { COLUMN_BY_SORT_FIELD, DESC_FIRST_COLUMNS, EDITABLE_COLUMN_IDS, SORT_FIELD_BY_COLUMN, isSortableColumn } from "../utils"
 
 interface UseClientsTableProps {
-    items: IClient[]
+    items: IClientListItem[]
+    sortBy: string
+    sortOrder: SortOrder
+    onSortChange: (_sortBy: string, _sortOrder: SortOrder) => void
 }
-
 declare module "@tanstack/react-table" {
     interface TableMeta<TData> {
         updateData: (rowIndex: number, columnId: string, value: unknown) => void
     }
 }
 
-const EDITABLE_COLUMN_IDS = new Set([
-    'accountPw',
-    'phone',
-    'guestAccount',
-])
 
-const TRANSLATE_COLUMNS = {
-    accountPw: 'Contraseña de Cuenta',
-    guestAccount: 'Cuenta de Invitado',
-    status: 'Estado',
-    plan: 'Plan',
-    email: 'Correo Electrónico',
-    createdAt: 'Fecha de Creación',
-    lastSignInAt: 'Último Inicio de Sesión',
-}
-
-const isEditableColumn = (columnId: string) => EDITABLE_COLUMN_IDS.has(columnId)
-
-const getPinningClasses = (column: Column<IClient>): string => {
-    const isPinned = column.getIsPinned()
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left')
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right')
-
-    const baseClasses = 'transition-colors duration-200'
-
-    if (!isPinned) {
-        return baseClasses
-    }
-
-    // Clases para columnas pineadas
-    const pinnedClasses = cn(
-        'sticky',
-        // 'bg-muted/90 dark:bg-muted/60',
-        'font-semibold',
-        'shadow-sm',
-        baseClasses,
-        isLastLeftPinnedColumn && 'shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.3)]',
-        isFirstRightPinnedColumn && 'shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.3)]',
-    )
-
-    return pinnedClasses
-}
-
-const getPinningStyles = (column: Column<IClient>): CSSProperties => {
-    const isPinned = column.getIsPinned()
-
-    return {
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        width: column.getSize(),
-        minWidth: column.getSize(),
-        maxWidth: column.getSize(),
-        zIndex: isPinned ? 10 : 0,
-    }
-}
-
-const useClientsTable = ({ items }: UseClientsTableProps) => {
-    const [tableData, setTableData] = useState<IClient[]>(items)
+const useClientsTable = ({ items, sortBy, sortOrder, onSortChange }: UseClientsTableProps) => {
+    const [tableData, setTableData] = useState<IClientListItem[]>(items)
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-    const columnsWithEditing: ColumnDef<IClient>[] = useMemo(() => {
+    const columnsWithEditing: ColumnDef<IClientListItem>[] = useMemo(() => {
         return tableColumns.map((column) => {
             const accessorKey = 'accessorKey' in column ? column.accessorKey : undefined
             const columnId = String(column.id ?? accessorKey ?? '')
 
-            if (!EDITABLE_COLUMN_IDS.has(columnId)) {
-                return column
-            }
-
             return {
                 ...column,
-                cell: columnId === 'phone' ? EditablePhoneCell : EditableTextCell,
+                enableSorting: isSortableColumn(columnId),
+                sortDescFirst: DESC_FIRST_COLUMNS.has(columnId),
+                ...(EDITABLE_COLUMN_IDS.has(columnId) && {
+                    cell: columnId === 'phone' ? EditablePhoneCell : EditableTextCell,
+                }),
             }
         })
     }, [])
 
+    const sorting: SortingState = useMemo(() => (
+        sortBy ? [{ id: COLUMN_BY_SORT_FIELD[sortBy] ?? sortBy, desc: sortOrder === 'desc' }] : []
+    ), [sortBy, sortOrder])
+
+    const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+        const [nextSort] = typeof updater === 'function' ? updater(sorting) : updater
+
+        if (!nextSort) {
+            onSortChange('', 'asc')
+            return
+        }
+
+        onSortChange(SORT_FIELD_BY_COLUMN[nextSort.id] ?? nextSort.id, nextSort.desc ? 'desc' : 'asc')
+    }
+
     const table = useReactTable({
         data: tableData,
         columns: columnsWithEditing,
+        manualSorting: true,
+        enableSortingRemoval: false,
         state: {
-            columnFilters
+            columnFilters,
+            sorting
         },
         meta: {
             updateData: (rowIndex, columnId, value) => {
@@ -122,8 +86,8 @@ const useClientsTable = ({ items }: UseClientsTableProps) => {
             }
         },
         onColumnFiltersChange: setColumnFilters,
+        onSortingChange: handleSortingChange,
         getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
     })
 
@@ -137,10 +101,4 @@ const useClientsTable = ({ items }: UseClientsTableProps) => {
     }
 }
 
-export {
-    getPinningClasses,
-    getPinningStyles,
-    useClientsTable,
-    isEditableColumn,
-    TRANSLATE_COLUMNS
-}
+export default useClientsTable

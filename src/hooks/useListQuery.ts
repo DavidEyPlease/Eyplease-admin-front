@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { QueryKey } from '@tanstack/react-query'
 
 import useFetchQuery from './useFetchQuery';
-import { JSONValue } from '@/interfaces/common';
+import { JSONValue, SortOrder } from '@/interfaces/common';
 
 type UseListInitResult<T, F> = {
     response: T | undefined;
@@ -11,7 +11,8 @@ type UseListInitResult<T, F> = {
     page: number;
     search: string;
     error: Error | null;
-    orderBy: string;
+    sortBy: string;
+    sortOrder: SortOrder;
     perPage: number;
     // sort: SortDirectionTypes;
     filters: Partial<F>;
@@ -21,7 +22,7 @@ type UseListInitResult<T, F> = {
     setSearch: (_query: string) => void;
     onApplyFilters: (_values: Partial<F>) => void;
     onChangePage: (_page: number) => void;
-    setSortBy: (_sortBy: string) => void;
+    onSortChange: (_sortBy: string, _sortOrder: SortOrder) => void;
     fetchRetry: () => void;
     setPerPage: (_perPage: number) => void;
     onSelectedFilter: (_key: string, _value: JSONValue) => void
@@ -34,7 +35,8 @@ type UseListInitParams<F = unknown> = {
     defaultPerPage?: number
     defaultSearch?: string;
     defaultPage?: number;
-    sortActive?: string;
+    defaultSortBy?: string;
+    defaultSortOrder?: SortOrder;
     customQueryKey?: QueryKey | ((params: any) => QueryKey)
     defaultFilters?: F extends object ? Partial<F> : never;
     staleTime?: number
@@ -46,7 +48,8 @@ type UseListInitParams<F = unknown> = {
 
 const useListQuery = <T, F = unknown>({
     endpoint,
-    sortActive = '',
+    defaultSortBy = '',
+    defaultSortOrder = 'asc',
     defaultPerPage = 15,
     defaultSearch = '',
     defaultPage = 1,
@@ -63,11 +66,12 @@ const useListQuery = <T, F = unknown>({
     const [perPage, setPerPage] = useState(defaultPerPage)
     const [filters, setFilters] = useState<Partial<F>>(defaultFilters || {})
     const [selectedFilters, setSelectedFilters] = useState<Partial<F>>({})
-    const [orderBy, setSortBy] = useState(sortActive)
+    const [sortBy, setSortBy] = useState(defaultSortBy)
+    const [sortOrder, setSortOrder] = useState<SortOrder>(defaultSortOrder)
 
     const queryParams = useMemo(() => {
-        return { search, page, perPage, orderBy, ...filters }
-    }, [search, page, perPage, orderBy, filters])
+        return { search, page, perPage, ...(sortBy && { sort_by: sortBy, sort_order: sortOrder }), ...filters }
+    }, [search, page, perPage, sortBy, sortOrder, filters])
 
     const generatedQueryKey = useMemo(() => {
         if (typeof customQueryKey === 'function') return customQueryKey(queryParams)
@@ -121,6 +125,12 @@ const useListQuery = <T, F = unknown>({
         setPage(1)
     }
 
+    const onSortChange = (newSortBy: string, newSortOrder: SortOrder) => {
+        setSortBy(newSortBy)
+        setSortOrder(newSortOrder)
+        setPage(1)
+    }
+
     const onSelectedFilter = (key: string, value: JSONValue) => setSelectedFilters(prev => ({ ...prev, [key]: value }))
     const onChangeFilter = (key: string, value: JSONValue) => setFilters({ ...selectedFilters, [key]: value })
 
@@ -130,7 +140,8 @@ const useListQuery = <T, F = unknown>({
         isLoading,
         error,
         page,
-        orderBy,
+        sortBy,
+        sortOrder,
         search,
         perPage,
         selectedFilters,
@@ -142,7 +153,7 @@ const useListQuery = <T, F = unknown>({
         setSearch: handleSearch,
         onChangePage: setPage,
         onSelectedFilter,
-        setSortBy,
+        onSortChange,
         cleanSelectedFilters,
         onChangeFilter
     }

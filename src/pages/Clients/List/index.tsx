@@ -1,7 +1,6 @@
 import { API_ROUTES } from "@/constants/api";
 import { ClientFilterKeys, IClientListItem } from "@/interfaces/clients";
 import { PaginationResponse } from "@/interfaces/common";
-import PageLoader from "@/components/generics/PageLoader";
 import ClientsMetrics from "./Metrics";
 import useListQuery from "@/hooks/useListQuery";
 import { queryKeys } from "@/utils/queryKeys";
@@ -11,13 +10,10 @@ import { CLIENTS_FILTER_ITEMS } from "./page-utils";
 import useAuthStore from "@/store/auth";
 import { FilterTypes } from "@/components/generics/FiltersAndSearch/types";
 import Button from "@/components/common/Button";
-import { BellIcon, GridIcon, PlusIcon, TableIcon } from "lucide-react";
+import { BellIcon, PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { APP_ROUTES } from "@/constants/app";
-import ClientsGridList from "./components/GridList";
-import { useHeaderActions } from "@/providers/HeaderActionsProvider";
-import { useEffect, useState } from "react";
-import DynamicTabs from "@/components/generics/DynamicTabs";
+import { useState } from "react";
 import ClientsTableList from "./components/Table";
 import FabButton from "@/components/generics/FabButton";
 import SendPushNotificationModal from "./components/SendPushNotificationModal";
@@ -25,10 +21,8 @@ import SendPushNotificationModal from "./components/SendPushNotificationModal";
 const ClientsListPage = () => {
     const navigate = useNavigate()
 
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('table')
     const [showNotificationModal, setShowNotificationModal] = useState(false)
     const { utilData } = useAuthStore(state => state)
-    const { setHeaderActions } = useHeaderActions();
 
     const {
         selectedFilters,
@@ -37,6 +31,9 @@ const ClientsListPage = () => {
         perPage,
         page,
         onChangePage,
+        sortBy,
+        sortOrder,
+        onSortChange,
         setPerPage,
         setSearch,
         onApplyFilters,
@@ -44,21 +41,10 @@ const ClientsListPage = () => {
         cleanSelectedFilters,
     } = useListQuery<PaginationResponse<IClientListItem>>({
         endpoint: API_ROUTES.CLIENTS.LIST,
+        defaultSortBy: 'previous_month_points',
+        defaultSortOrder: 'desc',
         customQueryKey: (params) => queryKeys.list('clients/list', params)
     })
-
-    useEffect(() => {
-        setHeaderActions(
-            <DynamicTabs
-                value={viewMode}
-                onValueChange={e => setViewMode(e as 'grid' | 'table')}
-                items={[
-                    { label: 'Tarjetas', value: 'grid', icon: <GridIcon /> },
-                    { label: 'Tabla', value: 'table', icon: <TableIcon /> },
-                ]}
-            />
-        )
-    }, [setHeaderActions, viewMode])
 
     const filterList = CLIENTS_FILTER_ITEMS.map(i => {
         if (i.id === 'plan' && i.type === FilterTypes.SELECT) {
@@ -98,27 +84,23 @@ const ClientsListPage = () => {
                     onClick={() => navigate(APP_ROUTES.CLIENTS.CREATE)}
                 />
             </div>
-            {
-                isLoading ? (
-                    <PageLoader />
-                ) : (
-                    <div className="space-y-4">
-                        {viewMode === 'table' ? (
-                            <ClientsTableList items={response?.items || []} />
-                        ) : (
-                            <ClientsGridList items={response?.items || []} />
-                        )}
-                        <UIPagination
-                            totalPages={response?.last_page || 0}
-                            perPage={perPage || 15}
-                            pending={isLoading}
-                            page={page || 1}
-                            onChangePage={onChangePage}
-                            onChangePerPage={setPerPage}
-                        />
-                    </div>
-                )
-            }
+            <div className="space-y-4">
+                <ClientsTableList
+                    items={response?.items || []}
+                    isLoading={isLoading}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSortChange={onSortChange}
+                />
+                <UIPagination
+                    totalPages={response?.last_page || 0}
+                    perPage={perPage || 15}
+                    pending={isLoading}
+                    page={page || 1}
+                    onChangePage={onChangePage}
+                    onChangePerPage={setPerPage}
+                />
+            </div>
             <FabButton
                 icon={<BellIcon className="h-5 w-5" />}
                 onClick={() => setShowNotificationModal(true)}
