@@ -42,14 +42,24 @@ export const tableColumns: ColumnDef<IClientListItem>[] = [
         size: 120,
         accessorKey: 'previous_month_points',
         header: 'MP',
-        cell: ({ row }) => <span className="tabular-nums">{formatPoints(row.original.previous_month_points)}</span>
+        cell: ({ row }) => (
+            <div className="flex flex-col">
+                <span className="tabular-nums">{formatPoints(row.original.previous_month_points)}</span>
+                <span className="text-xs font-bold tabular-nums text-primary dark:text-white">{formatPoints(row.original.client_previous_month_points)}</span>
+            </div>
+        )
     },
     {
         id: 'current_month_points',
         size: 120,
         accessorKey: 'current_month_points',
         header: 'MA',
-        cell: ({ row }) => <span className="tabular-nums">{formatPoints(row.original.current_month_points)}</span>
+        cell: ({ row }) => (
+            <div className="flex flex-col">
+                <span className="tabular-nums">{formatPoints(row.original.current_month_points)}</span>
+                <span className="text-xs font-bold tabular-nums text-primary dark:text-white">{formatPoints(row.original.client_current_month_points)}</span>
+            </div>
+        )
     },
     {
         id: 'guestAccount',

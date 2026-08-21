@@ -35,6 +35,8 @@ export interface IClient {
 export type IClientListItem = IClient & {
     current_month_points: number
     previous_month_points: number
+    client_current_month_points: number
+    client_previous_month_points: number
 }
 
 export interface IBasicClient {
