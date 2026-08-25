@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { Panel, HeroTile, KpiTile } from "./ui"
 import { useReportSummary, useEarlyDaily, useSectionMissing, SummarySection, MissingClient } from "../useReports"
-import { periodLabel, fmtDateTime } from "../reports.constants"
+import { periodLabel, fmtDateTime, statusMeta } from "../reports.constants"
 import useReportUpload from "@/hooks/useReportUpload"
 import UploadErrorFeedback from "@/pages/NewsletterReports/components/UploadErrorFeedback"
 import { queryKeys } from "@/utils/queryKeys"
@@ -95,11 +95,12 @@ const SummaryTab = ({ period }: { period: string }) => {
 
     return (
         <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 <HeroTile label="Avance del mes" value={kpis ? `${kpis.avance_pct}%` : "—"} sub="Reportes cargados correctamente" />
                 <KpiTile label="Clientes con boletín" value={loading ? "…" : kpis?.entitled_clients ?? "—"} sub="Básico, Ejecutivo, Elite y Nacional" accent="violet" />
                 <KpiTile label="Faltantes" value={loading ? "…" : kpis?.missing ?? "—"} sub={`reportes sin cargar en ${periodLabel(period)}`} accent="rose" />
                 <KpiTile label="Rechazados" value={loading ? "…" : kpis?.rejected ?? "—"} sub={`subidas con error en ${periodLabel(period)}`} accent="rose" />
+                <KpiTile label="Sin datos" value={loading ? "…" : kpis?.empty ?? "—"} sub={`cargados sin registros en ${periodLabel(period)}`} accent="sky" />
             </div>
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -164,6 +165,7 @@ const SummaryTab = ({ period }: { period: string }) => {
                                     {missingList.map((m) => {
                                         const uploading = uploadingUserId === m.user_id
                                         const busy = uploadingUserId !== null
+                                        const badge = statusMeta(m.status)
                                         return (
                                             <li key={m.user_id} className="flex items-center justify-between gap-3 py-2">
                                                 <div className="min-w-0">
@@ -171,8 +173,8 @@ const SummaryTab = ({ period }: { period: string }) => {
                                                     <div className="text-[11px] text-slate-400">{m.account}</div>
                                                 </div>
                                                 <div className="flex shrink-0 items-center gap-2">
-                                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${m.status === "failed" ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-500"}`}>
-                                                        {m.status === "failed" ? "Rechazado" : "Falta"}
+                                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${badge.pill}`}>
+                                                        {badge.label}
                                                     </span>
                                                     <label
                                                         className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold text-white transition ${busy ? "cursor-not-allowed opacity-50" : "hover:brightness-95"}`}

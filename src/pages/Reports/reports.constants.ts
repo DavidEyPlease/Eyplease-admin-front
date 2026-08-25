@@ -3,11 +3,16 @@
 
 export const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
-export type CellStatus = "completed" | "failed" | "processing" | "missing" | "na" | string
+export type CellStatus = "completed" | "empty" | "failed" | "processing" | "missing" | "na" | string
+
+/** Único estado que cuenta como reporte cargado con datos (el resto queda pendiente). */
+export const STATUS_LOADED = "completed"
 
 export const statusMeta = (s: CellStatus): { label: string; pill: string; dot: string } => {
     switch ((s || "").toLowerCase()) {
         case "completed": return { label: "Subido", pill: "bg-emerald-50 text-emerald-600", dot: "bg-emerald-500" }
+        // Subido pero sin registros: hay que volver a cargarlo.
+        case "empty": return { label: "Sin datos", pill: "bg-sky-50 text-sky-600", dot: "bg-sky-400" }
         case "failed": return { label: "Rechazado", pill: "bg-rose-50 text-rose-600", dot: "bg-rose-500" }
         case "processing": return { label: "Procesando", pill: "bg-amber-50 text-amber-600", dot: "bg-amber-400" }
         case "missing": return { label: "Falta", pill: "bg-slate-100 text-slate-500", dot: "bg-slate-200" }
@@ -18,6 +23,7 @@ export const statusMeta = (s: CellStatus): { label: string; pill: string; dot: s
 const ERROR_DECODE: Record<string, string> = {
     cross_user_validation: "Datos de otra consultora (validación cruzada). El Excel no corresponde a este cliente.",
     invalid_report_headings: "Encabezados del Excel inválidos. Las columnas no coinciden con la plantilla esperada.",
+    empty_report: "El reporte se cargó pero está vacío: no contiene datos que registrar.",
 }
 export const decodeError = (code: string | null): string => (code && ERROR_DECODE[code]) || code || "Error no especificado"
 

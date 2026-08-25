@@ -2,10 +2,11 @@ import { useMemo, useState } from "react"
 
 import { Panel } from "./ui"
 import { useClientsStatus, ClientStatus } from "../useReports"
-import { statusMeta } from "../reports.constants"
+import { statusMeta, STATUS_LOADED } from "../reports.constants"
 
 const LEGEND = [
     { c: "bg-emerald-500", t: "Subido" },
+    { c: "bg-sky-400", t: "Sin datos" },
     { c: "bg-rose-500", t: "Rechazado" },
     { c: "bg-amber-400", t: "Procesando" },
     { c: "bg-slate-200", t: "Falta" },
@@ -45,7 +46,8 @@ const MatrixTab = ({ period }: { period: string }) => {
         const matchesView = (c: ClientStatus) => {
             if (view === "all") return true
             const entitled = cols.filter((s) => c.cells[s.section_key] !== undefined)
-            const hasPending = entitled.some((s) => ["missing", "failed", "processing"].includes(c.cells[s.section_key]))
+            // Solo "completed" cuenta como cargado: vacío, rechazado, procesando y falta son pendientes.
+            const hasPending = entitled.some((s) => c.cells[s.section_key] !== STATUS_LOADED)
             return view === "pending" ? hasPending : entitled.length > 0 && !hasPending
         }
         return clients.filter(

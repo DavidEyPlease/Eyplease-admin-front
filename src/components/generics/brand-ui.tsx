@@ -13,13 +13,14 @@ export const Panel = ({ className, children }: { className?: string; children: R
     </div>
 )
 
-type Accent = "violet" | "rose" | "emerald" | "amber" | "slate"
+type Accent = "violet" | "rose" | "emerald" | "amber" | "sky" | "slate"
 
 const ACCENT: Record<Accent, { chip: string; text: string; ring: string }> = {
     violet: { chip: "bg-brand-violet-soft text-brand-violet", text: "text-brand-violet", ring: "ring-brand-violet/15" },
     rose: { chip: "bg-rose-50 text-rose-600", text: "text-rose-600", ring: "ring-rose-500/15" },
     emerald: { chip: "bg-emerald-50 text-emerald-600", text: "text-emerald-600", ring: "ring-emerald-500/15" },
     amber: { chip: "bg-amber-50 text-amber-600", text: "text-amber-600", ring: "ring-amber-500/15" },
+    sky: { chip: "bg-sky-50 text-sky-600", text: "text-sky-600", ring: "ring-sky-500/15" },
     slate: { chip: "bg-muted text-muted-foreground", text: "text-foreground", ring: "ring-border" },
 }
 

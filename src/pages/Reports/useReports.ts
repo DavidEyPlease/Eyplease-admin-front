@@ -23,6 +23,8 @@ export interface SummaryKpis {
     total_done: number
     missing: number
     rejected: number
+    /** Subidas procesadas sin registros (no cuentan como cargadas). */
+    empty: number
 }
 
 export interface ReportSummary {
@@ -34,7 +36,7 @@ export interface MissingClient {
     user_id: string
     name: string
     account: string
-    status: "missing" | "failed"
+    status: "missing" | "failed" | "empty"
     last_upload_at: string | null
 }
 
