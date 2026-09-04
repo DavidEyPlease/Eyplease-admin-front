@@ -186,6 +186,7 @@ export const DATA_KEY_OPTIONS: DataKeyOption[] = [
     { value: "missing_points", label: "Puntos faltantes" },
     { value: "missing_next_points", label: "Puntos siguientes faltantes" },
     { value: "birthday", label: "Fecha cumpleaños" },
+    { value: "anniversaries", label: "Aniversarios" },
 ];
 
 // Cuadro de honor: reina, princesa y segunda princesa (foto/nombre/puntos).
