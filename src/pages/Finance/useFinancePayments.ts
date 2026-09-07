@@ -6,7 +6,7 @@ import useFetchQuery from "@/hooks/useFetchQuery"
 import { PaymentMethod, PaymentRecord, PaymentSource, PaymentStatus } from "@/interfaces/finance"
 import { queryKeys } from "@/utils/queryKeys"
 
-const PAYMENTS_ENTITY = "finance-payments"
+export const PAYMENTS_ENTITY = "finance-payments"
 
 /** Paginated envelope + filter-wide aggregate totals (computed server-side). */
 type PaymentsPageResponse = PaginationResponse<ApiPaymentRecord> & {

@@ -2,7 +2,7 @@
 
 import { DiscountType } from "./promotion"
 
-export type PaymentStatus = "paid" | "partial" | "overdue" | "pending" | null
+export type PaymentStatus = "paid" | "in_review" | "partial" | "overdue" | "pending" | null
 
 export interface MonthlyPayment {
     /** Monto esperado del periodo (precio del paquete / cuota). */
@@ -10,6 +10,10 @@ export interface MonthlyPayment {
     /** Suma de abonos registrados para el periodo (pagos parciales). */
     paid?: number | null
     status: PaymentStatus
+    /** Comprobante subido por el cliente (URL temporal firmada) y sus datos. */
+    receiptUrl?: string | null
+    referenceNumber?: string | null
+    receiptUploadedAt?: string | null
 }
 
 /** Per-client applied promotion snapshot (kept in snake_case from the API). */
@@ -42,11 +46,33 @@ export interface FinanceClient {
     phone?: string | null
     /** Applied promotion snapshot, or null when the client has none. */
     promotion: FinanceClientPromotion | null
+    /** Next charge resolved by the API ('YYYY-MM-DD'): skips months paid ahead. */
+    nextChargeDate: string | null
+    /** What that next charge will cost (plan price minus the discount in force). */
+    nextChargeAmount: number | null
     /** Payments keyed by period 'YYYY-MM'. */
     payments: Record<string, MonthlyPayment>
 }
 
-export type PaymentSource = "manual" | "whatsapp_bot" | "stripe" | "import" | "system"
+export type PaymentSource = "manual" | "client" | "whatsapp_bot" | "stripe" | "import" | "system"
+
+/** Estado de cobro que filtra la lista de Cobranza (la API conoce la composición de cada uno). */
+export type CollectionStatus = "collectable" | "overdue" | "pending" | "in_review" | "paid"
+
+export const COLLECTION_STATUS_LABELS: Record<CollectionStatus, string> = {
+    collectable: "Por cobrar",
+    overdue: "En retraso",
+    pending: "Por vencer",
+    in_review: "En revisión",
+    paid: "Pagados",
+}
+
+export const COLLECTION_STATUS_OPTIONS = (Object.keys(COLLECTION_STATUS_LABELS) as CollectionStatus[]).map(
+    (value) => ({ value, label: COLLECTION_STATUS_LABELS[value] })
+)
+
+/** Decisión del admin sobre un comprobante subido por el cliente. */
+export type ReceiptDecision = "approve" | "reject"
 export type PaymentMethod = "stripe" | "transfer" | "card" | "cash"
 
 // ---- Payment methods management (Finanzas > Métodos de pago) ----
@@ -120,6 +146,7 @@ export interface PaymentRecord {
 /** Display labels (UI is in Spanish; the stored values stay in English). */
 export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string> = {
     paid: "Pagado",
+    in_review: "En revisión",
     partial: "Parcial",
     overdue: "Vencido",
     pending: "Pendiente",
@@ -127,6 +154,7 @@ export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string>
 
 export const PAYMENT_SOURCE_LABELS: Record<PaymentSource, string> = {
     manual: "Manual",
+    client: "Cliente",
     whatsapp_bot: "WhatsApp",
     stripe: "Stripe",
     import: "Importado",

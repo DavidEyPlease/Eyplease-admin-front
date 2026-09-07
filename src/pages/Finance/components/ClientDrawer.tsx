@@ -1,16 +1,20 @@
-import { CalendarClockIcon, PhoneIcon } from "lucide-react"
+import { CalendarClockIcon, FileTextIcon, PhoneIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import SideModal from "@/components/common/SideModal"
 import Spinner from "@/components/common/Spinner"
-import { formatChargeDate, formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
+import { PaymentStatus } from "@/interfaces/finance"
+import { formatDueDate, formatMoney, periodLabel, periodsForYear } from "@/utils/finance"
 import { MarkPaymentInput, useFinanceClient, useMarkPayment } from "../useFinanceClients"
 import { StatusPill } from "./ui"
 
-const STATUS_OPTIONS: { value: MarkPaymentInput["status"]; label: string }[] = [
+// "En revisión" only displays: it is set by the client's receipt upload and
+// resolved from Cobranza (Validar / Rechazar), never picked by hand.
+const STATUS_OPTIONS: { value: Exclude<PaymentStatus, null>; label: string; disabled?: boolean }[] = [
     { value: "paid", label: "Pagado" },
     { value: "overdue", label: "Retraso" },
     { value: "pending", label: "Pendiente" },
+    { value: "in_review", label: "En revisión", disabled: true },
 ]
 const APP_STATUS_LABELS: Record<string, string> = { active: "Activo", inactive: "Inactivo" }
 
@@ -65,7 +69,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                         <Row label="Día de pago">{client.paymentDay ?? "—"}</Row>
                         <Row label="Próximo cobro">
                             <span className="inline-flex items-center gap-1.5 text-[#5B47E0]">
-                                <CalendarClockIcon className="h-4 w-4" /> {formatChargeDate(client.paymentDay)}
+                                <CalendarClockIcon className="h-4 w-4" /> {formatDueDate(client.nextChargeDate)}
                             </span>
                         </Row>
                         <Row label="Saldo">
@@ -113,6 +117,11 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                                 className="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-right text-slate-800 outline-none hover:border-slate-200 focus:border-[#5B47E0] focus:bg-white"
                                             />
                                         </div>
+                                        {p?.receiptUrl && (
+                                            <a href={p.receiptUrl} target="_blank" rel="noreferrer" title="Ver comprobante" className="shrink-0 text-[#5B47E0] hover:opacity-80">
+                                                <FileTextIcon className="h-4 w-4" />
+                                            </a>
+                                        )}
                                         <select
                                             value={p?.status ?? ""}
                                             onChange={(e) => onStatusChange(period, e.target.value)}
@@ -120,7 +129,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                         >
                                             <option value="">—</option>
                                             {STATUS_OPTIONS.map((o) => (
-                                                <option key={o.value} value={o.value ?? ""}>{o.label}</option>
+                                                <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>
                                             ))}
                                         </select>
                                     </div>

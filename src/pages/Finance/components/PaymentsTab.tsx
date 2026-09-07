@@ -25,6 +25,7 @@ const YEARS = [2026, 2027]
 const SOURCE_TONE: Record<PaymentSource, string> = {
     stripe: "bg-violet-50 text-violet-600",
     manual: "bg-slate-100 text-slate-500",
+    client: "bg-[#EEEBFC] text-[#5B47E0]",
     whatsapp_bot: "bg-emerald-50 text-emerald-600",
     import: "bg-sky-50 text-sky-600",
     system: "bg-amber-50 text-amber-600",

@@ -1,3 +1,5 @@
+import { toLocalDateFromUtc } from "@/utils/dates"
+
 /** Spanish display labels, indexed 0-11 (UI copy). */
 export const MONTH_LABELS = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -30,22 +32,17 @@ export const formatMoney = (n: number | null | undefined) =>
 export const formatPct = (n: number | null | undefined) =>
     Number.isFinite(n) ? `${Math.round(n as number)}%` : "—"
 
-/** Next charge date from a client's payment day (1-31): the upcoming occurrence from today. */
-export const nextChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): Date | null => {
-    if (!paymentDay || paymentDay < 1 || paymentDay > 31) return null
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    let d = new Date(now.getFullYear(), now.getMonth(), paymentDay)
-    if (d.getTime() < today.getTime()) d = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay)
-    return d
-}
+const dueDateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" })
 
-const chargeDateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" })
+/**
+ * Human due date from an API date 'YYYY-MM-DD': "5 ago" (or "—"). Parsed as a
+ * calendar date, not as UTC midnight, so it never slips a day west of UTC.
+ */
+export const formatDueDate = (isoDate: string | null | undefined): string =>
+    isoDate ? dueDateFmt.format(toLocalDateFromUtc(isoDate)) : "—"
 
-/** Human next charge date: "5 ago" (or "—"). */
-export const formatChargeDate = (paymentDay: number | null | undefined, now: Date = new Date()): string => {
-    const d = nextChargeDate(paymentDay, now)
-    return d ? chargeDateFmt.format(d) : "—"
-}
+/** Period 'YYYY-MM' of an API date 'YYYY-MM-DD'. */
+export const periodOf = (isoDate: string) => isoDate.slice(0, 7)
 
 // ---- Pagos parciales / abonos ----
 

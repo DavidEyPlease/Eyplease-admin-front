@@ -88,32 +88,42 @@ export const PanelHeader = ({ title, desc, action }: { title: string; desc?: str
 /** Payment status pill with soft colors. */
 const STATUS_PILL_LABELS: Record<string, string> = {
     paid: "Pagado",
+    in_review: "En revisión",
     partial: "Parcial",
     overdue: "Retraso",
     pending: "Pendiente",
 }
 
-export const StatusPill = ({ status }: { status: string | null | undefined }) => {
-    const s = status ?? ""
-    const map = s === "paid"
-        ? "bg-emerald-50 text-emerald-600"
-        : s === "partial"
-            ? "bg-sky-50 text-sky-600"
-            : s === "overdue"
-                ? "bg-rose-50 text-rose-600"
-                : s === "pending"
-                    ? "bg-amber-50 text-amber-600"
-                    : "bg-slate-100 text-slate-400"
-    const label = STATUS_PILL_LABELS[s] ?? "—"
-    return <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", map)}>{label}</span>
+const STATUS_PILL_TONE: Record<string, string> = {
+    paid: "bg-emerald-50 text-emerald-600",
+    in_review: "bg-[#EEEBFC] text-[#5B47E0]",
+    partial: "bg-sky-50 text-sky-600",
+    overdue: "bg-rose-50 text-rose-600",
+    pending: "bg-amber-50 text-amber-600",
 }
 
-/** Small pill for an overdue month. */
-export const MonthChip = ({ children, tone = "rose" }: { children: React.ReactNode; tone?: "rose" | "amber" }) => (
-    <span className={cn(
-        "inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium",
-        tone === "rose" ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
-    )}>
+export const StatusPill = ({ status }: { status: string | null | undefined }) => {
+    const s = status ?? ""
+    return (
+        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_PILL_TONE[s] ?? "bg-slate-100 text-slate-400")}>
+            {STATUS_PILL_LABELS[s] ?? "—"}
+        </span>
+    )
+}
+
+/** Same palette as the status pill, so a month reads the same everywhere. */
+export type ChipTone = "rose" | "amber" | "sky" | "violet"
+
+const CHIP_TONE: Record<ChipTone, string> = {
+    rose: "bg-rose-50 text-rose-600",
+    amber: "bg-amber-50 text-amber-600",
+    sky: "bg-sky-50 text-sky-600",
+    violet: "bg-[#EEEBFC] text-[#5B47E0]",
+}
+
+/** Small pill for a month in the collections list. */
+export const MonthChip = ({ children, tone = "rose" }: { children: React.ReactNode; tone?: ChipTone }) => (
+    <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium", CHIP_TONE[tone])}>
         {children}
     </span>
 )

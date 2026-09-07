@@ -134,6 +134,7 @@ export const API_ROUTES = {
         PAYMENTS: {
             LIST: '/finance/payments',
             CREATE: '/finance/payments',
+            REVIEW: '/finance/payments/review',
         },
         PAYMENT_METHODS: {
             CONFIG: '/finance/payment-methods/config',

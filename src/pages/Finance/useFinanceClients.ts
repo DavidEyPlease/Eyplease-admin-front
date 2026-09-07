@@ -4,17 +4,23 @@ import { API_ROUTES } from "@/constants/api"
 import { PaginationResponse } from "@/interfaces/common"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import useRequestQuery from "@/hooks/useRequestQuery"
-import { FinanceClient, FinanceClientPromotion, MonthlyPayment, PaymentStatus } from "@/interfaces/finance"
+import { CollectionStatus, FinanceClient, FinanceClientPromotion, MonthlyPayment, PaymentStatus, ReceiptDecision } from "@/interfaces/finance"
 import { queryKeys } from "@/utils/queryKeys"
 import { replaceRecordIdInPath } from "@/utils"
+import { PAYMENTS_ENTITY } from "./useFinancePayments"
 
 const CLIENTS_ENTITY = "finance-clients"
+
+const DEFAULT_COLLECTION_STATUS: CollectionStatus = "collectable"
 
 interface ApiPayment {
     amount: number | null
     paid?: number | null
     status: PaymentStatus
     paid_at?: string | null
+    receipt_url?: string | null
+    reference_number?: string | null
+    receipt_uploaded_at?: string | null
 }
 
 interface ApiFinanceClient {
@@ -29,10 +35,16 @@ interface ApiFinanceClient {
     phone: string | null
     balance: number
     promotion: FinanceClientPromotion | null
+    next_charge_date: string | null
+    next_charge_amount: number | null
     payments: Record<string, ApiPayment>
 }
 
-type PaginatedClients = PaginationResponse<ApiFinanceClient> & { total_overdue?: number }
+type PaginatedClients = PaginationResponse<ApiFinanceClient> & {
+    total_overdue?: number
+    total_pending?: number
+    total_in_review?: number
+}
 
 const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     id: c.id,
@@ -46,8 +58,17 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     phone: c.phone ?? null,
     balance: c.balance ?? 0,
     promotion: c.promotion ?? null,
+    nextChargeDate: c.next_charge_date ?? null,
+    nextChargeAmount: c.next_charge_amount ?? null,
     payments: Object.entries(c.payments ?? {}).reduce<Record<string, MonthlyPayment>>((acc, [period, p]) => {
-        acc[period] = { amount: p.amount ?? null, paid: p.paid ?? null, status: p.status ?? null }
+        acc[period] = {
+            amount: p.amount ?? null,
+            paid: p.paid ?? null,
+            status: p.status ?? null,
+            receiptUrl: p.receipt_url ?? null,
+            referenceNumber: p.reference_number ?? null,
+            receiptUploadedAt: p.receipt_uploaded_at ?? null,
+        }
         return acc
     }, {}),
 })
@@ -86,12 +107,14 @@ export interface UseFinanceClientsPageParams {
     minOverdue?: number
     /** Filter by exact payment day (day of month 1-31, server-side). */
     paymentDay?: number
+    /** Which payment states the client must have in the year (default: anything unpaid). */
+    collectionStatus?: CollectionStatus
 }
 
 /**
  * Paginated, active-only client list for the Collections tab.
  */
-export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay }: UseFinanceClientsPageParams) => {
+export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus = DEFAULT_COLLECTION_STATUS }: UseFinanceClientsPageParams) => {
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
@@ -102,9 +125,9 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
                 overdue_months_max: overdueMonthsMax,
                 min_overdue: minOverdue,
                 payment_day: paymentDay,
-                only_overdue: 1,
+                collection_status: collectionStatus,
             },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, onlyOverdue: true }),
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus }),
         }
     )
 
@@ -116,8 +139,10 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
         totalPages: response?.last_page ?? 1,
         totalItems: response?.total_items ?? 0,
         perPage: response?.per_page ?? perPage,
-        // Overdue total across all matching clients, not just this page.
+        // Totals across all matching clients (not just this page), split by state.
         totalOverdue: response?.total_overdue ?? 0,
+        totalPending: response?.total_pending ?? 0,
+        totalInReview: response?.total_in_review ?? 0,
         loading,
         isRefetching,
         error,
@@ -139,15 +164,37 @@ export interface MarkPaymentInput {
 }
 
 /**
- * Register (upsert) a payment and refresh the clients matrix on success.
+ * Register (upsert) a payment and refresh the clients matrix and the ledger.
  */
 export const useMarkPayment = () => {
     const { request, requestState } = useRequestQuery({
-        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY)],
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY), queryKeys.listBase(PAYMENTS_ENTITY)],
     })
 
     const markPayment = (input: MarkPaymentInput) =>
         request<MarkPaymentInput, unknown>("POST", API_ROUTES.FINANCE.PAYMENTS.CREATE, input)
 
     return { markPayment, marking: requestState.loading }
+}
+
+export interface ReviewReceiptInput {
+    account: string
+    period: string
+    decision: ReceiptDecision
+    note?: string
+}
+
+/**
+ * Approve (paid) or reject (back to pending/overdue) a receipt the client
+ * uploaded; refreshes the clients matrix and the ledger.
+ */
+export const useReviewReceipt = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY), queryKeys.listBase(PAYMENTS_ENTITY)],
+    })
+
+    const reviewReceipt = (input: ReviewReceiptInput) =>
+        request<ReviewReceiptInput, unknown>("POST", API_ROUTES.FINANCE.PAYMENTS.REVIEW, input)
+
+    return { reviewReceipt, reviewing: requestState.loading }
 }
