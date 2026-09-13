@@ -51,6 +51,23 @@ export interface OverviewPublishing {
     }
 }
 
+export interface ServiceRequest {
+    id: string
+    title: string
+    client: string | null
+    account: string | null
+    created_at: string | null
+    days: number
+}
+
+export interface OverviewServiceRequests {
+    /** Sin asignar: nadie las ha tomado todavía. */
+    new: number
+    /** Ya tienen dueño y esperan revisión. */
+    in_review: number
+    latest: ServiceRequest[]
+}
+
 export interface AdminOverview {
     period: string
     revenue: {
@@ -58,6 +75,7 @@ export interface AdminOverview {
         previous: OverviewRevenuePeriod
     }
     publishing: OverviewPublishing
+    service_requests: OverviewServiceRequests
     clients: {
         active: number
         inactive: number

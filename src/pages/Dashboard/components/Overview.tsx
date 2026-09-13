@@ -5,6 +5,7 @@ import { AdminOverview } from "@/interfaces/overview"
 import MoneyBlock from "./MoneyBlock"
 import DailyRail from "./DailyRail"
 import MonthlyCoverage from "./MonthlyCoverage"
+import ServiceRequests from "./ServiceRequests"
 import { monthName } from "../overview.utils"
 
 /** Se refresca solo: es una torre de control, no un reporte que se abre y cierra. */
@@ -55,10 +56,24 @@ const Overview = () => {
                     <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Inicio</h1>
                 </div>
 
-                <p className="text-xs text-slate-500">
-                    <strong className="text-slate-900">{response.clients.active}</strong> clientas activas
-                    {response.clients.inactive > 0 && <> · {response.clients.inactive} inactivas</>}
-                </p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    {response.service_requests.new > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-2.5 py-1 text-[11px] font-medium text-white">
+                            <span className="relative flex size-1.5">
+                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
+                                <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+                            </span>
+                            {response.service_requests.new}{" "}
+                            {response.service_requests.new === 1
+                                ? "solicitud nueva"
+                                : "solicitudes nuevas"}
+                        </span>
+                    )}
+                    <p className="text-xs text-slate-500">
+                        <strong className="text-slate-900">{response.clients.active}</strong> clientas activas
+                        {response.clients.inactive > 0 && <> · {response.clients.inactive} inactivas</>}
+                    </p>
+                </div>
             </div>
 
             <MoneyBlock current={response.revenue.current} previous={response.revenue.previous} />
@@ -100,7 +115,10 @@ const Overview = () => {
                         daysInMonth={publishing.days_in_month}
                         daysElapsed={publishing.days_elapsed}
                     />
-                    <MonthlyCoverage monthly={publishing.monthly} />
+                    <div className="grid content-start gap-3">
+                        <ServiceRequests data={response.service_requests} />
+                        <MonthlyCoverage monthly={publishing.monthly} />
+                    </div>
                 </div>
             </section>
         </div>
