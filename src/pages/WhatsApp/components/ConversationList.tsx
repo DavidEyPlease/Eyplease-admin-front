@@ -78,7 +78,8 @@ const ConversationList = ({
                     <ul className="divide-y divide-slate-100">
                         {conversations.map((conv) => {
                             const active = conv.wa_id === selectedWaId
-                            const name = conv.display_name || conv.identity?.nombre || conv.profile_name || conv.wa_id
+                            // `name` y `account` los calcula la API: no repetimos la lógica aquí.
+                            const name = conv.name || conv.wa_id
                             return (
                                 <li key={conv.wa_id}>
                                     <button
@@ -106,9 +107,9 @@ const ConversationList = ({
                                             <span className="mt-0.5 block truncate text-xs text-slate-500">
                                                 {conv.last_message || "Sin mensajes"}
                                             </span>
-                                            {conv.identity?.codigo && (
+                                            {conv.account && (
                                                 <span className="mt-1.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                                                    {conv.identity.codigo}
+                                                    {conv.account}
                                                 </span>
                                             )}
                                         </span>

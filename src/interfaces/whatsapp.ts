@@ -15,10 +15,16 @@ export interface WaMessage {
     manual?: boolean
 }
 
+/** Lo que el bot guarda tras identificar a la clienta contra la API. */
 export interface WaIdentity {
-    nombre?: string
-    codigo?: string
-    rol?: string
+    name?: string
+    consultantCode?: string
+    networkPersonId?: string
+    role?: string
+    photoUrl?: string | null
+    active?: boolean
+    isClient?: boolean
+    found?: boolean
 }
 
 /** Fila del listado: sin el historial completo. */
@@ -32,6 +38,10 @@ export interface WaConversationSummary {
     last_message: string | null
     notas_count: number
     identity: WaIdentity | null
+    /** Derivados que calcula la API para no repetir la lógica en el front. */
+    name: string | null
+    account: string | null
+    network_person_id: string | null
     created_at: string
     updated_at: string
 }

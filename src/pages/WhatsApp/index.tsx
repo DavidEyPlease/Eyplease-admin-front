@@ -62,11 +62,7 @@ const WhatsAppInboxPage = () => {
         setShowCardOnMobile(false)
     }
 
-    const selectedName =
-        conversation?.display_name ||
-        conversation?.identity?.nombre ||
-        conversation?.profile_name ||
-        selectedWaId
+    const selectedName = conversation?.name || selectedWaId
 
     const listProps = {
         conversations,

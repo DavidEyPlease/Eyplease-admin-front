@@ -63,7 +63,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
     }
 
     const name =
-        conversation?.display_name || conversation?.identity?.nombre || conversation?.profile_name || conversation?.wa_id
+        conversation?.name || conversation?.wa_id
 
     return (
         <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-200/80 bg-white">
