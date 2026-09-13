@@ -39,7 +39,7 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
     return (
-        <div className="grid gap-2.5">
+        <div className="grid min-w-0 gap-2.5">
             {sections.map((section) => {
                 const covered = new Set(section.covered_days)
                 const pct = section.days_expected

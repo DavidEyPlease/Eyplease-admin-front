@@ -17,7 +17,7 @@ const MonthlyCoverage = ({ monthly }: { monthly: OverviewPublishing["monthly"] }
     const complete = !monthly.missing.length
 
     return (
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4">
+        <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h3 className="text-sm font-semibold text-slate-900">Secciones del mes</h3>
                 <span className="text-xs tabular-nums text-slate-500">

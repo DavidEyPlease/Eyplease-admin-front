@@ -53,6 +53,8 @@ export interface OverviewPublishing {
 
 export interface ServiceRequest {
     id: string
+    /** El número con el que se identifica la tarea en el día a día ("la #568"). */
+    consecutive: number | null
     title: string
     client: string | null
     account: string | null
@@ -68,6 +70,11 @@ export interface OverviewServiceRequests {
     latest: ServiceRequest[]
 }
 
+export interface OverviewCorrections {
+    count: number
+    latest: ServiceRequest[]
+}
+
 export interface AdminOverview {
     period: string
     revenue: {
@@ -76,6 +83,7 @@ export interface AdminOverview {
     }
     publishing: OverviewPublishing
     service_requests: OverviewServiceRequests
+    corrections: OverviewCorrections
     clients: {
         active: number
         inactive: number
