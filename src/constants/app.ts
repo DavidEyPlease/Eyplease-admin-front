@@ -58,6 +58,10 @@ export const APP_ROUTES = {
     },
     REPORTS: {
         DASHBOARD: '/reportes',
+    },
+    WHATSAPP: {
+        INBOX: '/whatsapp',
+        TICKETS: '/whatsapp/tickets',
     }
 }
 
@@ -94,6 +98,30 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         requiredPermission: true,
         permissionKeys: [PermissionKeys.REPORTS_MONITOR],
         icon: 'reportsMonitor',
+    },
+    {
+        key: PermissionKeys.WHATSAPP,
+        label: 'WhatsApp',
+        path: '',
+        requiredPermission: true,
+        permissionKeys: [PermissionKeys.WHATSAPP],
+        icon: 'chat',
+        children: [
+            {
+                key: PermissionKeys.WHATSAPP_CONVERSATIONS,
+                label: 'Conversaciones',
+                path: APP_ROUTES.WHATSAPP.INBOX,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.WHATSAPP, PermissionKeys.WHATSAPP_CONVERSATIONS],
+            },
+            {
+                key: PermissionKeys.WHATSAPP_TICKETS,
+                label: 'Tickets',
+                path: APP_ROUTES.WHATSAPP.TICKETS,
+                requiredPermission: true,
+                permissionKeys: [PermissionKeys.WHATSAPP, PermissionKeys.WHATSAPP_TICKETS],
+            },
+        ],
     },
     {
         key: PermissionKeys.TRAININGS,

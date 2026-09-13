@@ -31,6 +31,8 @@ import FullScreenLoader from "./components/generics/FullScreenLoader"
 import PostsTemplatesPage from "./pages/Templates/Posts"
 import ReportsTemplatesPage from "./pages/Templates/Reports"
 import TemplateReportEditorPage from "./pages/Templates/EditorReports"
+import WhatsAppInboxPage from "./pages/WhatsApp"
+import WhatsAppTicketsPage from "./pages/WhatsApp/Tickets"
 
 const Router = () => {
     const { isLogged, pending: sessionLoading, getMe } = useAuth();
@@ -78,6 +80,9 @@ const Router = () => {
 
                 <Route path={APP_ROUTES.FINANCES.DASHBOARD} element={<FinancePage />} />
                 <Route path={APP_ROUTES.REPORTS.DASHBOARD} element={<ReportsPage />} />
+
+                <Route path={APP_ROUTES.WHATSAPP.INBOX} element={<WhatsAppInboxPage />} />
+                <Route path={APP_ROUTES.WHATSAPP.TICKETS} element={<WhatsAppTicketsPage />} />
             </Route>
         </Routes>
     )

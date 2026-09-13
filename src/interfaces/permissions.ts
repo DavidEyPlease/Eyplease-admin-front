@@ -28,6 +28,11 @@ export const PermissionKeys = {
     PUBLISH_POSTS: 'publish_posts',
     FINANCES: 'finances',
     REPORTS_MONITOR: 'reports_monitor',
+    WHATSAPP: 'whatsapp',
+    WHATSAPP_CONVERSATIONS: 'whatsapp_conversations',
+    WHATSAPP_TICKETS: 'whatsapp_tickets',
+    WHATSAPP_TEMPLATES: 'whatsapp_templates',
+    WHATSAPP_PROSPECTS: 'whatsapp_prospects',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];
