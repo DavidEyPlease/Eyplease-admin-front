@@ -80,7 +80,7 @@ const WhatsAppInboxPage = () => {
                         className="h-7 w-1.5 rounded-full"
                         style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
                     />
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">WhatsApp</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">WhatsApp</h1>
                 </div>
 
                 {/* La ficha sustituye a los contadores del bot. */}
@@ -107,12 +107,12 @@ const WhatsAppInboxPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedWaId(null)}
-                                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+                                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground"
                             >
                                 <ArrowLeftIcon className="size-3.5" />
                                 Chats
                             </button>
-                            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
+                            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
                                 {selectedName}
                             </p>
                         </div>

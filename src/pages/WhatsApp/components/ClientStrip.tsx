@@ -22,9 +22,9 @@ const PAYMENT_LABEL: Record<WaPaymentStatus, string> = {
 }
 
 const PAYMENT_STYLE: Record<WaPaymentStatus, string> = {
-    al_corriente: "bg-emerald-100 text-emerald-700",
-    retraso: "bg-red-100 text-red-700",
-    por_validar: "bg-amber-100 text-amber-800",
+    al_corriente: "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300",
+    retraso: "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300",
+    por_validar: "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200",
 }
 
 const Chip = ({
@@ -51,7 +51,7 @@ interface Props {
 
 const ClientStrip = ({ data, loading }: Props) => {
     if (loading && !data) {
-        return <span className="text-xs text-slate-400">Cargando ficha…</span>
+        return <span className="text-xs text-muted-foreground">Cargando ficha…</span>
     }
 
     if (!data) return null
@@ -62,12 +62,12 @@ const ClientStrip = ({ data, loading }: Props) => {
     if (!data.identified || !data.client) {
         return (
             <div className="flex flex-wrap items-center gap-2">
-                <Chip className="bg-slate-100 text-slate-600">
+                <Chip className="bg-muted text-muted-foreground">
                     <CircleAlertIcon className="mr-1 size-3.5 text-amber-500" />
                     Sin identificar
                 </Chip>
                 {lastAt && (
-                    <Chip className={windowOpen ? "bg-slate-100 text-slate-600" : "bg-amber-100 text-amber-800"}>
+                    <Chip className={windowOpen ? "bg-muted text-muted-foreground" : "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200"}>
                         Escribió {relativeTime(lastAt)}
                         {!windowOpen && " · fuera de 24 h"}
                     </Chip>
@@ -81,7 +81,7 @@ const ClientStrip = ({ data, loading }: Props) => {
 
     return (
         <div className="flex flex-wrap items-center gap-2">
-            <Chip className={client.active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}>
+            <Chip className={client.active ? "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300"}>
                 {client.active ? "Activa" : "Inactiva"}
             </Chip>
 
@@ -89,7 +89,7 @@ const ClientStrip = ({ data, loading }: Props) => {
 
             {lastAt && (
                 <Chip
-                    className={windowOpen ? "bg-slate-100 text-slate-600" : "bg-amber-100 text-amber-800"}
+                    className={windowOpen ? "bg-muted text-muted-foreground" : "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200"}
                     // Fuera de la ventana Meta rechaza el texto libre: el aviso
                     // va aquí en corto, en vez de un párrafo sobre el chat.
                     title={

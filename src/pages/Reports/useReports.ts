@@ -1,4 +1,6 @@
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 import useFetchQuery from "@/hooks/useFetchQuery"
 import useRequestQuery from "@/hooks/useRequestQuery"
@@ -226,4 +228,74 @@ export const useDispatchDownloadRun = () => {
     const { request, requestState } = useRequestQuery({ invalidateQueries: [DOWNLOAD_RUNS_QUERY_KEY] })
     const dispatch = (body: DispatchDownloadRunInput) => request("POST", API_ROUTES.REPORTS.DOWNLOAD_RUNS, body)
     return { dispatch, dispatching: requestState.loading }
+}
+
+/** Qué se borraría de los reportes de una clienta (no borra nada). */
+export interface ReportDeletionPreview {
+    client: { id: string; name: string; account: string | null }
+    period: string
+    section_key: string | null
+    uploads: number
+    rows: number
+    sections: { section_key: string | null; name: string | null; status: string; rows: number }[]
+}
+
+/**
+ * Borrar reportes de una clienta.
+ *
+ * Dos pasos a propósito: primero se pide el resumen de lo que se llevaría por
+ * delante y se enseña, y solo entonces se borra. No hay vuelta atrás más que
+ * volver a cargar el archivo.
+ */
+export const useReportDeletion = () => {
+    const queryClient = useQueryClient()
+    const { request } = useRequestQuery()
+    const [preview, setPreview] = useState<ReportDeletionPreview | null>(null)
+    const [busy, setBusy] = useState(false)
+
+    const loadPreview = useCallback(
+        async (userId: string, period: string, sectionKey?: string | null) => {
+            setBusy(true)
+            try {
+                const { data } = await request<object, ReportDeletionPreview>(
+                    "POST",
+                    API_ROUTES.REPORTS.DELETION_PREVIEW,
+                    { user_id: userId, period, ...(sectionKey ? { section_key: sectionKey } : {}) }
+                )
+                setPreview(data)
+                return data
+            } catch {
+                setPreview(null)
+                return null
+            } finally {
+                setBusy(false)
+            }
+        },
+        [request]
+    )
+
+    const confirmDelete = useCallback(
+        async (userId: string, period: string, sectionKey?: string | null) => {
+            setBusy(true)
+            try {
+                await request("DELETE", API_ROUTES.REPORTS.DELETE_UPLOADS, {
+                    user_id: userId,
+                    period,
+                    ...(sectionKey ? { section_key: sectionKey } : {}),
+                })
+                toast.success("Reportes eliminados.")
+                // La matriz y el resumen quedan obsoletos al instante.
+                await queryClient.invalidateQueries({ queryKey: ["report-clients-status"] })
+                await queryClient.invalidateQueries({ queryKey: ["generic"] })
+                return true
+            } catch {
+                return false
+            } finally {
+                setBusy(false)
+            }
+        },
+        [request, queryClient]
+    )
+
+    return { preview, setPreview, loadPreview, confirmDelete, busy }
 }

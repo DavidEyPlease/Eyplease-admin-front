@@ -17,18 +17,18 @@ export type AlertTone = "violet" | "amber"
 
 const TONE = {
     violet: {
-        card: "border-violet-200 bg-violet-50/50",
+        card: "border-violet-200 dark:border-violet-400/30 bg-violet-50/50 dark:bg-violet-400/10",
         ping: "bg-violet-300",
         badge: "bg-violet-600 text-white",
-        link: "text-violet-700",
-        chip: "bg-violet-100 text-violet-700",
+        link: "text-violet-700 dark:text-violet-300",
+        chip: "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300",
     },
     amber: {
-        card: "border-amber-200 bg-amber-50/50",
+        card: "border-amber-200 dark:border-amber-400/30 bg-amber-50/50 dark:bg-amber-400/10",
         ping: "bg-amber-300",
         badge: "bg-amber-500 text-white",
-        link: "text-amber-800",
-        chip: "bg-amber-100 text-amber-800",
+        link: "text-amber-800 dark:text-amber-200",
+        chip: "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200",
     },
 } as const
 
@@ -69,7 +69,7 @@ const TaskAlertCard = ({
         <div
             className={cn(
                 "min-w-0 rounded-xl border p-4 transition",
-                active ? t.card : "border-slate-200/80 bg-white"
+                active ? t.card : "border-border bg-card"
             )}
         >
             <div className="flex items-center gap-2.5">
@@ -85,7 +85,7 @@ const TaskAlertCard = ({
                     <span
                         className={cn(
                             "relative flex size-8 items-center justify-center rounded-lg",
-                            active ? t.badge : "bg-slate-100 text-slate-400"
+                            active ? t.badge : "bg-muted text-muted-foreground"
                         )}
                     >
                         {active ? <Icon className="size-4" /> : <IdleIcon className="size-4" />}
@@ -93,10 +93,10 @@ const TaskAlertCard = ({
                 </span>
 
                 <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold text-slate-900">
+                    <h3 className="text-sm font-semibold text-foreground">
                         {active ? title(count) : idleTitle}
                     </h3>
-                    <p className="text-xs text-slate-500">{active ? subtitle : idleSubtitle}</p>
+                    <p className="text-xs text-muted-foreground">{active ? subtitle : idleSubtitle}</p>
                 </div>
             </div>
 
@@ -119,16 +119,16 @@ const TaskAlertCard = ({
                                     </span>
                                 )}
                                 <span className="min-w-0">
-                                    <span className="block truncate text-sm text-slate-900">{item.title}</span>
+                                    <span className="block truncate text-sm text-foreground">{item.title}</span>
                                     {item.client && (
-                                        <span className="block truncate text-[11px] text-slate-500">
+                                        <span className="block truncate text-[11px] text-muted-foreground">
                                             {item.client}
                                             {item.account && <> · {item.account}</>}
                                         </span>
                                     )}
                                 </span>
                             </span>
-                            <span className="shrink-0 text-[11px] text-slate-400">{days(item.days)}</span>
+                            <span className="shrink-0 text-[11px] text-muted-foreground">{days(item.days)}</span>
                         </li>
                     ))}
                 </ul>
@@ -138,7 +138,7 @@ const TaskAlertCard = ({
                 to={to}
                 className={cn(
                     "mt-3 inline-flex items-center gap-1.5 text-xs font-medium transition hover:gap-2 hover:underline",
-                    active ? t.link : "text-slate-500"
+                    active ? t.link : "text-muted-foreground"
                 )}
             >
                 {active ? linkLabel : idleLinkLabel}

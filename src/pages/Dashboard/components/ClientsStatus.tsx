@@ -39,7 +39,7 @@ const ClientStatus = ({ activePercentage, inactivePercentage, totalClients }: Cl
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <PieChartIcon className="h-5 w-5 text-emerald-600" />
+                    <PieChartIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                     Estado de Clientes
                 </CardTitle>
                 <CardDescription>Distribución actual de clientes</CardDescription>

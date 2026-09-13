@@ -24,10 +24,10 @@ import { useNotificationCenter } from "@/hooks/useNotificationCenter"
  */
 
 const CHANNEL = {
-    whatsapp: { label: "WhatsApp", icon: MessageCircleIcon, tone: "bg-emerald-100 text-emerald-700" },
-    service_requests: { label: "Solicitud", icon: SparklesIcon, tone: "bg-violet-100 text-violet-700" },
-    corrections: { label: "Corrección", icon: PencilRulerIcon, tone: "bg-amber-100 text-amber-800" },
-    delivery_failures: { label: "No entregado", icon: TriangleAlertIcon, tone: "bg-red-100 text-red-700" },
+    whatsapp: { label: "WhatsApp", icon: MessageCircleIcon, tone: "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300" },
+    service_requests: { label: "Solicitud", icon: SparklesIcon, tone: "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300" },
+    corrections: { label: "Corrección", icon: PencilRulerIcon, tone: "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200" },
+    delivery_failures: { label: "No entregado", icon: TriangleAlertIcon, tone: "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300" },
 } as const satisfies Record<NotificationChannel, { label: string; icon: typeof BellIcon; tone: string }>
 
 function timeAgo(iso: string | null): string {

@@ -1,3 +1,6 @@
+import { Trash2Icon } from "lucide-react"
+
+import DeleteReportDialog from "./DeleteReportDialog"
 import { useMemo, useState } from "react"
 
 import { Panel } from "./ui"
@@ -20,6 +23,7 @@ const GROUPS = [
 
 const MatrixTab = ({ period }: { period: string }) => {
     const { sections, clients, loading } = useClientsStatus(period)
+    const [toDelete, setToDelete] = useState<ClientStatus | null>(null)
     const [plan, setPlan] = useState("all")
     const [q, setQ] = useState("")
     const [view, setView] = useState<"all" | "pending" | "complete">("all")
@@ -143,10 +147,25 @@ const MatrixTab = ({ period }: { period: string }) => {
                         </thead>
                         <tbody>
                             {visibleRows.map((c) => (
-                                <tr key={c.id} className="border-t border-slate-50 hover:bg-slate-50/60">
+                                <tr key={c.id} className="group/row border-t border-slate-50 hover:bg-slate-50/60">
                                     <td className="sticky left-0 z-10 bg-white px-3 py-1.5">
-                                        <div className="text-sm font-medium text-slate-700">{c.name}</div>
-                                        <div className="text-[11px] text-slate-400">{c.account} · {c.plan.replace("Plan ", "")}</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate text-sm font-medium text-slate-700">{c.name}</div>
+                                                <div className="truncate text-[11px] text-slate-400">{c.account} · {c.plan.replace("Plan ", "")}</div>
+                                            </div>
+                                            {/* Borrar sus reportes del periodo. Pide confirmación
+                                                con el detalle de lo que se va a llevar. */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setToDelete(c)}
+                                                title={`Eliminar reportes de ${c.name} en ${period}`}
+                                                aria-label={`Eliminar reportes de ${c.name}`}
+                                                className="shrink-0 rounded-md p-1 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover/row:opacity-100"
+                                            >
+                                                <Trash2Icon className="size-3.5" />
+                                            </button>
+                                        </div>
                                     </td>
                                     {cols.map((s, i) => {
                                         const m = statusMeta(c.cells[s.section_key] ?? "na")
@@ -161,7 +180,13 @@ const MatrixTab = ({ period }: { period: string }) => {
                         </tbody>
                     </table>
                 )}
-            </div>
+                <DeleteReportDialog
+                client={toDelete}
+                period={period}
+                sections={sections.map((s) => ({ section_key: s.section_key, name: s.name }))}
+                onClose={() => setToDelete(null)}
+            />
+        </div>
         </Panel>
     )
 }

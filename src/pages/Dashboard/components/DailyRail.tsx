@@ -24,9 +24,9 @@ const STATUS_LABEL: Record<DailyTodayStatus, string> = {
 }
 
 const StatusIcon = ({ status }: { status: DailyTodayStatus }) => {
-    if (status === "ok") return <CheckIcon className="size-3.5 text-emerald-600" />
-    if (status === "scheduled") return <ClockIcon className="size-3.5 text-slate-400" />
-    return <TriangleAlertIcon className="size-3.5 text-red-600" />
+    if (status === "ok") return <CheckIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+    if (status === "scheduled") return <ClockIcon className="size-3.5 text-muted-foreground" />
+    return <TriangleAlertIcon className="size-3.5 text-red-600 dark:text-red-400" />
 }
 
 interface Props {
@@ -49,7 +49,7 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                 return (
                     <div
                         key={section.key}
-                        className="rounded-xl border border-slate-200/80 bg-white p-3.5 transition hover:border-slate-300"
+                        className="rounded-xl border border-border bg-card p-3.5 transition hover:border-muted-foreground/40"
                     >
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                             <span className="relative flex size-2.5 shrink-0">
@@ -64,9 +64,9 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                 />
                             </span>
 
-                            <span className="text-sm font-semibold text-slate-900">{section.name}</span>
+                            <span className="text-sm font-semibold text-foreground">{section.name}</span>
 
-                            <span className="font-mono text-[11px] tabular-nums text-slate-400">
+                            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
                                 {section.scheduled_at}
                             </span>
 
@@ -74,9 +74,9 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                 <StatusIcon status={section.today_status} />
                                 <span
                                     className={cn(
-                                        section.today_status === "ok" && "text-emerald-700",
-                                        section.today_status === "scheduled" && "text-slate-500",
-                                        section.today_status === "missing" && "text-red-700"
+                                        section.today_status === "ok" && "text-emerald-700 dark:text-emerald-300",
+                                        section.today_status === "scheduled" && "text-muted-foreground",
+                                        section.today_status === "missing" && "text-red-700 dark:text-red-300"
                                     )}
                                 >
                                     {STATUS_LABEL[section.today_status]}
@@ -99,10 +99,10 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
 
                                     const tone =
                                         isFuture || pending
-                                            ? "bg-slate-100"
+                                            ? "bg-muted"
                                             : done
                                               ? "bg-emerald-500"
-                                              : "bg-red-200"
+                                              : "bg-red-300 dark:bg-red-400/40"
 
                                     const label = isFuture
                                         ? "aún no llega"
@@ -126,18 +126,18 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                 })}
                             </div>
 
-                            <span className="shrink-0 text-xs tabular-nums text-slate-500">
-                                <strong className="text-slate-900">{section.days_covered}</strong>/
+                            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                                <strong className="text-foreground">{section.days_covered}</strong>/
                                 {section.days_expected} días
                                 {section.days_missing > 0 && (
-                                    <span className="ml-1 text-red-600">· faltan {section.days_missing}</span>
+                                    <span className="ml-1 text-red-600 dark:text-red-400">· faltan {section.days_missing}</span>
                                 )}
-                                <span className="ml-1.5 text-slate-400">({pct}%)</span>
+                                <span className="ml-1.5 text-muted-foreground">({pct}%)</span>
                             </span>
                         </div>
 
                         {section.failed_jobs > 0 && (
-                            <p className="mt-2 text-xs text-amber-700">
+                            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
                                 {section.failed_jobs} piezas fallaron al generarse este mes
                             </p>
                         )}

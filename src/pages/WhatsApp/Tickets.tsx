@@ -15,9 +15,9 @@ const FILTERS: { key: WaTicketStatus | "todos"; label: string }[] = [
 ]
 
 const SEVERITY_STYLES: Record<string, string> = {
-    alta: "bg-red-100 text-red-700",
-    media: "bg-amber-100 text-amber-700",
-    baja: "bg-slate-100 text-slate-600",
+    alta: "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300",
+    media: "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300",
+    baja: "bg-muted text-muted-foreground",
 }
 
 const WhatsAppTicketsPage = () => {
@@ -35,13 +35,13 @@ const WhatsAppTicketsPage = () => {
                     className="h-7 w-1.5 rounded-full"
                     style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
                 />
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                     Tickets de WhatsApp
                 </h1>
             </div>
 
             <div className="-mx-1 overflow-x-auto px-1">
-                <div className="inline-flex w-max gap-1 rounded-full border border-slate-200/80 bg-white/70 p-1">
+                <div className="inline-flex w-max gap-1 rounded-full border border-border bg-white/70 p-1">
                     {FILTERS.map((f) => {
                         const active = filter === f.key
                         return (
@@ -50,7 +50,7 @@ const WhatsAppTicketsPage = () => {
                                 onClick={() => setFilter(f.key)}
                                 className={cn(
                                     "whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition sm:px-5",
-                                    active ? "text-white" : "text-slate-500 hover:text-slate-800"
+                                    active ? "text-white" : "text-muted-foreground hover:text-foreground"
                                 )}
                                 style={active ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
                             >
@@ -66,7 +66,7 @@ const WhatsAppTicketsPage = () => {
                     <Spinner />
                 </div>
             ) : !tickets.length ? (
-                <p className="rounded-xl border border-dashed border-slate-200 px-4 py-12 text-center text-sm text-slate-400">
+                <p className="rounded-xl border border-dashed border-border px-4 py-12 text-center text-sm text-muted-foreground">
                     No hay tickets en este estado.
                 </p>
             ) : (
@@ -74,11 +74,11 @@ const WhatsAppTicketsPage = () => {
                     {tickets.map((ticket) => (
                         <div
                             key={ticket.id}
-                            className="grid gap-3 rounded-xl border border-slate-200/80 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                            className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
                         >
                                 <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-sm font-semibold text-slate-900">
+                                        <span className="text-sm font-semibold text-foreground">
                                             {ticket.client_name || ticket.wa_id}
                                         </span>
                                         <span
@@ -89,9 +89,9 @@ const WhatsAppTicketsPage = () => {
                                         >
                                             {ticket.severity}
                                         </span>
-                                        <span className="text-xs text-slate-400">{relativeTime(ticket.created_at)}</span>
+                                        <span className="text-xs text-muted-foreground">{relativeTime(ticket.created_at)}</span>
                                     </div>
-                                    <p className="mt-1.5 text-sm text-slate-600">{ticket.problem}</p>
+                                    <p className="mt-1.5 text-sm text-muted-foreground">{ticket.problem}</p>
                                 </div>
 
                                 <div className="flex gap-2">
@@ -107,7 +107,7 @@ const WhatsAppTicketsPage = () => {
                                             Marcar resuelto
                                         </button>
                                     ) : (
-                                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                                        <span className="rounded-full bg-emerald-100 dark:bg-emerald-400/15 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
                                             Resuelto
                                         </span>
                                     )}

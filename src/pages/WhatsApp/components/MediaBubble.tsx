@@ -106,7 +106,7 @@ const MediaBubble = ({ media, mine, onLoaded }: Props) => {
             download={media.filename || undefined}
             className={
                 "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium underline-offset-2 hover:underline " +
-                (mine ? "bg-white/15" : "bg-white")
+                (mine ? "bg-white/15" : "bg-card")
             }
         >
             <FileTextIcon className="size-4 shrink-0" />

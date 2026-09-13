@@ -20,8 +20,8 @@ const HeaderPill = ({ className, children }: { className: string; children: Reac
         }
     >
         <span className="relative flex size-1.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-card opacity-75" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-card" />
         </span>
         {children}
     </span>
@@ -109,7 +109,7 @@ const Overview = () => {
                     </h2>
 
                     {health === "alert" && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-400/10 px-2.5 py-1 text-[11px] font-medium text-red-700 dark:text-red-300">
                             <span className="size-1.5 rounded-full bg-red-500" />
                             {missingToday}{" "}
                             {missingToday === 1 ? "sección no corrió hoy" : "secciones no corrieron hoy"}
@@ -117,13 +117,13 @@ const Overview = () => {
                         </span>
                     )}
                     {health === "warn" && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-400/15 px-2.5 py-1 text-[11px] font-medium text-amber-800 dark:text-amber-200">
                             <span className="size-1.5 rounded-full bg-amber-500" />
                             Hoy va bien · {backlog} {backlog === 1 ? "día" : "días"} sin cubrir este mes
                         </span>
                     )}
                     {health === "ok" && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
                             <span className="size-1.5 rounded-full bg-emerald-500" />
                             Todo al día
                         </span>

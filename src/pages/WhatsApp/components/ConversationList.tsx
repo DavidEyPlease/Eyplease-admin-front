@@ -37,7 +37,7 @@ const ConversationList = ({
     return (
         <div className="flex min-h-0 flex-col gap-3">
             <div className="relative">
-                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
@@ -46,7 +46,7 @@ const ConversationList = ({
                 />
             </div>
 
-            <div className="inline-flex w-full gap-1 rounded-full border border-slate-200/80 bg-white/70 p-1">
+            <div className="inline-flex w-full gap-1 rounded-full border border-border bg-white/70 p-1">
                 {MODES.map((m) => {
                     const active = mode === m.key
                     return (
@@ -55,7 +55,7 @@ const ConversationList = ({
                             onClick={() => onModeChange(m.key)}
                             className={cn(
                                 "flex-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition",
-                                active ? "text-white" : "text-slate-500 hover:text-slate-800"
+                                active ? "text-white" : "text-muted-foreground hover:text-foreground"
                             )}
                             style={active ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
                         >
@@ -65,17 +65,17 @@ const ConversationList = ({
                 })}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-slate-200/80 bg-white">
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-card">
                 {loading && !conversations.length ? (
                     <div className="flex items-center justify-center py-10">
                         <Spinner />
                     </div>
                 ) : !conversations.length ? (
-                    <p className="px-4 py-10 text-center text-sm text-slate-400">
+                    <p className="px-4 py-10 text-center text-sm text-muted-foreground">
                         {search ? "Sin resultados para esa búsqueda." : "No hay conversaciones."}
                     </p>
                 ) : (
-                    <ul className="divide-y divide-slate-100">
+                    <ul className="divide-y divide-border">
                         {conversations.map((conv) => {
                             const active = conv.wa_id === selectedWaId
                             // `name` y `account` los calcula la API: no repetimos la lógica aquí.
@@ -85,14 +85,14 @@ const ConversationList = ({
                                     <button
                                         onClick={() => onSelect(conv.wa_id)}
                                         className={cn(
-                                            "flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-slate-50",
-                                            active && "bg-violet-50/70 hover:bg-violet-50"
+                                            "flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-muted/40",
+                                            active && "bg-violet-50/70 dark:bg-violet-400/15 hover:bg-violet-50 dark:bg-violet-400/10"
                                         )}
                                     >
                                         <span
                                             className={cn(
                                                 "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full",
-                                                conv.human_took_over ? "bg-amber-100 text-amber-700" : "bg-violet-100 text-violet-700"
+                                                conv.human_took_over ? "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300" : "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300"
                                             )}
                                             title={conv.human_took_over ? "Atención manual" : "Lo atiende el bot"}
                                         >
@@ -101,14 +101,14 @@ const ConversationList = ({
 
                                         <span className="min-w-0 flex-1">
                                             <span className="flex items-baseline justify-between gap-2">
-                                                <span className="truncate text-sm font-semibold text-slate-900">{name}</span>
-                                                <span className="shrink-0 text-[11px] text-slate-400">{relativeTime(conv.updated_at)}</span>
+                                                <span className="truncate text-sm font-semibold text-foreground">{name}</span>
+                                                <span className="shrink-0 text-[11px] text-muted-foreground">{relativeTime(conv.updated_at)}</span>
                                             </span>
-                                            <span className="mt-0.5 block truncate text-xs text-slate-500">
+                                            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                                                 {conv.last_message || "Sin mensajes"}
                                             </span>
                                             {conv.account && (
-                                                <span className="mt-1.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                                <span className="mt-1.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                                                     {conv.account}
                                                 </span>
                                             )}

@@ -112,6 +112,8 @@ export const API_ROUTES = {
         PENDING_UPLOADS: '/reports/pending-uploads',
         DISPATCH_IMPORT_JOB: '/reports/dispatch-import',
         DOWNLOAD_RUNS: '/reports/download-runs',
+        DELETION_PREVIEW: '/reports/deletion-preview',
+        DELETE_UPLOADS: '/reports/uploads',
     },
     POSTS: {
         PUBLISH_NEWSLETTER: '/posts/publish-newsletter',

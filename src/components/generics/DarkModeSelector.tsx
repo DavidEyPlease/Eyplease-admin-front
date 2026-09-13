@@ -1,31 +1,53 @@
-import { MoonIcon, SunIcon } from "lucide-react"
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
 
 import { useTheme } from "@/providers/theme-provider"
-import { Switch } from "@/uishadcn/ui/switch"
+import { cn } from "@/lib/utils"
+
+/**
+ * Claro · Automático · Oscuro.
+ *
+ * "Automático" sigue al sistema, así que el panel se oscurece solo al
+ * anochecer si el equipo lo hace. Antes era un interruptor de dos posiciones:
+ * el modo automático existía en el proveedor pero no había forma de elegirlo.
+ */
+
+const OPTIONS = [
+    { value: "light", label: "Claro", icon: SunIcon },
+    { value: "system", label: "Automático (sigue al sistema)", icon: MonitorIcon },
+    { value: "dark", label: "Oscuro", icon: MoonIcon },
+] as const
 
 export function DarkModeSelector() {
     const { theme, setTheme } = useTheme()
 
-    const toggleTheme = () => {
-        setTheme(theme === "dark" ? "light" : "dark")
-    }
-
     return (
-        <div className="flex items-center space-x-2 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
-            <SunIcon
-                className={`h-[1.2rem] w-[1.2rem] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${theme === "dark" ? "text-[#A1A1AA] scale-75 rotate-12" : "text-foreground scale-100 rotate-0"
-                    }`}
-            />
-            <Switch
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-                aria-label="Toggle theme"
-                className="transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110"
-            />
-            <MoonIcon
-                className={`h-[1.2rem] w-[1.2rem] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${theme === "light" ? "text-[#A1A1AA] scale-75 rotate-12" : "text-yellow-300 scale-100 rotate-0"
-                    }`}
-            />
+        <div
+            role="radiogroup"
+            aria-label="Tema del panel"
+            className="flex items-center gap-0.5 rounded-full border border-border bg-background/60 p-0.5"
+        >
+            {OPTIONS.map(({ value, label, icon: Icon }) => {
+                const active = theme === value
+                return (
+                    <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        aria-label={label}
+                        title={label}
+                        onClick={() => setTheme(value)}
+                        className={cn(
+                            "flex size-7 items-center justify-center rounded-full transition",
+                            active
+                                ? "bg-violet-600 text-white shadow-sm"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        )}
+                    >
+                        <Icon className="size-[15px]" />
+                    </button>
+                )
+            })}
         </div>
     )
 }

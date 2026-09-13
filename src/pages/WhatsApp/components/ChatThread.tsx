@@ -37,8 +37,8 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
 
     if (!conversation && !loading) {
         return (
-            <div className="flex h-full items-center justify-center rounded-xl border border-slate-200/80 bg-white">
-                <p className="px-6 text-center text-sm text-slate-400">
+            <div className="flex h-full items-center justify-center rounded-xl border border-border bg-card">
+                <p className="px-6 text-center text-sm text-muted-foreground">
                     Elige una conversación para ver el hilo.
                 </p>
             </div>
@@ -60,12 +60,12 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
         conversation?.name || conversation?.wa_id
 
     return (
-        <div className="flex h-full min-h-0 flex-col rounded-xl border border-slate-200/80 bg-white">
-            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <div className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-card">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
                 {!compact && (
                     <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-900">{name}</p>
-                        <p className="truncate text-xs text-slate-400">{conversation?.wa_id}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{conversation?.wa_id}</p>
                     </div>
                 )}
                 <div className="flex items-center gap-2">
@@ -73,8 +73,8 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                         className={cn(
                             "rounded-full px-2.5 py-1 text-[11px] font-medium",
                             conversation?.human_took_over
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-violet-100 text-violet-700"
+                                ? "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300"
+                                : "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300"
                         )}
                     >
                         {conversation?.human_took_over ? "Atención manual" : "Bot activo"}
@@ -83,7 +83,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                         type="button"
                         disabled={sending}
                         onClick={() => onTakeover(!conversation?.human_took_over)}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                        className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/40 disabled:opacity-50"
                     >
                         {conversation?.human_took_over ? "Devolver al bot" : "Tomar el chat"}
                     </button>
@@ -96,7 +96,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                         <Spinner />
                     </div>
                 ) : !history.length ? (
-                    <p className="py-10 text-center text-sm text-slate-400">Sin mensajes todavía.</p>
+                    <p className="py-10 text-center text-sm text-muted-foreground">Sin mensajes todavía.</p>
                 ) : (
                     history.map((msg, i) => {
                         const mine = msg.role === "assistant"
@@ -107,7 +107,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                                         "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm break-words",
                                         mine
                                             ? "rounded-br-sm bg-violet-600 text-white"
-                                            : "rounded-bl-sm bg-slate-100 text-slate-800"
+                                            : "rounded-bl-sm bg-muted text-foreground"
                                     )}
                                 >
                                     {msg.media && (
@@ -119,7 +119,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                                     <span
                                         className={cn(
                                             "mt-1 flex items-center gap-1 text-[10px]",
-                                            mine ? "justify-end text-violet-200" : "text-slate-400"
+                                            mine ? "justify-end text-violet-200" : "text-muted-foreground"
                                         )}
                                     >
                                         {mine && (msg.manual ? <UserRoundIcon className="size-3" /> : <BotIcon className="size-3" />)}
@@ -133,7 +133,7 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                 <div ref={bottomRef} />
             </div>
 
-            <form onSubmit={handleSubmit} className="border-t border-slate-100 p-3">
+            <form onSubmit={handleSubmit} className="border-t border-border p-3">
                 <div className="flex items-end gap-2">
                     <Textarea
                         value={draft}

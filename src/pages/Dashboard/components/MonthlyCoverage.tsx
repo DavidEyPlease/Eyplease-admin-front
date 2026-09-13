@@ -17,15 +17,15 @@ const MonthlyCoverage = ({ monthly }: { monthly: OverviewPublishing["monthly"] }
     const complete = !monthly.missing.length
 
     return (
-        <div className="min-w-0 rounded-xl border border-slate-200/80 bg-white p-4">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <h3 className="text-sm font-semibold text-slate-900">Secciones del mes</h3>
-                <span className="text-xs tabular-nums text-slate-500">
-                    <strong className="text-slate-900">{monthly.covered}</strong> de {monthly.total} con piezas
+                <h3 className="text-sm font-semibold text-foreground">Secciones del mes</h3>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                    <strong className="text-foreground">{monthly.covered}</strong> de {monthly.total} con piezas
                 </span>
             </div>
 
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
                     className="h-full rounded-full transition-[width] duration-500"
                     style={{
@@ -38,21 +38,21 @@ const MonthlyCoverage = ({ monthly }: { monthly: OverviewPublishing["monthly"] }
             </div>
 
             {complete ? (
-                <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-700">
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-300">
                     <CircleCheckIcon className="size-4" />
                     Todas las secciones tienen piezas.
                 </p>
             ) : (
                 <>
-                    <p className="mt-3 text-xs font-medium text-slate-500">Sin piezas todavía</p>
+                    <p className="mt-3 text-xs font-medium text-muted-foreground">Sin piezas todavía</p>
                     <ul className="mt-1.5 grid gap-1">
                         {monthly.missing.map((section) => (
                             <li
                                 key={section.key}
-                                className="flex items-center justify-between gap-3 rounded-lg bg-amber-50/60 px-2.5 py-1.5"
+                                className="flex items-center justify-between gap-3 rounded-lg bg-amber-50/60 dark:bg-amber-400/10 px-2.5 py-1.5"
                             >
-                                <span className="truncate text-sm text-slate-900">{section.name}</span>
-                                <span className="shrink-0 text-[11px] text-amber-700">
+                                <span className="truncate text-sm text-foreground">{section.name}</span>
+                                <span className="shrink-0 text-[11px] text-amber-700 dark:text-amber-300">
                                     datos de {monthName(section.data_period)}
                                 </span>
                             </li>
@@ -63,7 +63,7 @@ const MonthlyCoverage = ({ monthly }: { monthly: OverviewPublishing["monthly"] }
 
             <Link
                 to={APP_ROUTES.POSTS.DASHBOARD}
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 transition hover:gap-2 hover:underline"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 dark:text-violet-300 transition hover:gap-2 hover:underline"
             >
                 Ir a Publicaciones
                 <ArrowRightIcon className="size-3.5" />
