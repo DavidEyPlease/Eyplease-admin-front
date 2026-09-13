@@ -7,12 +7,24 @@ export type WaChannel = 'whatsapp' | 'facebook' | 'instagram'
 
 export type WaRole = 'user' | 'assistant'
 
+export type WaMediaKind = "image" | "video" | "audio" | "document"
+
+/** Adjunto que mandó la clienta: el bot lo guarda y lo sirve la API. */
+export interface WaMedia {
+    kind: WaMediaKind
+    /** Ruta del bot, "/admin/media/<archivo>". */
+    url: string
+    /** Nombre original, cuando WhatsApp lo manda (documentos). */
+    filename?: string
+}
+
 export interface WaMessage {
     role: WaRole
     content: string
     at: string
     /** true cuando lo escribio una persona del equipo, no el bot. */
     manual?: boolean
+    media?: WaMedia
 }
 
 /** Lo que el bot guarda tras identificar a la clienta contra la API. */
@@ -53,9 +65,14 @@ export interface WaConversation extends WaConversationSummary {
     qualification: Record<string, unknown> | null
 }
 
+/** Veredicto de cobranza en una palabra, para la ficha del chat. */
+export type WaPaymentStatus = "al_corriente" | "retraso" | "por_validar"
+
 export interface WaClientPaymentSummary {
     year: number
+    status: WaPaymentStatus
     paid_periods: number
+    overdue_periods: number
     /** Subió comprobante y espera validación: no es lo mismo que no pagar. */
     in_review_periods: number
     pending_periods: number
@@ -84,6 +101,8 @@ export interface WaClientCard {
 export interface WaClientCardResponse {
     identified: boolean
     client: WaClientCard | null
+    /** Último mensaje DE LA CLIENTA: marca la ventana de 24 h de WhatsApp. */
+    last_client_message_at: string | null
 }
 
 export type WaTicketStatus = 'abierto' | 'en_proceso' | 'resuelto'

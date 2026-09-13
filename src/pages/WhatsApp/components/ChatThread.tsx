@@ -1,13 +1,14 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BotIcon, SendIcon, UserRoundIcon } from "lucide-react"
 
 import { Button } from "@/uishadcn/ui/button"
 import { Textarea } from "@/uishadcn/ui/textarea"
 import Spinner from "@/components/common/Spinner"
+import MediaBubble from "./MediaBubble"
 import { cn } from "@/lib/utils"
 import { WaConversation } from "@/interfaces/whatsapp"
 
-import { clockTime, isWithinServiceWindow } from "../whatsapp.utils"
+import { clockTime } from "../whatsapp.utils"
 
 interface Props {
     conversation: WaConversation | undefined
@@ -26,20 +27,13 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
 
     const history = useMemo(() => conversation?.history ?? [], [conversation])
 
-    // Momento del ultimo mensaje del cliente: define si la ventana de 24 h de
-    // WhatsApp sigue abierta para poder escribir texto libre.
-    const lastClientAt = useMemo(() => {
-        for (let i = history.length - 1; i >= 0; i--) {
-            if (history[i].role === "user") return history[i].at
-        }
-        return null
-    }, [history])
-
-    const windowOpen = isWithinServiceWindow(lastClientAt)
+    const scrollToBottom = useCallback(() => {
+        bottomRef.current?.scrollIntoView({ block: "end" })
+    }, [])
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ block: "end" })
-    }, [history.length, conversation?.wa_id])
+        scrollToBottom()
+    }, [history.length, conversation?.wa_id, scrollToBottom])
 
     if (!conversation && !loading) {
         return (
@@ -110,13 +104,18 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
                             <div key={`${msg.at}-${i}`} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                                 <div
                                     className={cn(
-                                        "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words",
+                                        "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm break-words",
                                         mine
                                             ? "rounded-br-sm bg-violet-600 text-white"
                                             : "rounded-bl-sm bg-slate-100 text-slate-800"
                                     )}
                                 >
-                                    {msg.content}
+                                    {msg.media && (
+                                        <div className={cn(msg.content && "mb-2")}>
+                                            <MediaBubble media={msg.media} mine={mine} onLoaded={scrollToBottom} />
+                                        </div>
+                                    )}
+                                    {msg.content && <span className="whitespace-pre-wrap">{msg.content}</span>}
                                     <span
                                         className={cn(
                                             "mt-1 flex items-center gap-1 text-[10px]",
@@ -135,12 +134,6 @@ const ChatThread = ({ conversation, loading, sending, compact = false, onSend, o
             </div>
 
             <form onSubmit={handleSubmit} className="border-t border-slate-100 p-3">
-                {!windowOpen && (
-                    <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        Pasaron más de 24 h desde el último mensaje de la clienta. WhatsApp solo permite
-                        enviar plantillas aprobadas; un texto libre será rechazado por Meta.
-                    </p>
-                )}
                 <div className="flex items-end gap-2">
                     <Textarea
                         value={draft}
