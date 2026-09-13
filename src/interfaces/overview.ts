@@ -11,30 +11,44 @@ export interface OverviewRevenuePeriod {
     total_count: number
 }
 
-export interface OverviewDebtor {
-    id: string
+/** Cómo va hoy una sección que debe correr todos los días. */
+export type DailyTodayStatus = "ok" | "scheduled" | "missing"
+
+export interface DailySection {
+    key: string
     name: string
-    account: string | null
-    /** Cuántos periodos del año arrastra vencidos. */
-    periods: number
-    amount: number
-    /** Periodo más antiguo sin pagar, "YYYY-MM". */
-    since: string
+    /** Hora del cron, "HH:mm". */
+    scheduled_at: string
+    ran_today: boolean
+    today_status: DailyTodayStatus
+    days_covered: number
+    /** Días que ya eran exigibles (hoy solo cuenta si pasó su hora). */
+    days_expected: number
+    days_missing: number
+    /** Días del mes en los que sí corrió, para el calendario. */
+    covered_days: number[]
+    failed_jobs: number
+    last_run_at: string | null
 }
 
-export interface OverviewTaskBucket {
-    count: number
-    /** Antigüedad de la más vieja, en días. */
-    oldest_days: number
-    /** Cuántas llevan más de una semana. */
-    stale: number
+export interface MonthlySection {
+    key: string
+    name: string
+    posts: number
+    /** Mes de los datos con los que se arma (no es el mes que se ve). */
+    data_period: string
 }
 
-export interface OverviewStuck {
-    tasks: Record<string, OverviewTaskBucket>
-    tasks_over_week: number
-    unanswered_chats: number
-    open_tickets: number
+export interface OverviewPublishing {
+    today: string
+    days_elapsed: number
+    days_in_month: number
+    daily: DailySection[]
+    monthly: {
+        covered: number
+        total: number
+        missing: MonthlySection[]
+    }
 }
 
 export interface AdminOverview {
@@ -43,13 +57,7 @@ export interface AdminOverview {
         current: OverviewRevenuePeriod
         previous: OverviewRevenuePeriod
     }
-    debtors: OverviewDebtor[]
-    /** La deuda REAL del año: la lista de arriba son solo los mayores. */
-    debtors_total: {
-        clients: number
-        amount: number
-    }
-    stuck: OverviewStuck
+    publishing: OverviewPublishing
     clients: {
         active: number
         inactive: number
