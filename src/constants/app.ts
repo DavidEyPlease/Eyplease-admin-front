@@ -262,8 +262,9 @@ export const MONTHS_OPTIONS = [
 
 export const TOOLS_TYPES = [
     { label: 'Entérate Ya', value: ToolSectionTypes.STAY_INFORMED },
-    { label: 'Aprende', value: ToolSectionTypes.LEARN },
-    { label: 'Explica', value: ToolSectionTypes.EXPLAIN },
+    // Mismos nombres que ve la clienta en la biblioteca: el rename se habia hecho solo alla.
+    { label: 'Publicación de Redes Sociales', value: ToolSectionTypes.LEARN },
+    { label: 'Historia en Redes Sociales', value: ToolSectionTypes.EXPLAIN },
     { label: 'Propuestas', value: ToolSectionTypes.PROPOSALS },
     { label: 'Productos', value: ToolSectionTypes.PRODUCTS },
     { label: 'Inicia', value: ToolSectionTypes.GET_STARTED },
