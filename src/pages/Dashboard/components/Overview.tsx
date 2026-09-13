@@ -72,7 +72,7 @@ const Overview = () => {
                         className="h-7 w-1.5 rounded-full"
                         style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
                     />
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Inicio</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Inicio</h1>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -90,8 +90,8 @@ const Overview = () => {
                             {response.corrections.count === 1 ? "corrección" : "correcciones"}
                         </HeaderPill>
                     )}
-                    <p className="text-xs text-slate-500">
-                        <strong className="text-slate-900">{response.clients.active}</strong> clientas activas
+                    <p className="text-xs text-muted-foreground">
+                        <strong className="text-foreground">{response.clients.active}</strong> clientas activas
                         {response.clients.inactive > 0 && <> · {response.clients.inactive} inactivas</>}
                     </p>
                 </div>
@@ -101,9 +101,9 @@ const Overview = () => {
 
             <section className="grid min-w-0 gap-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <h2 className="text-sm font-semibold text-slate-900">
+                    <h2 className="text-sm font-semibold text-foreground">
                         Publicaciones · {monthName(response.period)}
-                        <span className="ml-2 font-normal text-slate-400">
+                        <span className="ml-2 font-normal text-muted-foreground">
                             día {publishing.days_elapsed} de {publishing.days_in_month}
                         </span>
                     </h2>

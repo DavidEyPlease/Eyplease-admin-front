@@ -20,12 +20,15 @@ import SidebarFooter from "@/layouts/Sidebar/components/Footer"
 import useAuth from "@/hooks/useAuth"
 import useAuthStore from "@/store/auth"
 import { ICONS } from "@/layouts/Sidebar/icons"
+import { useNotificationCenter } from "@/hooks/useNotificationCenter"
+import { PermissionKeys } from "@/interfaces/permissions"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import { APP_ROUTES } from "@/constants/app"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { user } = useAuth()
 	const { sidebarMenu } = useAuthStore(state => state)
+	const { data: notifications } = useNotificationCenter()
 
 	return (
 		<Sidebar variant="floating" {...props}>
@@ -52,6 +55,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						{sidebarMenu.map((item) => {
 							const Icon = ICONS[item.icon]
 							const isActive = location.pathname === item.path
+							// Mensajes de WhatsApp sin ver, contestados por el bot o no.
+							const badge =
+								item.key === PermissionKeys.WHATSAPP ? (notifications?.unread?.whatsapp ?? 0) : 0
 							return (
 								item.children ? (
 									<Collapsible
@@ -65,7 +71,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 												<SidebarMenuButton tooltip={item.label} className="p-5">
 													{Icon && <Icon />}
 													<span>{item.label}</span>
-													<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+													{badge > 0 && (
+														<span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-semibold tabular-nums text-violet-700">
+															{badge > 99 ? "99+" : badge}
+														</span>
+													)}
+													<ChevronRight className={(badge > 0 ? "" : "ml-auto ") + "transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"} />
 												</SidebarMenuButton>
 											</CollapsibleTrigger>
 											<CollapsibleContent>
@@ -92,6 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 											<SidebarMenuButton isActive={isActive} className="p-5">
 												{Icon && <Icon />}
 												{item.label}
+												{badge > 0 && (
+													<span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-semibold tabular-nums text-violet-700">
+														{badge > 99 ? "99+" : badge}
+													</span>
+												)}
 											</SidebarMenuButton>
 										</Link>
 									</SidebarMenuItem>

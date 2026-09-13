@@ -4,6 +4,7 @@ import { SIDEBAR_ITEMS } from "@/constants/app";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/uishadcn/ui/breadcrumb";
 import { Separator } from "@/uishadcn/ui/separator";
 import { SidebarInset, SidebarTrigger } from "@/uishadcn/ui/sidebar";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useHeaderActions } from "@/providers/HeaderActionsProvider";
 import NetworkPeopleSearch from "@/components/generics/NetworkPeopleSearch";
 import useAuth from "@/hooks/useAuth";
@@ -53,7 +54,8 @@ const ContentContainer = ({ children, page }: Props) => {
                         {headerActions}
                     </div>
                 )}
-                <div className="ml-auto px-3">
+                <div className="ml-auto flex items-center gap-1 px-3">
+                    {user?.role?.role_key === RoleKeys.SUPER_ADMIN && <NotificationCenter />}
                     <DarkModeSelector />
                 </div>
             </header>
