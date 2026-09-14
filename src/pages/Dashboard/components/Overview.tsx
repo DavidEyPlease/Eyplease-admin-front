@@ -9,6 +9,7 @@ import MoneyBlock from "./MoneyBlock"
 import DailyRail from "./DailyRail"
 import MonthlyCoverage from "./MonthlyCoverage"
 import TaskAlertCard from "./TaskAlertCard"
+import LiveNewsPanel from "./LiveNewsPanel"
 import { monthName } from "../overview.utils"
 
 /** Aviso de cabecera: para enterarse sin bajar la vista. */
@@ -179,6 +180,8 @@ const Overview = () => {
                     </div>
                 </div>
             </section>
+
+            <LiveNewsPanel />
         </div>
     )
 }
