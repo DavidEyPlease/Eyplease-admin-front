@@ -139,6 +139,14 @@ export const ASSET_LABELS: Record<TemplateGroup, Record<string, string>> = {
         new_director: "Nueva directora",
         top10: "Top 10",
         top_3: "Top 3",
+        // Iniciadoras del Mes (sustituyen al Top 10 de iniciación, por tramos de logro)
+        ini_personal_5mas: "Iniciadoras personal · 5 o más",
+        ini_personal_3a4: "Iniciadoras personal · 3 a 4",
+        ini_personal_1a2: "Iniciadoras personal · 1 a 2",
+        ini_unidad_10mas: "Iniciadoras unidad · 10 o más",
+        ini_unidad_5a9: "Iniciadoras unidad · 5 a 9",
+        ini_unidad_3a4: "Iniciadoras unidad · 3 a 4",
+        ini_unidad_1a2: "Iniciadoras unidad · 1 a 2",
         tsr_1: "TSR 1er lugar",
         tsr_2: "TSR 2do lugar",
         tsr_target1: "TSR target 1er lugar",
@@ -260,7 +268,11 @@ export const SHAPE_OPTIONS = [
     { value: "rounded_rect", label: "Rect. redondeado" },
     { value: "rect", label: "Rectángulo" },
 ];
+// Mismo juego que FONT_MAP y que la lista blanca del renderer PHP. Poppins y Lora
+// son las que llevan hoy las 8 plantillas: sin ellas aquí no se pueden elegir.
 export const FONT_OPTIONS = [
+    { value: "Poppins", label: "Poppins" },
+    { value: "Lora", label: "Lora" },
     { value: "PlayfairDisplay-Italic", label: "Playfair Italic" },
     { value: "PlayfairDisplay", label: "Playfair" },
     { value: "Inter", label: "Inter" },

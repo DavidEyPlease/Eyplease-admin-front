@@ -43,10 +43,17 @@ export interface Layout { name: string; canvas: { w: number; h: number }; zones:
 
 export interface BgInfo { group: TemplateGroup; format: TemplateFormat; kind: "cover" | "section"; asset: string; url: string; }
 
+// MUST match the PHP renderer's fontFile() whitelist (BoletinRenderService).
+// Una fuente que falte aquí se mide y se dibuja como Inter, así que el lienzo
+// enseña el texto en un sitio y el boletín lo imprime en otro: Poppins es ~5.5%
+// más ancha que Inter, lo bastante para que un nombre que "cabía" en el editor
+// salte de renglón en el render. Las 8 plantillas usan Poppins o Lora.
 export const FONT_MAP: Record<string, { family: string; italic: boolean }> = {
     "PlayfairDisplay": { family: "Playfair Display", italic: false },
     "PlayfairDisplay-Italic": { family: "Playfair Display", italic: true },
     "Inter": { family: "Inter", italic: false },
+    "Poppins": { family: "Poppins", italic: false },
+    "Lora": { family: "Lora", italic: false },
     "DancingScript": { family: "Dancing Script", italic: false },
 };
 
