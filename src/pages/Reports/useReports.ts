@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -253,11 +253,18 @@ export const useReportDeletion = () => {
     const [preview, setPreview] = useState<ReportDeletionPreview | null>(null)
     const [busy, setBusy] = useState(false)
 
+    // useRequestQuery devuelve una función NUEVA en cada render, así que
+    // meterla en las dependencias hacía que loadPreview cambiara siempre, el
+    // efecto que lo llama se repitiera sin parar y la pantalla se quedara en
+    // blanco. El ref la mantiene accesible sin invalidar los callbacks.
+    const requestRef = useRef(request)
+    requestRef.current = request
+
     const loadPreview = useCallback(
         async (userId: string, period: string, sectionKey?: string | null) => {
             setBusy(true)
             try {
-                const { data } = await request<object, ReportDeletionPreview>(
+                const { data } = await requestRef.current<object, ReportDeletionPreview>(
                     "POST",
                     API_ROUTES.REPORTS.DELETION_PREVIEW,
                     { user_id: userId, period, ...(sectionKey ? { section_key: sectionKey } : {}) }
@@ -271,14 +278,14 @@ export const useReportDeletion = () => {
                 setBusy(false)
             }
         },
-        [request]
+        []
     )
 
     const confirmDelete = useCallback(
         async (userId: string, period: string, sectionKey?: string | null) => {
             setBusy(true)
             try {
-                await request("DELETE", API_ROUTES.REPORTS.DELETE_UPLOADS, {
+                await requestRef.current("DELETE", API_ROUTES.REPORTS.DELETE_UPLOADS, {
                     user_id: userId,
                     period,
                     ...(sectionKey ? { section_key: sectionKey } : {}),
@@ -294,7 +301,7 @@ export const useReportDeletion = () => {
                 setBusy(false)
             }
         },
-        [request, queryClient]
+        [queryClient]
     )
 
     return { preview, setPreview, loadPreview, confirmDelete, busy }
