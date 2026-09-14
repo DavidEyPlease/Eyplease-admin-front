@@ -25,23 +25,53 @@ import { ClientStatus, useReportDeletion } from "../useReports"
 interface Props {
     client: ClientStatus | null
     period: string
-    /** Secciones del periodo, para poder borrar solo una. */
-    sections: { section_key: string; name: string }[]
     onClose: () => void
 }
 
-const DeleteReportDialog = ({ client, period, sections, onClose }: Props) => {
+/** La base repite nombres ("Cumpleaños" es de unidad y nacional): se distinguen. */
+function nombreSeccion(sectionKey: string | null, name: string | null): string {
+    const base = name ?? sectionKey ?? "Sin nombre"
+    return sectionKey?.startsWith("national_") ? `${base} · Nacional` : base
+}
+
+const DeleteReportDialog = ({ client, period, onClose }: Props) => {
     const { preview, setPreview, loadPreview, confirmDelete, busy } = useReportDeletion()
     const [sectionKey, setSectionKey] = useState<string>("")
+    /** Lo que esta clienta tiene cargado ese mes. Se fija al abrir y no cambia
+     *  al elegir una sección, que es cuando el preview pasa a traer solo esa. */
+    const [opciones, setOpciones] = useState<{ key: string; label: string; rows: number }[]>([])
 
     useEffect(() => {
         if (!client) {
             setPreview(null)
             setSectionKey("")
+            setOpciones([])
             return
         }
+
+        let vivo = true
+        void loadPreview(client.id, period, null).then((data) => {
+            if (!vivo || !data) return
+            setOpciones(
+                data.sections
+                    .filter((s) => s.section_key)
+                    .map((s) => ({
+                        key: s.section_key as string,
+                        label: nombreSeccion(s.section_key, s.name),
+                        rows: s.rows,
+                    }))
+            )
+        })
+        return () => {
+            vivo = false
+        }
+    }, [client, period, loadPreview, setPreview])
+
+    // Al cambiar de sección solo se recalcula el preview; las opciones se quedan.
+    useEffect(() => {
+        if (!client) return
         void loadPreview(client.id, period, sectionKey || null)
-    }, [client, period, sectionKey, loadPreview, setPreview])
+    }, [sectionKey, client, period, loadPreview])
 
     if (!client) return null
 
@@ -76,10 +106,13 @@ const DeleteReportDialog = ({ client, period, sections, onClose }: Props) => {
                                     onChange={(e) => setSectionKey(e.target.value)}
                                     className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-foreground"
                                 >
-                                    <option value="">Todo el mes (todas las secciones)</option>
-                                    {sections.map((s) => (
-                                        <option key={s.section_key} value={s.section_key}>
-                                            Solo «{s.name}»
+                                    <option value="">
+                                        Todo el mes ({opciones.length}{" "}
+                                        {opciones.length === 1 ? "sección" : "secciones"})
+                                    </option>
+                                    {opciones.map((o) => (
+                                        <option key={o.key} value={o.key}>
+                                            Solo «{o.label}» ({o.rows} filas)
                                         </option>
                                     ))}
                                 </select>
@@ -107,7 +140,7 @@ const DeleteReportDialog = ({ client, period, sections, onClose }: Props) => {
                                             <ul className="mt-2 grid max-h-32 gap-0.5 overflow-y-auto text-xs text-muted-foreground">
                                                 {preview.sections.map((s, i) => (
                                                     <li key={`${s.section_key}-${i}`} className="flex justify-between gap-3">
-                                                        <span className="truncate">{s.name ?? s.section_key}</span>
+                                                        <span className="truncate">{nombreSeccion(s.section_key, s.name)}</span>
                                                         <span className="shrink-0 tabular-nums">{s.rows} filas</span>
                                                     </li>
                                                 ))}

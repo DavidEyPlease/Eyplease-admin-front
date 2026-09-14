@@ -183,7 +183,6 @@ const MatrixTab = ({ period }: { period: string }) => {
                 <DeleteReportDialog
                 client={toDelete}
                 period={period}
-                sections={sections.map((s) => ({ section_key: s.section_key, name: s.name }))}
                 onClose={() => setToDelete(null)}
             />
         </div>
