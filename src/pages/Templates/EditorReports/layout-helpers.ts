@@ -267,6 +267,10 @@ export const SHAPE_OPTIONS = [
     { value: "circle", label: "Círculo" },
     { value: "rounded_rect", label: "Rect. redondeado" },
     { value: "rect", label: "Rectángulo" },
+    // La foto se coloca SIN marco: llega ya recortada del fondo y con el pie
+    // desvanecido, así que la forma es la propia persona. Encaja dentro de la caja
+    // (no recorta) y se apoya en el borde inferior.
+    { value: "silueta", label: "Silueta (sin marco)" },
 ];
 // Mismo juego que FONT_MAP y que la lista blanca del renderer PHP. Poppins y Lora
 // son las que llevan hoy las 8 plantillas: sin ellas aquí no se pueden elegir.

@@ -16,16 +16,21 @@ export default function PhotoNode({ z, scale: S, multi, onSelect, onDragStart, o
     const dw = z.w * S, dh = z.h * S;
     const [img] = useImage(DEFAULT_PHOTO_URL);
     // Cover-fit the preview image into the zone box (centered crop).
+    const silueta = z.shape === "silueta";
     let drawW = dw, drawH = dh, ox = 0, oy = 0;
     if (img) {
-        const sc = Math.max(dw / img.naturalWidth, dh / img.naturalHeight);
+        // La silueta encaja DENTRO de la caja (no recorta: cortaría hombros o pelo)
+        // y se apoya abajo. El resto de formas siguen con recorte centrado.
+        const sc = silueta
+            ? Math.min(dw / img.naturalWidth, dh / img.naturalHeight)
+            : Math.max(dw / img.naturalWidth, dh / img.naturalHeight);
         drawW = img.naturalWidth * sc; drawH = img.naturalHeight * sc;
-        ox = (dw - drawW) / 2; oy = (dh - drawH) / 2;
+        ox = (dw - drawW) / 2; oy = silueta ? dh - drawH : (dh - drawH) / 2;
     }
     const clip = (ctx: Konva.Context) => {
         if (z.shape === "circle") ctx.arc(dw / 2, dh / 2, Math.min(dw, dh) / 2, 0, Math.PI * 2);
         else if (z.shape === "rounded_rect") { const r = Math.min((z.radius || 0) * S, dw / 2, dh / 2); ctx.moveTo(r, 0); ctx.arcTo(dw, 0, dw, dh, r); ctx.arcTo(dw, dh, 0, dh, r); ctx.arcTo(0, dh, 0, 0, r); ctx.arcTo(0, 0, dw, 0, r); }
-        else ctx.rect(0, 0, dw, dh);
+        else ctx.rect(0, 0, dw, dh);   // rect y silueta: sin recorte
     };
     const bcol = z.border ? `rgb(${z.border.color.join(",")})` : "transparent";
     return (
@@ -41,8 +46,8 @@ export default function PhotoNode({ z, scale: S, multi, onSelect, onDragStart, o
                     ? <KImage image={img} x={ox} y={oy} width={drawW} height={drawH} />
                     : <><Rect width={dw} height={dh} fill="rgba(140,140,160,0.45)" /><Text text="FOTO" width={dw} height={dh} align="center" verticalAlign="middle" fontSize={12} fill="#fff" /></>}
             </Group>
-            {z.border && z.shape === "circle" && <Circle x={dw / 2} y={dh / 2} radius={Math.min(dw, dh) / 2} stroke={bcol} strokeWidth={(z.border.width || 4) * S} />}
-            {z.border && z.shape !== "circle" && <Rect width={dw} height={dh} cornerRadius={(z.radius || 0) * S} stroke={bcol} strokeWidth={(z.border.width || 4) * S} />}
+            {z.border && !silueta && z.shape === "circle" && <Circle x={dw / 2} y={dh / 2} radius={Math.min(dw, dh) / 2} stroke={bcol} strokeWidth={(z.border.width || 4) * S} />}
+            {z.border && !silueta && z.shape !== "circle" && <Rect width={dw} height={dh} cornerRadius={(z.radius || 0) * S} stroke={bcol} strokeWidth={(z.border.width || 4) * S} />}
             {multi && <Rect width={dw} height={dh} stroke={SELECTION} strokeWidth={2} dash={[5, 3]} />}
         </Group>
     );

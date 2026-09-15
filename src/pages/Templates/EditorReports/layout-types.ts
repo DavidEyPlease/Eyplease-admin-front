@@ -13,7 +13,9 @@ export interface Shadow { blur: number; color: RGBA; offset: [number, number]; }
 export interface PhotoZone {
     id: string; type: "photo"; data_key: string;
     x: number; y: number; w: number; h: number;
-    shape: "circle" | "rounded_rect" | "rect"; radius?: number; fit?: "cover" | "contain";
+    // "silueta": la foto llega recortada del fondo (PNG con alfa) y con el pie
+    // desvanecido; se coloca sin marco, encajada dentro de la caja y apoyada abajo.
+    shape: "circle" | "rounded_rect" | "rect" | "silueta"; radius?: number; fit?: "cover" | "contain";
     border?: Border; shadow?: Shadow; opacity?: number;
 }
 export interface TextZone {
