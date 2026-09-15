@@ -144,8 +144,12 @@ const SummaryTab = ({ period }: { period: string }) => {
                                     </div>
                                     <div className="flex shrink-0 gap-6 text-right">
                                         <div>
-                                            {/* Cero en ámbar, no en verde: hoy no se cargó nada y eso hay que mirarlo. */}
-                                            <div className={`text-xl font-bold tracking-tight ${r.loaded ? "text-emerald-600" : "text-amber-500"}`}>{r.loaded}</div>
+                                            {/* Verde sólo si cubrió lo de siempre. En ámbar cuando se quedó
+                                                corta o no cargó nada: es justo lo que hay que mirar. */}
+                                            <div className={`text-xl font-bold tracking-tight ${r.usual > 0 && r.loaded >= r.usual ? "text-emerald-600" : "text-amber-500"}`}>
+                                                {r.loaded}
+                                                {r.usual > 0 && <span className="text-sm font-medium text-slate-300"> / {r.usual}</span>}
+                                            </div>
                                             <div className="mt-0.5 text-[11px] text-slate-400">Cargadas</div>
                                         </div>
                                         <div>

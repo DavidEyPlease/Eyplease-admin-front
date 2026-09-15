@@ -79,6 +79,8 @@ export const useEarlyDaily = () => {
 export interface DailyReport extends EarlyDaily {
     section_key: string
     name: string
+    /** Cuántas cubre ese reporte en su mejor día de las últimas dos semanas. */
+    usual: number
 }
 
 /**
