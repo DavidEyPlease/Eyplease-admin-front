@@ -76,6 +76,23 @@ export const useEarlyDaily = () => {
     return { early: response, loading }
 }
 
+export interface DailyReport extends EarlyDaily {
+    section_key: string
+    name: string
+}
+
+/**
+ * Los reportes que se bajan cada día, uno por fila. Son tres desde que se
+ * sumaron los dos de Corazones de Círculo Rosa, y el backend devuelve fila
+ * aunque ese día no haya subido nada: el cero es el dato que interesa vigilar.
+ */
+export const useDailyReports = () => {
+    const { response, loading } = useFetchQuery<DailyReport[]>(API_ROUTES.REPORTS.DAILY_REPORTS, {
+        customQueryKey: queryKeys.generic("report-daily-reports"),
+    })
+    return { dailyReports: response ?? [], loading }
+}
+
 /** Clientes con derecho a una sección que no la tienen cargada (modal "Faltan: …"). */
 export const useSectionMissing = (period: string, sectionKey: string | null) => {
     const { response, loading } = useFetchQuery<SectionMissing>(API_ROUTES.REPORTS.SUMMARY_MISSING, {

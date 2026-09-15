@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { Panel, HeroTile, KpiTile } from "./ui"
-import { useReportSummary, useEarlyDaily, useSectionMissing, SummarySection, MissingClient } from "../useReports"
+import { useReportSummary, useDailyReports, useSectionMissing, SummarySection, MissingClient } from "../useReports"
 import { periodLabel, fmtDateTime, statusMeta } from "../reports.constants"
 import useReportUpload from "@/hooks/useReportUpload"
 import UploadErrorFeedback from "@/pages/NewsletterReports/components/UploadErrorFeedback"
@@ -64,7 +64,7 @@ const Group = ({ title, color, sections, onVer }: { title: string; color: string
 const SummaryTab = ({ period }: { period: string }) => {
     const queryClient = useQueryClient()
     const { summary, loading } = useReportSummary(period)
-    const { early, loading: loadingEarly } = useEarlyDaily()
+    const { dailyReports, loading: loadingDaily } = useDailyReports()
     const [verSection, setVerSection] = useState<SummarySection | null>(null)
     const { data: missing, loading: loadingMissing } = useSectionMissing(period, verSection?.section_key ?? null)
     const { upload, uploadError, setUploadError } = useReportUpload()
@@ -124,24 +124,37 @@ const SummaryTab = ({ period }: { period: string }) => {
                 <Panel>
                     <div className="px-5 pt-5">
                         <h3 className="text-sm font-semibold text-slate-800">
-                            Tempraneras <span className="ml-1 rounded-full bg-[#EEEBFC] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#5B47E0]">Diario</span>
+                            Reportes del día <span className="ml-1 rounded-full bg-[#EEEBFC] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#5B47E0]">Diario</span>
                         </h3>
-                        <p className="mt-0.5 text-xs text-slate-400">Ventas personales del día (ordenantes). Se cargan cada mañana.</p>
+                        <p className="mt-0.5 text-xs text-slate-400">Los que el robot baja cada mañana. No van por plan ni por periodo: cuentan las cargas de hoy.</p>
                     </div>
-                    <div className="px-5 py-4">
-                        <div className="flex gap-8">
-                            <div>
-                                <div className="text-2xl font-bold tracking-tight text-emerald-600">{loadingEarly ? "…" : early?.loaded ?? 0}</div>
-                                <div className="mt-0.5 text-xs text-slate-400">Cargadas hoy</div>
-                            </div>
-                            <div>
-                                <div className={`text-2xl font-bold tracking-tight ${early?.rejected ? "text-rose-600" : "text-slate-400"}`}>{loadingEarly ? "…" : early?.rejected ?? 0}</div>
-                                <div className="mt-0.5 text-xs text-slate-400">Rechazadas hoy</div>
-                            </div>
-                        </div>
-                        <div className="mt-3 text-[11px] text-slate-400">
-                            Última carga <b className="font-medium text-slate-500">{fmtDateTime(early?.last_at ?? null)}</b>
-                        </div>
+                    <div className="divide-y divide-slate-100 px-5 py-1">
+                        {loadingDaily && <div className="py-4 text-xs text-slate-400">Cargando…</div>}
+                        {!loadingDaily && dailyReports.length === 0 && (
+                            <div className="py-4 text-xs text-slate-400">Sin reportes diarios configurados.</div>
+                        )}
+                        {!loadingDaily &&
+                            dailyReports.map((r) => (
+                                <div key={r.section_key} className="flex items-baseline justify-between gap-4 py-3">
+                                    <div className="min-w-0">
+                                        <div className="truncate text-sm font-medium text-slate-700">{r.name}</div>
+                                        <div className="mt-0.5 text-[11px] text-slate-400">
+                                            Última carga <b className="font-medium text-slate-500">{fmtDateTime(r.last_at)}</b>
+                                        </div>
+                                    </div>
+                                    <div className="flex shrink-0 gap-6 text-right">
+                                        <div>
+                                            {/* Cero en ámbar, no en verde: hoy no se cargó nada y eso hay que mirarlo. */}
+                                            <div className={`text-xl font-bold tracking-tight ${r.loaded ? "text-emerald-600" : "text-amber-500"}`}>{r.loaded}</div>
+                                            <div className="mt-0.5 text-[11px] text-slate-400">Cargadas</div>
+                                        </div>
+                                        <div>
+                                            <div className={`text-xl font-bold tracking-tight ${r.rejected ? "text-rose-600" : "text-slate-300"}`}>{r.rejected}</div>
+                                            <div className="mt-0.5 text-[11px] text-slate-400">Rechazadas</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                     </div>
                 </Panel>
             </div>

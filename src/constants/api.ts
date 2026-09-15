@@ -107,6 +107,7 @@ export const API_ROUTES = {
         CLIENTS_STATUS: '/reports/clients-status',
         REJECTED: '/reports/rejected',
         EARLY_DAILY: '/reports/early-daily',
+        DAILY_REPORTS: '/reports/daily-reports',
         GET_UPLOADS: '/reports/uploads',
         UPLOAD: '/reports/upload',
         PENDING_UPLOADS: '/reports/pending-uploads',
