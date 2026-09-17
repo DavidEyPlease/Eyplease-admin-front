@@ -6,6 +6,7 @@ import Spinner from "@/components/common/Spinner"
 import { AdminOverview } from "@/interfaces/overview"
 
 import MoneyBlock from "./MoneyBlock"
+import DailyReportsCard from "./DailyReportsCard"
 import DailyRail from "./DailyRail"
 import MonthlyCoverage from "./MonthlyCoverage"
 import TaskAlertCard from "./TaskAlertCard"
@@ -99,6 +100,11 @@ const Overview = () => {
             </div>
 
             <MoneyBlock current={response.revenue.current} previous={response.revenue.previous} />
+
+            {/* Los reportes ANTES de las publicaciones: son la materia prima. Si uno no
+                bajó, las piezas de ese día salen con datos viejos o no salen, y verlo
+                después obliga a deducir la causa desde el efecto. */}
+            <DailyReportsCard />
 
             <section className="grid min-w-0 gap-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
