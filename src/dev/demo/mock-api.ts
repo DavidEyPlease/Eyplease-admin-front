@@ -374,6 +374,15 @@ export const installMockApi = () => {
             response = respond(found ? { client: found, stats: { tools_download_percentage: 42, total_tools: 120, downloaded_tools: 50, monthly_posts: 64, shared_posts: 19, posts_shared_percentage: 30, month: period(0) } } : null, found ? 200 : 404)
         }
         else if (/^\/clients\/c-\d+\/network$/.test(path)) response = respond(page([]))
+        else if (/^\/clients\/c-\d+\/accounts$/.test(path) && method === 'GET') {
+            /* La clienta A trae dos cuentas (México y Colombia) para poder ver la tarjeta llena */
+            const id = path.split('/')[2]
+            response = respond(id === 'c-0' ? [
+                { id: 'liga-mex', account: 'EJ-001', country: 'MEX', name: 'Clienta de ejemplo A', plan: 'Plan de ejemplo C', active: true, current: true },
+                { id: 'liga-col', account: 'EJ-001MX', country: 'COL', name: 'Clienta de ejemplo A', plan: 'Plan de ejemplo B', active: true, current: false },
+            ] : [])
+        }
+        else if (/^\/clients\/c-\d+\/accounts$/.test(path)) { await wait(300); response = respond(true) }
         else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
         else if (path === '/finance/payments/review' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, decision: string }

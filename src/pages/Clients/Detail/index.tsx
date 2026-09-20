@@ -7,6 +7,7 @@ import { replaceRecordIdInPath } from "@/utils";
 import { useParams } from "react-router";
 import Network from "./components/Network";
 import Summary from "./components/Summary";
+import LinkedAccounts from "./components/LinkedAccounts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/uishadcn/ui/tabs";
 import SetPlan from "./components/SetPlan";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
@@ -53,6 +54,7 @@ const ClientDetailPage = () => {
                             <div className="grid md:grid-cols-5 gap-4">
                                 <div className="col-span-2 space-y-4">
                                     <Summary client={client} />
+                                    <LinkedAccounts clientId={client.id} />
                                     {stats && <ClientStatsSection stats={stats} />}
                                 </div>
 
