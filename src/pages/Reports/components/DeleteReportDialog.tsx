@@ -88,7 +88,7 @@ const DeleteReportDialog = ({ client, period, onClose }: Props) => {
             <AlertDialogContent className="max-w-lg">
                 <AlertDialogHeader>
                     <AlertDialogTitle className="flex items-center gap-2">
-                        <span className="flex size-8 items-center justify-center rounded-lg bg-red-100 text-red-700 dark:bg-red-400/15 dark:text-red-300">
+                        <span className="flex size-8 items-center justify-center rounded-lg bg-red-500/15 text-red-700 dark:bg-red-400/15 dark:text-red-300">
                             <Trash2Icon className="size-4" />
                         </span>
                         Eliminar reportes de {client.name}

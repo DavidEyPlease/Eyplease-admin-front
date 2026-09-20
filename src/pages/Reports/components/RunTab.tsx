@@ -16,11 +16,11 @@ const EARLY_SECTION = { label: "Tempraneras", value: "early" }
 
 // Estilo del chip de estado de cada corrida de descarga.
 const RUN_STATUS_UI: Record<DownloadRun["status"], { label: string; className: string }> = {
-    queued: { label: "En cola", className: "bg-slate-100 text-slate-500" },
+    queued: { label: "En cola", className: "bg-foreground/[.06] text-muted-foreground" },
     running: { label: "Corriendo", className: "bg-indigo-50 text-indigo-600" },
-    completed: { label: "Completado", className: "bg-emerald-50 text-emerald-600" },
-    failed: { label: "Fallido", className: "bg-rose-50 text-rose-600" },
-    rejected: { label: "Rechazado", className: "bg-amber-50 text-amber-600" },
+    completed: { label: "Completado", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+    failed: { label: "Fallido", className: "bg-rose-500/10 text-rose-600 dark:text-rose-400" },
+    rejected: { label: "Rechazado", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
 }
 
 const RunTab = () => {
@@ -137,8 +137,8 @@ const RunTab = () => {
         <div className="grid items-start gap-5 lg:grid-cols-2">
             <Panel>
                 <div className="px-5 pt-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Procesar reportes hacia boletines</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <h3 className="text-sm font-semibold text-foreground">Procesar reportes hacia boletines</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                         Re-ejecuta la importación de los reportes ya descargados (S3) hacia la plataforma
                     </p>
                 </div>
@@ -200,14 +200,14 @@ const RunTab = () => {
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>
                         {dispatching ? "Procesando…" : "Procesar importación"}
                     </BtnPrimary>
-                    <span className="text-xs text-slate-400">Solo mes anterior / actual / siguiente.</span>
+                    <span className="text-xs text-muted-foreground">Solo mes anterior / actual / siguiente.</span>
                 </div>
             </Panel>
 
             <Panel>
                 <div className="px-5 pt-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Correr descarga de reportes</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <h3 className="text-sm font-semibold text-foreground">Correr descarga de reportes</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                         Descarga los reportes desde Mary Kay InTouch y los sube a S3 (worker bajo demanda)
                     </p>
                 </div>
@@ -263,23 +263,23 @@ const RunTab = () => {
                         {downloading ? "Encolando…" : "Correr para TODOS"}
                     </BtnPrimary>
                     <div className="flex items-center gap-2">
-                        <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Cuenta del cliente (ej. WG3471)" className="w-56 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#5B47E0]" />
-                        <button onClick={() => runScraper("one")} disabled={downloading || !downloadType} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Correr para UNO</button>
+                        <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Cuenta del cliente (ej. WG3471)" className="w-56 rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-[#5B47E0]" />
+                        <button onClick={() => runScraper("one")} disabled={downloading || !downloadType} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-foreground/[.04] disabled:cursor-not-allowed disabled:opacity-50">Correr para UNO</button>
                     </div>
                 </div>
 
                 {runs.length > 0 && (
-                    <div className="border-t border-slate-100 px-5 pb-5 pt-4">
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Últimas corridas</h4>
+                    <div className="border-t border-border px-5 pb-5 pt-4">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Últimas corridas</h4>
                         <ul className="mt-2 flex flex-col gap-2">
                             {runs.slice(0, 5).map((run) => (
-                                <li key={run.run_id} className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                    <span className={`rounded-full px-2 py-0.5 font-semibold ${RUN_STATUS_UI[run.status]?.className ?? "bg-slate-100 text-slate-500"}`}>
+                                <li key={run.run_id} className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                    <span className={`rounded-full px-2 py-0.5 font-semibold ${RUN_STATUS_UI[run.status]?.className ?? "bg-foreground/[.06] text-muted-foreground"}`}>
                                         {RUN_STATUS_UI[run.status]?.label ?? run.status}
                                     </span>
-                                    <span className="font-medium text-slate-600">{run.sections?.join(", ") || run.process}</span>
+                                    <span className="font-medium text-muted-foreground">{run.sections?.join(", ") || run.process}</span>
                                     {run.clients?.length ? <span>· {run.clients.join(", ")}</span> : null}
-                                    {run.reset ? <span className="text-amber-600">· reset</span> : null}
+                                    {run.reset ? <span className="text-amber-600 dark:text-amber-400">· reset</span> : null}
                                     {run.result ? (
                                         <span>· {run.result.uploaded}/{run.result.total} subidos · {run.result.failed} fallidos · {run.result.skipped} saltados</span>
                                     ) : null}
