@@ -75,26 +75,26 @@ const PromotionsTab = () => {
         {
             id: "name",
             header: "Nombre",
-            cell: ({ row }) => <span className="font-medium text-slate-800">{row.original.name}</span>,
+            cell: ({ row }) => <span className="font-medium text-foreground">{row.original.name}</span>,
         },
         {
             id: "type",
             header: "Tipo",
-            cell: ({ row }) => <span className="text-slate-600">{DISCOUNT_TYPE_LABELS[row.original.discountType]}</span>,
+            cell: ({ row }) => <span className="text-muted-foreground">{DISCOUNT_TYPE_LABELS[row.original.discountType]}</span>,
         },
         {
             id: "discount",
             header: "Descuento",
-            cell: ({ row }) => <span className="font-semibold text-slate-800">{formatDiscount(row.original)}</span>,
+            cell: ({ row }) => <span className="font-semibold text-foreground">{formatDiscount(row.original)}</span>,
         },
         {
             id: "expires",
             header: "Expira",
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <span className="text-slate-600">{dayjs(row.original.expiresAt).format("DD/MM/YYYY")}</span>
+                    <span className="text-muted-foreground">{dayjs(row.original.expiresAt).format("DD/MM/YYYY")}</span>
                     {row.original.isExpired && (
-                        <span className="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-600">Expirada</span>
+                        <span className="inline-flex items-center rounded-full bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-600 dark:text-rose-400">Expirada</span>
                     )}
                 </div>
             ),
@@ -103,7 +103,7 @@ const PromotionsTab = () => {
             id: "status",
             header: "Estado",
             cell: ({ row }) => (
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${row.original.active ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${row.original.active ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-foreground/[.06] text-muted-foreground"}`}>
                     {row.original.active ? "Activa" : "Inactiva"}
                 </span>
             ),
@@ -116,7 +116,7 @@ const PromotionsTab = () => {
                     <button
                         type="button"
                         onClick={() => openEdit(row.original)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-foreground/[.07] hover:text-foreground"
                     >
                         <PencilIcon className="h-4 w-4" />
                     </button>
@@ -126,7 +126,7 @@ const PromotionsTab = () => {
                         loading={mutating}
                         onConfirm={() => handleDelete(row.original)}
                         trigger={
-                            <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500">
+                            <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-rose-50 hover:text-rose-500">
                                 <Trash2Icon className="h-4 w-4" />
                             </button>
                         }
@@ -140,7 +140,7 @@ const PromotionsTab = () => {
     return (
         <div className="grid gap-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-slate-400">Crea y administra los descuentos disponibles para aplicar a tus clientes.</p>
+                <p className="text-sm text-muted-foreground">Crea y administra los descuentos disponibles para aplicar a tus clientes.</p>
                 <Button
                     text={<span className="flex items-center gap-1.5"><PlusIcon className="h-4 w-4" /> Nueva promoción</span>}
                     color="primary"
@@ -152,12 +152,12 @@ const PromotionsTab = () => {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:max-w-xl">
                 <div className="relative">
-                    <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
                         placeholder="Buscar por nombre..."
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15"
+                        className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15"
                     />
                 </div>
                 <Dropdown placeholder="Estado" value={status} items={STATUS_OPTIONS} onChange={setStatus} />
@@ -166,9 +166,9 @@ const PromotionsTab = () => {
             <DataTable columns={columns} data={filtered} isLoading={loading} />
 
             <Dialog open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditing(null) }}>
-                <DialogContent className="max-w-lg rounded-2xl border-slate-200 bg-white">
+                <DialogContent className="max-w-lg rounded-2xl border-border bg-card">
                     <DialogHeader>
-                        <DialogTitle className="text-slate-900">{editing ? "Editar promoción" : "Nueva promoción"}</DialogTitle>
+                        <DialogTitle className="text-foreground">{editing ? "Editar promoción" : "Nueva promoción"}</DialogTitle>
                     </DialogHeader>
                     <PromotionForm key={editing?.id ?? "new"} promotion={editing} loading={mutating} onSubmit={handleSubmit} />
                 </DialogContent>

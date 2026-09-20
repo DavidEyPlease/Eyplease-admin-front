@@ -7,7 +7,7 @@ import { useFinanceSummary } from "../useFinanceSummary"
 import { HeroTile, KpiTile, Panel } from "./ui"
 
 const tooltipStyle = {
-    contentStyle: { borderRadius: 12, border: "1px solid #E2E8F0", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
+    contentStyle: { borderRadius: 12, border: "1px solid var(--border)", background: "var(--popover)", color: "var(--popover-foreground)", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
 }
 
 const SummaryTab = ({ period }: { period: { year: number; month: number } }) => {
@@ -32,8 +32,8 @@ const SummaryTab = ({ period }: { period: { year: number; month: number } }) => 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
             {!hasIncome && (
-                <Panel className="p-4 text-sm text-slate-500">
-                    Sin ingresos cobrados en <b className="text-slate-700">{monthLabel} {period.year}</b>. Cuando se registren los pagos del periodo aparecerán aquí.
+                <Panel className="p-4 text-sm text-muted-foreground">
+                    Sin ingresos cobrados en <b className="text-foreground">{monthLabel} {period.year}</b>. Cuando se registren los pagos del periodo aparecerán aquí.
                 </Panel>
             )}
 
@@ -52,19 +52,19 @@ const SummaryTab = ({ period }: { period: { year: number; month: number } }) => 
 
             <Panel>
                 <div className="px-5 pt-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Historial mensual de ingresos {period.year}</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">Ingreso por mes. El mes seleccionado está resaltado.</p>
+                    <h3 className="text-sm font-semibold text-foreground">Historial mensual de ingresos {period.year}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Ingreso por mes. El mes seleccionado está resaltado.</p>
                 </div>
                 <div className="p-4 pt-2">
                     <ResponsiveContainer width="100%" height={220}>
                         <BarChart data={incomeHistory}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F6" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="label" tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "#F8FAFC" }} />
+                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "rgba(127,127,127,.1)" }} />
                             <Bar dataKey="total" radius={[6, 6, 0, 0]} maxBarSize={34} isAnimationActive={false}>
                                 {incomeHistory.map((h) => (
-                                    <Cell key={h.monthNumber} fill={h.monthNumber === period.month ? "#16B8C4" : "#C7EFEB"} />
+                                    <Cell key={h.monthNumber} fill={h.monthNumber === period.month ? "#16B8C4" : "rgba(22,184,196,.32)"} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -73,16 +73,16 @@ const SummaryTab = ({ period }: { period: { year: number; month: number } }) => 
             </Panel>
 
             <Panel className="p-5">
-                <h3 className="text-sm font-semibold text-slate-800">Clientes por plan</h3>
-                <p className="mt-0.5 text-xs text-slate-400">Distribución actual de la cartera.</p>
+                <h3 className="text-sm font-semibold text-foreground">Clientes por plan</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">Distribución actual de la cartera.</p>
                 <div className="mt-4 space-y-3.5">
                     {planDist.map((p) => (
                         <div key={p.plan}>
                             <div className="mb-1 flex items-center justify-between text-sm">
-                                <span className="text-slate-600">{p.plan}</span>
-                                <span className="font-semibold text-slate-800">{p.count}</span>
+                                <span className="text-muted-foreground">{p.plan}</span>
+                                <span className="font-semibold text-foreground">{p.count}</span>
                             </div>
-                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-foreground/[.06]">
                                 <div className="h-full rounded-full" style={{ width: `${(p.count / maxPlanCount) * 100}%`, backgroundImage: "linear-gradient(90deg,#5B47E0,#5DD9D2)" }} />
                             </div>
                         </div>

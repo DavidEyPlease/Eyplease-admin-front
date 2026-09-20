@@ -9,7 +9,7 @@ const CYAN = "#16B8C4"
 const VIOLET = "#5B47E0"
 const axis = { tick: { fill: "#94A3B8", fontSize: 11 }, axisLine: false, tickLine: false }
 const tooltipStyle = {
-    contentStyle: { borderRadius: 12, border: "1px solid #E2E8F0", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
+    contentStyle: { borderRadius: 12, border: "1px solid var(--border)", background: "var(--popover)", color: "var(--popover-foreground)", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
 }
 
 const BalanceTab = ({ period }: { period: { year: number; month: number } }) => {
@@ -42,19 +42,19 @@ const BalanceTab = ({ period }: { period: { year: number; month: number } }) => 
 
             <Panel>
                 <div className="px-5 pt-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Ingresos vs. Gastos {period.year}</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">Barras = ingreso (cyan) y gasto (gris). La línea morada es el balance del mes.</p>
+                    <h3 className="text-sm font-semibold text-foreground">Ingresos vs. Gastos {period.year}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Barras = ingreso (cyan) y gasto (gris). La línea morada es el balance del mes.</p>
                 </div>
                 <div className="p-4 pt-2">
                     <ResponsiveContainer width="100%" height={300}>
                         <ComposedChart data={rows}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F6" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="label" {...axis} />
                             <YAxis {...axis} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "#F8FAFC" }} />
+                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "rgba(127,127,127,.1)" }} />
                             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                             <Bar dataKey="income" name="Ingreso" fill={CYAN} radius={[5, 5, 0, 0]} maxBarSize={22} isAnimationActive={false} />
-                            <Bar dataKey="expense" name="Gasto" fill="#E5E9F2" radius={[5, 5, 0, 0]} maxBarSize={22} isAnimationActive={false} />
+                            <Bar dataKey="expense" name="Gasto" fill="rgba(148,163,184,.4)" radius={[5, 5, 0, 0]} maxBarSize={22} isAnimationActive={false} />
                             <Line type="monotone" dataKey="balance" name="Balance" stroke={VIOLET} strokeWidth={3} dot={{ r: 3, fill: VIOLET }} isAnimationActive={false} />
                         </ComposedChart>
                     </ResponsiveContainer>
@@ -65,7 +65,7 @@ const BalanceTab = ({ period }: { period: { year: number; month: number } }) => 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/70 text-left text-[11px] uppercase tracking-wider text-slate-400">
+                            <tr className="border-b border-border bg-foreground/[.03] text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                                 <th className="px-5 py-3 font-semibold">Mes</th>
                                 <th className="px-5 py-3 text-right font-semibold">Ingreso</th>
                                 <th className="px-5 py-3 text-right font-semibold">Gasto</th>
@@ -74,23 +74,23 @@ const BalanceTab = ({ period }: { period: { year: number; month: number } }) => 
                         </thead>
                         <tbody>
                             {withData.length ? withData.map((r) => (
-                                <tr key={r.monthNumber} className="border-b border-slate-50">
-                                    <td className="px-5 py-3 font-medium text-slate-700">{MONTH_LABELS[r.monthNumber - 1]}</td>
-                                    <td className="px-5 py-3 text-right text-slate-600">{formatMoney(r.income)}</td>
-                                    <td className="px-5 py-3 text-right text-slate-600">{formatMoney(r.expense)}</td>
-                                    <td className={`px-5 py-3 text-right font-semibold ${r.balance < 0 ? "text-rose-600" : "text-emerald-600"}`}>{formatMoney(r.balance)}</td>
+                                <tr key={r.monthNumber} className="border-b border-border">
+                                    <td className="px-5 py-3 font-medium text-foreground">{MONTH_LABELS[r.monthNumber - 1]}</td>
+                                    <td className="px-5 py-3 text-right text-muted-foreground">{formatMoney(r.income)}</td>
+                                    <td className="px-5 py-3 text-right text-muted-foreground">{formatMoney(r.expense)}</td>
+                                    <td className={`px-5 py-3 text-right font-semibold ${r.balance < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{formatMoney(r.balance)}</td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan={4} className="py-12 text-center text-slate-400">Sin datos para {period.year}.</td></tr>
+                                <tr><td colSpan={4} className="py-12 text-center text-muted-foreground">Sin datos para {period.year}.</td></tr>
                             )}
                         </tbody>
                         {withData.length > 0 && (
                             <tfoot>
-                                <tr className="border-t border-slate-100 bg-slate-50/50 text-sm font-bold">
-                                    <td className="px-5 py-3 text-slate-700">Total {period.year}</td>
-                                    <td className="px-5 py-3 text-right text-slate-800">{formatMoney(yearIncome)}</td>
-                                    <td className="px-5 py-3 text-right text-slate-800">{formatMoney(yearExpense)}</td>
-                                    <td className={`px-5 py-3 text-right ${yearBalance < 0 ? "text-rose-600" : "text-emerald-600"}`}>{formatMoney(yearBalance)}</td>
+                                <tr className="border-t border-border bg-foreground/[.03] text-sm font-bold">
+                                    <td className="px-5 py-3 text-foreground">Total {period.year}</td>
+                                    <td className="px-5 py-3 text-right text-foreground">{formatMoney(yearIncome)}</td>
+                                    <td className="px-5 py-3 text-right text-foreground">{formatMoney(yearExpense)}</td>
+                                    <td className={`px-5 py-3 text-right ${yearBalance < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{formatMoney(yearBalance)}</td>
                                 </tr>
                             </tfoot>
                         )}

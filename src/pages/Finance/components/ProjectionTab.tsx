@@ -24,7 +24,7 @@ const SLATE = "#94A3B8"
 const PROJECTION_MONTHS = 6
 const axis = { tick: { fill: "#94A3B8", fontSize: 12 }, axisLine: false, tickLine: false }
 const tooltipStyle = {
-    contentStyle: { borderRadius: 12, border: "1px solid #E2E8F0", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
+    contentStyle: { borderRadius: 12, border: "1px solid var(--border)", background: "var(--popover)", color: "var(--popover-foreground)", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
 }
 
 const ProjectionTab = ({ period }: { period: { year: number; month: number } }) => {
@@ -119,11 +119,11 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
             <Panel className="p-5">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-semibold text-slate-800">Simulador de escenarios</h3>
-                        <p className="mt-0.5 text-xs text-slate-400">Mueve las palancas y mira el efecto en la proyección.</p>
+                        <h3 className="text-sm font-semibold text-foreground">Simulador de escenarios</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Mueve las palancas y mira el efecto en la proyección.</p>
                     </div>
                     {dirty && (
-                        <button onClick={resetSim} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
+                        <button onClick={resetSim} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-foreground/[.04]">
                             Volver al actual
                         </button>
                     )}
@@ -131,21 +131,21 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
                 <div className="mt-4 grid gap-6 md:grid-cols-2">
                     <div>
                         <div className="mb-1.5 flex items-center justify-between text-sm">
-                            <span className="text-slate-500">Churn mensual</span>
-                            <span className="font-semibold text-[#5B47E0]">{churn.toFixed(1)}%</span>
+                            <span className="text-muted-foreground">Churn mensual</span>
+                            <span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">{churn.toFixed(1)}%</span>
                         </div>
                         <input type="range" min={0} max={churnMax} step={0.5} value={churn} onChange={(e) => setChurn(Number(e.target.value))}
                             className="w-full accent-[#5B47E0]" />
-                        <div className="mt-1 flex justify-between text-[11px] text-slate-400"><span>0%</span><span>{churnMax}%</span></div>
+                        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>0%</span><span>{churnMax}%</span></div>
                     </div>
                     <div>
                         <div className="mb-1.5 flex items-center justify-between text-sm">
-                            <span className="text-slate-500">Ingreso cobrado por cliente</span>
-                            <span className="font-semibold text-[#0E9E97]">{formatMoney(ticket)}</span>
+                            <span className="text-muted-foreground">Ingreso cobrado por cliente</span>
+                            <span className="font-semibold text-[#0E9E97] dark:text-[#5DD9D2]">{formatMoney(ticket)}</span>
                         </div>
                         <input type="range" min={300} max={ticketMax} step={10} value={ticket} onChange={(e) => setTicket(Number(e.target.value))}
                             className="w-full accent-[#5DD9D2]" />
-                        <div className="mt-1 flex justify-between text-[11px] text-slate-400">
+                        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
                             <span>{formatMoney(300)}</span>
                             <span>Ticket esperado: {formatMoney(expectedTicket)}</span>
                         </div>
@@ -159,7 +159,7 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
                     <div className="p-4 pt-2">
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={projection}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F6" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                                 <XAxis dataKey="label" {...axis} />
                                 <YAxis {...axis} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
                                 <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} />
@@ -173,32 +173,32 @@ const ProjectionView = ({ summary, balance, startMonth, year }: ProjectionViewPr
                 </Panel>
 
                 <Panel className="p-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Ingreso por plan</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">Cuánto aporta cada plan al ingreso mensual esperado.</p>
+                    <h3 className="text-sm font-semibold text-foreground">Ingreso por plan</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Cuánto aporta cada plan al ingreso mensual esperado.</p>
                     <div className="mt-4 space-y-3">
                         {planRevenue.map((p) => (
                             <div key={p.plan}>
                                 <div className="mb-1 flex items-center justify-between text-sm">
-                                    <span className="text-slate-600">{p.plan} <span className="text-slate-400">· {p.count}</span></span>
-                                    <span className="font-medium text-slate-700">{formatMoney(p.revenue)}</span>
+                                    <span className="text-muted-foreground">{p.plan} <span className="text-muted-foreground">· {p.count}</span></span>
+                                    <span className="font-medium text-foreground">{formatMoney(p.revenue)}</span>
                                 </div>
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/[.06]">
                                     <div className="h-full rounded-full" style={{ width: `${(p.revenue / maxPlanRev) * 100}%`, backgroundImage: "linear-gradient(90deg,#5B47E0,#5DD9D2)" }} />
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-5 rounded-xl bg-rose-50/60 p-3 text-xs text-slate-600">
+                    <div className="mt-5 rounded-xl bg-rose-500/10 p-3 text-xs text-muted-foreground">
                         {hasCollections ? (
                             <>
-                                Hoy cobras <b className="text-slate-800">{formatMoney(realizedArpu)}</b> por cliente (el acordado es {formatMoney(expectedTicket)} —
-                                la diferencia es lo que pierdes por cobranza). A ese ingreso real necesitas <b className="text-slate-800">{breakEvenClients(monthlyExpenses, realizedArpu)} clientes</b> para
+                                Hoy cobras <b className="text-foreground">{formatMoney(realizedArpu)}</b> por cliente (el acordado es {formatMoney(expectedTicket)} —
+                                la diferencia es lo que pierdes por cobranza). A ese ingreso real necesitas <b className="text-foreground">{breakEvenClients(monthlyExpenses, realizedArpu)} clientes</b> para
                                 no perder y tienes {currentClients}. Si cobraras el total acordado, el equilibrio bajaría a {beExpected} clientes.
                             </>
                         ) : (
                             <>
-                                Aún no hay pagos cobrados en {year}, así que el ingreso real por cliente es <b className="text-slate-800">{formatMoney(0)}</b>. Por
-                                ticket esperado (<b className="text-slate-800">{formatMoney(expectedTicket)}</b>) tu equilibrio está en <b className="text-slate-800">{beExpected} clientes</b> y
+                                Aún no hay pagos cobrados en {year}, así que el ingreso real por cliente es <b className="text-foreground">{formatMoney(0)}</b>. Por
+                                ticket esperado (<b className="text-foreground">{formatMoney(expectedTicket)}</b>) tu equilibrio está en <b className="text-foreground">{beExpected} clientes</b> y
                                 tienes {currentClients}. Registra los pagos del periodo para ver el ingreso real.
                             </>
                         )}

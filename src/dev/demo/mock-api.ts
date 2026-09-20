@@ -63,6 +63,24 @@ const liveNews = {
 const dailyReports = [['early', 'Ventas Mensuales Personales', 98, 98], ['pink_circle_hearts', 'Corazones · VIP Gold', 98, 97], ['pink_circle_vip_plus', 'Corazones · VIP Plus', 29, 29]]
     .map(([section_key, name, usual, loaded]) => ({ section_key, name, usual, loaded, rejected: 0, date: ymd(), last_at: iso(200) }))
 
+/* Finanzas: resumen y balance con la forma real (las listas de pagos y clientas abren vacías) */
+const monthsSoFar = Array.from({ length: now.getMonth() + 1 }, (_, index) => index + 1)
+const incomeOf = (month: number) => month === now.getMonth() + 1 ? 48210 : 52000 + ((month * 7919) % 9000)
+const summaryMonth = (month: number) => ({
+    month, income: incomeOf(month), overdue_total: month === now.getMonth() + 1 ? 5480 : 0, pending_total: month === now.getMonth() + 1 ? 8900 : 0,
+    overdue_clients: month === now.getMonth() + 1 ? 4 : 0, avg_ticket: 790, total_clients: 80,
+})
+const financeSummary = (month: number) => ({
+    year: now.getFullYear(), month, active_clients: 98, churn_rate: 0.021,
+    plan_distribution: [{ plan: 'Plan de ejemplo A', count: 41, revenue: 28290 }, { plan: 'Plan de ejemplo B', count: 33, revenue: 32670 }, { plan: 'Plan de ejemplo C', count: 24, revenue: 35760 }],
+    month_summary: summaryMonth(month), months: monthsSoFar.map(summaryMonth),
+})
+const financeBalance = () => {
+    const months = monthsSoFar.map(month => { const income = incomeOf(month); const expense = 21000 + ((month * 3571) % 6000); return { month, income, expense, balance: income - expense } })
+    const sum = (key: 'income' | 'expense' | 'balance') => months.reduce((acc, item) => acc + item[key], 0)
+    return { year: now.getFullYear(), year_income: sum('income'), year_expense: sum('expense'), year_balance: sum('balance'), months }
+}
+
 /* ── Copiloto de mentira ─────────────────────────────────────────────────────────────────────
    En la demo NO hay IA: contesta con un guion armado con las MISMAS cifras de ejemplo de arriba,
    para revisar cómo se ve y se siente el panel. El de verdad es Claude con herramientas de sólo
@@ -156,6 +174,9 @@ export const installMockApi = () => {
         else if (path === '/copilot/conversations') response = respond({ items: Object.values(copilotThreads).sort((a, b) => b.last_message_at.localeCompare(a.last_message_at)).map(({ id, title, last_message_at, created_at }) => ({ id, title, last_message_at, created_at })), pagination_token: null, previous_pagination_token: null, per_page: 20, last_page: true })
         else if (/^\/copilot\/conversations\/[^/]+\/messages$/.test(path)) response = respond(copilotThreads[path.split('/')[3]]?.messages ?? [])
         else if (/^\/copilot\/conversations\/[^/]+$/.test(path) && method === 'DELETE') { delete copilotThreads[path.split('/')[3]]; response = respond(true) }
+        else if (path === '/finance/summary') response = respond(financeSummary(Number(url.searchParams.get('month')) || now.getMonth() + 1))
+        else if (path === '/finance/balance') response = respond(financeBalance())
+        else if (path === '/finance/expenses') response = respond([])
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
         /* Lo no previsto contesta vacío: la pantalla abre en su estado «sin datos», que también hay que ver */

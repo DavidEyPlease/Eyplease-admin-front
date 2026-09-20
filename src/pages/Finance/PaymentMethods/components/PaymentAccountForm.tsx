@@ -18,7 +18,7 @@ interface Props {
     onCancelEdit: () => void
 }
 
-const fieldLabelCls = "text-xs font-medium text-slate-500"
+const fieldLabelCls = "text-xs font-medium text-muted-foreground"
 
 const PaymentAccountForm = ({ account, loading, onSubmit, onCancelEdit }: Props) => {
     const isEdit = Boolean(account)
@@ -43,14 +43,14 @@ const PaymentAccountForm = ({ account, loading, onSubmit, onCancelEdit }: Props)
     })
 
     return (
-        <form onSubmit={submit} className="rounded-xl bg-slate-50/70 p-3.5">
+        <form onSubmit={submit} className="rounded-xl bg-foreground/[.03] p-3.5">
             <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-slate-700">{isEdit ? "Editar cuenta" : "Agregar cuenta"}</h4>
+                <h4 className="text-sm font-semibold text-foreground">{isEdit ? "Editar cuenta" : "Agregar cuenta"}</h4>
                 {isEdit && (
                     <button
                         type="button"
                         onClick={onCancelEdit}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-600"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
                     >
                         <XIcon className="h-3.5 w-3.5" /> Cancelar
                     </button>
@@ -79,7 +79,7 @@ const PaymentAccountForm = ({ account, loading, onSubmit, onCancelEdit }: Props)
                         value={watch("numberType")}
                         onValueChange={(value) => setValue("numberType", value as PaymentAccountType, { shouldValidate: true })}
                     >
-                        <SelectTrigger className="w-full bg-white">
+                        <SelectTrigger className="w-full bg-card">
                             <SelectValue placeholder="Selecciona el tipo" />
                         </SelectTrigger>
                         <SelectContent>

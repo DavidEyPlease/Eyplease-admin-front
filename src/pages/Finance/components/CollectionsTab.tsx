@@ -111,18 +111,18 @@ const BillingTypeChip = ({ type }: { type: "stripe" | "manual" }) =>
             <CreditCardIcon className="h-3 w-3" /> Stripe
         </span>
     ) : (
-        <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">Manual</span>
+        <span className="inline-flex shrink-0 items-center rounded-md bg-foreground/[.06] px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">Manual</span>
     )
 
 /** Active per-client promotion badge (with a "Vencida" tag once the deadline passed). */
 const PromoBadge = ({ promotion }: { promotion: FinanceClientPromotion | null }) => {
-    if (!promotion) return <span className="text-xs text-slate-300">—</span>
+    if (!promotion) return <span className="text-xs text-muted-foreground/60">—</span>
     const expired = dayjs(promotion.expires_at).isBefore(dayjs(), "day")
     return (
         <span className="inline-flex items-center gap-1.5">
-            <span className="truncate text-xs font-medium text-slate-700">{promotion.name ?? "Promoción"}</span>
-            <span className="shrink-0 rounded-md bg-[#5B47E0]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#5B47E0]">{promoDiscountLabel(promotion)}</span>
-            {expired && <span className="shrink-0 rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-medium text-rose-600">Vencida</span>}
+            <span className="truncate text-xs font-medium text-foreground">{promotion.name ?? "Promoción"}</span>
+            <span className="shrink-0 rounded-md bg-[#5B47E0]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#5B47E0] dark:text-[#A99BFF]">{promoDiscountLabel(promotion)}</span>
+            {expired && <span className="shrink-0 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-medium text-rose-600 dark:text-rose-400">Vencida</span>}
         </span>
     )
 }
@@ -132,15 +132,15 @@ const ChargeDay = ({ client, compact = false }: { client: FinanceClient; compact
     if (!client.paymentDay && !client.nextChargeDate) return <>—</>
     if (compact) {
         return (
-            <p className="text-xs text-[#5B47E0]">
+            <p className="text-xs text-[#5B47E0] dark:text-[#A99BFF]">
                 {client.paymentDay ? `Día ${client.paymentDay}` : "Cobro automático"} · próx. {formatDueDate(client.nextChargeDate)}
             </p>
         )
     }
     return (
         <div className="flex flex-col leading-tight">
-            <span className="font-medium text-slate-700">{client.paymentDay ? `Día ${client.paymentDay}` : "Automático"}</span>
-            <span className="text-xs text-slate-400">próx. {formatDueDate(client.nextChargeDate)}</span>
+            <span className="font-medium text-foreground">{client.paymentDay ? `Día ${client.paymentDay}` : "Automático"}</span>
+            <span className="text-xs text-muted-foreground">próx. {formatDueDate(client.nextChargeDate)}</span>
         </div>
     )
 }
@@ -160,27 +160,27 @@ const PeriodChips = ({ row }: { row: CollectionRow }) => {
         )
     }
     if (row.client.balance > 0) return <MonthChip tone="amber">Saldo</MonthChip>
-    return <span className="text-xs text-emerald-600">Al día</span>
+    return <span className="text-xs text-emerald-600 dark:text-emerald-400">Al día</span>
 }
 
 /** The amount that matters most for the row: overdue first, then upcoming, then under review. */
 const RowAmount = ({ row }: { row: CollectionRow }) => {
-    if (row.overdueAmount > 0) return <span className="font-semibold text-rose-600">{formatMoney(row.overdueAmount)}</span>
+    if (row.overdueAmount > 0) return <span className="font-semibold text-rose-600 dark:text-rose-400">{formatMoney(row.overdueAmount)}</span>
     if (row.pendingAmount > 0) {
         return (
-            <span className="font-semibold text-slate-700">
-                {formatMoney(row.pendingAmount)} <span className="text-[11px] font-medium text-amber-600">por vencer</span>
+            <span className="font-semibold text-foreground">
+                {formatMoney(row.pendingAmount)} <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">por vencer</span>
             </span>
         )
     }
     if (row.reviewAmount > 0) {
         return (
-            <span className="font-semibold text-[#5B47E0]">
+            <span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">
                 {formatMoney(row.reviewAmount)} <span className="text-[11px] font-medium">en revisión</span>
             </span>
         )
     }
-    return <span className="text-slate-300">—</span>
+    return <span className="text-muted-foreground/60">—</span>
 }
 
 const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (id: string) => void }) => {
@@ -334,21 +334,21 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5">
-            <a href={WHATSAPP_ADMIN} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-[#5DD9D2]/40 bg-gradient-to-r from-[#EEF9F8] to-white px-4 py-3 transition hover:shadow-sm sm:px-5 sm:py-3.5">
+            <a href={WHATSAPP_ADMIN} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-[#5DD9D2]/40 bg-gradient-to-r from-[#EEF9F8] to-card px-4 py-3 transition hover:shadow-sm sm:px-5 sm:py-3.5">
                 <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/15 text-[#1DA851]"><WhatsappIcon className="h-4.5 w-4.5" /></span>
                     <div>
-                        <p className="text-sm font-medium text-slate-800">Conectado al bot de WhatsApp</p>
-                        <p className="text-xs text-slate-400">Reporta pagos y activación de nuevos usuarios.</p>
+                        <p className="text-sm font-medium text-foreground">Conectado al bot de WhatsApp</p>
+                        <p className="text-xs text-muted-foreground">Reporta pagos y activación de nuevos usuarios.</p>
                     </div>
                 </div>
-                <span className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-[#5B47E0] sm:flex">Abrir <ExternalLinkIcon className="h-4 w-4" /></span>
+                <span className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-[#5B47E0] dark:text-[#A99BFF] sm:flex">Abrir <ExternalLinkIcon className="h-4 w-4" /></span>
             </a>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <div className="relative w-full sm:max-w-xs">
-                    <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input placeholder="Buscar por nombre o cuenta..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15" />
+                    <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input placeholder="Buscar por nombre o cuenta..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15" />
                 </div>
                 <div className="w-full sm:w-40">
                     <Dropdown key={`status-${filtersVersion}`} placeholder="Estado" value={status} items={COLLECTION_STATUS_OPTIONS} onChange={(v) => { setStatus(v as CollectionStatus); setPage(1) }} />
@@ -359,8 +359,8 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 <div className="w-full sm:w-48">
                     <Dropdown key={`months-${filtersVersion}`} placeholder="Meses de retraso" value={monthsFilter} items={OVERDUE_MONTHS_OPTIONS} onChange={(v) => { setMonthsFilter(v); setPage(1) }} />
                 </div>
-                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus-within:border-[#5B47E0]">
-                    <span className="whitespace-nowrap text-slate-400">Retraso mín. $</span>
+                <div className="flex items-center gap-1 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground focus-within:border-[#5B47E0]">
+                    <span className="whitespace-nowrap text-muted-foreground">Retraso mín. $</span>
                     <input type="number" min={0} step={100} value={minAmountInput} onChange={(e) => setMinAmountInput(e.target.value)} placeholder="0" className="w-20 bg-transparent text-right outline-none" />
                 </div>
                 <DateInput
@@ -370,7 +370,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     className="w-full sm:w-auto"
                 />
                 {filtersActive && (
-                    <button onClick={clearFilters} className="text-xs font-medium text-[#5B47E0] hover:underline">Limpiar filtros</button>
+                    <button onClick={clearFilters} className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF] hover:underline">Limpiar filtros</button>
                 )}
             </div>
 
@@ -383,7 +383,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/70 text-left text-[11px] uppercase tracking-wider text-slate-400">
+                                    <tr className="border-b border-border bg-foreground/[.03] text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                                         <th className="px-5 py-3 font-semibold">Nombre</th>
                                         <th className="px-5 py-3 font-semibold">Cuenta</th>
                                         <th className="px-5 py-3 font-semibold">Plan</th>
@@ -396,39 +396,39 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </thead>
                                 <tbody>
                                     {rows.length ? rows.map((row) => (
-                                        <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-slate-50 transition hover:bg-slate-50/60">
-                                            <td className="px-5 py-3.5 font-medium text-slate-800">
+                                        <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-border transition hover:bg-foreground/[.04]">
+                                            <td className="px-5 py-3.5 font-medium text-foreground">
                                                 <div className="flex items-center gap-2">
                                                     <span>{row.client.name}</span>
                                                     <BillingTypeChip type={row.client.billingType} />
                                                 </div>
                                             </td>
-                                            <td className="px-5 py-3.5 text-slate-500">{row.client.id}</td>
-                                            <td className="px-5 py-3.5 text-slate-600">{row.client.plan ?? "—"}</td>
-                                            <td className="px-5 py-3.5 text-slate-600"><ChargeDay client={row.client} /></td>
+                                            <td className="px-5 py-3.5 text-muted-foreground">{row.client.id}</td>
+                                            <td className="px-5 py-3.5 text-muted-foreground">{row.client.plan ?? "—"}</td>
+                                            <td className="px-5 py-3.5 text-muted-foreground"><ChargeDay client={row.client} /></td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
                                                 <div className="flex flex-wrap gap-1"><PeriodChips row={row} /></div>
                                             </td>
                                             <td className="px-5 py-3.5 text-right"><RowAmount row={row} /></td>
-                                            <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0]">Gestionar</span></td>
+                                            <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF]">Gestionar</span></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={8} className="py-16 text-center text-slate-400">{emptyCopy}</td></tr>
+                                        <tr><td colSpan={8} className="py-16 text-center text-muted-foreground">{emptyCopy}</td></tr>
                                     )}
                                 </tbody>
                                 {rows.length > 0 && (
                                     <tfoot>
-                                        <tr className="border-t border-slate-100 bg-slate-50/50 text-sm">
-                                            <td className="px-5 py-3 text-slate-500" colSpan={6}>
+                                        <tr className="border-t border-border bg-foreground/[.03] text-sm">
+                                            <td className="px-5 py-3 text-muted-foreground" colSpan={6}>
                                                 <span className="font-medium">{totalItems} {totalItems === 1 ? "cliente" : "clientes"}</span>
-                                                <span className="text-slate-400"> · retrasado </span><span className="font-semibold text-rose-600">{formatMoney(totalOverdue)}</span>
-                                                <span className="text-slate-400"> · por vencer </span><span className="font-semibold text-slate-700">{formatMoney(totalPending)}</span>
+                                                <span className="text-muted-foreground"> · retrasado </span><span className="font-semibold text-rose-600 dark:text-rose-400">{formatMoney(totalOverdue)}</span>
+                                                <span className="text-muted-foreground"> · por vencer </span><span className="font-semibold text-foreground">{formatMoney(totalPending)}</span>
                                                 {totalInReview > 0 && (
-                                                    <><span className="text-slate-400"> · en revisión </span><span className="font-semibold text-[#5B47E0]">{formatMoney(totalInReview)}</span></>
+                                                    <><span className="text-muted-foreground"> · en revisión </span><span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">{formatMoney(totalInReview)}</span></>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-3 text-right font-bold text-slate-800">{formatMoney(totalOverdue + totalPending)}</td>
+                                            <td className="px-5 py-3 text-right font-bold text-foreground">{formatMoney(totalOverdue + totalPending)}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -444,22 +444,22 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 <Panel className="flex items-center gap-3 p-4">
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
-                                            <p className="truncate font-medium text-slate-800">{row.client.name}</p>
+                                            <p className="truncate font-medium text-foreground">{row.client.name}</p>
                                             <BillingTypeChip type={row.client.billingType} />
                                         </div>
-                                        <p className="text-xs text-slate-400">{row.client.id} · {row.client.plan ?? "—"}</p>
+                                        <p className="text-xs text-muted-foreground">{row.client.id} · {row.client.plan ?? "—"}</p>
                                         <ChargeDay client={row.client} compact />
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
                                         <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} /></div>
                                     </div>
                                     <div className="shrink-0 text-right">
                                         <RowAmount row={row} />
-                                        <ChevronRightIcon className="ml-auto mt-1 h-4 w-4 text-slate-300" />
+                                        <ChevronRightIcon className="ml-auto mt-1 h-4 w-4 text-muted-foreground/60" />
                                     </div>
                                 </Panel>
                             </button>
                         )) : (
-                            <Panel className="p-10 text-center text-slate-400">{emptyCopy}</Panel>
+                            <Panel className="p-10 text-center text-muted-foreground">{emptyCopy}</Panel>
                         )}
                     </div>
 
@@ -471,19 +471,19 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
             {/* Payment management modal */}
             <Dialog open={!!manageId} onOpenChange={(o) => !o && closeManage()}>
-                <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-slate-200 bg-white">
+                <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border bg-card">
                     <DialogHeader>
-                        <DialogTitle className="text-slate-900">Gestionar pago</DialogTitle>
-                        <DialogDescription className="text-slate-400">{manageRow?.client.name ?? ""} · {manageRow?.client.id ?? ""}</DialogDescription>
+                        <DialogTitle className="text-foreground">Gestionar pago</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">{manageRow?.client.name ?? ""} · {manageRow?.client.id ?? ""}</DialogDescription>
                     </DialogHeader>
                     {manageRow ? (
                         <div className="space-y-4">
                             {/* Charge what's collectable: card or transfer */}
                             {manageCollectable.length > 0 && (
-                                <div className="rounded-xl bg-slate-50/70 p-3">
+                                <div className="rounded-xl bg-foreground/[.03] p-3">
                                     <div className="mb-2 flex items-center justify-between">
-                                        <span className="text-sm font-medium text-slate-700">{manageRow.overdueAmount > 0 ? "Cobrar adeudo" : "Cobrar"}</span>
-                                        <span className={`text-sm font-bold ${manageRow.overdueAmount > 0 ? "text-rose-600" : "text-slate-700"}`}>{formatMoney(manageAmount)}</span>
+                                        <span className="text-sm font-medium text-foreground">{manageRow.overdueAmount > 0 ? "Cobrar adeudo" : "Cobrar"}</span>
+                                        <span className={`text-sm font-bold ${manageRow.overdueAmount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{formatMoney(manageAmount)}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
@@ -497,29 +497,29 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <button
                                             onClick={() => setShowTransfer((v) => !v)}
                                             disabled={methods?.transfer.enabled === false}
-                                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
+                                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-foreground/[.04] active:scale-[0.98] disabled:opacity-50"
                                         >
                                             <BanknoteIcon className="h-4 w-4" /> Transferencia
                                         </button>
                                     </div>
 
                                     {showTransfer && methods?.transfer && (
-                                        <div className="mt-2 space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                                        <div className="mt-2 space-y-2 rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">
                                             {methods.transfer.accounts.map((acc, i) => (
-                                                <div key={i} className="rounded-lg bg-slate-50 p-2">
+                                                <div key={i} className="rounded-lg bg-foreground/[.03] p-2">
                                                     <div className="flex items-center justify-between">
-                                                        <b className="text-slate-700">{acc.bank}</b>
-                                                        <span className="text-[11px] uppercase text-slate-400">{acc.numberType}</span>
+                                                        <b className="text-foreground">{acc.bank}</b>
+                                                        <span className="text-[11px] uppercase text-muted-foreground">{acc.numberType}</span>
                                                     </div>
-                                                    <p className="text-slate-500">{acc.beneficiary}</p>
+                                                    <p className="text-muted-foreground">{acc.beneficiary}</p>
                                                     <p className="flex items-center gap-1.5">
-                                                        <b className="tracking-wide text-slate-800">{acc.number}</b>
-                                                        <button onClick={() => { navigator.clipboard.writeText(acc.number.replace(/\s/g, "")); toast.success(`${acc.bank} copiado`) }} className="text-slate-400 hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
+                                                        <b className="tracking-wide text-foreground">{acc.number}</b>
+                                                        <button onClick={() => { navigator.clipboard.writeText(acc.number.replace(/\s/g, "")); toast.success(`${acc.bank} copiado`) }} className="text-muted-foreground hover:text-[#5B47E0]"><CopyIcon className="h-3.5 w-3.5" /></button>
                                                     </p>
                                                 </div>
                                             ))}
-                                            <p className="pt-1 text-slate-400">{methods.transfer.instructions}</p>
-                                            <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-1 w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
+                                            <p className="pt-1 text-muted-foreground">{methods.transfer.instructions}</p>
+                                            <button onClick={() => registerTransfer(manageRow)} disabled={marking} className="mt-1 w-full rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 disabled:opacity-50">
                                                 <CheckIcon className="mr-1 inline h-4 w-4" /> Marcar pagado por transferencia
                                             </button>
                                         </div>
@@ -530,18 +530,18 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                             {/* Receipts uploaded by the client, waiting for a decision */}
                             {manageRow.reviewPeriods.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-xs text-slate-400">Comprobantes por validar:</p>
+                                    <p className="text-xs text-muted-foreground">Comprobantes por validar:</p>
                                     {manageRow.reviewPeriods.map((p) => {
                                         const pay = manageRow.client.payments[p]
                                         return (
-                                            <div key={p} className="rounded-xl border border-[#5B47E0]/20 bg-[#EEEBFC]/40 px-3 py-2.5">
+                                            <div key={p} className="rounded-xl border border-[#5B47E0]/20 bg-[#5B47E0]/[.06] px-3 py-2.5">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-slate-700">{periodLabel(p)}</span>
-                                                    <span className="text-sm font-semibold text-slate-800">{formatMoney(periodRemaining(pay, manageRow.client.fixedPayment ?? 0))}</span>
+                                                    <span className="text-sm font-medium text-foreground">{periodLabel(p)}</span>
+                                                    <span className="text-sm font-semibold text-foreground">{formatMoney(periodRemaining(pay, manageRow.client.fixedPayment ?? 0))}</span>
                                                 </div>
-                                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                                     {pay?.receiptUrl && (
-                                                        <a href={pay.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-[#5B47E0] hover:underline">
+                                                        <a href={pay.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-[#5B47E0] dark:text-[#A99BFF] hover:underline">
                                                             <FileTextIcon className="h-3.5 w-3.5" /> Ver comprobante
                                                         </a>
                                                     )}
@@ -549,10 +549,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                                     {pay?.receiptUploadedAt && <span>Subido {formatDate(new Date(pay.receiptUploadedAt), { date: "medium" })}</span>}
                                                 </div>
                                                 <div className="mt-2 flex items-center justify-end gap-2">
-                                                    <button onClick={() => resolveReceipt(manageRow, p, "reject")} disabled={reviewing} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50">
+                                                    <button onClick={() => resolveReceipt(manageRow, p, "reject")} disabled={reviewing} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 disabled:opacity-50">
                                                         <XIcon className="h-3.5 w-3.5" /> Rechazar
                                                     </button>
-                                                    <button onClick={() => resolveReceipt(manageRow, p, "approve")} disabled={reviewing} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
+                                                    <button onClick={() => resolveReceipt(manageRow, p, "approve")} disabled={reviewing} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 disabled:opacity-50">
                                                         <CheckIcon className="h-3.5 w-3.5" /> Validar
                                                     </button>
                                                 </div>
@@ -565,39 +565,39 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                             {/* Por mes: registrar abono (pago parcial) o marcar pagado */}
                             {manageCollectable.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-xs text-slate-400">Registra un abono (pago parcial) o marca el mes como pagado:</p>
+                                    <p className="text-xs text-muted-foreground">Registra un abono (pago parcial) o marca el mes como pagado:</p>
                                     {manageCollectable.map((p) => {
                                         const pay = manageRow.client.payments[p]
                                         const remaining = periodRemaining(pay, manageRow.client.fixedPayment ?? 0)
                                         const paidSoFar = periodPaid(pay)
                                         const upcoming = pay?.status === "pending"
                                         return (
-                                            <div key={p} className="rounded-xl border border-slate-100 px-3 py-2.5">
+                                            <div key={p} className="rounded-xl border border-border px-3 py-2.5">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                                                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
                                                         {periodLabel(p)}
                                                         {upcoming && <MonthChip tone="amber">por vencer</MonthChip>}
                                                     </span>
                                                     <div className="text-right">
-                                                        <span className={`text-sm font-semibold ${upcoming ? "text-slate-700" : "text-rose-600"}`}>{formatMoney(remaining)}</span>
-                                                        <span className="text-xs text-slate-400"> restante</span>
-                                                        {paidSoFar > 0 && <div className="text-[11px] text-sky-600">Abonado {formatMoney(paidSoFar)}</div>}
+                                                        <span className={`text-sm font-semibold ${upcoming ? "text-foreground" : "text-rose-600 dark:text-rose-400"}`}>{formatMoney(remaining)}</span>
+                                                        <span className="text-xs text-muted-foreground"> restante</span>
+                                                        {paidSoFar > 0 && <div className="text-[11px] text-sky-600 dark:text-sky-400">Abonado {formatMoney(paidSoFar)}</div>}
                                                     </div>
                                                 </div>
                                                 <div className="mt-2 flex items-center gap-2">
-                                                    <div className="flex flex-1 items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 focus-within:border-[#5B47E0]">
-                                                        <span className="text-sm text-slate-400">$</span>
+                                                    <div className="flex flex-1 items-center gap-1 rounded-lg border border-border px-2 py-1 focus-within:border-[#5B47E0]">
+                                                        <span className="text-sm text-muted-foreground">$</span>
                                                         <input
                                                             type="number" min={0} placeholder="Abono"
                                                             value={abono[p] ?? ""}
                                                             onChange={(e) => setAbono((prev) => ({ ...prev, [p]: e.target.value }))}
-                                                            className="w-full min-w-0 bg-transparent text-right text-sm text-slate-800 outline-none"
+                                                            className="w-full min-w-0 bg-transparent text-right text-sm text-foreground outline-none"
                                                         />
                                                     </div>
-                                                    <button onClick={() => registerAbono(manageRow.client.id, p)} disabled={marking || !Number(abono[p])} className="rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-100 disabled:opacity-50">
+                                                    <button onClick={() => registerAbono(manageRow.client.id, p)} disabled={marking || !Number(abono[p])} className="rounded-lg bg-sky-500/10 px-2.5 py-1.5 text-xs font-medium text-sky-700 dark:text-sky-400 hover:bg-sky-100 disabled:opacity-50">
                                                         Abonar
                                                     </button>
-                                                    <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 disabled:opacity-50">
+                                                    <button onClick={() => markMonthPaid(manageRow.client.id, p)} disabled={marking} className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 disabled:opacity-50">
                                                         <CheckIcon className="h-3.5 w-3.5" /> Pagado
                                                     </button>
                                                 </div>
@@ -609,7 +609,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
                             {/* Up to date: the next open month can be paid ahead (manual clients only) */}
                             {manageIsUpToDate && (
-                                <div className="rounded-xl bg-emerald-50 px-3 py-3 text-sm text-emerald-700">
+                                <div className="rounded-xl bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-400">
                                     <p className="font-medium">Este cliente está al día.</p>
                                     {manageRow.client.nextChargeDate && (
                                         <p className="mt-0.5 text-xs text-emerald-600/80">
@@ -619,7 +619,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         </p>
                                     )}
                                     {manageRow.client.billingType === "manual" && advancePeriod && (
-                                        <button onClick={() => registerAdvance(manageRow, advancePeriod)} disabled={marking} className="mt-2 inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm hover:bg-emerald-100 disabled:opacity-50">
+                                        <button onClick={() => registerAdvance(manageRow, advancePeriod)} disabled={marking} className="mt-2 inline-flex items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 shadow-sm hover:bg-emerald-100 disabled:opacity-50">
                                             <CheckIcon className="h-3.5 w-3.5" /> Registrar adelanto de {periodLabel(advancePeriod)}
                                         </button>
                                     )}
@@ -627,7 +627,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                             )}
                         </div>
                     ) : (
-                        <p className="rounded-xl bg-emerald-50 px-3 py-3 text-sm font-medium text-emerald-700">✓ Cliente al corriente.</p>
+                        <p className="rounded-xl bg-emerald-500/10 px-3 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-400">✓ Cliente al corriente.</p>
                     )}
                     <DialogFooter className="gap-2">
                         {manageRow && (

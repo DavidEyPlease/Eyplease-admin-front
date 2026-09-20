@@ -12,19 +12,19 @@ const BRAND = {
 type Accent = "violet" | "cyan" | "rose" | "amber" | "emerald" | "slate"
 
 const ACCENT: Record<Accent, { chip: string; text: string; ring: string }> = {
-    violet: { chip: "bg-[#EEEBFC] text-[#5B47E0]", text: "text-[#5B47E0]", ring: "ring-[#5B47E0]/15" },
-    cyan: { chip: "bg-[#E2F8F6] text-[#0E9E97]", text: "text-[#0E9E97]", ring: "ring-[#5DD9D2]/20" },
-    rose: { chip: "bg-rose-50 text-rose-600", text: "text-rose-600", ring: "ring-rose-500/15" },
-    amber: { chip: "bg-amber-50 text-amber-600", text: "text-amber-600", ring: "ring-amber-500/15" },
-    emerald: { chip: "bg-emerald-50 text-emerald-600", text: "text-emerald-600", ring: "ring-emerald-500/15" },
-    slate: { chip: "bg-slate-100 text-slate-600", text: "text-slate-900", ring: "ring-slate-400/10" },
+    violet: { chip: "bg-[#5B47E0]/10 text-[#5B47E0] dark:text-[#A99BFF]", text: "text-[#5B47E0] dark:text-[#A99BFF]", ring: "ring-[#5B47E0]/15" },
+    cyan: { chip: "bg-[#5DD9D2]/15 text-[#0E9E97] dark:text-[#5DD9D2]", text: "text-[#0E9E97] dark:text-[#5DD9D2]", ring: "ring-[#5DD9D2]/20" },
+    rose: { chip: "bg-rose-500/10 text-rose-600 dark:text-rose-400", text: "text-rose-600 dark:text-rose-400", ring: "ring-rose-500/15" },
+    amber: { chip: "bg-amber-500/10 text-amber-600 dark:text-amber-400", text: "text-amber-600 dark:text-amber-400", ring: "ring-amber-500/15" },
+    emerald: { chip: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", text: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-500/15" },
+    slate: { chip: "bg-foreground/[.06] text-muted-foreground", text: "text-foreground", ring: "ring-foreground/10" },
 }
 
 /** Base card: white, soft corners, subtle shadow. */
 export const Panel = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <div
         className={cn(
-            "rounded-2xl border border-slate-200/70 bg-white",
+            "rounded-2xl border border-border bg-card",
             "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-16px_rgba(91,71,224,0.18)]",
             className
         )}
@@ -47,13 +47,13 @@ export const KpiTile = ({ label, value, sub, icon, accent = "violet" }: KpiTileP
     return (
         <Panel className={cn("p-5 ring-1 ring-inset", a.ring)}>
             <div className="flex items-start justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
                 {icon && (
                     <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", a.chip)}>{icon}</span>
                 )}
             </div>
             <div className={cn("mt-3 text-3xl font-bold tracking-tight", a.text)}>{value}</div>
-            {sub && <div className="mt-1 text-xs text-slate-400">{sub}</div>}
+            {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
         </Panel>
     )
 }
@@ -78,8 +78,8 @@ export const HeroTile = ({ label, value, sub, icon }: KpiTileProps) => (
 export const PanelHeader = ({ title, desc, action }: { title: string; desc?: string; action?: React.ReactNode }) => (
     <div className="flex items-start justify-between gap-3 px-5 pt-5">
         <div>
-            <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
-            {desc && <p className="mt-0.5 text-xs text-slate-400">{desc}</p>}
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+            {desc && <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>}
         </div>
         {action}
     </div>
@@ -95,17 +95,17 @@ const STATUS_PILL_LABELS: Record<string, string> = {
 }
 
 const STATUS_PILL_TONE: Record<string, string> = {
-    paid: "bg-emerald-50 text-emerald-600",
-    in_review: "bg-[#EEEBFC] text-[#5B47E0]",
-    partial: "bg-sky-50 text-sky-600",
-    overdue: "bg-rose-50 text-rose-600",
-    pending: "bg-amber-50 text-amber-600",
+    paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    in_review: "bg-[#5B47E0]/10 text-[#5B47E0] dark:text-[#A99BFF]",
+    partial: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    overdue: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
 }
 
 export const StatusPill = ({ status }: { status: string | null | undefined }) => {
     const s = status ?? ""
     return (
-        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_PILL_TONE[s] ?? "bg-slate-100 text-slate-400")}>
+        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_PILL_TONE[s] ?? "bg-foreground/[.06] text-muted-foreground")}>
             {STATUS_PILL_LABELS[s] ?? "—"}
         </span>
     )
@@ -115,10 +115,10 @@ export const StatusPill = ({ status }: { status: string | null | undefined }) =>
 export type ChipTone = "rose" | "amber" | "sky" | "violet"
 
 const CHIP_TONE: Record<ChipTone, string> = {
-    rose: "bg-rose-50 text-rose-600",
-    amber: "bg-amber-50 text-amber-600",
-    sky: "bg-sky-50 text-sky-600",
-    violet: "bg-[#EEEBFC] text-[#5B47E0]",
+    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    violet: "bg-[#5B47E0]/10 text-[#5B47E0] dark:text-[#A99BFF]",
 }
 
 /** Small pill for a month in the collections list. */
@@ -148,8 +148,8 @@ export const BtnGhost = ({ className, children, ...props }: React.ButtonHTMLAttr
     <button
         {...props}
         className={cn(
-            "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600",
-            "transition hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] disabled:opacity-50",
+            "inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground",
+            "transition hover:bg-foreground/[.04] hover:text-foreground active:scale-[0.98] disabled:opacity-50",
             className
         )}
     >

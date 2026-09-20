@@ -14,10 +14,10 @@ import ExpenseForm from "./ExpenseForm"
 import { HeroTile, KpiTile, Panel } from "./ui"
 
 const tooltipStyle = {
-    contentStyle: { borderRadius: 12, border: "1px solid #E2E8F0", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
+    contentStyle: { borderRadius: 12, border: "1px solid var(--border)", background: "var(--popover)", color: "var(--popover-foreground)", boxShadow: "0 12px 28px -16px rgba(15,23,42,0.25)", fontSize: 12 },
 }
-const categoryBadgeCls = "inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
-const rowActionCls = "flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 transition"
+const categoryBadgeCls = "inline-flex items-center rounded-full bg-foreground/[.06] px-2 py-0.5 text-xs font-medium text-muted-foreground"
+const rowActionCls = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition"
 
 const ExpensesTab = ({ period }: { period: { year: number; month: number } }) => {
     const { expenses, loading, createExpense, updateExpense, deleteExpense, mutating } = useExpenses(period.year)
@@ -91,19 +91,19 @@ const ExpensesTab = ({ period }: { period: { year: number; month: number } }) =>
 
             <Panel>
                 <div className="px-5 pt-5">
-                    <h3 className="text-sm font-semibold text-slate-800">Historial mensual {period.year}</h3>
-                    <p className="mt-0.5 text-xs text-slate-400">Gasto total por mes. El mes seleccionado está resaltado.</p>
+                    <h3 className="text-sm font-semibold text-foreground">Historial mensual {period.year}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Gasto total por mes. El mes seleccionado está resaltado.</p>
                 </div>
                 <div className="p-4 pt-2">
                     <ResponsiveContainer width="100%" height={220}>
                         <BarChart data={history}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F6" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="label" tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "#F8FAFC" }} />
+                            <Tooltip {...tooltipStyle} formatter={(v: number) => formatMoney(v)} cursor={{ fill: "rgba(127,127,127,.1)" }} />
                             <Bar dataKey="total" radius={[6, 6, 0, 0]} maxBarSize={34} isAnimationActive={false}>
                                 {history.map((h) => (
-                                    <Cell key={h.monthIndex} fill={h.monthIndex === monthIndex ? "#5B47E0" : "#D9D6F4"} />
+                                    <Cell key={h.monthIndex} fill={h.monthIndex === monthIndex ? "#5B47E0" : "rgba(91,71,224,.3)"} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -113,8 +113,8 @@ const ExpensesTab = ({ period }: { period: { year: number; month: number } }) =>
 
             <Panel className="p-5">
                 <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-slate-800">Gastos de {monthLabel} {period.year}</h3>
-                    <p className="text-xs text-slate-400">{formatMoney(total)} en total</p>
+                    <h3 className="text-sm font-semibold text-foreground">Gastos de {monthLabel} {period.year}</h3>
+                    <p className="text-xs text-muted-foreground">{formatMoney(total)} en total</p>
                 </div>
 
                 <div className="mt-4">
@@ -127,7 +127,7 @@ const ExpensesTab = ({ period }: { period: { year: number; month: number } }) =>
                     />
                 </div>
 
-                <div className="mt-4 divide-y divide-slate-100">
+                <div className="mt-4 divide-y divide-border">
                     {loading && (
                         <div className="py-10">
                             <Spinner size="md" color="primary" />
@@ -135,25 +135,25 @@ const ExpensesTab = ({ period }: { period: { year: number; month: number } }) =>
                     )}
 
                     {!loading && monthExpenses.length === 0 && (
-                        <p className="py-6 text-center text-sm text-slate-400">Sin gastos en este periodo. Agrega el primero.</p>
+                        <p className="py-6 text-center text-sm text-muted-foreground">Sin gastos en este periodo. Agrega el primero.</p>
                     )}
 
                     {!loading &&
                         monthExpenses.map((expense) => (
                             <div key={expense.id} className="flex items-center gap-3 py-2.5">
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-slate-700">{expense.description}</p>
+                                    <p className="truncate text-sm font-medium text-foreground">{expense.description}</p>
                                     <div className="mt-0.5 flex items-center gap-2">
-                                        <span className="text-xs text-slate-400">{dayjs(expense.date).format("DD/MM")}</span>
+                                        <span className="text-xs text-muted-foreground">{dayjs(expense.date).format("DD/MM")}</span>
                                         <span className={categoryBadgeCls}>{EXPENSE_CATEGORY_LABELS[expense.category]}</span>
                                     </div>
                                 </div>
-                                <span className="text-sm font-semibold text-slate-800">{formatMoney(expense.amount)}</span>
+                                <span className="text-sm font-semibold text-foreground">{formatMoney(expense.amount)}</span>
                                 <div className="flex items-center gap-1">
                                     <button
                                         type="button"
                                         onClick={() => setEditing(expense)}
-                                        className={`${rowActionCls} hover:bg-slate-100 hover:text-slate-600`}
+                                        className={`${rowActionCls} hover:bg-foreground/[.07] hover:text-foreground`}
                                     >
                                         <PencilIcon className="h-4 w-4" />
                                     </button>

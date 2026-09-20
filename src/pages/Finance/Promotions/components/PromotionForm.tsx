@@ -20,9 +20,9 @@ interface Props {
     onSubmit: (values: PromotionFormValues) => Promise<void> | void
 }
 
-const fieldLabelCls = "text-xs font-medium text-slate-500"
+const fieldLabelCls = "text-xs font-medium text-muted-foreground"
 const dateTriggerCls =
-    "flex h-9 w-full items-center rounded-md border border-input bg-white px-3 py-1 text-sm text-slate-700 outline-none focus:border-primary"
+    "flex h-9 w-full items-center rounded-md border border-input bg-card px-3 py-1 text-sm text-foreground outline-none focus:border-primary"
 
 const PromotionForm = ({ promotion, loading, onSubmit }: Props) => {
     const isEdit = Boolean(promotion)
@@ -64,7 +64,7 @@ const PromotionForm = ({ promotion, loading, onSubmit }: Props) => {
                         value={discountType}
                         onValueChange={(value) => setValue("discountType", value as PromotionFormValues["discountType"], { shouldValidate: true })}
                     >
-                        <SelectTrigger className="w-full bg-white">
+                        <SelectTrigger className="w-full bg-card">
                             <SelectValue placeholder="Selecciona un tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -117,7 +117,7 @@ const PromotionForm = ({ promotion, loading, onSubmit }: Props) => {
                     <label className={fieldLabelCls}>Estado</label>
                     <div className="flex h-9 items-center gap-2">
                         <Switch checked={active} onCheckedChange={(value) => setValue("active", value, { shouldValidate: true })} />
-                        <span className="text-sm text-slate-600">{active ? "Activa" : "Inactiva"}</span>
+                        <span className="text-sm text-muted-foreground">{active ? "Activa" : "Inactiva"}</span>
                     </div>
                 </div>
             </div>

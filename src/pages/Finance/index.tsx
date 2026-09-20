@@ -41,7 +41,7 @@ const FinancePage = () => {
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                     <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Finanzas y Cobranza</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Finanzas y Cobranza</h1>
                 </div>
                 {showPeriod && (
                     <div className="flex flex-wrap items-center gap-2">
@@ -56,14 +56,14 @@ const FinancePage = () => {
             </div>
 
             <div className="-mx-1 overflow-x-auto px-1">
-                <div className="inline-flex w-max gap-1 rounded-full border border-slate-200/80 bg-white/70 p-1 backdrop-blur">
+                <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
                     {TABS.map((t) => {
                         const active = tab === t.key
                         return (
                             <button
                                 key={t.key}
                                 onClick={() => setTab(t.key)}
-                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition sm:px-5 ${active ? "text-white shadow-[0_8px_18px_-8px_rgba(91,71,224,0.7)]" : "text-slate-500 hover:text-slate-800"
+                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition sm:px-5 ${active ? "text-white shadow-[0_8px_18px_-8px_rgba(91,71,224,0.7)]" : "text-muted-foreground hover:text-foreground"
                                     }`}
                                 style={active ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
                             >
