@@ -10,13 +10,13 @@ export const STATUS_LOADED = "completed"
 
 export const statusMeta = (s: CellStatus): { label: string; pill: string; dot: string } => {
     switch ((s || "").toLowerCase()) {
-        case "completed": return { label: "Subido", pill: "bg-emerald-50 text-emerald-600", dot: "bg-emerald-500" }
+        case "completed": return { label: "Subido", pill: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" }
         // Subido pero sin registros: hay que volver a cargarlo.
-        case "empty": return { label: "Sin datos", pill: "bg-sky-50 text-sky-600", dot: "bg-sky-400" }
-        case "failed": return { label: "Rechazado", pill: "bg-rose-50 text-rose-600", dot: "bg-rose-500" }
-        case "processing": return { label: "Procesando", pill: "bg-amber-50 text-amber-600", dot: "bg-amber-400" }
-        case "missing": return { label: "Falta", pill: "bg-slate-100 text-slate-500", dot: "bg-slate-200" }
-        default: return { label: "No aplica", pill: "bg-white text-slate-300", dot: "border border-slate-200 bg-white" }
+        case "empty": return { label: "Sin datos", pill: "bg-sky-500/10 text-sky-600 dark:text-sky-400", dot: "bg-sky-400" }
+        case "failed": return { label: "Rechazado", pill: "bg-rose-500/10 text-rose-600 dark:text-rose-400", dot: "bg-rose-500" }
+        case "processing": return { label: "Procesando", pill: "bg-amber-500/10 text-amber-600 dark:text-amber-400", dot: "bg-amber-400" }
+        case "missing": return { label: "Falta", pill: "bg-foreground/[.06] text-muted-foreground", dot: "bg-foreground/15" }
+        default: return { label: "No aplica", pill: "bg-transparent text-muted-foreground/60", dot: "border border-border bg-transparent" }
     }
 }
 

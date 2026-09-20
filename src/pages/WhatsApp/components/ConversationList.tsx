@@ -46,7 +46,7 @@ const ConversationList = ({
                 />
             </div>
 
-            <div className="inline-flex w-full gap-1 rounded-full border border-border bg-white/70 p-1">
+            <div className="inline-flex w-full gap-1 rounded-full border border-border bg-card/70 p-1">
                 {MODES.map((m) => {
                     const active = mode === m.key
                     return (

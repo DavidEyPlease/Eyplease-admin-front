@@ -18,11 +18,18 @@ import ClientsTableList from "./components/Table";
 import FabButton from "@/components/generics/FabButton";
 import SendPushNotificationModal from "./components/SendPushNotificationModal";
 import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
+import StatusBoard from "./StatusBoard"
+import { cn } from "@/lib/utils"
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
 
     const [showNotificationModal, setShowNotificationModal] = useState(false)
+    /* Con el marco nuevo el padrón abre en «una fila, todo su estado»; la tabla de siempre (la que
+       edita login, contraseña, logotipo y promoción en sitio) queda a un clic, entera. */
+    const newShell = isNewShell()
+    const [view, setView] = useState<'board' | 'table'>(newShell ? 'board' : 'table')
     const { utilData } = useAuthStore(state => state)
 
     const {
@@ -59,8 +66,17 @@ const ClientsListPage = () => {
 
     return (
         <div className="grid grid-cols-[minmax(0,1fr)] pt-2 gap-y-4">
-            <PageHead eyebrow="Clientas" title={<>El <em>padrón</em></>} sub="Cada cuenta con su plan, su estado y su acceso. Entra a una para verla a fondo." />
-            <ClientsMetrics />
+            <PageHead eyebrow="Clientas" title={<>Todas las clientas · <em>una fila, todo su estado</em></>} sub="Plan, pago, reportes del mes, puntos y acceso sin salir de la lista. Entra a una para verla a fondo.">
+                <div className="inline-flex rounded-xl bg-foreground/5 p-[3px]">
+                    {([['board', 'Estado'], ['table', 'Tabla de trabajo']] as const).map(([key, label]) => (
+                        <button key={key} type="button" onClick={() => setView(key)} className={cn('h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors', view === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{label}</button>
+                    ))}
+                </div>
+                <Button rounded text={<><PlusIcon className="w-4 h-4 mr-2" />Nueva clienta</>} onClick={() => navigate(APP_ROUTES.CLIENTS.CREATE)} />
+            </PageHead>
+            {view === 'board' && <StatusBoard />}
+            {view === 'table' && <>
+            {!newShell && <ClientsMetrics />}
             <div className="flex items-center gap-x-2">
                 <div className="flex-1">
                     <FiltersAndSearch
@@ -75,7 +91,8 @@ const ClientsListPage = () => {
                         resetFilters={cleanSelectedFilters}
                     />
                 </div>
-                <Button
+                {/* Con el marco nuevo el botón ya está en el encabezado */}
+                {!newShell && <Button
                     rounded
                     text={
                         <>
@@ -84,7 +101,7 @@ const ClientsListPage = () => {
                         </>
                     }
                     onClick={() => navigate(APP_ROUTES.CLIENTS.CREATE)}
-                />
+                />}
             </div>
             <div className="space-y-4">
                 <ClientsTableList
@@ -103,6 +120,7 @@ const ClientsListPage = () => {
                     onChangePerPage={setPerPage}
                 />
             </div>
+            </>}
             <FabButton
                 icon={<BellIcon className="h-5 w-5" />}
                 onClick={() => setShowNotificationModal(true)}

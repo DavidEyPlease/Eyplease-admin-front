@@ -23,12 +23,12 @@ const DateInput = ({ value, onChange, placeholder = "Fecha", className }: DateIn
                 <button
                     type="button"
                     className={cn(
-                        "flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#5B47E0]",
+                        "flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none transition focus:border-[#5B47E0]",
                         className
                     )}
                 >
-                    <CalendarIcon className="h-4 w-4 shrink-0 text-slate-400" />
-                    <span className={cn("whitespace-nowrap", value ? "text-slate-700" : "text-slate-400")}>
+                    <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className={cn("whitespace-nowrap", value ? "text-foreground" : "text-muted-foreground")}>
                         {value ? dayjs(value).format("DD/MM/YYYY") : placeholder}
                     </span>
                     {value && (
@@ -40,7 +40,7 @@ const DateInput = ({ value, onChange, placeholder = "Fecha", className }: DateIn
                                 e.stopPropagation()
                                 onChange(undefined)
                             }}
-                            className="ml-1 text-slate-300 transition hover:text-slate-500"
+                            className="ml-1 text-muted-foreground/60 transition hover:text-foreground"
                         >
                             <XIcon className="h-3.5 w-3.5" />
                         </span>

@@ -47,7 +47,7 @@ const ManageClients = ({ template }: Props) => {
                 <div className="flex items-center justify-between">
                     <div>
                         <h4 className="font-medium text-[#4E31C0]">Resumen de la Plantilla</h4>
-                        <p className="text-sm text-gray-600 mt-1">{template.name}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{template.name}</p>
                     </div>
                     <Badge>
                         {clientsCount} clientes activos

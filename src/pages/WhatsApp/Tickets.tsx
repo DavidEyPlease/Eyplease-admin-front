@@ -6,6 +6,8 @@ import { WaTicketStatus } from "@/interfaces/whatsapp"
 
 import { relativeTime } from "./whatsapp.utils"
 import { useWaTicketActions, useWaTickets } from "./useWhatsApp"
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
 const FILTERS: { key: WaTicketStatus | "todos"; label: string }[] = [
     { key: "todos", label: "Todos" },
@@ -31,6 +33,9 @@ const WhatsAppTicketsPage = () => {
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5">
             <div className="flex items-center gap-2.5">
+                {isNewShell() ? (
+                    <PageHead eyebrow="Clientas · WhatsApp" title={<>Tickets · <em>lo que quedó por resolver</em></>} />
+                ) : (<>
                 <span
                     className="h-7 w-1.5 rounded-full"
                     style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
@@ -38,10 +43,11 @@ const WhatsAppTicketsPage = () => {
                 <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                     Tickets de WhatsApp
                 </h1>
+                </>)}
             </div>
 
             <div className="-mx-1 overflow-x-auto px-1">
-                <div className="inline-flex w-max gap-1 rounded-full border border-border bg-white/70 p-1">
+                <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1">
                     {FILTERS.map((f) => {
                         const active = filter === f.key
                         return (

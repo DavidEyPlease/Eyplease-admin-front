@@ -23,9 +23,9 @@ import {
     toApplyPromotionPayload,
 } from "./clientPromotionSchema"
 
-const fieldLabelCls = "text-xs font-medium text-slate-500"
+const fieldLabelCls = "text-xs font-medium text-muted-foreground"
 const dateTriggerCls =
-    "flex h-9 w-full items-center rounded-md border border-input bg-white px-3 py-1 text-sm text-slate-700 outline-none focus:border-primary"
+    "flex h-9 w-full items-center rounded-md border border-input bg-card px-3 py-1 text-sm text-foreground outline-none focus:border-primary"
 
 const formatDiscount = (promotion: ClientPromotion) =>
     promotion.discount_type === "percent" ? `${promotion.discount}%` : formatMoney(promotion.discount)
@@ -76,12 +76,12 @@ const ClientPromotionForm = ({ client, onDone }: { client: IClient; onDone: () =
             <div className="flex flex-col gap-1">
                 <label className={fieldLabelCls}>Promoción</label>
                 <Select value={promotionId ?? undefined} onValueChange={onSelectPromotion}>
-                    <SelectTrigger className="w-full bg-white">
+                    <SelectTrigger className="w-full bg-card">
                         <SelectValue placeholder="Selecciona una promoción" />
                     </SelectTrigger>
                     <SelectContent>
                         {selectable.length === 0 ? (
-                            <div className="px-2 py-1.5 text-sm text-slate-400">No hay promociones activas</div>
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">No hay promociones activas</div>
                         ) : (
                             selectable.map((promotion) => (
                                 <SelectItem key={promotion.id} value={promotion.id}>
@@ -91,7 +91,7 @@ const ClientPromotionForm = ({ client, onDone }: { client: IClient; onDone: () =
                         )}
                     </SelectContent>
                 </Select>
-                <p className="text-[11px] text-slate-400">Se usa como plantilla; puedes ajustar los campos para este cliente.</p>
+                <p className="text-[11px] text-muted-foreground">Se usa como plantilla; puedes ajustar los campos para este cliente.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -101,7 +101,7 @@ const ClientPromotionForm = ({ client, onDone }: { client: IClient; onDone: () =
                         value={discountType}
                         onValueChange={(value) => setValue("discountType", value as ClientPromotionFormValues["discountType"], { shouldValidate: true })}
                     >
-                        <SelectTrigger className="w-full bg-white">
+                        <SelectTrigger className="w-full bg-card">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -174,7 +174,7 @@ const ClientPromotionCell = ({ client }: { client: IClient }) => {
                 text={
                     applied ? (
                         <span className="flex items-center gap-1.5">
-                            <span className="font-medium text-slate-700">{applied.name ?? "Promoción"}</span>
+                            <span className="font-medium text-foreground">{applied.name ?? "Promoción"}</span>
                             <span className="rounded-md bg-[#5B47E0]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#5B47E0]">{formatDiscount(applied)}</span>
                             {expired && <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-medium text-rose-600">Vencida</span>}
                         </span>
@@ -188,9 +188,9 @@ const ClientPromotionCell = ({ client }: { client: IClient }) => {
             />
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="max-w-lg rounded-2xl border-slate-200 bg-white">
+                <DialogContent className="max-w-lg rounded-2xl border-border bg-card">
                     <DialogHeader>
-                        <DialogTitle className="text-slate-900">Promoción · {client.name}</DialogTitle>
+                        <DialogTitle className="text-foreground">Promoción · {client.name}</DialogTitle>
                     </DialogHeader>
                     <ClientPromotionForm client={client} onDone={() => setOpen(false)} />
                 </DialogContent>

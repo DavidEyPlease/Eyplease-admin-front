@@ -11,6 +11,8 @@ import PaymentsTab from "./components/PaymentsTab"
 import PromotionsTab from "./Promotions/PromotionsTab"
 import PaymentMethodsTab from "./PaymentMethods/PaymentMethodsTab"
 import ClientDrawer from "./components/ClientDrawer"
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
 const TABS = [
     { key: "resumen", label: "Resumen" },
@@ -39,10 +41,14 @@ const FinancePage = () => {
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
-                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Finanzas y Cobranza</h1>
-                </div>
+                {isNewShell() ? (
+                    <PageHead eyebrow="Finanzas" title={<>Cobranza · <em>el dinero del mes</em></>} sub="Lo cobrado, lo que falta y quién debe; pagos, gastos y balance del año en las pestañas." />
+                ) : (
+                    <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
+                        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Finanzas y Cobranza</h1>
+                    </div>
+                )}
                 {showPeriod && (
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="w-36">

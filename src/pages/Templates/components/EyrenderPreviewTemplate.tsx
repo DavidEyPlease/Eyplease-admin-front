@@ -180,7 +180,7 @@ const EyrenderPreviewTemplate = ({ template, variant = null, disabled, disabledR
     const progressValue = isPolling ? ((pollSeconds - secondsLeft) / pollSeconds) * 100 : 0
 
     return (
-        <div className="p-4 border border-dashed border-gray-300 rounded-md aspect-square max-w-lg mx-auto flex items-center justify-center relative">
+        <div className="p-4 border border-dashed border-border rounded-md aspect-square max-w-lg mx-auto flex items-center justify-center relative">
             {!response && (
                 <div className="flex flex-col items-center gap-2">
                     <Button

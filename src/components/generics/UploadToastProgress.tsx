@@ -20,7 +20,7 @@ const UploadToastProgress = () => {
             {uploads.map(file => (
                 <div key={file.id}>
                     <span className="font-medium text-sm truncate text-white">{file.name}</span>
-                    <div className="w-full h-2 bg-gray-200 rounded mt-2">
+                    <div className="w-full h-2 bg-foreground/10 rounded mt-2">
                         <div
                             className={`h-2 rounded transition-all duration-200 ${file.status === 'error' ? 'bg-red-500' : file.status === 'success' ? 'bg-green-500' : 'bg-blue-500'
                                 }`}

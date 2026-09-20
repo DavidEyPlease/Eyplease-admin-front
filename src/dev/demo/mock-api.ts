@@ -118,7 +118,7 @@ const downloadRuns = ([
     ['dr-1', ['early'], null, 29, 29, 0, 6, 0], ['dr-2', ['pink_circle_hearts', 'pink_circle_vip_plus'], null, 196, 194, 2, 11, 30], ['dr-3', ['pink_circle_hearts'], ['EJ-001', 'EJ-002'], 2, 2, 0, 12, 30],
 ] as Array<[string, string[], string[] | null, number, number, number, number, number]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([run_id, sections, clients, total, uploaded, failed, h, m]) => ({
     run_id, process: 'daily', sections, clients, reset: false, status: 'completed', result: { total, uploaded, failed, skipped: 0 }, error: null, queued_at: at(h, m).toISOString(), finished_at: at(h, m + 4).toISOString(),
-}))
+})).reverse()
 
 /* Una pieza de mentira: un mosaico con su rótulo, sin imágenes de nadie */
 const tile = (label: string, a: string, b: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="200" cy="190" r="70" fill="rgba(255,255,255,.22)"/><rect x="90" y="300" width="220" height="18" rx="9" fill="rgba(255,255,255,.55)"/><rect x="130" y="332" width="140" height="12" rx="6" fill="rgba(255,255,255,.35)"/><text x="200" y="440" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="800" fill="rgba(255,255,255,.85)">${label}</text></svg>`)}`
@@ -162,6 +162,58 @@ const demoTasks = [
     task_status: utilData.task_statuses[Number(status)], task_type: utilData.task_types[0], assigned_to: null, files: [], metadata: {},
     created_at: iso(Number(daysAgo) * 1440), updated_at: iso(30),
 }))
+
+/* ── Clientas, cobranza y matriz de reportes (gente inventada) ─────────────────────────────── */
+const demoClients = ([
+    ['A', 'Directora Ejecutiva', 2, true, true, 0], ['B', 'Directora', 1, true, true, 1], ['C', 'Directora Senior', 2, true, false, 3], ['D', 'Directora', 0, true, true, 9],
+    ['E', 'Consultora', 0, true, true, 2], ['F', 'Directora', 1, false, true, 95], ['G', 'Directora Senior', 2, true, true, 0], ['H', 'Consultora', 0, true, true, 40],
+    ['I', 'Directora', 1, true, true, 4], ['J', 'Directora Ejecutiva', 2, true, false, 0],
+] as Array<[string, string, number, boolean, boolean, number]>).map(([letter, rank, planIndex, active, password, seenDays], index) => ({
+    id: `c-${index}`, name: `Clienta de ejemplo ${letter}`, account: `EJ-00${index + 1}`, from_signup: 'admin', mk_status: 'A1', photo: null, logotype: null, country: 'MEX',
+    created_at: iso(60 * 24 * (200 + index * 17)), last_sign_in_at: seenDays > 90 ? null : iso(60 * 24 * seenDays), platform_guest_account: `invitada${index + 1}`,
+    external_company_pw: password ? 'ejemplo' : null, rank, start_date: '2019-03-01', last_order_date: ymd(), promotion: index === 4 ? { promotion_id: 'p1', name: 'Promo de ejemplo −20 %', discount_type: 'percentage', discount: 20, expires_at: ymd() } : null,
+    current_month_points: 1800 + ((index * 7919) % 5200), previous_month_points: 2400 + ((index * 3571) % 6100), client_current_month_points: 600, client_previous_month_points: 900,
+    user: { id: `u-${index}`, name: `Clienta de ejemplo ${letter}`, email: `clienta${index + 1}@ejemplo.com`, profile_picture: null, username: `EJ-00${index + 1}`, country: 'MEX', phone: '0000000000', active, on_notifications: true, on_biometric_auth: false, role: { id: 'r-client', name: 'Cliente', role_key: 'client', permissions: [] }, plan: plans[planIndex] },
+}))
+const financeBy: Record<string, string[]> = { overdue: ['EJ-003', 'EJ-008'], in_review: ['EJ-005'], pending: ['EJ-002', 'EJ-004', 'EJ-009'] }
+const financeClients = (status: string) => page((financeBy[status] ?? []).map(account => ({ id: account, name: demoClients.find(client => client.account === account)?.name ?? account, plan: null, fixed_payment: null, billing_type: 'manual', app_status: 'active', payment_day: 5, phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, payments: {} })))
+const reportSections = [['early', 'Tempraneras'], ['pink_circle', 'Círculo Rosa'], ['stars', 'Estrellas'], ['honor_roll', 'Cuadro de Honor'], ['new_beginnings', 'Nuevos inicios'], ['birthdays', 'Cumpleaños']]
+const clientsStatus = {
+    sections: reportSections.map(([section_key, name]) => ({ section_key, name, group: 'unit', plans: plans.map(plan => plan.name) })),
+    clients: demoClients.filter(client => client.user.active).map((client, index) => ({
+        id: client.id, name: client.name, account: client.account, plan: client.user.plan.name,
+        cells: Object.fromEntries(reportSections.slice(0, 4 + (index % 3)).map(([key], column) => [key, (index === 2 && column > 1) || (index === 7 && column === 0) ? 'missing' : 'completed'])),
+    })),
+}
+const reportSummary = {
+    period: period(1),
+    kpis: { progress: 94, loaded: 512, expected: 545, clients_with_newsletter: 98, missing: 33, rejected: 2, empty: 1 },
+    sections: reportSections.map(([section_key, name], index) => ({ section_key, name, group: 'unit', loaded: 98 - index * 3, expected: 98, missing: index * 3 })),
+}
+
+/* ── WhatsApp: una bandeja de ejemplo para recorrer la pantalla (nadie real, nada se envía) ─── */
+const waConversation = (n: number, name: string, last: string, minutes: number, manual: boolean, client: boolean, channel = 'whatsapp') => ({
+    wa_id: `52155000000${n}`, channel, stage: client ? 'soporte' : 'prospecto', human_took_over: manual, profile_name: name, display_name: name, last_message: last, notas_count: 0,
+    identity: client ? { name, consultantCode: `EJ-00${n}`, networkPersonId: `c-${n - 1}`, role: 'Directora', photoUrl: null, active: true, isClient: true, found: true } : { found: false, isClient: false },
+    name: client ? name : null, account: client ? `EJ-00${n}` : null, network_person_id: client ? `c-${n - 1}` : null, created_at: iso(60 * 24 * 12), updated_at: iso(minutes),
+})
+const waConversations = [
+    waConversation(1, 'Clienta de ejemplo A', '¿Ya quedó mi invitación?', 12, false, true), waConversation(3, 'Clienta de ejemplo C', 'Ya hice la transferencia, te mando el comprobante', 47, true, true),
+    waConversation(5, 'Clienta de ejemplo E', 'Gracias, quedó hermoso', 180, false, true), waConversation(9, 'Prospecto de ejemplo', '¿Cuánto cuesta el plan para una Directora?', 260, false, false, 'instagram'),
+]
+const waHistory = (name: string) => [
+    { role: 'user', content: `Hola, soy ${name}. ¿Ya quedó mi invitación para la junta del sábado?`, at: iso(40) },
+    { role: 'assistant', content: 'Hola. Tu invitación está en proceso con el equipo de diseño; la fecha compromiso es hoy a las 10 de la noche. En cuanto esté lista te aviso por aquí.', at: iso(39) },
+    { role: 'user', content: 'Perfecto. ¿Le pueden poner la dirección del salón?', at: iso(14) },
+    { role: 'assistant', content: 'Claro, ya se lo pasé al diseñador como nota del pedido.', at: iso(13) },
+    { role: 'user', content: '¿Ya quedó mi invitación?', at: iso(12) },
+]
+const waTickets = [
+    { id: 't-1', wa_id: '521550000003', client_name: 'Clienta de ejemplo C', client_role: 'Directora Senior', channel: 'whatsapp', problem: 'Subió comprobante y su pago sigue como vencido', severity: 'alta', status: 'abierto', created_at: iso(50), updated_at: iso(47) },
+    { id: 't-2', wa_id: '521550000005', client_name: 'Clienta de ejemplo E', client_role: 'Consultora', channel: 'whatsapp', problem: 'No le aparece la foto en su pieza de cumpleaños', severity: 'media', status: 'en_proceso', created_at: iso(60 * 20), updated_at: iso(60 * 3) },
+    { id: 't-3', wa_id: '521550000001', client_name: 'Clienta de ejemplo A', client_role: 'Directora Ejecutiva', channel: 'whatsapp', problem: 'Pidió cambiar el logotipo de su unidad', severity: 'baja', status: 'resuelto', created_at: iso(60 * 50), updated_at: iso(60 * 30) },
+]
+const waPage = <T,>(items: T[]) => ({ current_page: 1, items, per_page: 30, total_items: items.length, last_page: 1, is_last_page: true })
 
 /* ── Copiloto de mentira ─────────────────────────────────────────────────────────────────────
    En la demo NO hay IA: contesta con un guion armado con las MISMAS cifras de ejemplo de arriba,
@@ -266,6 +318,33 @@ export const installMockApi = () => {
         else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
         else if (path === '/plans') response = respond(plans)
         else if (path === '/tasks' && method === 'GET') response = respond(demoTasks)
+        else if (path === '/clients' && method === 'GET') {
+            const search = (url.searchParams.get('search') ?? '').toLowerCase()
+            response = respond(page(demoClients.filter(client => !search || `${client.name} ${client.account}`.toLowerCase().includes(search))))
+        }
+        else if (path === '/clients/metrics') response = respond({ active: 98, inactive: 7, pending_payment: 4, total_reports: 545, uploaded_reports: 512 })
+        else if (/^\/clients\/c-\d+$/.test(path) && method === 'GET') {
+            /* La ficha espera `{ client, stats }`, no la clienta suelta */
+            const found = demoClients.find(client => client.id === path.split('/')[2])
+            response = respond(found ? { client: found, stats: { tools_download_percentage: 42, total_tools: 120, downloaded_tools: 50, monthly_posts: 64, shared_posts: 19, posts_shared_percentage: 30, month: period(0) } } : null, found ? 200 : 404)
+        }
+        else if (/^\/clients\/c-\d+\/network$/.test(path)) response = respond(page([]))
+        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
+        else if (path === '/reports/clients-status') response = respond(clientsStatus)
+        else if (path === '/reports/summary') response = respond(reportSummary)
+        else if (path === '/whatsapp/stats') response = respond({ conversations: waConversations.length, manual: 1, bot: 3, open_tickets: 2, delivery_failures: 0 })
+        else if (path === '/whatsapp/conversations') response = respond(waPage(waConversations))
+        else if (/^\/whatsapp\/conversations\/\d+\/client$/.test(path)) {
+            const found = waConversations.find(item => item.wa_id === path.split('/')[3])
+            response = respond(found?.account ? { identified: true, last_client_message_at: iso(12), client: { id: found.network_person_id, account: found.account, name: found.name, email: 'clienta@ejemplo.com', active: true, photo: null, country_code: 'MX', rank: 'Directora', plan: 'Plan de ejemplo B', payments: { year: now.getFullYear(), status: found.account === 'EJ-003' ? 'retraso' : 'al_corriente', paid_periods: 8, overdue_periods: found.account === 'EJ-003' ? 1 : 0, in_review_periods: 0, pending_periods: 3, last_payment: { period: period(1), status: 'paid', amount: 990, paid_at: iso(60 * 24 * 18) } } } } : { identified: false, client: null, last_client_message_at: iso(260) })
+        }
+        else if (/^\/whatsapp\/conversations\/\d+$/.test(path)) {
+            const found = waConversations.find(item => item.wa_id === path.split('/')[3])
+            response = respond(found ? { ...found, history: waHistory(found.display_name ?? 'Clienta'), notas: [], qualification: null } : null, found ? 200 : 404)
+        }
+        else if (path === '/whatsapp/tickets') response = respond(waPage(waTickets))
+        else if (path === '/whatsapp/templates') response = respond([{ name: 'recordatorio_pago', status: 'APPROVED', category: 'UTILITY', language: 'es_MX', body: 'Hola {{1}}, te recordamos tu pago de Eyplease+.', varCount: 1 }])
+        else if (path.startsWith('/whatsapp/') && method === 'POST') response = respond(true)
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
         /* Lo no previsto contesta vacío: la pantalla abre en su estado «sin datos», que también hay que ver */

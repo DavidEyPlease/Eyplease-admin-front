@@ -5,10 +5,18 @@ import SummaryTab from "./components/SummaryTab"
 import MatrixTab from "./components/MatrixTab"
 import RejectionsTab from "./components/RejectionsTab"
 import RunTab from "./components/RunTab"
+import TodayTab from "./components/TodayTab"
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
+import "@/pages/Hoy/hoy.css"
 import { buildPeriodOptions, defaultPeriod } from "./reports.constants"
 
+/* Con el marco nuevo el monitor abre en HOY (el robot y sus corridas); lo del mes sigue en sus pestañas */
+const NEW_SHELL = isNewShell()
+
 const TABS = [
-    { key: "summary", label: "Resumen" },
+    ...(NEW_SHELL ? [{ key: "today", label: "Hoy" }] as const : []),
+    { key: "summary", label: NEW_SHELL ? "Resumen del mes" : "Resumen" },
     { key: "status-by-client", label: "Estado por cliente" },
     { key: "rejections", label: "Rechazos" },
     { key: "dispatch-imports", label: "Correr programas" },
@@ -19,18 +27,22 @@ type TabKey = (typeof TABS)[number]["key"]
 const PERIOD_OPTIONS = buildPeriodOptions()
 
 const ReportsPage = () => {
-    const [tab, setTab] = useState<TabKey>("summary")
+    const [tab, setTab] = useState<TabKey>(NEW_SHELL ? "today" : "summary")
     const [period, setPeriod] = useState<string>(defaultPeriod())
 
-    const showPeriod = tab !== "dispatch-imports"
+    const showPeriod = tab !== "dispatch-imports" && tab !== "today"
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
-                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Reportes Mary Kay</h1>
-                </div>
+                {NEW_SHELL ? (
+                    <PageHead eyebrow="Operación" title={<>Reportes · <em>el robot y sus corridas</em></>} sub="Qué bajó, a qué hora y qué hubo que reintentar. Lo del mes (resumen, estado por clienta y rechazos) está en las pestañas." />
+                ) : (
+                    <div className="flex items-center gap-2.5">
+                        <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
+                        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Reportes Mary Kay</h1>
+                    </div>
+                )}
                 {showPeriod && (
                     <div className="w-44">
                         <Dropdown placeholder="Periodo" value={period} items={PERIOD_OPTIONS} onChange={(v) => setPeriod(v)} />
@@ -56,6 +68,7 @@ const ReportsPage = () => {
                 </div>
             </div>
 
+            {tab === "today" && <TodayTab onOpenOptions={() => setTab("dispatch-imports")} />}
             {tab === "summary" && <SummaryTab period={period} />}
             {tab === "status-by-client" && <MatrixTab period={period} />}
             {tab === "rejections" && <RejectionsTab period={period} />}

@@ -101,7 +101,7 @@ const FileUploader = ({ title, description, info, loading, fileAccepts = '.pdf,.
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={cn(
-                        "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors",
+                        "border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-indigo-400 transition-colors",
                         isDragging && 'border-indigo-500 bg-indigo-50',
                         disableUpload && 'opacity-50 cursor-not-allowed'
                     )}

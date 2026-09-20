@@ -7,6 +7,8 @@ import ControlCenter from './components/ControlCenter'
 import Coverage from './components/Coverage'
 import { defaultPeriod } from './page-utils'
 import { useClientCoverage, usePostRenderRuns, usePostsCoverage, usePublishPosts } from './usePosts'
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
 const TABS = [
     { value: 'control', label: 'Centro de control', icon: <GaugeIcon /> },
@@ -39,10 +41,14 @@ const PostsPage = () => {
 
     return (
         <div className="flex min-w-0 flex-col gap-4">
-            <div className="flex items-center gap-2.5">
-                <span className="h-7 w-1.5 rounded-full bg-brand-gradient-v" />
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Publicaciones</h1>
-            </div>
+            {isNewShell() ? (
+                <PageHead eyebrow="Operación" title={<>Publicaciones · <em>qué salió y qué falta</em></>} sub="Cada sección con sus piezas del mes, en imagen y en video, y las corridas que las generaron. Desde aquí se relanza lo que falte." />
+            ) : (
+                <div className="flex items-center gap-2.5">
+                    <span className="h-7 w-1.5 rounded-full bg-brand-gradient-v" />
+                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Publicaciones</h1>
+                </div>
+            )}
 
             <Tabs defaultValue={TABS[0].value} className="gap-4">
                 <TabsList>

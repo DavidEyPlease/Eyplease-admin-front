@@ -1,4 +1,6 @@
 import { PlusIcon } from "lucide-react"
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
 import Button from "@/components/common/Button"
 import Modal from "@/components/common/Modal"
@@ -15,10 +17,14 @@ const TrainingsPage = () => {
 
     return (
         <div className="space-y-5">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Gestión de Entrenamientos
-                </h1>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+                {isNewShell() ? (
+                    <PageHead eyebrow="Contenido" title={<>Entrenamientos · <em>lo que aprenden las clientas</em></>} sub="Los decks y videos que ven en la app. Cada uno con su categoría, su estado y a qué planes llega." />
+                ) : (
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        Gestión de Entrenamientos
+                    </h1>
+                )}
                 <Button
                     rounded
                     text={
