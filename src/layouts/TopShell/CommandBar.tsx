@@ -54,10 +54,10 @@ const CommandBar = ({ copilot = false }: { copilot?: boolean }) => {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="ml-1.5 hidden h-[38px] min-w-0 flex-1 cursor-text items-center gap-2 rounded-xl border border-border bg-foreground/[.03] px-3 text-[12.5px] text-muted-foreground transition-colors hover:border-[#6C47FF]/40 hover:bg-foreground/[.05] lg:flex lg:max-w-[240px]"
+                className="ml-1.5 hidden h-[38px] min-w-0 flex-1 cursor-text items-center gap-2 rounded-xl border border-border bg-foreground/[.03] px-3 text-[12.5px] text-muted-foreground transition-colors hover:border-[#6C47FF]/40 hover:bg-foreground/[.05] lg:flex lg:max-w-[420px]"
             >
                 <SearchIcon className="size-[15px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-left">{copilot ? 'Ir a… o pregunta' : 'Ir a…'}</span>
+                <span className="min-w-0 flex-1 truncate text-left">{copilot ? 'Pregúntale al Copiloto o ve a una página…' : 'Ir a una página…'}</span>
                 <kbd className="shrink-0 rounded-md border border-border bg-card/70 px-1.5 py-0.5 text-[10px] font-bold">{IS_MAC ? '⌘' : 'Ctrl'} K</kbd>
             </button>
 

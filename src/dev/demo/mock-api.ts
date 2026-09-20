@@ -20,15 +20,16 @@ const revenue = (back: number, collected: number, outstanding: number) => ({
     period: period(back), collected, outstanding, paid_count: 61, overdue_count: back ? 0 : 4, in_review_count: back ? 0 : 3, pending_count: back ? 0 : 12, total_count: 80,
 })
 
-const daily = [
-    ['birthdays', 'Cumpleaños', '06:30', 'ok'], ['early', 'Ordenantes del mes', '07:00', 'ok'], ['new_beginnings', 'Nuevos inicios', '07:30', 'ok'],
-    ['pink_circle', 'Círculo Rosa en vivo', '11:30', now.getHours() >= 12 ? 'missing' : 'scheduled'], ['honor_roll', 'Cuadro de Honor en vivo', '11:30', now.getHours() >= 12 ? 'ok' : 'scheduled'],
-].map(([key, name, scheduled_at, status], index) => ({
-    key, name, scheduled_at, ran_today: status === 'ok', today_status: status,
-    days_covered: today - (index === 3 ? 2 : 0), days_expected: today, days_missing: index === 3 ? 2 : 0,
-    covered_days: Array.from({ length: today }, (_, d) => d + 1).filter(d => !(index === 3 && (d === today || d === today - 3))),
-    failed_jobs: index === 3 ? 1 : 0, last_run_at: status === 'ok' ? iso(180 - index * 20) : iso(60 * 26),
-}))
+/* Las diarias que la API vigila de verdad (PostCoverageService::DAILY_SCHEDULE) */
+const daily = ([['early', 'Ordenantes del mes', '09:00'], ['birthdays', 'Cumpleaños', '20:00'], ['anniversaries', 'Aniversarios', '20:00']] as Array<[string, string, string]>).map(([key, name, scheduled_at], index) => {
+    const [h, m] = scheduled_at.split(':').map(Number)
+    const due = now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m)
+    return {
+        key, name, scheduled_at, ran_today: due, today_status: due ? 'ok' : 'scheduled',
+        days_covered: due ? today : today - 1, days_expected: due ? today : today - 1, days_missing: index === 2 ? 1 : 0,
+        covered_days: Array.from({ length: due ? today : today - 1 }, (_, d) => d + 1), failed_jobs: 0, last_run_at: due ? iso(30) : iso(60 * 17),
+    }
+})
 
 const request = (n: number, title: string, client: string, days: number) => ({ id: `task-${n}`, consecutive: n, title, client, account: `EJ-00${n % 9 + 1}`, created_at: iso(days * 1440 + 90), days })
 
@@ -100,10 +101,48 @@ const clientCoverage = {
     }),
     total_items: 6, per_page: 15, current_page: 1, last_page: 1,
 }
-const postRuns = [['birthdays', 'Cumpleaños', 'completed', 212, 0], ['early', 'Ordenantes del mes', 'completed', 340, 0], ['pink_circle', 'Círculo Rosa', 'partial', 98, 7]].map(([section_key, section_name, status, total, failed], index) => ({
-    id: `run-${index}`, section_key, section_name, sub_section: null, artifact: 'image', total_jobs: total, processed_jobs: total, succeeded_jobs: Number(total) - Number(failed), failed_jobs: failed,
-    status, trigger_source: 'cron', triggered_by: null, started_at: iso(240 - index * 30), finished_at: iso(225 - index * 30), error_summary: failed ? 'Ejemplo: 7 piezas sin plantilla del mes' : null,
+/* A su hora de HOY, y sólo lo que ya pasó: la demo tiene que cuadrar con el reloj de quien la mira */
+const at = (h: number, m: number) => { const d = new Date(now); d.setHours(h, m, 0, 0); return d }
+const passed = (h: number, m: number) => at(h, m).getTime() <= now.getTime()
+const postRuns = ([
+    ['early', 'Ordenantes del mes', 'image', 'completed', 340, 0, 9, 0], ['live_stars', 'Estrellas', 'image', 'completed', 4, 0, 9, 30], ['live_stars', 'Estrellas', 'video', 'completed', 4, 0, 9, 31],
+    ['live_welcome', 'Nuevos inicios', 'image', 'completed', 3, 0, 9, 45], ['live_honor_roll', 'Cuadro de Honor', 'image', 'completed', 6, 0, 11, 30],
+    ['live_pink_circle', 'Círculo Rosa', 'image', 'partial', 12, 3, 14, 30], ['birthdays', 'Cumpleaños', 'image', 'completed', 9, 0, 20, 0],
+] as Array<[string, string, string, string, number, number, number, number]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([section_key, section_name, artifact, status, total, failed, h, m], index) => ({
+    id: `run-${index}`, section_key, section_name, sub_section: null, artifact, total_jobs: total, processed_jobs: total, succeeded_jobs: total - failed, failed_jobs: failed,
+    status, trigger_source: 'cron', triggered_by: null, started_at: at(h, m).toISOString(), finished_at: at(h, m + 6).toISOString(), error_summary: failed ? 'Ejemplo: 3 piezas sin plantilla del mes' : null,
 }))
+
+/* El robot: la descarga de la mañana, la de corazones (deja 2 colgadas) y su reintento */
+const downloadRuns = ([
+    ['dr-1', ['early'], null, 29, 29, 0, 6, 0], ['dr-2', ['pink_circle_hearts', 'pink_circle_vip_plus'], null, 196, 194, 2, 11, 30], ['dr-3', ['pink_circle_hearts'], ['EJ-001', 'EJ-002'], 2, 2, 0, 12, 30],
+] as Array<[string, string[], string[] | null, number, number, number, number, number]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([run_id, sections, clients, total, uploaded, failed, h, m]) => ({
+    run_id, process: 'daily', sections, clients, reset: false, status: 'completed', result: { total, uploaded, failed, skipped: 0 }, error: null, queued_at: at(h, m).toISOString(), finished_at: at(h, m + 4).toISOString(),
+}))
+
+/* Una pieza de mentira: un mosaico con su rótulo, sin imágenes de nadie */
+const tile = (label: string, a: string, b: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="200" cy="190" r="70" fill="rgba(255,255,255,.22)"/><rect x="90" y="300" width="220" height="18" rx="9" fill="rgba(255,255,255,.55)"/><rect x="130" y="332" width="140" height="12" rx="6" fill="rgba(255,255,255,.35)"/><text x="200" y="440" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="800" fill="rgba(255,255,255,.85)">${label}</text></svg>`)}`
+const tiles = (label: string, n: number, a: string, b: string) => Array.from({ length: n }, (_, index) => tile(`${label} ${index + 1}`, index % 2 ? b : a, index % 2 ? a : b))
+
+const pulse = {
+    date: ymd(),
+    schedule: [
+        ['06:00', 'robot_early', 'Robot: descarga de Ventas', 'Una entrada al portal por clienta', 'robot', []], ['08:00', 'import_early', 'Import de Tempraneras', 'Carga lo que bajó el robot', 'reports', []],
+        ['09:00', 'early', 'Ordenantes del mes', 'Piezas de quien ordenó', 'publishing', ['early']], ['09:30', 'live_stars', 'Estrellas en vivo', 'Sólo quien cruzó un nivel hoy', 'live', ['stars']],
+        ['09:45', 'live_welcome', 'Bienvenidas en vivo', 'Quien entró a una unidad', 'live', ['new_beginnings']], ['10:30', 'complete_formats', 'Repaso de formatos', 'Completa lo que quedó a medias', 'publishing', []],
+        ['11:30', 'live_honor_roll', 'Cuadro de Honor en vivo', 'Sale donde el podio cambió de manos', 'live', ['honor_roll']], ['11:30', 'robot_hearts', 'Robot: descarga de Corazones', 'Mary Kay actualiza corazones a las 11:00', 'robot', []],
+        ['12:30', 'retry_hearts', 'Reintento de Corazones', 'Uno a uno, cada 2 min, tope de 10', 'robot', []], ['13:30', 'import_hearts', 'Import de Corazones', 'Recoge también lo del reintento', 'reports', []],
+        ['14:30', 'live_pink_circle', 'Círculo Rosa en vivo', 'Sale el día que ella mueve corazones', 'live', ['pink_circle']], ['20:00', 'birthdays', 'Cumpleaños y aniversarios', 'Las piezas de mañana', 'publishing', ['birthdays', 'anniversaries']],
+    ].map(([time, key, label, hint, kind, sections]) => ({ time, key, label, hint, kind, sections })),
+    pieces: [
+        { section_key: 'early', section_name: 'Ordenantes del mes', live: false, posts: 340, clients: 29, last_at: at(9, 6).toISOString(), thumbs: tiles('Ordenante', 4, '#6C47FF', '#2CD4D9') },
+        { section_key: 'stars', section_name: 'Estrellas', live: true, posts: 4, clients: 3, last_at: at(9, 36).toISOString(), thumbs: tiles('Estrella', 4, '#E5077D', '#6C47FF') },
+        { section_key: 'new_beginnings', section_name: 'Nuevos inicios', live: true, posts: 3, clients: 3, last_at: at(9, 50).toISOString(), thumbs: tiles('Bienvenida', 3, '#F59E0B', '#E5077D') },
+        { section_key: 'honor_roll', section_name: 'Cuadro de Honor', live: true, posts: 6, clients: 4, last_at: at(11, 36).toISOString(), thumbs: tiles('Podio', 4, '#4E31C0', '#E5077D') },
+        { section_key: 'pink_circle', section_name: 'Círculo Rosa', live: true, posts: 9, clients: 7, last_at: at(14, 36).toISOString(), thumbs: tiles('Corazones', 4, '#DB2777', '#F472B6') },
+    ],
+}
+
 const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
 
 /* Los catálogos que el panel carga al entrar: sin ellos Tareas truena al pintar sus filtros */
@@ -223,6 +262,8 @@ export const installMockApi = () => {
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
         else if (path === '/posts/runs') response = respond(postRuns)
+        else if (path === '/pulse') response = respond(pulse)
+        else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
         else if (path === '/plans') response = respond(plans)
         else if (path === '/tasks' && method === 'GET') response = respond(demoTasks)
         else if (path === '/logout') response = respond(null)
