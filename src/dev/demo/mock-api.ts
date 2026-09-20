@@ -81,6 +81,49 @@ const financeBalance = () => {
     return { year: now.getFullYear(), year_income: sum('income'), year_expense: sum('expense'), year_balance: sum('balance'), months }
 }
 
+/* Publicaciones: cobertura por sección y por clienta, y las últimas corridas */
+const coverageSection = (section_key: string, name: string, cadence: 'daily' | 'monthly', scheduled_at: string | null, expected: number, posts: number, artifacts: Array<'image' | 'video'> = ['image', 'video']) => ({
+    section_key, name, newsletter: 'unit_newsletter', cadence, scheduled_at, artifacts, last_activity_at: iso(200), expected, pending: Math.max(expected - posts, 0),
+    posts, with_image: posts, with_video: artifacts.includes('video') ? Math.max(posts - 3, 0) : 0, notified: posts, subsections: [],
+})
+const coverageSections = [
+    coverageSection('birthdays', 'Cumpleaños', 'daily', '06:30', 212, 212), coverageSection('early', 'Ordenantes del mes', 'daily', '07:00', 340, 340, ['image']),
+    coverageSection('pink_circle', 'Círculo Rosa', 'monthly', null, 98, 91), coverageSection('honor_roll', 'Cuadro de Honor', 'monthly', null, 98, 98),
+    coverageSection('diq', "DIQ's", 'monthly', null, 40, 0), coverageSection('sales_cut', 'Corte de ventas', 'monthly', null, 98, 0),
+]
+const postsCoverage = { period: period(1), snapshot_at: iso(300), current_target_period: period(1), sections: coverageSections }
+const clientCoverage = {
+    period: period(1), columns: coverageSections.map(section => ({ section_key: section.section_key, name: section.name, newsletter: 'unit_newsletter', requires_video: section.artifacts.includes('video') })),
+    items: ['A', 'B', 'C', 'D', 'E', 'F'].map((letter, index) => {
+        const cells = Object.fromEntries(coverageSections.map((section, column) => [section.section_key, section.posts === 0 ? 'empty' : (index + column) % 7 === 0 ? 'partial' : 'full']))
+        return { client_id: `c-${index}`, client_name: `Clienta de ejemplo ${letter}`, client_account: `EJ-00${index + 1}`, plan_name: `Plan de ejemplo ${'ABC'[index % 3]}`, cells, gaps: Object.values(cells).filter(state => state !== 'full').length }
+    }),
+    total_items: 6, per_page: 15, current_page: 1, last_page: 1,
+}
+const postRuns = [['birthdays', 'Cumpleaños', 'completed', 212, 0], ['early', 'Ordenantes del mes', 'completed', 340, 0], ['pink_circle', 'Círculo Rosa', 'partial', 98, 7]].map(([section_key, section_name, status, total, failed], index) => ({
+    id: `run-${index}`, section_key, section_name, sub_section: null, artifact: 'image', total_jobs: total, processed_jobs: total, succeeded_jobs: Number(total) - Number(failed), failed_jobs: failed,
+    status, trigger_source: 'cron', triggered_by: null, started_at: iso(240 - index * 30), finished_at: iso(225 - index * 30), error_summary: failed ? 'Ejemplo: 7 piezas sin plantilla del mes' : null,
+}))
+const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
+
+/* Los catálogos que el panel carga al entrar: sin ellos Tareas truena al pintar sus filtros */
+const utilData = {
+    plans, designers: [], training_categories: [], newsletters: [],
+    task_types: [{ id: 'tt-1', name: 'Solicitud de clienta', slug: 'user-service-request' }, { id: 'tt-2', name: 'Biblioteca', slug: 'tools' }, { id: 'tt-3', name: 'Entrenamientos', slug: 'trainings' }],
+    task_statuses: [['Sin asignar', 'unassigned'], ['En proceso', 'in-progress'], ['Lista para revisión', 'ready-for-review'], ['Corrección', 'correction'], ['Completada', 'completed']].map(([name, slug], index) => ({ id: `ts-${index}`, name, slug })),
+}
+
+/* Tareas: el tablero espera una LISTA (no una página) */
+const demoTasks = [
+    [581, 'Invitación · Junta de unidad', 0, 0, 1], [580, 'Reconocimiento · Reina de ventas', 1, 1, 2], [578, 'Promoción · Skincare', 1, 2, 3],
+    [572, 'Invitación · cambiar la hora', 3, 1, 1], [569, 'Felicitación · Nueva Directora', 2, 3, 2], [565, 'Portada de boletín', 4, 6, 0],
+].map(([consecutive, title, status, daysAgo, dueIn]) => ({
+    id: `task-${consecutive}`, consecutive, title, description: 'Pedido de EJEMPLO para revisar el tablero.',
+    started_at: iso(Number(daysAgo) * 1440), expired_at: new Date(now.getTime() + Number(dueIn) * 86400000).toISOString(),
+    task_status: utilData.task_statuses[Number(status)], task_type: utilData.task_types[0], assigned_to: null, files: [], metadata: {},
+    created_at: iso(Number(daysAgo) * 1440), updated_at: iso(30),
+}))
+
 /* ── Copiloto de mentira ─────────────────────────────────────────────────────────────────────
    En la demo NO hay IA: contesta con un guion armado con las MISMAS cifras de ejemplo de arriba,
    para revisar cómo se ve y se siente el panel. El de verdad es Claude con herramientas de sólo
@@ -155,7 +198,7 @@ export const installMockApi = () => {
         let response: Response
 
         if (path === '/me') response = respond(me)
-        else if (path === '/util-data') response = respond({ faqs: [], templates: [], newsletters: [], plans: [], task_categories: [], training_categories: [] })
+        else if (path === '/util-data') response = respond(utilData)
         else if (path === '/overview') response = respond(overview)
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
@@ -177,6 +220,11 @@ export const installMockApi = () => {
         else if (path === '/finance/summary') response = respond(financeSummary(Number(url.searchParams.get('month')) || now.getMonth() + 1))
         else if (path === '/finance/balance') response = respond(financeBalance())
         else if (path === '/finance/expenses') response = respond([])
+        else if (path === '/posts/coverage') response = respond(postsCoverage)
+        else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
+        else if (path === '/posts/runs') response = respond(postRuns)
+        else if (path === '/plans') response = respond(plans)
+        else if (path === '/tasks' && method === 'GET') response = respond(demoTasks)
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
         /* Lo no previsto contesta vacío: la pantalla abre en su estado «sin datos», que también hay que ver */

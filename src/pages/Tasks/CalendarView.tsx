@@ -10,7 +10,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/uishadcn/ui/tooltip"
 import { MAP_TASK_STATUS_COLORS } from "@/constants/app"
 import { EventContentArg } from "@fullcalendar/core/index.js"
 import { ITask, TaskStatusTypes } from "@/interfaces/tasks"
-import { useSidebar } from "@/uishadcn/ui/sidebar"
 import { useEffect, useRef } from "react"
 import { UseTaskResult } from "./useTasks"
 
@@ -58,20 +57,26 @@ const CalendarView = ({
     onDragEnd
 }: CalendarViewProps) => {
     const calendarRef = useRef<FullCalendar | null>(null)
-    const { state: sidebarState } = useSidebar()
+    const containerRef = useRef<HTMLDivElement | null>(null)
 
+    /* El calendario no se entera solo de que su caja cambió de ancho. Antes escuchaba al menú
+       lateral (`useSidebar`), que con el marco nuevo no existe y tronaba la página; ahora observa
+       su propia caja: cubre el menú que se pliega, el Copiloto que se abre y la ventana. */
     useEffect(() => {
-        if (calendarRef.current) {
-            calendarRef.current.getApi().updateSize();
-        }
-    }, [calendarRef, sidebarState]);
+        const box = containerRef.current
+        if (!box || typeof ResizeObserver === 'undefined') return
+
+        const observer = new ResizeObserver(() => calendarRef.current?.getApi().updateSize())
+        observer.observe(box)
+        return () => observer.disconnect()
+    }, [])
 
     return (
         <Card>
             <CardContent className='p-0'>
                 <div className="flex flex-col md:flex-row">
                     <FilterSidebar filters={filters} onChangeFilters={onApplyFilters} />
-                    <div className='w-full relative py-4'>
+                    <div ref={containerRef} className='w-full min-w-0 relative py-4'>
                         {/* {isLoading && <PageLoader className='w-full' />} */}
 
                         <FullCalendar
