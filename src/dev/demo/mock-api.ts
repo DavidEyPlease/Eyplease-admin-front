@@ -182,8 +182,25 @@ const demoClients = ([
     current_month_points: 1800 + ((index * 7919) % 5200), previous_month_points: 2400 + ((index * 3571) % 6100), client_current_month_points: 600, client_previous_month_points: 900,
     user: { id: `u-${index}`, name: `Clienta de ejemplo ${letter}`, email: `clienta${index + 1}@ejemplo.com`, profile_picture: null, username: `EJ-00${index + 1}`, country: 'MEX', phone: '0000000000', active, on_notifications: true, on_biometric_auth: false, role: { id: 'r-client', name: 'Cliente', role_key: 'client', permissions: [] }, plan: plans[planIndex] },
 }))
-const financeBy: Record<string, string[]> = { overdue: ['EJ-003', 'EJ-008'], in_review: ['EJ-005'], pending: ['EJ-002', 'EJ-004', 'EJ-009'] }
-const financeClients = (status: string) => page((financeBy[status] ?? []).map(account => ({ id: account, name: demoClients.find(client => client.account === account)?.name ?? account, plan: null, fixed_payment: null, billing_type: 'manual', app_status: 'active', payment_day: 5, phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, payments: {} })))
+/* Cobranza con la forma real: cada clienta trae sus pagos por periodo (YYYY-MM). «Aprobar» un
+   comprobante lo pasa a pagado de verdad, para poder probar la cola. */
+const cur = period(0), prev = period(1)
+const financeLedger: Record<string, Record<string, { amount: number, paid: number | null, status: string, receipt_url?: string | null, reference_number?: string | null, receipt_uploaded_at?: string | null }>> = {
+    'EJ-003': { [prev]: { amount: 1490, paid: 0, status: 'overdue' }, [cur]: { amount: 1490, paid: 0, status: 'overdue' } },
+    'EJ-008': { [cur]: { amount: 690, paid: 0, status: 'overdue' } },
+    'EJ-005': { [cur]: { amount: 552, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-4471', receipt_uploaded_at: iso(95) } },
+    'EJ-001': { [cur]: { amount: 1490, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-9020', receipt_uploaded_at: iso(260) } },
+    'EJ-002': { [cur]: { amount: 990, paid: 0, status: 'pending' } }, 'EJ-004': { [cur]: { amount: 690, paid: 0, status: 'pending' } }, 'EJ-009': { [cur]: { amount: 990, paid: 0, status: 'pending' } },
+}
+const STATUS_GROUP: Record<string, string[]> = { overdue: ['overdue', 'partial'], in_review: ['in_review'], pending: ['pending'], paid: ['paid'], collectable: ['overdue', 'partial', 'pending', 'in_review'] }
+const financeClients = (status: string) => {
+    const wanted = STATUS_GROUP[status] ?? STATUS_GROUP.collectable
+    const items = Object.entries(financeLedger).filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status))).map(([account, payments], index) => {
+        const client = demoClients.find(item => item.account === account)
+        return { id: account, user_id: client?.user.id, name: client?.name ?? account, plan: client?.user.plan.name ?? null, fixed_payment: client?.user.plan.price ?? null, billing_type: index % 3 === 0 ? 'stripe' : 'manual', app_status: 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, payments }
+    })
+    return { ...page(items), total_overdue: 3670, total_pending: 2670, total_in_review: 2042 }
+}
 const reportSections = [['early', 'Tempraneras'], ['pink_circle', 'Círculo Rosa'], ['stars', 'Estrellas'], ['honor_roll', 'Cuadro de Honor'], ['new_beginnings', 'Nuevos inicios'], ['birthdays', 'Cumpleaños']]
 const clientsStatus = {
     sections: reportSections.map(([section_key, name]) => ({ section_key, name, group: 'unit', plans: plans.map(plan => plan.name) })),
@@ -352,6 +369,17 @@ export const installMockApi = () => {
         }
         else if (/^\/clients\/c-\d+\/network$/.test(path)) response = respond(page([]))
         else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
+        else if (path === '/finance/payments/review' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, decision: string }
+            const payment = financeLedger[body.account]?.[body.period]
+            if (payment) { payment.status = body.decision === 'approve' ? 'paid' : 'pending'; payment.paid = body.decision === 'approve' ? payment.amount : 0 }
+            await wait(350)
+            response = respond(true)
+        }
+        else if (/^\/finance\/clients\/[^/]+$/.test(path)) {
+            const account = decodeURIComponent(path.split('/')[3])
+            response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? null)
+        }
         else if (path === '/reports/clients-status') response = respond(clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)
         else if (path === '/whatsapp/stats') response = respond({ conversations: waConversations.length, manual: 1, bot: 3, open_tickets: 2, delivery_failures: 0 })

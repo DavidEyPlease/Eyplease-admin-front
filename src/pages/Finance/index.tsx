@@ -3,6 +3,7 @@ import { useState } from "react"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTH_LABELS } from "@/utils/finance"
 import SummaryTab from "./components/SummaryTab"
+import MonthTab from "./components/MonthTab"
 import CollectionsTab from "./components/CollectionsTab"
 import ExpensesTab from "./components/ExpensesTab"
 import BalanceTab from "./components/BalanceTab"
@@ -14,8 +15,13 @@ import ClientDrawer from "./components/ClientDrawer"
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
+/* Con el marco nuevo Finanzas abre en «La caja del mes» (lo que hay que hacer); el Resumen de
+   mosaicos de siempre sigue ahí, al final, por si se extraña alguna cifra. */
+const NEW_SHELL = isNewShell()
+
 const TABS = [
-    { key: "resumen", label: "Resumen" },
+    ...(NEW_SHELL ? [{ key: "mes", label: "La caja del mes" }] as const : []),
+    ...(!NEW_SHELL ? [{ key: "resumen", label: "Resumen" }] as const : []),
     { key: "cobranza", label: "Cobranza" },
     { key: "pagos", label: "Pagos" },
     { key: "gastos", label: "Gastos" },
@@ -23,6 +29,7 @@ const TABS = [
     { key: "proyeccion", label: "Proyección" },
     { key: "promociones", label: "Promociones" },
     { key: "metodos-pago", label: "Métodos de pago" },
+    ...(NEW_SHELL ? [{ key: "resumen", label: "Resumen clásico" }] as const : []),
 ] as const
 
 type TabKey = (typeof TABS)[number]["key"]
@@ -32,11 +39,11 @@ const MONTH_OPTIONS = MONTH_LABELS.map((label, idx) => ({ label, value: String(i
 const YEAR_OPTIONS = YEARS.map((y) => ({ label: String(y), value: String(y) }))
 
 const FinancePage = () => {
-    const [tab, setTab] = useState<TabKey>("resumen")
+    const [tab, setTab] = useState<TabKey>(NEW_SHELL ? "mes" : "resumen")
     const [detailId, setDetailId] = useState<string | null>(null)
     const [period, setPeriod] = useState({ year: 2026, month: new Date().getMonth() + 1 })
 
-    const showPeriod = tab === "resumen" || tab === "gastos" || tab === "balance"
+    const showPeriod = tab === "mes" || tab === "resumen" || tab === "gastos" || tab === "balance"
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
@@ -80,6 +87,7 @@ const FinancePage = () => {
                 </div>
             </div>
 
+            {tab === "mes" && <MonthTab period={period} onOpenClient={setDetailId} onGoTo={setTab} />}
             {tab === "resumen" && <SummaryTab period={period} />}
             {tab === "cobranza" && <CollectionsTab year={period.year} onOpenDetail={setDetailId} />}
             {tab === "pagos" && <PaymentsTab year={period.year} />}
