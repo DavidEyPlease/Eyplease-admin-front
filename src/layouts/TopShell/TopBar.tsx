@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router'
-import { BadgeCheckIcon, ChevronDownIcon, LogOutIcon, UndoIcon } from 'lucide-react'
+import { BadgeCheckIcon, ChevronDownIcon, LogOutIcon, SparklesIcon, UndoIcon } from 'lucide-react'
 
 import ISOTIPO from '@/assets/images/icon-white.png'
 import ButtonBack from '@/components/generics/ButtonBack'
@@ -47,7 +47,14 @@ const Count = ({ value }: { value: number }) => value > 0
     ? <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#E5077D] px-1 text-[10px] font-extrabold tabular-nums text-white">{value > 99 ? '99+' : value}</span>
     : null
 
-const TopBar = () => {
+interface Props {
+    /** El rol puede usar el Copiloto (el servidor lo vuelve a exigir) */
+    copilot: boolean
+    copilotOpen: boolean
+    onToggleCopilot: () => void
+}
+
+const TopBar = ({ copilot, copilotOpen, onToggleCopilot }: Props) => {
     const { user } = useAuth()
     const sidebarMenu = useAuthStore(state => state.sidebarMenu)
     const { data: notifications } = useNotificationCenter()
@@ -139,13 +146,24 @@ const TopBar = () => {
                 {others.length > 0 && dropdown('Más', others)}
             </nav>
 
-            <CommandBar />
+            <CommandBar copilot={copilot} />
 
             <div className="ml-auto flex items-center gap-1.5">
                 {/* Las acciones que cada página sube a la cabecera (HeaderActionsProvider) conservan su sitio */}
                 {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
                 {isSuperAdmin && <span className="hidden 2xl:block"><NetworkPeopleSearch /></span>}
                 {isSuperAdmin && <NotificationCenter />}
+                {copilot && (
+                    <button
+                        type="button"
+                        title={copilotOpen ? 'Plegar el Copiloto' : 'Abrir el Copiloto'}
+                        aria-pressed={copilotOpen}
+                        onClick={onToggleCopilot}
+                        className={cn('hidden h-[38px] cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[12.5px] font-bold transition-colors lg:flex', copilotOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground')}
+                    >
+                        <SparklesIcon className="size-4" /> <span className="hidden xl:inline">Copiloto</span>
+                    </button>
+                )}
                 <DarkModeSelector />
 
                 <DropdownMenu>

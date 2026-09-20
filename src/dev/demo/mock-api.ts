@@ -63,6 +63,59 @@ const liveNews = {
 const dailyReports = [['early', 'Ventas Mensuales Personales', 98, 98], ['pink_circle_hearts', 'Corazones · VIP Gold', 98, 97], ['pink_circle_vip_plus', 'Corazones · VIP Plus', 29, 29]]
     .map(([section_key, name, usual, loaded]) => ({ section_key, name, usual, loaded, rejected: 0, date: ymd(), last_at: iso(200) }))
 
+/* ── Copiloto de mentira ─────────────────────────────────────────────────────────────────────
+   En la demo NO hay IA: contesta con un guion armado con las MISMAS cifras de ejemplo de arriba,
+   para revisar cómo se ve y se siente el panel. El de verdad es Claude con herramientas de sólo
+   lectura (`/admin/copilot`), y necesita la API desplegada. */
+const money = (n: number) => `$${n.toLocaleString('es-MX')}`
+const copilotThreads: Record<string, { id: string, title: string, last_message_at: string, created_at: string, messages: Array<{ id: string, role: 'user' | 'assistant', text: string, created_at: string }> }> = {}
+
+const copilotAnswer = (question: string) => {
+    const q = question.toLowerCase()
+    const cur = overview.revenue.current
+    const missingDaily = daily.filter(item => item.days_missing > 0 || item.failed_jobs > 0)
+    const reportsShort = dailyReports.filter(report => report.loaded < report.usual)
+
+    if (/report|robot|baj/.test(q)) {
+        return [
+            reportsShort.length ? `Casi: ${dailyReports.length - reportsShort.length} de ${dailyReports.length} reportes bajaron completos.` : 'Sí, los reportes de hoy bajaron completos.',
+            ...dailyReports.map(report => `- ${report.name}: ${report.loaded} de ${report.usual}${report.loaded < report.usual ? ' (falta ' + (Number(report.usual) - Number(report.loaded)) + ')' : ''}`),
+            reportsShort.length ? 'La que falta la vuelve a intentar el robot a las 12:30. Si sigue sin subir, se ve en Monitor de reportes.' : '',
+        ].filter(Boolean).join('\n')
+    }
+    if (/cobr|pag|venc|deb|dinero|ingres/.test(q)) {
+        return [
+            `Van ${money(cur.collected)} cobrados este mes y quedan ${money(cur.outstanding)} por cobrar.`,
+            `- Vencidos: ${cur.overdue_count} (lo primero que hay que atender)`,
+            `- En revisión: ${cur.in_review_count} comprobantes por validar`,
+            `- Pendientes sin vencer: ${cur.pending_count}`,
+            `- Pagados: ${cur.paid_count} de ${cur.total_count}`,
+            `El mes pasado cerró en ${money(overview.revenue.previous.collected)}. El detalle por clienta está en Finanzas.`,
+        ].join('\n')
+    }
+    if (/public|falta|secci|sali/.test(q)) {
+        const monthly = overview.publishing.monthly
+        return [
+            missingDaily.length ? `Hay ${missingDaily.length} sección diaria con huecos y ${monthly.missing.length} mensuales sin publicar.` : `Las diarias van al corriente; faltan ${monthly.missing.length} mensuales.`,
+            ...missingDaily.map(item => `- ${item.name}: ${item.days_missing} días sin salir este mes y ${item.failed_jobs} trabajo fallido`),
+            ...monthly.missing.map(item => `- ${item.name}: sin publicar (datos de ${item.data_period})`),
+            'Relanzar una sección se hace desde Publicaciones; yo sólo consulto.',
+        ].join('\n')
+    }
+    if (/client|busca|cuenta/.test(q)) {
+        return `Tienes ${overview.clients.active} clientas activas, ${overview.clients.inactive} inactivas y ${overview.clients.new_this_month} nuevas este mes. Dime el nombre o la cuenta Mary Kay de una y te digo su plan y si está activa (en esta demo la gente es inventada).`
+    }
+    return [
+        'Tres cosas por atender hoy, en este orden:',
+        `- Cobranza: ${cur.overdue_count} pagos vencidos y ${cur.in_review_count} comprobantes por validar (${money(cur.outstanding)} por cobrar)`,
+        ...missingDaily.map(item => `- Publicaciones: ${item.name} lleva ${item.days_missing} días sin salir y tiene ${item.failed_jobs} trabajo fallido`),
+        `- Diseño: ${overview.service_requests.new} solicitudes nuevas sin asignar y ${overview.corrections.count} corrección pendiente`,
+        reportsShort.length ? `Los reportes bajaron casi completos: falta ${reportsShort.map(report => report.name).join(', ')}.` : 'Los reportes de hoy bajaron completos.',
+    ].join('\n')
+}
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 /** Lo que se pidió y a qué se contestó: `window.__demo.calls` dice qué no estaba previsto. */
 export const calls: Array<{ method: string, path: string, mocked: boolean }> = []
 
@@ -90,6 +143,19 @@ export const installMockApi = () => {
         else if (path === '/notifications/center/seen') response = respond(true)
         else if (path === '/live-news') response = respond(liveNews)
         else if (path === '/reports/daily-reports') response = respond(dailyReports)
+        else if (path === '/copilot' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { message: string, conversation_id: string | null }
+            const id = body.conversation_id ?? crypto.randomUUID()
+            const thread = copilotThreads[id] ??= { id, title: body.message.slice(0, 60), last_message_at: iso(), created_at: new Date().toISOString(), messages: [] }
+            const answer = copilotAnswer(body.message)
+            thread.messages.push({ id: crypto.randomUUID(), role: 'user', text: body.message, created_at: new Date().toISOString() }, { id: crypto.randomUUID(), role: 'assistant', text: answer, created_at: new Date().toISOString() })
+            thread.last_message_at = new Date().toISOString()
+            await wait(1400)
+            response = respond({ conversation_id: id, message: answer })
+        }
+        else if (path === '/copilot/conversations') response = respond({ items: Object.values(copilotThreads).sort((a, b) => b.last_message_at.localeCompare(a.last_message_at)).map(({ id, title, last_message_at, created_at }) => ({ id, title, last_message_at, created_at })), pagination_token: null, previous_pagination_token: null, per_page: 20, last_page: true })
+        else if (/^\/copilot\/conversations\/[^/]+\/messages$/.test(path)) response = respond(copilotThreads[path.split('/')[3]]?.messages ?? [])
+        else if (/^\/copilot\/conversations\/[^/]+$/.test(path) && method === 'DELETE') { delete copilotThreads[path.split('/')[3]]; response = respond(true) }
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
         /* Lo no previsto contesta vacío: la pantalla abre en su estado «sin datos», que también hay que ver */

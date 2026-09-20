@@ -2,6 +2,12 @@ export const API_ROUTES = {
     SIGN_IN: '/sign-in',
     LOGOUT: '/logout',
     DASHBOARD: '/dashboard',
+    COPILOT: {
+        SEND: '/copilot',
+        CONVERSATIONS: '/copilot/conversations',
+        CONVERSATION_MESSAGES: '/copilot/conversations/{id}/messages',
+        DELETE_CONVERSATION: '/copilot/conversations/{id}',
+    },
     GET_NEWSLETTER_SECTION_ITEMS: '/newsletters/sections/{sectionKey}/items',
     FORGOT_PASSWORD: {
         VALIDATE_EMAIL: '/forgot-password/send-email',
