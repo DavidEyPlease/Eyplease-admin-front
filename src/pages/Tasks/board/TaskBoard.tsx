@@ -74,6 +74,8 @@ const Card = ({ task, busy, canAssign, onOpen, onAssign, onDragState, dragging }
             </div>
 
             <h3 className="line-clamp-2 text-[13px] leading-snug font-bold">{task.title}</h3>
+            {/* Sólo en pedidos de clienta: en lo de Biblioteca quien «creó» la tarea es alguien del equipo */}
+            {task.task_type?.slug === TaskTypes.SERVICE && task.created_by?.name && <p className="-mt-1 truncate text-[11.5px] text-muted-foreground">de {task.created_by.name}</p>}
 
             <div className="flex items-center justify-between gap-2">
                 <span className={cn('mesa-due', due.tone)}><CalendarClockIcon className="size-3.5" />{due.text}</span>

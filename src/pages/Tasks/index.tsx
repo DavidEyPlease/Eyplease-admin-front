@@ -51,7 +51,7 @@ const TasksPage = () => {
     return (
         <div className='relative'>
             <div className="mb-4">
-                <PageHead eyebrow="Clientas" title={<>Pedidos de diseño · <em>la mesa</em></>} sub="Todo el trabajo de diseño por etapa: lo que nadie ha tomado, lo que se está haciendo, lo que espera tu visto bueno, las correcciones y lo entregado.">
+                <PageHead eyebrow="Operación" title={<>Pedidos de diseño · <em>la mesa</em></>} sub="Todo el trabajo de diseño por etapa: lo que nadie ha tomado, lo que se está haciendo, lo que espera tu visto bueno, las correcciones y lo entregado.">
                     <div className="inline-flex rounded-xl bg-foreground/5 p-[3px]">
                         {([['board', 'La mesa'], ['calendar', 'Calendario'], ['todo', 'Lista']] as const).map(([key, label]) => (
                             <button key={key} type="button" onClick={() => setViewMode(key)} className={cn('h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors', viewMode === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{label}</button>

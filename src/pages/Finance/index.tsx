@@ -15,13 +15,14 @@ import ClientDrawer from "./components/ClientDrawer"
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
-/* Con el marco nuevo Finanzas abre en «La caja del mes» (lo que hay que hacer); el Resumen de
-   mosaicos de siempre sigue ahí, al final, por si se extraña alguna cifra. */
+/* Con el marco nuevo Finanzas abre en «La caja del mes» (lo que hay que hacer) y sus nueve
+   pantallas se agrupan en CUATRO pestañas; dentro de cada una, un conmutador chico. No se quitó
+   ninguna pantalla: sólo se juntaron por para qué sirven. El marco de siempre sigue con las suyas. */
 const NEW_SHELL = isNewShell()
 
 const TABS = [
-    ...(NEW_SHELL ? [{ key: "mes", label: "La caja del mes" }] as const : []),
-    ...(!NEW_SHELL ? [{ key: "resumen", label: "Resumen" }] as const : []),
+    { key: "mes", label: "La caja del mes" },
+    { key: "resumen", label: "Resumen" },
     { key: "cobranza", label: "Cobranza" },
     { key: "pagos", label: "Pagos" },
     { key: "gastos", label: "Gastos" },
@@ -29,10 +30,20 @@ const TABS = [
     { key: "proyeccion", label: "Proyección" },
     { key: "promociones", label: "Promociones" },
     { key: "metodos-pago", label: "Métodos de pago" },
-    ...(NEW_SHELL ? [{ key: "resumen", label: "Resumen clásico" }] as const : []),
 ] as const
 
 type TabKey = (typeof TABS)[number]["key"]
+
+/** Las pestañas del marco de siempre (sin «La caja del mes», que es del rediseño) */
+const CLASSIC_TABS = TABS.filter((t) => t.key !== "mes")
+
+/** Las cuatro del rediseño. Cada una abre en su primera pantalla. */
+const GROUPS: Array<{ label: string; tabs: Array<{ key: TabKey; label: string }> }> = [
+    { label: "La caja del mes", tabs: [{ key: "mes", label: "La caja del mes" }] },
+    { label: "Cobranza", tabs: [{ key: "cobranza", label: "Por cobrar" }, { key: "pagos", label: "Pagos registrados" }] },
+    { label: "El año", tabs: [{ key: "balance", label: "Balance" }, { key: "gastos", label: "Gastos" }, { key: "proyeccion", label: "Proyección" }] },
+    { label: "Configurar", tabs: [{ key: "promociones", label: "Promociones" }, { key: "metodos-pago", label: "Métodos de pago" }] },
+]
 
 const YEARS = [2026, 2027]
 const MONTH_OPTIONS = MONTH_LABELS.map((label, idx) => ({ label, value: String(idx + 1) }))
@@ -49,7 +60,7 @@ const FinancePage = () => {
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 {isNewShell() ? (
-                    <PageHead eyebrow="Finanzas" title={<>Cobranza · <em>el dinero del mes</em></>} sub="Lo cobrado, lo que falta y quién debe; pagos, gastos y balance del año en las pestañas." />
+                    <PageHead eyebrow="Finanzas" title={<>Cobranza · <em>el dinero del mes</em></>} sub="Lo cobrado, lo que falta y quién debe. Cobranza junta lo por cobrar y los pagos; El año, el balance, los gastos y la proyección." />
                 ) : (
                     <div className="flex items-center gap-2.5">
                         <span className="h-7 w-1.5 rounded-full" style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }} />
@@ -68,24 +79,40 @@ const FinancePage = () => {
                 )}
             </div>
 
-            <div className="-mx-1 overflow-x-auto px-1">
-                <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
-                    {TABS.map((t) => {
-                        const active = tab === t.key
-                        return (
-                            <button
-                                key={t.key}
-                                onClick={() => setTab(t.key)}
-                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition sm:px-5 ${active ? "text-white shadow-[0_8px_18px_-8px_rgba(91,71,224,0.7)]" : "text-muted-foreground hover:text-foreground"
-                                    }`}
-                                style={active ? { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" } : undefined}
-                            >
-                                {t.label}
-                            </button>
-                        )
-                    })}
-                </div>
-            </div>
+            {(() => {
+                const pill = (active: boolean) => `whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition sm:px-5 ${active ? "text-white shadow-[0_8px_18px_-8px_rgba(91,71,224,0.7)]" : "text-muted-foreground hover:text-foreground"}`
+                const gradient = { backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" }
+
+                if (!NEW_SHELL) {
+                    return (
+                        <div className="-mx-1 overflow-x-auto px-1">
+                            <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
+                                {CLASSIC_TABS.map((t) => (
+                                    <button key={t.key} onClick={() => setTab(t.key)} className={pill(tab === t.key)} style={tab === t.key ? gradient : undefined}>{t.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                }
+
+                const group = GROUPS.find((g) => g.tabs.some((t) => t.key === tab)) ?? GROUPS[0]
+                return (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+                        <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
+                            {GROUPS.map((g) => (
+                                <button key={g.label} onClick={() => setTab(g.tabs[0].key)} className={pill(g === group)} style={g === group ? gradient : undefined}>{g.label}</button>
+                            ))}
+                        </div>
+                        {group.tabs.length > 1 && (
+                            <div className="inline-flex rounded-xl bg-foreground/5 p-[3px]">
+                                {group.tabs.map((t) => (
+                                    <button key={t.key} type="button" onClick={() => setTab(t.key)} className={`h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors ${tab === t.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{t.label}</button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            })()}
 
             {tab === "mes" && <MonthTab period={period} onOpenClient={setDetailId} onGoTo={setTab} />}
             {tab === "resumen" && <SummaryTab period={period} />}

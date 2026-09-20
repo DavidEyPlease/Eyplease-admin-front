@@ -6,7 +6,7 @@ export const ADMIN_COPY: Partial<Record<PermissionKeys, { label?: string, hint: 
     [PermissionKeys.DASHBOARD]: { label: 'Hoy', hint: 'El pulso de la operación' },
     [PermissionKeys.CLIENTS]: { hint: 'Padrón, planes, accesos y cada cuenta a fondo' },
     [PermissionKeys.WHATSAPP]: { hint: 'Lo que escriben las clientas y los tickets abiertos' },
-    [PermissionKeys.TASKS]: { label: 'Pedidos de diseño', hint: 'Lo que encargan, quién lo lleva y qué se entrega' },
+    [PermissionKeys.TASKS]: { label: 'Pedidos de diseño', hint: 'La mesa: qué falta por asignar, qué se está haciendo y qué se entrega' },
     [PermissionKeys.REPORTS_MONITOR]: { hint: 'Si bajaron los reportes de cada clienta y cuáles faltan' },
     [PermissionKeys.PUBLISH_POSTS]: { hint: 'Qué sección salió hoy, cuál falta y relanzarla' },
     [PermissionKeys.TEMPLATES]: { hint: 'Las plantillas de boletines y de publicaciones' },

@@ -166,6 +166,7 @@ const demoTasks = ([
 ] as Array<[number, string, number, number, number, number | null, number]>).map(([consecutive, title, status, type, days, designer, files]) => ({
     id: `task-${consecutive}`, consecutive, title, description: 'Pedido de EJEMPLO para revisar el tablero.',
     started_at: dueIn(days - 1, 9), expired_at: dueIn(days), task_status: utilData.task_statuses[status], task_type: utilData.task_types[type],
+    created_by: type === 0 ? { id: `u-${consecutive % 10}`, name: `Clienta de ejemplo ${'ABCDEFGHIJ'[consecutive % 10]}` } : null,
     assigned_to: designer === null ? null : demoDesigners[designer], files: Array.from({ length: files }, (_, index) => ({ id: `f-${consecutive}-${index}` })), metadata: {},
     created_at: iso((5 - days) * 1440), updated_at: iso(30),
 }))
@@ -335,6 +336,9 @@ export const installMockApi = () => {
         else if (path === '/finance/summary') response = respond(financeSummary(Number(url.searchParams.get('month')) || now.getMonth() + 1))
         else if (path === '/finance/balance') response = respond(financeBalance())
         else if (path === '/finance/expenses') response = respond([])
+        else if (path === '/promotions' && method === 'GET') response = respond([])
+        else if ((path === '/finance/payment-methods' || path === '/finance/payment-methods/config') && method === 'GET') response = respond({ accounts: [{ id: 'acc-1', bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '000000000000000000', number_type: 'clabe', is_active: true, sort_order: 1 }], settings: { stripe_enabled: true, transfer_enabled: true, transfer_instructions: 'Instrucciones de EJEMPLO.' } })
+        else if (path === '/finance/payments' && method === 'GET') response = respond({ ...page([]), total_amount: 0, total_collected: 0 })
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
         else if (path === '/posts/runs') response = respond(postRuns)

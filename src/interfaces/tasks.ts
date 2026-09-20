@@ -51,6 +51,8 @@ export interface ITask extends IBaseDBProperties {
     task_status: ITaskStatus
     task_type: ITaskType
     assigned_to: IUser | null
+    /** Quién la creó. En un pedido de clienta, es la clienta. Sólo llega si el listado lo incluye. */
+    created_by?: { id: string, name: string } | null
     files: ITaskFile[]
     metadata: {
         primaryColor?: string
