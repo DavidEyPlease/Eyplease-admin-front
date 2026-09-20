@@ -105,7 +105,7 @@ const TaskAlertCard = ({
                     {items.map((item) => (
                         <li
                             key={item.id}
-                            className="flex items-baseline justify-between gap-2.5 rounded-lg bg-white/80 px-2.5 py-1.5"
+                            className="flex items-baseline justify-between gap-2.5 rounded-lg bg-white/80 px-2.5 py-1.5 dark:bg-white/[.06]"
                         >
                             <span className="flex min-w-0 items-baseline gap-2">
                                 {item.consecutive != null && (

@@ -11,6 +11,7 @@ import TaskDetail from './components/Detail'
 import DynamicTabs from '@/components/generics/DynamicTabs'
 import CalendarView from './CalendarView'
 import TodoListView from './TodoListView'
+import PageHead from "@/layouts/TopShell/PageHead"
 
 const TasksPage = () => {
     const [viewMode, setViewMode] = useState<'calendar' | 'todo'>('calendar')
@@ -42,6 +43,7 @@ const TasksPage = () => {
 
     return (
         <div className='relative'>
+            <div className="mb-4"><PageHead eyebrow="Clientas" title={<>Pedidos de <em>diseño</em></>} sub="Lo que encargan las clientas: lo nuevo sin asignar, lo que está en proceso, las correcciones y lo entregado." /></div>
             {/* {tasksData.isLoading && <PageLoader />} */}
 
             {viewMode === 'calendar' && (

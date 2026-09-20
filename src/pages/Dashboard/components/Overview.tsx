@@ -12,6 +12,8 @@ import MonthlyCoverage from "./MonthlyCoverage"
 import TaskAlertCard from "./TaskAlertCard"
 import LiveNewsPanel from "./LiveNewsPanel"
 import { monthName } from "../overview.utils"
+import PageHead from "@/layouts/TopShell/PageHead"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
 /** Aviso de cabecera: para enterarse sin bajar la vista. */
 const HeaderPill = ({ className, children }: { className: string; children: React.ReactNode }) => (
@@ -68,15 +70,12 @@ const Overview = () => {
 
     return (
         <div className="grid min-w-0 gap-5">
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                <div className="flex items-center gap-2.5">
-                    <span
-                        className="h-7 w-1.5 rounded-full"
-                        style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
-                    />
-                    <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Inicio</h1>
-                </div>
-
+            {isNewShell() ? (
+                <PageHead
+                    eyebrow={new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}
+                    title={<>El pulso <em>de hoy</em></>}
+                    sub="Primero el dinero del mes, luego si bajaron los reportes y si lo que tenía que salir publicado está saliendo. Se refresca solo cada dos minutos."
+                >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     {response.service_requests.new > 0 && (
                         <HeaderPill className="bg-violet-600">
@@ -97,7 +96,39 @@ const Overview = () => {
                         {response.clients.inactive > 0 && <> · {response.clients.inactive} inactivas</>}
                     </p>
                 </div>
-            </div>
+                </PageHead>
+            ) : (
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-2.5">
+                        <span
+                            className="h-7 w-1.5 rounded-full"
+                            style={{ backgroundImage: "linear-gradient(180deg,#5B47E0,#5DD9D2)" }}
+                        />
+                        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Inicio</h1>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        {response.service_requests.new > 0 && (
+                            <HeaderPill className="bg-violet-600">
+                                {response.service_requests.new}{" "}
+                                {response.service_requests.new === 1
+                                    ? "solicitud nueva"
+                                    : "solicitudes nuevas"}
+                            </HeaderPill>
+                        )}
+                        {response.corrections.count > 0 && (
+                            <HeaderPill className="bg-amber-500">
+                                {response.corrections.count}{" "}
+                                {response.corrections.count === 1 ? "corrección" : "correcciones"}
+                            </HeaderPill>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                            <strong className="text-foreground">{response.clients.active}</strong> clientas activas
+                            {response.clients.inactive > 0 && <> · {response.clients.inactive} inactivas</>}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <MoneyBlock current={response.revenue.current} previous={response.revenue.previous} />
 

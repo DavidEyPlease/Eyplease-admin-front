@@ -56,7 +56,7 @@ const NetworkPeopleSearch = () => {
     return (
         <div className="flex flex-col gap-4">
             <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                     <Button
                         variant="ghost"
                         size="icon"

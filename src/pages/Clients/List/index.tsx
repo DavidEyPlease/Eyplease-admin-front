@@ -17,6 +17,7 @@ import { useState } from "react";
 import ClientsTableList from "./components/Table";
 import FabButton from "@/components/generics/FabButton";
 import SendPushNotificationModal from "./components/SendPushNotificationModal";
+import PageHead from "@/layouts/TopShell/PageHead"
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
@@ -58,6 +59,7 @@ const ClientsListPage = () => {
 
     return (
         <div className="grid grid-cols-[minmax(0,1fr)] pt-2 gap-y-4">
+            <PageHead eyebrow="Clientas" title={<>El <em>padrón</em></>} sub="Cada cuenta con su plan, su estado y su acceso. Entra a una para verla a fondo." />
             <ClientsMetrics />
             <div className="flex items-center gap-x-2">
                 <div className="flex-1">

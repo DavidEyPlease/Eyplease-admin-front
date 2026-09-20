@@ -6,6 +6,7 @@ import TableContainer from "@/components/generics/TableContainer";
 import { LIST_TABLE_COLUMNS } from "./page-utils";
 import useListQuery from "@/hooks/useListQuery";
 import { queryKeys } from "@/utils/queryKeys";
+import PageHead from "@/layouts/TopShell/PageHead"
 
 const PlansPage = () => {
     const {
@@ -18,6 +19,7 @@ const PlansPage = () => {
 
     return (
         <div className="grid pt-2 gap-y-2">
+            <PageHead eyebrow="Configuración" title={<>Planes y <em>precios</em></>} sub="Qué trae cada plan y cuánto cuesta. Cambiar un plan cambia lo que ven sus clientas." />
             {
                 isLoading ? (
                     <PageLoader />
