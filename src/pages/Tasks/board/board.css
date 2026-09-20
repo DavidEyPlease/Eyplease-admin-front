@@ -1,0 +1,36 @@
+/* La mesa de trabajo de Pedidos de diseño: columnas por etapa, tarjetas que se arrastran */
+
+.mesa { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(264px, 1fr); gap: 12px; align-items: start; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.mesa-col { display: flex; flex-direction: column; min-width: 0; max-height: calc(100vh - 318px); min-height: 280px; border-radius: 22px; border: 1px solid var(--border); background: color-mix(in oklab, var(--foreground) 3%, transparent); transition: background .18s, border-color .18s, box-shadow .18s; }
+.mesa-col.over { background: color-mix(in oklab, #6C47FF 11%, transparent); border-color: color-mix(in oklab, #6C47FF 55%, transparent); box-shadow: 0 0 0 3px color-mix(in oklab, #6C47FF 16%, transparent); }
+.mesa-col__head { display: flex; align-items: center; gap: 8px; padding: 13px 14px 9px; }
+.mesa-col__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--stage, #6C47FF); box-shadow: 0 0 0 3px color-mix(in oklab, var(--stage, #6C47FF) 22%, transparent); }
+.mesa-col__body { display: grid; gap: 9px; padding: 3px 10px 12px; overflow-y: auto; scrollbar-width: thin; align-content: start; }
+
+.mesa-col.todo { --stage: #94A3B8; }
+.mesa-col.doing { --stage: #F59E0B; }
+.mesa-col.review { --stage: #22D3EE; }
+.mesa-col.fix { --stage: #F43F5E; }
+.mesa-col.done { --stage: #10B981; }
+
+.mesa-card { position: relative; display: grid; gap: 8px; padding: 12px 12px 11px 14px; border-radius: 16px; cursor: grab; text-align: left; overflow: hidden; animation: mesa-in .35s cubic-bezier(.2, .8, .2, 1) both; }
+.mesa-card::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--kind, #6C47FF); }
+.mesa-card:hover { transform: translateY(-1px); border-color: color-mix(in oklab, #6C47FF 42%, transparent); }
+.mesa-card:active { cursor: grabbing; }
+.mesa-card.dragging { opacity: .4; }
+.mesa-card.busy { opacity: .6; pointer-events: none; }
+.mesa-card.kind-request { --kind: #A855F7; }
+.mesa-card.kind-tools { --kind: #14B8A6; }
+.mesa-card.kind-trainings { --kind: #6366F1; }
+@keyframes mesa-in { from { opacity: 0; transform: translateY(8px); } }
+
+.mesa-due { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--muted-foreground); }
+.mesa-due.late { color: #F43F5E; }
+.mesa-due.today { color: #F59E0B; }
+.dark .mesa-due.late { color: #FB7185; }
+.dark .mesa-due.today { color: #FBBF24; }
+
+.mesa-face { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; font-size: 9.5px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #4E31C0, #6C47FF 55%, #2CD4D9 130%); object-fit: cover; }
+.mesa-face.none { background: transparent; border: 1.5px dashed color-mix(in oklab, var(--foreground) 30%, transparent); color: var(--muted-foreground); }
+
+@media (prefers-reduced-motion: reduce) { .mesa-card { animation: none; } }

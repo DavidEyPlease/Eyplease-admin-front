@@ -145,22 +145,29 @@ const pulse = {
 
 const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
 
+const demoDesigners = ['Ana Ejemplo', 'Beto Ejemplo', 'Carla Ejemplo'].map((name, index) => ({ id: `d-${index}`, name, email: `d${index}@ejemplo.com`, profile_picture: null, photo: null, username: `DIS${index}`, country: 'MEX', phone: '', active: true, on_notifications: true, on_biometric_auth: false, role: { id: 'r-des', name: 'Diseñador', role_key: 'designer', permissions: [] } }))
+
 /* Los catálogos que el panel carga al entrar: sin ellos Tareas truena al pintar sus filtros */
 const utilData = {
-    plans, designers: [], training_categories: [], newsletters: [],
+    plans, designers: demoDesigners, training_categories: [], newsletters: [],
     task_types: [{ id: 'tt-1', name: 'Solicitud de clienta', slug: 'user-service-request' }, { id: 'tt-2', name: 'Biblioteca', slug: 'tools' }, { id: 'tt-3', name: 'Entrenamientos', slug: 'trainings' }],
-    task_statuses: [['Sin asignar', 'unassigned'], ['En proceso', 'in-progress'], ['Lista para revisión', 'ready-for-review'], ['Corrección', 'correction'], ['Completada', 'completed']].map(([name, slug], index) => ({ id: `ts-${index}`, name, slug })),
+    task_statuses: [['Sin asignar', 'unassigned'], ['En proceso', 'in-progress'], ['Lista para revisión', 'ready-for-review'], ['Corrección', 'correction'], ['Completada', 'completed'], ['Lista para publicar', 'ready-for-publish'], ['Subir recursos AE', 'upload_ae_resources'], ['Publicada', 'published']].map(([name, slug], index) => ({ id: `ts-${index}`, name, slug })),
 }
 
-/* Tareas: el tablero espera una LISTA (no una página) */
-const demoTasks = [
-    [581, 'Invitación · Junta de unidad', 0, 0, 1], [580, 'Reconocimiento · Reina de ventas', 1, 1, 2], [578, 'Promoción · Skincare', 1, 2, 3],
-    [572, 'Invitación · cambiar la hora', 3, 1, 1], [569, 'Felicitación · Nueva Directora', 2, 3, 2], [565, 'Portada de boletín', 4, 6, 0],
-].map(([consecutive, title, status, daysAgo, dueIn]) => ({
+/* Tareas: el tablero espera una LISTA (no una página). Hay de todo: de clientas, de Biblioteca y de
+   entrenamientos, en todas las etapas, con atrasadas y de hoy para que se vean los avisos. */
+const dueIn = (days: number, hour = 22) => { const d = new Date(now); d.setDate(d.getDate() + days); d.setHours(hour, 0, 0, 0); return d.toISOString() }
+const demoTasks = ([
+    [581, 'Invitación · Junta de unidad · sáb 26 sep', 0, 0, 0, null, 2], [583, 'Reconocimiento · Reina de ventas de agosto', 0, 0, 1, null, 1], [590, 'Historia · Tip de skincare de la semana', 0, 1, 3, null, 0], [591, 'Deck · Cómo cerrar una clase de belleza', 0, 2, 5, null, 0],
+    [580, 'Promoción · Skincare Week', 1, 0, 0, 0, 3], [577, 'Felicitación · Nueva Directora', 1, 0, -1, 1, 1], [586, 'Publicación · Frase del lunes', 1, 1, 2, 0, 0], [587, 'Carrusel · 5 pasos del cuidado de la piel', 1, 1, 4, 2, 0],
+    [578, 'Invitación · Debut de Directora', 2, 0, 0, 1, 2], [585, 'Historia · Aspiracional del martes', 2, 1, 1, 2, 1],
+    [572, 'Invitación · cambiar la hora', 3, 0, -2, 0, 4],
+    [569, 'Portada de boletín de unidad', 4, 0, -3, 1, 2], [565, 'Reconocimiento · Cuadro de Honor', 4, 0, -5, 0, 1], [560, 'Publicación · Frase del lunes pasado', 7, 1, -6, 2, 1], [558, 'Deck · Entérate Ya de septiembre', 5, 2, -8, 1, 1],
+] as Array<[number, string, number, number, number, number | null, number]>).map(([consecutive, title, status, type, days, designer, files]) => ({
     id: `task-${consecutive}`, consecutive, title, description: 'Pedido de EJEMPLO para revisar el tablero.',
-    started_at: iso(Number(daysAgo) * 1440), expired_at: new Date(now.getTime() + Number(dueIn) * 86400000).toISOString(),
-    task_status: utilData.task_statuses[Number(status)], task_type: utilData.task_types[0], assigned_to: null, files: [], metadata: {},
-    created_at: iso(Number(daysAgo) * 1440), updated_at: iso(30),
+    started_at: dueIn(days - 1, 9), expired_at: dueIn(days), task_status: utilData.task_statuses[status], task_type: utilData.task_types[type],
+    assigned_to: designer === null ? null : demoDesigners[designer], files: Array.from({ length: files }, (_, index) => ({ id: `f-${consecutive}-${index}` })), metadata: {},
+    created_at: iso((5 - days) * 1440), updated_at: iso(30),
 }))
 
 /* ── Clientas, cobranza y matriz de reportes (gente inventada) ─────────────────────────────── */
@@ -317,7 +324,22 @@ export const installMockApi = () => {
         else if (path === '/pulse') response = respond(pulse)
         else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
         else if (path === '/plans') response = respond(plans)
-        else if (path === '/tasks' && method === 'GET') response = respond(demoTasks)
+        else if (path === '/tasks' && method === 'GET') {
+            const statuses = url.searchParams.getAll('statuses[]')
+            const month = Number(url.searchParams.get('month'))
+            response = respond(demoTasks.filter(task => (!statuses.length || statuses.includes(task.task_status.id)) && (!month || new Date(task.started_at).getMonth() + 1 === month || new Date(task.expired_at).getMonth() + 1 === month)))
+        }
+        else if (/^\/tasks\/task-\d+$/.test(path) && method === 'PATCH') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { status?: string, user?: string | null }
+            const task = demoTasks.find(item => item.id === path.split('/')[2])
+            if (task && body.status) task.task_status = utilData.task_statuses.find(item => item.id === body.status) ?? task.task_status
+            if (task && 'user' in body) task.assigned_to = demoDesigners.find(item => item.id === body.user) ?? null
+            await wait(350)
+            response = respond(task ?? null, task ? 200 : 404)
+        }
+        else if (/^\/tasks\/task-\d+$/.test(path) && method === 'GET') response = respond(demoTasks.find(item => item.id === path.split('/')[2]) ?? null)
+        else if (/^\/tasks\/task-\d+\/activity$/.test(path)) response = respond([])
+        else if (/^\/tasks\/task-\d+\/attachments$/.test(path)) response = respond([])
         else if (path === '/clients' && method === 'GET') {
             const search = (url.searchParams.get('search') ?? '').toLowerCase()
             response = respond(page(demoClients.filter(client => !search || `${client.name} ${client.account}`.toLowerCase().includes(search))))
