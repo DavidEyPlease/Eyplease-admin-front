@@ -6,6 +6,8 @@ import ContentContainer from "./Sidebar/components/ContentContainer";
 import { useEffect, useState } from "react";
 import UploadToastProgress from "@/components/generics/UploadToastProgress";
 import { HeaderActionsProvider } from "@/providers/HeaderActionsProvider";
+import TopShell from "./TopShell";
+import { isNewShell } from "./TopShell/useNewShell";
 
 const MainLayout = () => {
     const navigate = useNavigate();
@@ -26,6 +28,9 @@ const MainLayout = () => {
     return (
         <section className='flex'>
             <HeaderActionsProvider>
+                {/* El marco nuevo se enciende por persona (`?nuevo=1`). Sólo cambia el marco: las páginas
+                    entran por el mismo Outlet en los dos. */}
+                {isNewShell() ? <TopShell /> : (
                 <SidebarProvider
                 // style={
                 //     {
@@ -42,6 +47,7 @@ const MainLayout = () => {
                         </ContentContainer>
                     </SidebarInset>
                 </SidebarProvider>
+                )}
 
                 <UploadToastProgress />
             </HeaderActionsProvider>

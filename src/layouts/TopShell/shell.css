@@ -1,0 +1,136 @@
+/* Marco del rediseño web: el mismo lenguaje que la app nueva (violeta → cian, vidrio y el
+   Asistente que brilla). Sólo lo que Tailwind no da cómodo: fondo, vidrio y animaciones. */
+
+.shell-backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.shell-backdrop::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(78, 49, 192, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(78, 49, 192, .055) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
+}
+.dark .shell-backdrop::before { background-image: linear-gradient(rgba(140, 120, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(140, 120, 255, .07) 1px, transparent 1px); }
+.shell-blob { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
+.shell-blob.a { width: 620px; height: 620px; left: -160px; top: -220px; background: rgba(108, 71, 255, .26); animation: shell-drift-a 26s ease-in-out infinite alternate; }
+.shell-blob.b { width: 560px; height: 560px; right: -140px; top: 40px; background: rgba(44, 212, 217, .22); animation: shell-drift-b 32s ease-in-out infinite alternate; }
+.shell-blob.c { width: 460px; height: 460px; left: 38%; bottom: -260px; background: rgba(229, 7, 125, .10); animation: shell-drift-a 38s ease-in-out infinite alternate-reverse; }
+@keyframes shell-drift-a { to { transform: translate(90px, 70px) scale(1.12); } }
+@keyframes shell-drift-b { to { transform: translate(-110px, 60px) scale(.92); } }
+
+.shell-glass {
+    background: rgba(255, 255, 255, .72);
+    -webkit-backdrop-filter: blur(22px) saturate(1.7);
+    backdrop-filter: blur(22px) saturate(1.7);
+    border: 1px solid rgba(26, 24, 48, .08);
+    box-shadow: 0 6px 20px -12px rgba(27, 20, 80, .35);
+}
+.dark .shell-glass { background: rgba(30, 27, 58, .62); border-color: rgba(255, 255, 255, .08); box-shadow: 0 8px 24px -12px rgba(0, 0, 0, .7); }
+
+.shell-grad { background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); }
+
+/* Botón principal del marco (mismo degradado que el de las páginas) */
+.shell-cta { background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); box-shadow: 0 10px 24px -10px rgba(108, 71, 255, .9); transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s, filter .2s; }
+.shell-cta:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.15); }
+
+/* La marca: un destello cruza el isotipo de vez en cuando */
+.shell-mark { position: relative; overflow: hidden; }
+.shell-mark::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .55) 50%, transparent 65%); transform: translateX(-120%); animation: shell-sheen 5s ease-in-out infinite; }
+@keyframes shell-sheen { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+/* Desplegables: caen con resorte y sus filas entran escalonadas */
+.shell-drop { transform-origin: var(--radix-dropdown-menu-content-transform-origin); animation: shell-drop-in .32s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes shell-drop-in { from { opacity: 0; transform: translateY(-8px) scale(.97); } }
+.shell-drop-row { animation: shell-row-in .4s cubic-bezier(.34, 1.56, .64, 1) both; animation-delay: calc(var(--i, 0) * 35ms + 60ms); }
+@keyframes shell-row-in { from { opacity: 0; transform: translateY(6px); } }
+.shell-drop-row:hover .shell-drop-icon { transform: scale(1.08) rotate(-4deg); }
+.shell-drop-icon { transition: transform .3s cubic-bezier(.34, 1.56, .64, 1); background: linear-gradient(135deg, rgba(108, 71, 255, .14), rgba(44, 212, 217, .14)); }
+
+/* El orbe del Asistente respira, igual que la pestaña central de la app */
+.shell-orb { position: relative; animation: shell-glow 2.8s ease-in-out infinite; }
+.shell-orb::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, .7), transparent 40%); animation: shell-spin 3.4s linear infinite; -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%); mask: radial-gradient(circle, transparent 58%, #000 60%); }
+@keyframes shell-spin { to { transform: rotate(360deg); } }
+@keyframes shell-glow {
+    0% { box-shadow: 0 10px 22px -8px rgba(78, 49, 192, .7), 0 0 0 0 rgba(44, 212, 217, .55); }
+    55% { box-shadow: 0 10px 26px -6px rgba(44, 212, 217, .9), 0 0 18px 2px rgba(108, 71, 255, .5), 0 0 0 10px rgba(44, 212, 217, 0); }
+    100% { box-shadow: 0 10px 22px -8px rgba(78, 49, 192, .7), 0 0 0 10px rgba(44, 212, 217, 0); }
+}
+
+/* ── Las páginas de siempre, dentro del marco nuevo ──────────────────────────────────────────
+   No se reescriben de golpe: aquí cambian de MATERIA. Las fichas opacas pasan a vidrio, las líneas
+   y los fondos suaves toman el tinte violeta y las esquinas se redondean como en el Hoy. Sólo
+   alcanza a lo que vive dentro de la página; diálogos y menús van en portal y conservan lo suyo. */
+.shell-page {
+    --card: rgba(255, 255, 255, .74);
+    --background: #F3F2FA;
+    --surface-soft: rgba(108, 71, 255, .055);
+    --muted: rgba(26, 24, 48, .05);
+    --accent: rgba(108, 71, 255, .08);
+    --border: rgba(26, 24, 48, .09);
+    --input: rgba(26, 24, 48, .12);
+    --radius: .9rem;
+    --primary-gradient-start: #6C47FF;
+    --primary-gradient-end: #4E31C0;
+}
+.dark .shell-page {
+    --card: rgba(30, 27, 58, .62);
+    --background: #0B0A1A;
+    --surface-soft: rgba(255, 255, 255, .045);
+    --muted: rgba(255, 255, 255, .06);
+    --accent: rgba(140, 120, 255, .14);
+    --border: rgba(255, 255, 255, .09);
+    --input: rgba(255, 255, 255, .14);
+}
+/* Las fichas grandes (las que llevan sombra de ficha) desenfocan lo que tienen detrás, como el resto */
+.shell-page .shadow-card { -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); box-shadow: 0 6px 20px -12px rgba(27, 20, 80, .35); }
+.dark .shell-page .shadow-card { box-shadow: 0 8px 24px -12px rgba(0, 0, 0, .7); }
+
+/* La barra de arriba es fija: lo que las páginas de siempre dejaban pegado «a 1rem del borde» se
+   queda por debajo de ella, y su alto máximo descuenta la barra. */
+@media (min-width: 1024px) {
+    .shell-page .lg\:sticky.lg\:top-4 { top: 90px; }
+    .shell-page .lg\:max-h-\[calc\(100vh-2rem\)\] { max-height: calc(100vh - 106px); }
+}
+
+/* Encabezado de página del rediseño: antetítulo, título con su tramo en degradado y bajada */
+.shell-title em { font-style: normal; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dark .shell-title em { background-image: linear-gradient(135deg, #A894FF 0%, #8C78FF 40%, #2CD4D9 110%); }
+
+/* Cada página entra subiendo */
+.shell-page { animation: shell-page-in .55s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes shell-page-in { from { opacity: 0; transform: translateY(12px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .shell-blob, .shell-mark::after, .shell-orb, .shell-orb::before, .shell-drop, .shell-drop-row, .shell-page { animation: none !important; }
+}
+
+/* ── Pantallas de acceso ─────────────────────────────────────────────────────────────────── */
+.auth-stage { background: linear-gradient(150deg, #2A1580 0%, #4E31C0 34%, #6C47FF 62%, #2CD4D9 128%); }
+.auth-stage .shell-backdrop::before { background-image: linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px); }
+.auth-stage .shell-blob.a { background: rgba(255, 255, 255, .16); }
+.auth-stage .shell-blob.b { background: rgba(44, 212, 217, .38); }
+.auth-stage .shell-blob.c { background: rgba(229, 7, 125, .26); }
+
+.auth-glass { background: rgba(255, 255, 255, .12); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); border: 1px solid rgba(255, 255, 255, .22); box-shadow: 0 24px 60px -28px rgba(10, 5, 60, .8); }
+.auth-card { background: var(--card); box-shadow: 0 40px 100px -40px rgba(10, 5, 60, .85), 0 0 0 1px rgba(255, 255, 255, .25); }
+
+/* Las tres tarjetas flotan despacio y desacompasadas */
+.auth-float { animation: auth-float 7s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes auth-float { 0%, 100% { transform: translateY(0) rotate(-.4deg); } 50% { transform: translateY(-12px) rotate(.4deg); } }
+
+/* Con su propio fotograma final: reusar `shell-page-in` (que sólo tiene `from`) devolvía el elemento a
+   su estado base, que aquí es invisible, y el titular y el formulario desaparecían al terminar. */
+.auth-rise { opacity: 0; transform: translateY(14px); animation: auth-rise-in .8s cubic-bezier(.2, .8, .2, 1) forwards; animation-delay: calc(var(--i, 0) * 110ms + 120ms); }
+@keyframes auth-rise-in { to { opacity: 1; transform: none; } }
+
+.auth-ring { stroke-dashoffset: 163.4; animation: auth-ring 1.8s cubic-bezier(.2, .8, .2, 1) .9s forwards; }
+@keyframes auth-ring { to { stroke-dashoffset: 62; } }
+
+.auth-typing i { width: 5px; height: 5px; border-radius: 50%; background: rgba(255, 255, 255, .8); animation: auth-dot 1.2s infinite; }
+.auth-typing i:nth-child(2) { animation-delay: .15s; } .auth-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes auth-dot { 0%, 60%, 100% { transform: none; opacity: .4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-float, .auth-typing i { animation: none !important; }
+    .auth-rise { opacity: 1; transform: none; animation: none !important; }
+    .auth-ring { stroke-dashoffset: 62; animation: none !important; }
+}

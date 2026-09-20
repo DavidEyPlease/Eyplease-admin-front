@@ -1,4 +1,6 @@
 import EYPLEASE_LOGO from "@/assets/icons/icon.png";
+import AuthStage from "./TopShell/AuthStage";
+import { isNewShell } from "./TopShell/useNewShell";
 
 interface Props {
 	children: React.ReactNode;
@@ -7,6 +9,9 @@ interface Props {
 //bg-gradient-to-tr from-[#231f56] via-[#3d0a6e] to-[#f0047f]
 
 const AuthLayout = ({ children }: Props) => {
+	/* Las pantallas de acceso cuelgan todas de aquí: con el diseño nuevo cambia sólo su marco */
+	if (isNewShell()) return <AuthStage>{children}</AuthStage>
+
 	return (
 		<div className="grid min-h-svh lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10 bg-white">
