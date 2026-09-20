@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { BanknoteIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, ExternalLinkIcon, FileTextIcon, SearchIcon, XIcon } from "lucide-react"
+import { BanknoteIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, FileTextIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
 import dayjs from "dayjs"
 import { toast } from "sonner"
 
@@ -21,8 +21,9 @@ import { formatDueDate, formatMoney, periodLabel, periodOf, periodPaid, periodRe
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
+import { cn } from "@/lib/utils"
+import { isNewShell } from "@/layouts/TopShell/useNewShell"
 
-const WHATSAPP_ADMIN = "https://whatsapp.eyplease.com.mx/admin"
 
 const DEFAULT_STATUS: CollectionStatus = "collectable"
 
@@ -58,10 +59,6 @@ const CHIP_TONE_BY_STATUS: Partial<Record<Exclude<PaymentStatus, null>, ChipTone
     pending: "amber",
     in_review: "violet",
 }
-
-const WhatsappIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.516 5.26l-.999 3.648 3.972-.717zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z" /></svg>
-)
 
 /** A client's periods of the year, bucketed by what the admin can do with them. */
 interface CollectionRow {
@@ -183,6 +180,11 @@ const RowAmount = ({ row }: { row: CollectionRow }) => {
     return <span className="text-muted-foreground/60">—</span>
 }
 
+/** Las cifras de titular van sin centavos; las de cada fila, exactas */
+const whole = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
+
+const chip = (active: boolean) => cn("inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors", active ? "border-transparent bg-foreground text-background" : "border-border bg-card/60 text-muted-foreground hover:border-[#6C47FF]/40 hover:text-foreground")
+
 const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (id: string) => void }) => {
     const [page, setPage] = useState(1)
     const [searchInput, setSearchInput] = useState("")
@@ -196,6 +198,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     // Dropdown is uncontrolled (defaultValue), so a state reset alone leaves the
     // old option on screen: bumping this key remounts the selects on "Limpiar".
     const [filtersVersion, setFiltersVersion] = useState(0)
+    /* Con el marco nuevo Cobranza sigue el lenguaje de «La caja del mes»: total con su desglose,
+       estados como fichas y los filtros finos detrás de un botón. La lógica es la misma. */
+    const newShell = isNewShell()
+    const [showFilters, setShowFilters] = useState(false)
 
     // "4" en el dropdown = 4+ (sólo mínimo); el resto es un rango exacto de meses.
     const monthsRange = useMemo(() => {
@@ -334,23 +340,51 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5">
-            <a href={WHATSAPP_ADMIN} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-[#5DD9D2]/40 bg-gradient-to-r from-[#EEF9F8] to-card px-4 py-3 transition hover:shadow-sm sm:px-5 sm:py-3.5">
-                <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/15 text-[#1DA851]"><WhatsappIcon className="h-4.5 w-4.5" /></span>
-                    <div>
-                        <p className="text-sm font-medium text-foreground">Conectado al bot de WhatsApp</p>
-                        <p className="text-xs text-muted-foreground">Reporta pagos y activación de nuevos usuarios.</p>
+            {newShell && (
+                <section className="shell-glass rounded-3xl p-[22px]">
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <small className="text-[11px] font-bold tracking-[.08em] text-muted-foreground uppercase">Por cobrar en {year}</small>
+                            <b className="mt-1 block text-[34px] leading-none font-extrabold tracking-[-.035em] tabular-nums">{whole(totalOverdue + totalPending)}</b>
+                        </div>
+                        <span className="text-[12.5px] text-muted-foreground"><b className="text-foreground tabular-nums">{totalItems}</b> {totalItems === 1 ? "clienta" : "clientas"} con este filtro</span>
                     </div>
-                </div>
-                <span className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-[#5B47E0] dark:text-[#A99BFF] sm:flex">Abrir <ExternalLinkIcon className="h-4 w-4" /></span>
-            </a>
+                    {totalOverdue + totalPending > 0 && (
+                        <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-foreground/[.07]">
+                            <i className="block h-full bg-rose-500" style={{ width: `${(totalOverdue / (totalOverdue + totalPending)) * 100}%` }} />
+                            <i className="block h-full bg-foreground/25" style={{ width: `${(totalPending / (totalOverdue + totalPending)) * 100}%` }} />
+                        </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-[12.5px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-rose-500" />En retraso <b className="text-rose-600 tabular-nums dark:text-rose-400">{whole(totalOverdue)}</b></span>
+                        <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-foreground/30" />Por vencer <b className="text-foreground tabular-nums">{whole(totalPending)}</b></span>
+                        {totalInReview > 0 && <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#6C47FF]" />Con comprobante por validar <b className="text-[#5B47E0] tabular-nums dark:text-[#A99BFF]">{whole(totalInReview)}</b></span>}
+                    </div>
+                </section>
+            )}
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                <div className="relative w-full sm:max-w-xs">
+            {newShell && (
+                <div className="flex flex-wrap items-center gap-2">
+                    <label className="flex h-9 min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-border bg-card/60 px-3 text-[13px] sm:max-w-[300px]">
+                        <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+                        <input placeholder="Nombre o cuenta…" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground" />
+                    </label>
+                    {COLLECTION_STATUS_OPTIONS.map((option) => (
+                        <button key={option.value} type="button" onClick={() => { setStatus(option.value as CollectionStatus); setPage(1) }} className={chip(status === option.value)}>{option.label}</button>
+                    ))}
+                    <button type="button" onClick={() => setShowFilters((v) => !v)} className={chip(showFilters || otherFiltersActive)}>
+                        <SlidersHorizontalIcon className="size-3.5" /> Más filtros{otherFiltersActive ? " ·" : ""}
+                    </button>
+                    {filtersActive && <button onClick={clearFilters} className="text-[12px] font-bold text-primary hover:underline">Limpiar</button>}
+                </div>
+            )}
+
+            <div className={cn("flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center", newShell && !showFilters && "hidden")}>
+                <div className={cn("relative w-full sm:max-w-xs", newShell && "hidden")}>
                     <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input placeholder="Buscar por nombre o cuenta..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[#5B47E0] focus:ring-2 focus:ring-[#5B47E0]/15" />
                 </div>
-                <div className="w-full sm:w-40">
+                <div className={cn("w-full sm:w-40", newShell && "hidden")}>
                     <Dropdown key={`status-${filtersVersion}`} placeholder="Estado" value={status} items={COLLECTION_STATUS_OPTIONS} onChange={(v) => { setStatus(v as CollectionStatus); setPage(1) }} />
                 </div>
                 <div className="w-full sm:w-44">
@@ -369,7 +403,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     placeholder="Día de pago"
                     className="w-full sm:w-auto"
                 />
-                {filtersActive && (
+                {filtersActive && !newShell && (
                     <button onClick={clearFilters} className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF] hover:underline">Limpiar filtros</button>
                 )}
             </div>
@@ -384,9 +418,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-border bg-foreground/[.03] text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                                        <th className="px-5 py-3 font-semibold">Nombre</th>
-                                        <th className="px-5 py-3 font-semibold">Cuenta</th>
-                                        <th className="px-5 py-3 font-semibold">Plan</th>
+                                        <th className="px-5 py-3 font-semibold">{newShell ? "Clienta" : "Nombre"}</th>
+                                        {!newShell && <th className="px-5 py-3 font-semibold">Cuenta</th>}
+                                        {!newShell && <th className="px-5 py-3 font-semibold">Plan</th>}
                                         <th className="px-5 py-3 font-semibold">Día de pago</th>
                                         <th className="px-5 py-3 font-semibold">Promoción</th>
                                         <th className="px-5 py-3 font-semibold">Meses</th>
@@ -402,9 +436,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                                     <span>{row.client.name}</span>
                                                     <BillingTypeChip type={row.client.billingType} />
                                                 </div>
+                                                {newShell && <small className="mt-0.5 block text-[11.5px] font-normal text-muted-foreground">{row.client.id} · {row.client.plan ?? "sin plan"}</small>}
                                             </td>
-                                            <td className="px-5 py-3.5 text-muted-foreground">{row.client.id}</td>
-                                            <td className="px-5 py-3.5 text-muted-foreground">{row.client.plan ?? "—"}</td>
+                                            {!newShell && <td className="px-5 py-3.5 text-muted-foreground">{row.client.id}</td>}
+                                            {!newShell && <td className="px-5 py-3.5 text-muted-foreground">{row.client.plan ?? "—"}</td>}
                                             <td className="px-5 py-3.5 text-muted-foreground"><ChargeDay client={row.client} /></td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
@@ -414,13 +449,13 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF]">Gestionar</span></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={8} className="py-16 text-center text-muted-foreground">{emptyCopy}</td></tr>
+                                        <tr><td colSpan={newShell ? 6 : 8} className="py-16 text-center text-muted-foreground">{emptyCopy}</td></tr>
                                     )}
                                 </tbody>
                                 {rows.length > 0 && (
                                     <tfoot>
                                         <tr className="border-t border-border bg-foreground/[.03] text-sm">
-                                            <td className="px-5 py-3 text-muted-foreground" colSpan={6}>
+                                            <td className="px-5 py-3 text-muted-foreground" colSpan={newShell ? 4 : 6}>
                                                 <span className="font-medium">{totalItems} {totalItems === 1 ? "cliente" : "clientes"}</span>
                                                 <span className="text-muted-foreground"> · retrasado </span><span className="font-semibold text-rose-600 dark:text-rose-400">{formatMoney(totalOverdue)}</span>
                                                 <span className="text-muted-foreground"> · por vencer </span><span className="font-semibold text-foreground">{formatMoney(totalPending)}</span>

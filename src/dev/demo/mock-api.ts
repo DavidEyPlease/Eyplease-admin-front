@@ -337,7 +337,9 @@ export const installMockApi = () => {
         else if (path === '/finance/balance') response = respond(financeBalance())
         else if (path === '/finance/expenses') response = respond([])
         else if (path === '/promotions' && method === 'GET') response = respond([])
-        else if ((path === '/finance/payment-methods' || path === '/finance/payment-methods/config') && method === 'GET') response = respond({ accounts: [{ id: 'acc-1', bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '000000000000000000', number_type: 'clabe', is_active: true, sort_order: 1 }], settings: { stripe_enabled: true, transfer_enabled: true, transfer_instructions: 'Instrucciones de EJEMPLO.' } })
+        /* Ojo: son DOS rutas con formas distintas. Ésta la usa «Gestionar» de Cobranza; `/config`, la pestaña Métodos de pago */
+        else if (path === '/finance/payment-methods' && method === 'GET') response = respond({ stripe: { enabled: true }, transfer: { enabled: true, accounts: [{ bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '0000 0000 0000 0000', numberType: 'clabe' }], instructions: 'Instrucciones de EJEMPLO.' } })
+        else if (path === '/finance/payment-methods/config' && method === 'GET') response = respond({ accounts: [{ id: 'acc-1', bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '000000000000000000', number_type: 'clabe', is_active: true, sort_order: 1 }], settings: { stripe_enabled: true, transfer_enabled: true, transfer_instructions: 'Instrucciones de EJEMPLO.' } })
         else if (path === '/finance/payments' && method === 'GET') response = respond({ ...page([]), total_amount: 0, total_collected: 0 })
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
