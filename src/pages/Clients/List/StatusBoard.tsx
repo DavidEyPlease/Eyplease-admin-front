@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { SearchIcon } from 'lucide-react'
+import { MoreHorizontalIcon, PowerIcon, PowerOffIcon, SearchIcon } from 'lucide-react'
 
 import { APP_ROUTES } from '@/constants/app'
 import { cn } from '@/lib/utils'
 import { replaceRecordIdInPath } from '@/utils'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/uishadcn/ui/dropdown-menu'
+import { initials, titleCase } from './names'
+import StatusDialog from './StatusDialog'
 import useClientsBoard, { BoardClient, PaymentState } from './useClientsBoard'
 import '@/pages/Hoy/hoy.css'
 
@@ -16,14 +19,6 @@ const PAYMENT: Record<PaymentState, { label: string, tone: string }> = {
     unknown: { label: '…', tone: 'plain' },
 }
 
-/** «de», «del», «la»… van en minúscula y no cuentan para las iniciales */
-const PARTICLES = new Set(['de', 'del', 'la', 'las', 'los', 'y'])
-
-const titleCase = (name: string) => name.toLocaleLowerCase('es-MX').split(/\s+/).filter(Boolean)
-    .map((word, index) => index > 0 && PARTICLES.has(word) ? word : word.charAt(0).toLocaleUpperCase('es-MX') + word.slice(1)).join(' ')
-
-const initials = (name: string) => name.toLocaleLowerCase('es-MX').split(/\s+/).filter(word => word && !PARTICLES.has(word)).slice(0, 2).map(word => word.charAt(0).toLocaleUpperCase('es-MX')).join('')
-
 const lastSeen = (value: Date | string | null) => {
     if (!value) return 'nunca ha entrado'
     const days = Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000)
@@ -32,7 +27,7 @@ const lastSeen = (value: Date | string | null) => {
 
 type Quick = 'all' | 'overdue' | 'no_password' | 'reports' | 'inactive'
 
-const Row = ({ row }: { row: BoardClient }) => {
+const Row = ({ row, onChangeStatus }: { row: BoardClient, onChangeStatus: (row: BoardClient) => void }) => {
     const navigate = useNavigate()
     const { client, payment, reports } = row
     const active = client.user?.active !== false
@@ -69,8 +64,24 @@ const Row = ({ row }: { row: BoardClient }) => {
             <td className="px-3 py-3 whitespace-nowrap">
                 {row.hasPortalPassword ? <small className="text-[11.5px] text-muted-foreground">{lastSeen(client.last_sign_in_at)}</small> : <span className="pulse-tag warn">Sin contraseña del portal</span>}
             </td>
-            <td className="py-3 pr-5 pl-3 text-right">
-                <button type="button" onClick={event => { event.stopPropagation(); open() }} className="h-8 cursor-pointer rounded-xl px-3 text-[12.5px] font-bold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground">Abrir</button>
+            {/* Todo lo de esta celda se queda en la celda: el menú va en un portal, pero los eventos de
+                React suben por el árbol de componentes, y sin esto elegir «Desactivar» abría su ficha */}
+            <td className="py-3 pr-4 pl-3 text-right whitespace-nowrap" onClick={event => event.stopPropagation()}>
+                <button type="button" onClick={open} className="h-8 cursor-pointer rounded-xl px-3 text-[12.5px] font-bold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground">Abrir</button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger aria-label={`Más acciones para ${titleCase(client.name)}`} className="ml-0.5 inline-grid size-8 cursor-pointer place-items-center rounded-xl align-middle text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground data-[state=open]:bg-foreground/5">
+                        <MoreHorizontalIcon className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" sideOffset={6} className="w-52 rounded-2xl p-1.5">
+                        <DropdownMenuItem
+                            onSelect={() => onChangeStatus(row)}
+                            className={cn('cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold', active && 'text-destructive focus:text-destructive')}
+                        >
+                            {active ? <PowerOffIcon className="size-4" /> : <PowerIcon className="size-4" />}
+                            {active ? 'Desactivar clienta' : 'Activar clienta'}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </td>
         </tr>
     )
@@ -86,6 +97,9 @@ const StatusBoard = () => {
     const [search, setSearch] = useState('')
     const [plan, setPlan] = useState<string>('all')
     const [quick, setQuick] = useState<Quick>('all')
+    /* El diálogo vive AQUÍ y no dentro de la fila, por la misma razón que la celda del menú corta
+       los clics: dentro de un <tr> clicable, cada clic del diálogo abriría la ficha */
+    const [changing, setChanging] = useState<BoardClient | null>(null)
 
     const plans = useMemo(() => {
         const counts = new Map<string, number>()
@@ -143,13 +157,15 @@ const StatusBoard = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                            {shown.map(row => <Row key={row.client.id} row={row} />)}
+                            {shown.map(row => <Row key={row.client.id} row={row} onChangeStatus={setChanging} />)}
                         </tbody>
                     </table>
                 </div>
                 {loading && <div className="grid gap-2 p-4">{Array.from({ length: 6 }, (_, index) => <span key={index} className="h-12 animate-pulse rounded-xl bg-foreground/[.06]" />)}</div>}
                 {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : 'Todavía no hay clientas.'}</p>}
             </section>
+
+            <StatusDialog client={changing} onClose={() => setChanging(null)} />
         </div>
     )
 }

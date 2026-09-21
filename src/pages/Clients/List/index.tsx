@@ -72,6 +72,9 @@ const ClientsListPage = () => {
                         <button key={key} type="button" onClick={() => setView(key)} className={cn('h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors', view === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{label}</button>
                     ))}
                 </div>
+                {/* Mandar un aviso a las clientas vivía en un botón flotante: en el marco nuevo quedaba
+                    encima de la tabla, tapaba el «Abrir» de las filas y se apilaba con el Copiloto */}
+                <Button rounded variant="outline" text={<><BellIcon className="w-4 h-4 mr-2" />Enviar aviso</>} onClick={() => setShowNotificationModal(true)} />
                 <Button rounded text={<><PlusIcon className="w-4 h-4 mr-2" />Nueva clienta</>} onClick={() => navigate(APP_ROUTES.CLIENTS.CREATE)} />
             </PageHead>
             {view === 'board' && <StatusBoard />}
@@ -121,10 +124,11 @@ const ClientsListPage = () => {
                 />
             </div>
             </>}
-            <FabButton
+            {/* Con el marco nuevo el botón está en el encabezado; el flotante se queda sólo en el de antes */}
+            {!newShell && <FabButton
                 icon={<BellIcon className="h-5 w-5" />}
                 onClick={() => setShowNotificationModal(true)}
-            />
+            />}
             <SendPushNotificationModal
                 open={showNotificationModal}
                 onOpenChange={setShowNotificationModal}

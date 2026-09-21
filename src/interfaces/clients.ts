@@ -37,6 +37,9 @@ export type IClientListItem = IClient & {
     previous_month_points: number
     client_current_month_points: number
     client_previous_month_points: number
+    /** Paga con tarjeta automática (Stripe): desactivarla aquí NO cancela ese cobro. Opcional porque
+        una API sin actualizar no lo manda. */
+    card_subscription?: boolean
 }
 
 export interface IBasicClient {

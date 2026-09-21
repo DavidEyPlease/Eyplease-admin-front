@@ -180,6 +180,8 @@ const demoClients = ([
     id: `c-${index}`, name: `Clienta de ejemplo ${letter}`, account: `EJ-00${index + 1}`, from_signup: 'admin', mk_status: 'A1', photo: null, logotype: null, country: 'MEX',
     created_at: iso(60 * 24 * (200 + index * 17)), last_sign_in_at: seenDays > 90 ? null : iso(60 * 24 * seenDays), platform_guest_account: `invitada${index + 1}`,
     external_company_pw: password ? 'ejemplo' : null, rank, start_date: '2019-03-01', last_order_date: ymd(), promotion: index === 4 ? { promotion_id: 'p1', name: 'Promo de ejemplo −20 %', discount_type: 'percentage', discount: 20, expires_at: ymd() } : null,
+    /* A y G pagan con tarjeta automática: así se ve el aviso de Stripe al desactivarlas */
+    card_subscription: index === 0 || index === 6,
     current_month_points: 1800 + ((index * 7919) % 5200), previous_month_points: 2400 + ((index * 3571) % 6100), client_current_month_points: 600, client_previous_month_points: 900,
     user: { id: `u-${index}`, name: `Clienta de ejemplo ${letter}`, email: `clienta${index + 1}@ejemplo.com`, profile_picture: null, username: `EJ-00${index + 1}`, country: 'MEX', phone: '0000000000', active, on_notifications: true, on_biometric_auth: false, role: { id: 'r-client', name: 'Cliente', role_key: 'client', permissions: [] }, plan: plans[planIndex] },
 }))
@@ -368,6 +370,13 @@ export const installMockApi = () => {
             response = respond(page(demoClients.filter(client => !search || `${client.name} ${client.account}`.toLowerCase().includes(search))))
         }
         else if (path === '/clients/metrics') response = respond({ active: 98, inactive: 7, pending_payment: 4, total_reports: 545, uploaded_reports: 512 })
+        /* Activar / desactivar, como `change-status`: cambia `user.active` DE VERDAD, para que al recargar siga igual */
+        else if (/^\/clients\/c-\d+\/change-status$/.test(path) && method === 'PATCH') {
+            const client = demoClients.find(item => item.id === path.split('/')[2])
+            if (client) client.user.active = !!JSON.parse(String(init?.body ?? '{}')).active
+            await wait(400)
+            response = respond(client ?? null, client ? 200 : 404)
+        }
         else if (/^\/clients\/c-\d+$/.test(path) && method === 'GET') {
             /* La ficha espera `{ client, stats }`, no la clienta suelta */
             const found = demoClients.find(client => client.id === path.split('/')[2])

@@ -77,6 +77,9 @@ const useClientActions = () => {
             )
             if (response.success) {
                 handleUpdateList({ id: clientId, user: { active: checked } } as Partial<IClient>)
+                /* El padrón «Estado» guarda la lista en su propia caché: sin esto, al volver a él la
+                   clienta seguía saliendo como estaba hasta que caducara */
+                queryClient.invalidateQueries({ queryKey: queryKeys.listBase('clients/board') })
             }
         } finally {
             setLoading(false)
