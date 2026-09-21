@@ -29,6 +29,8 @@ interface ApiPaymentSettings {
     stripe_enabled: boolean
     transfer_enabled: boolean
     transfer_instructions: string | null
+    /** Opcional: una API sin actualizar no lo manda (y entonces vale apagado) */
+    client_card_automation_enabled?: boolean
 }
 
 interface ApiConfig {
@@ -50,6 +52,7 @@ const mapSettings = (s: ApiPaymentSettings): PaymentSettings => ({
     stripeEnabled: s.stripe_enabled,
     transferEnabled: s.transfer_enabled,
     transferInstructions: s.transfer_instructions ?? "",
+    cardAutomationEnabled: !!s.client_card_automation_enabled,
 })
 
 /**

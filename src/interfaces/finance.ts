@@ -105,12 +105,15 @@ export interface PaymentSettings {
     stripeEnabled: boolean
     transferEnabled: boolean
     transferInstructions: string
+    /** Invitar a las clientas a domiciliar su tarjeta (web, al reportar una transferencia) */
+    cardAutomationEnabled: boolean
 }
 
 export interface PaymentSettingsPayload {
     stripe_enabled?: boolean
     transfer_enabled?: boolean
     transfer_instructions?: string
+    client_card_automation_enabled?: boolean
 }
 
 export const PAYMENT_ACCOUNT_TYPE_LABELS: Record<PaymentAccountType, string> = {

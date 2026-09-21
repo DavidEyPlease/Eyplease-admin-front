@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CreditCardIcon, LandmarkIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { CreditCardIcon, LandmarkIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import Spinner from "@/components/common/Spinner"
@@ -27,12 +27,14 @@ const PaymentMethodsTab = () => {
     // Local mirror of the settings so the toggles/instructions are editable.
     const [stripeEnabled, setStripeEnabled] = useState(true)
     const [transferEnabled, setTransferEnabled] = useState(true)
+    const [cardAutomation, setCardAutomation] = useState(false)
     const [instructions, setInstructions] = useState("")
 
     useEffect(() => {
         if (!settings) return
         setStripeEnabled(settings.stripeEnabled)
         setTransferEnabled(settings.transferEnabled)
+        setCardAutomation(settings.cardAutomationEnabled)
         setInstructions(settings.transferInstructions)
     }, [settings])
 
@@ -62,6 +64,7 @@ const PaymentMethodsTab = () => {
         await updateSettings({
             stripe_enabled: stripeEnabled,
             transfer_enabled: transferEnabled,
+            client_card_automation_enabled: cardAutomation,
             transfer_instructions: instructions.trim(),
         })
         toast.success("Configuración guardada")
@@ -104,6 +107,22 @@ const PaymentMethodsTab = () => {
                         </div>
                         <SwitchInput id="transfer-enabled" checked={transferEnabled} onCheckedChange={setTransferEnabled} />
                     </div>
+                </div>
+
+                {/* Lo que ven las CLIENTAS, no el equipo: por eso va aparte y explica qué hace. Depende de
+                    que el pago con tarjeta esté encendido (sin Stripe no hay con qué domiciliar). */}
+                <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3">
+                    <div className="flex items-start gap-2.5">
+                        <RepeatIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#635BFF]" />
+                        <div>
+                            <p className="text-sm font-medium text-foreground">Invitar a domiciliar la tarjeta</p>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                                En la web, cuando una clienta sube su comprobante, se le ofrece que su plan se cobre solo cada mes.
+                                Su primer cobro automático cae en su próxima fecha de pago. No se ofrece a quien tiene deudas vencidas o promoción.
+                            </p>
+                        </div>
+                    </div>
+                    <SwitchInput id="card-automation" checked={cardAutomation} disabled={!stripeEnabled} onCheckedChange={setCardAutomation} />
                 </div>
 
                 <div className="mt-4">
