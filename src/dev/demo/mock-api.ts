@@ -343,6 +343,27 @@ export const installMockApi = () => {
         else if (path === '/finance/payment-methods' && method === 'GET') response = respond({ stripe: { enabled: true }, transfer: { enabled: true, accounts: [{ bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '0000 0000 0000 0000', numberType: 'clabe' }], instructions: 'Instrucciones de EJEMPLO.' } })
         else if (path === '/finance/payment-methods/config' && method === 'GET') response = respond({ accounts: [{ id: 'acc-1', bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '000000000000000000', number_type: 'clabe', is_active: true, sort_order: 1 }], settings: { stripe_enabled: true, transfer_enabled: true, transfer_instructions: 'Instrucciones de EJEMPLO.' } })
         else if (path === '/finance/payments' && method === 'GET') response = respond({ ...page([]), total_amount: 0, total_collected: 0 })
+        /* La liga para mandarle a la clienta, con los mismos tres casos que la API real: con deuda
+           (meses del libro de pagos), sin nada pendiente, o domiciliada (no necesita liga) */
+        else if (path === '/finance/payments/card-link' && method === 'POST') {
+            const account = String(JSON.parse(String(init?.body ?? '{}')).account ?? '')
+            const client = demoClients.find(item => item.account === account)
+            const periods = Object.entries(financeLedger[account] ?? {})
+                .filter(([, payment]) => ['pending', 'overdue', 'partial'].includes(payment.status))
+                .map(([period, payment]) => ({ period, amount: payment.amount - (payment.paid ?? 0) }))
+                .sort((a, b) => a.period.localeCompare(b.period))
+            await wait(700)
+            const fail = (message: string) => new Response(JSON.stringify({ success: false, data: null, message }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+            if (client?.card_subscription) response = fail('Ya paga con tarjeta automática: el cargo le llega solo, no necesita liga.')
+            else if (!periods.length) response = fail('No tiene nada pendiente de pago.')
+            else response = respond({
+                checkout_url: `https://checkout.stripe.com/c/pay/cs_live_EJEMPLO_${account}`,
+                amount: periods.reduce((sum, item) => sum + item.amount, 0),
+                currency: 'MXN',
+                periods,
+                expires_at: new Date(Date.now() + (23 * 60 + 50) * 60_000).toISOString(),
+            })
+        }
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
         else if (path === '/posts/runs') response = respond(postRuns)

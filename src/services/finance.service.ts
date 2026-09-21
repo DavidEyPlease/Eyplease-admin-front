@@ -29,6 +29,17 @@ export interface CheckoutResult {
     session_id: string
 }
 
+/** La liga que se le MANDA a la clienta: pago único con tarjeta, sin domiciliar */
+export interface CardLinkResult {
+    checkout_url: string
+    amount: number
+    currency: string
+    /** Un renglón por mes, del más viejo al más nuevo, con lo que falta de cada uno */
+    periods: Array<{ period: string, amount: number }>
+    /** Stripe no deja que una liga viva más de 24 horas */
+    expires_at: string
+}
+
 // --- Mock data (PLACEHOLDER). Las cuentas de cobro REALES se configuran en el backend
 //     (GET /finance/payment-methods); no se ponen aquí porque este repo es público. ---
 const MOCK_METHODS: PaymentMethodsConfig = {
@@ -62,6 +73,21 @@ export const FinanceService = {
             account, periods, amount, concept,
         })
         return res.data
+    },
+
+    /**
+     * Genera (o devuelve la que sigue viva) la liga de pago para mandársela a una clienta. El panel
+     * sólo dice QUIÉN: los meses y el importe los pone el servidor desde el libro de pagos.
+     * Si no se puede (nada pendiente, ya paga domiciliada…) lanza un Error con el motivo, en palabras
+     * para el equipo.
+     */
+    async createCardLink(account: string): Promise<CardLinkResult> {
+        try {
+            const res = await HttpService.post<ApiResponse<CardLinkResult>>("/finance/payments/card-link", { account })
+            return res.data
+        } catch (error) {
+            throw new Error((error as { message?: string })?.message || "No se pudo generar la liga de pago.")
+        }
     },
 }
 

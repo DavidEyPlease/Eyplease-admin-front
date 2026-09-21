@@ -15,6 +15,7 @@ import Spinner from "@/components/common/Spinner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import DateInput from "@/components/common/Inputs/DateInput"
 import UIPagination from "@/components/generics/Pagination"
+import PaymentLinkDialog from "@/components/generics/PaymentLinkDialog"
 import { COLLECTION_STATUS_OPTIONS, CollectionStatus, FinanceClient, FinanceClientPromotion, PaymentStatus } from "@/interfaces/finance"
 import { formatDate } from "@/utils/dates"
 import { formatDueDate, formatMoney, periodLabel, periodOf, periodPaid, periodRemaining, periodsForYear } from "@/utils/finance"
@@ -227,7 +228,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     const [manageId, setManageId] = useState<string | null>(null)
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
-    const [stripeLoading, setStripeLoading] = useState(false)
+    const [cardLinkFor, setCardLinkFor] = useState<{ account: string, name: string } | null>(null)
     const [showTransfer, setShowTransfer] = useState(false)
     const [abono, setAbono] = useState<Record<string, string>>({}) // monto de abono por periodo
 
@@ -288,25 +289,12 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         closeManage()
     }
 
-    const chargeWithStripe = async (row: CollectionRow) => {
-        setStripeLoading(true)
-        try {
-            const targets = collectablePeriods(row)
-            const concept = row.overduePeriods.length ? "Adeudo" : "Pago"
-            const res = await FinanceService.createStripeCheckout(
-                row.client.id,
-                targets,
-                row.overdueAmount + row.pendingAmount,
-                `${concept} Eyplease+ · ${targets.length} mes(es)`
-            )
-            navigator.clipboard.writeText(res.checkout_url)
-            window.open(res.checkout_url, "_blank")
-            toast.success("Link de pago con tarjeta generado y copiado")
-        } catch {
-            toast.error("No se pudo generar el link de Stripe")
-        } finally {
-            setStripeLoading(false)
-        }
+    /* Antes abría la página de Stripe en la pantalla del EQUIPO y copiaba la liga sin enseñarla. Quien
+       paga es la clienta: ahora se enseña la liga, lista para copiar o mandar por WhatsApp, y los meses
+       y el importe los pone el servidor desde el libro de pagos. */
+    const chargeWithStripe = (row: CollectionRow) => {
+        closeManage()
+        setCardLinkFor({ account: row.client.id, name: row.client.name })
     }
 
     const registerTransfer = async (row: CollectionRow) => {
@@ -504,6 +492,8 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 </>
             )}
 
+            <PaymentLinkDialog account={cardLinkFor?.account ?? null} name={cardLinkFor?.name ?? ""} onClose={() => setCardLinkFor(null)} />
+
             {/* Payment management modal */}
             <Dialog open={!!manageId} onOpenChange={(o) => !o && closeManage()}>
                 <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border-border bg-card">
@@ -523,11 +513,11 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => chargeWithStripe(manageRow)}
-                                            disabled={stripeLoading || methods?.stripe.enabled === false}
+                                            disabled={methods?.stripe.enabled === false}
                                             className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-50"
                                             style={{ backgroundImage: "linear-gradient(135deg,#5B47E0,#6B5BE8)" }}
                                         >
-                                            <CreditCardIcon className="h-4 w-4" /> {stripeLoading ? "Generando..." : "Con tarjeta"}
+                                            <CreditCardIcon className="h-4 w-4" /> Liga de pago
                                         </button>
                                         <button
                                             onClick={() => setShowTransfer((v) => !v)}

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { MoreHorizontalIcon, PowerIcon, PowerOffIcon, SearchIcon } from 'lucide-react'
+import { CreditCardIcon, MoreHorizontalIcon, PowerIcon, PowerOffIcon, SearchIcon } from 'lucide-react'
 
 import { APP_ROUTES } from '@/constants/app'
 import { cn } from '@/lib/utils'
 import { replaceRecordIdInPath } from '@/utils'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/uishadcn/ui/dropdown-menu'
+import PaymentLinkDialog from '@/components/generics/PaymentLinkDialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/uishadcn/ui/dropdown-menu'
 import { initials, titleCase } from './names'
 import StatusDialog from './StatusDialog'
 import useClientsBoard, { BoardClient, PaymentState } from './useClientsBoard'
@@ -27,7 +28,7 @@ const lastSeen = (value: Date | string | null) => {
 
 type Quick = 'all' | 'overdue' | 'no_password' | 'reports' | 'inactive'
 
-const Row = ({ row, onChangeStatus }: { row: BoardClient, onChangeStatus: (row: BoardClient) => void }) => {
+const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChangeStatus: (row: BoardClient) => void, onPaymentLink: (row: BoardClient) => void }) => {
     const navigate = useNavigate()
     const { client, payment, reports } = row
     const active = client.user?.active !== false
@@ -72,7 +73,14 @@ const Row = ({ row, onChangeStatus }: { row: BoardClient, onChangeStatus: (row: 
                     <DropdownMenuTrigger aria-label={`Más acciones para ${titleCase(client.name)}`} className="ml-0.5 inline-grid size-8 cursor-pointer place-items-center rounded-xl align-middle text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground data-[state=open]:bg-foreground/5">
                         <MoreHorizontalIcon className="size-4" />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" sideOffset={6} className="w-52 rounded-2xl p-1.5">
+                    <DropdownMenuContent align="end" sideOffset={6} className="w-60 rounded-2xl p-1.5">
+                        {/* Quien paga domiciliada no necesita liga: el cargo le llega solo */}
+                        {!client.card_subscription && <>
+                            <DropdownMenuItem onSelect={() => onPaymentLink(row)} className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold">
+                                <CreditCardIcon className="size-4" /> Liga de pago con tarjeta
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                        </>}
                         <DropdownMenuItem
                             onSelect={() => onChangeStatus(row)}
                             className={cn('cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold', active && 'text-destructive focus:text-destructive')}
@@ -100,6 +108,7 @@ const StatusBoard = () => {
     /* El diálogo vive AQUÍ y no dentro de la fila, por la misma razón que la celda del menú corta
        los clics: dentro de un <tr> clicable, cada clic del diálogo abriría la ficha */
     const [changing, setChanging] = useState<BoardClient | null>(null)
+    const [paying, setPaying] = useState<BoardClient | null>(null)
 
     const plans = useMemo(() => {
         const counts = new Map<string, number>()
@@ -157,7 +166,7 @@ const StatusBoard = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                            {shown.map(row => <Row key={row.client.id} row={row} onChangeStatus={setChanging} />)}
+                            {shown.map(row => <Row key={row.client.id} row={row} onChangeStatus={setChanging} onPaymentLink={setPaying} />)}
                         </tbody>
                     </table>
                 </div>
@@ -166,6 +175,7 @@ const StatusBoard = () => {
             </section>
 
             <StatusDialog client={changing} onClose={() => setChanging(null)} />
+            <PaymentLinkDialog account={paying?.client.account ?? null} name={paying ? titleCase(paying.client.name) : ''} onClose={() => setPaying(null)} />
         </div>
     )
 }
