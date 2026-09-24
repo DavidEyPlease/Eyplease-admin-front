@@ -1,0 +1,46 @@
+/* Ventas: una sola fila de trabajo. Cada tarjeta dice a quién le hablas, qué pide y en qué paso va.
+   El color del canto izquierdo dice de qué lista viene sin tener que leer nada. */
+
+.vta-row { position: relative; border-radius: 22px; padding: 16px 18px 15px; overflow: hidden; transition: transform .22s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s; }
+.vta-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--edge, #6C47FF); }
+.vta-row:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -18px rgba(27, 20, 80, .55); }
+.dark .vta-row:hover { box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .8); }
+.vta-row[data-kind="gift"] { --edge: linear-gradient(180deg, #6C47FF, #4E31C0); }
+.vta-row[data-kind="interest"] { --edge: linear-gradient(180deg, #2CD4D9, #6C47FF); }
+.vta-row[data-kind="prospect"] { --edge: linear-gradient(180deg, #E5077D, #6C47FF); }
+.vta-row.is-done { opacity: .72; }
+.vta-row.is-done:hover { opacity: 1; }
+
+/* Lo que pide, en una línea. El plan (o el premio) sale con el degradado de la marca. */
+.vta-asks em { font-style: normal; font-weight: 800; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dark .vta-asks em { background-image: linear-gradient(135deg, #A894FF 0%, #8C78FF 40%, #2CD4D9 110%); }
+
+/* El paso a paso: dónde se quedó esta venta */
+.vta-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; }
+.vta-steps > span { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .01em; color: var(--muted-foreground); }
+.vta-steps i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid color-mix(in oklab, var(--foreground) 22%, transparent); background: var(--card); }
+.vta-steps > span.done i { border-color: #10B981; background: #10B981; }
+.vta-steps > span.done { color: color-mix(in oklab, var(--foreground) 72%, transparent); }
+.vta-steps > span.now i { border-color: #6C47FF; background: #6C47FF; box-shadow: 0 0 0 4px rgba(108, 71, 255, .2); }
+.vta-steps > span.now { color: var(--foreground); }
+.vta-steps b { display: block; width: 16px; height: 2px; border-radius: 2px; margin: 0 4px; background: color-mix(in oklab, var(--foreground) 14%, transparent); }
+.vta-steps b.done { background: color-mix(in oklab, #10B981 55%, transparent); }
+
+/* Botones de la fila */
+.vta-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); color: var(--foreground); cursor: pointer; transition: background-color .2s, border-color .2s, transform .2s; }
+.vta-btn:hover:not(:disabled) { background: color-mix(in oklab, var(--foreground) 6%, transparent); border-color: color-mix(in oklab, #6C47FF 40%, transparent); }
+.vta-btn:disabled { opacity: .5; cursor: default; }
+.vta-btn.wa { border-color: transparent; background: linear-gradient(135deg, #12A150, #25D366); color: #fff; box-shadow: 0 10px 20px -12px rgba(18, 161, 80, .9); }
+.vta-btn.wa:hover { background: linear-gradient(135deg, #0E8F46, #1FC45C); border-color: transparent; transform: translateY(-1px); }
+.vta-btn.ghost { border-color: transparent; background: transparent; color: var(--muted-foreground); font-weight: 600; height: 30px; padding: 0 9px; }
+.vta-btn.ghost:hover { background: color-mix(in oklab, var(--foreground) 6%, transparent); color: var(--foreground); }
+
+/* El dato de contacto se copia de un clic */
+.vta-copy { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; border-radius: 8px; padding: 1px 5px; margin-left: -5px; font-size: 11.5px; color: var(--muted-foreground); cursor: pointer; transition: background-color .18s, color .18s; }
+.vta-copy:hover { background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--foreground); }
+
+/* Las tres listas, en la columna de la izquierda */
+.vta-pick { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; width: 100%; border-radius: 15px; padding: 9px 11px; text-align: left; cursor: pointer; transition: background-color .2s; }
+.vta-pick:hover { background: color-mix(in oklab, var(--foreground) 5%, transparent); }
+.vta-pick.on { background: color-mix(in oklab, #6C47FF 13%, transparent); }
+.vta-pick small { display: block; font-size: 10.5px; line-height: 1.3; color: var(--muted-foreground); }
