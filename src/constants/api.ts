@@ -154,4 +154,13 @@ export const API_ROUTES = {
         },
     },
     NETWORK_PERSONS: '/network-persons',
+    // Ventas (fase 3/4 de la app): la app anota, el equipo cierra por fuera
+    SALES: {
+        PLAN_INTERESTS: '/plan-interests',
+        PLAN_INTEREST_CONTACTED: '/plan-interests/{id}/contacted',
+        PLAN_GIFTS: '/plan-gifts',
+        PLAN_GIFT_CONTACTED: '/plan-gifts/{id}/contacted',
+        PLAN_GIFT_FULFILLED: '/plan-gifts/{id}/fulfilled',
+        DIRECTOR_PROSPECTS: '/director-prospects',
+    },
 }

@@ -62,7 +62,10 @@ export const APP_ROUTES = {
     WHATSAPP: {
         INBOX: '/whatsapp',
         TICKETS: '/whatsapp/tickets',
-    }
+    },
+    SALES: {
+        OPPORTUNITIES: '/ventas',
+    },
 }
 
 export const SESSION_KEY = 'EyWebPleaseTokenAdm'
@@ -90,6 +93,15 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         requiredPermission: true,
         permissionKeys: [PermissionKeys.FINANCES],
         icon: 'finances',
+    },
+    {
+        key: PermissionKeys.SALES,
+        label: 'Ventas',
+        path: APP_ROUTES.SALES.OPPORTUNITIES,
+        requiredPermission: true,
+        // Quien lleva clientas o finanzas también ve las oportunidades; 'sales' queda para un permiso propio en el panel
+        permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
+        icon: 'sales',
     },
     {
         key: PermissionKeys.REPORTS_MONITOR,

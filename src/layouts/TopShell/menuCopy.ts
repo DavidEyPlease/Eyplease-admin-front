@@ -13,5 +13,6 @@ export const ADMIN_COPY: Partial<Record<PermissionKeys, { label?: string, hint: 
     [PermissionKeys.TRAININGS]: { label: 'Entrenamiento', hint: 'El tema de cada lunes para las juntas de unidad' },
     [PermissionKeys.FINANCES]: { hint: 'Lo cobrado, lo pendiente y los comprobantes por validar' },
     [PermissionKeys.CONFIGURATION]: { label: 'Configuración', hint: 'Planes, precios y permisos de cada rol' },
+    [PermissionKeys.SALES]: { hint: 'Quién quiere subir de plan, regalar Eyplease+ a su unidad, y las Directoras que llegan invitadas' },
 }
 export const adminLabelOf = (item: MenuItem) => ADMIN_COPY[item.key]?.label ?? item.label

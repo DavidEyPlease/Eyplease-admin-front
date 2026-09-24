@@ -32,7 +32,7 @@ import { setNewShell } from './useNewShell'
  */
 const DIRECT_FIRST: PermissionKeys[] = [PermissionKeys.DASHBOARD]
 const GROUPS: Array<{ label: string, keys: PermissionKeys[] }> = [
-    { label: 'Clientas', keys: [PermissionKeys.CLIENTS, PermissionKeys.WHATSAPP] },
+    { label: 'Clientas', keys: [PermissionKeys.CLIENTS, PermissionKeys.WHATSAPP, PermissionKeys.SALES] },
     /* Pedidos de diseño es operación (el trabajo que hay que sacar), no un dato de la clienta */
     { label: 'Operación', keys: [PermissionKeys.TASKS, PermissionKeys.PUBLISH_POSTS, PermissionKeys.REPORTS_MONITOR] },
     { label: 'Contenido', keys: [PermissionKeys.TEMPLATES, PermissionKeys.TRAININGS] },
