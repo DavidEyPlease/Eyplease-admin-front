@@ -5,7 +5,7 @@ import { useMemo, useState } from "react"
 
 import { Panel } from "./ui"
 import { useClientsStatus, ClientStatus } from "../useReports"
-import { statusMeta, STATUS_LOADED } from "../reports.constants"
+import { statusMeta, STATUS_LOADED, type ReportsCountry } from "../reports.constants"
 
 const LEGEND = [
     { c: "bg-emerald-500", t: "Subido" },
@@ -21,8 +21,8 @@ const GROUPS = [
     ["national", "Nacional", "#0E9E97"],
 ] as const
 
-const MatrixTab = ({ period }: { period: string }) => {
-    const { sections, clients, loading } = useClientsStatus(period)
+const MatrixTab = ({ period, country }: { period: string; country: ReportsCountry }) => {
+    const { sections, clients, loading } = useClientsStatus(period, country)
     const [toDelete, setToDelete] = useState<ClientStatus | null>(null)
     const [plan, setPlan] = useState("all")
     const [q, setQ] = useState("")

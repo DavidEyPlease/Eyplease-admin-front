@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { Panel, HeroTile, KpiTile } from "./ui"
 import { useReportSummary, useDailyReports, useSectionMissing, SummarySection, MissingClient } from "../useReports"
-import { periodLabel, fmtDateTime, statusMeta } from "../reports.constants"
+import { periodLabel, fmtDateTime, statusMeta, type ReportsCountry } from "../reports.constants"
 import useReportUpload from "@/hooks/useReportUpload"
 import UploadErrorFeedback from "@/pages/NewsletterReports/components/UploadErrorFeedback"
 import { queryKeys } from "@/utils/queryKeys"
@@ -61,12 +61,12 @@ const Group = ({ title, color, sections, onVer }: { title: string; color: string
     </div>
 )
 
-const SummaryTab = ({ period }: { period: string }) => {
+const SummaryTab = ({ period, country }: { period: string; country: ReportsCountry }) => {
     const queryClient = useQueryClient()
-    const { summary, loading } = useReportSummary(period)
-    const { dailyReports, loading: loadingDaily } = useDailyReports()
+    const { summary, loading } = useReportSummary(period, country)
+    const { dailyReports, loading: loadingDaily } = useDailyReports(country)
     const [verSection, setVerSection] = useState<SummarySection | null>(null)
-    const { data: missing, loading: loadingMissing } = useSectionMissing(period, verSection?.section_key ?? null)
+    const { data: missing, loading: loadingMissing } = useSectionMissing(period, verSection?.section_key ?? null, country)
     const { upload, uploadError, setUploadError } = useReportUpload()
     const [uploadingUserId, setUploadingUserId] = useState<string | null>(null)
 

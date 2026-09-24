@@ -6,6 +6,7 @@ import useFetchQuery from "@/hooks/useFetchQuery"
 import useRequestQuery from "@/hooks/useRequestQuery"
 import { API_ROUTES } from "@/constants/api"
 import { queryKeys } from "@/utils/queryKeys"
+import { DEFAULT_COUNTRY, type ReportsCountry } from "./reports.constants"
 
 /* ----------------------------- Resumen (tab Resumen) ----------------------------- */
 export type NewsletterGroupKey = "unit" | "national"
@@ -53,10 +54,10 @@ export interface SectionMissing {
  * KPIs + estadísticas por sección del periodo. Todo el derecho por plan y el
  * conteo cargados/esperados lo resuelve el backend (endpoint /reports/summary).
  */
-export const useReportSummary = (period: string) => {
+export const useReportSummary = (period: string, country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading, isRefetching } = useFetchQuery<ReportSummary>(API_ROUTES.REPORTS.SUMMARY, {
-        queryParams: { year_month: period },
-        customQueryKey: queryKeys.generic("report-summary", { period }),
+        queryParams: { year_month: period, country },
+        customQueryKey: queryKeys.generic("report-summary", { period, country }),
     })
     return { summary: response, loading, isRefetching }
 }
@@ -69,9 +70,10 @@ export interface EarlyDaily {
 }
 
 /** Tempraneras: flujo diario (sección "early"). Cargadas/rechazadas del día de hoy. */
-export const useEarlyDaily = () => {
+export const useEarlyDaily = (country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading } = useFetchQuery<EarlyDaily>(API_ROUTES.REPORTS.EARLY_DAILY, {
-        customQueryKey: queryKeys.generic("report-early-daily"),
+        queryParams: { country },
+        customQueryKey: queryKeys.generic("report-early-daily", { country }),
     })
     return { early: response, loading }
 }
@@ -88,18 +90,19 @@ export interface DailyReport extends EarlyDaily {
  * sumaron los dos de Corazones de Círculo Rosa, y el backend devuelve fila
  * aunque ese día no haya subido nada: el cero es el dato que interesa vigilar.
  */
-export const useDailyReports = () => {
+export const useDailyReports = (country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading } = useFetchQuery<DailyReport[]>(API_ROUTES.REPORTS.DAILY_REPORTS, {
-        customQueryKey: queryKeys.generic("report-daily-reports"),
+        queryParams: { country },
+        customQueryKey: queryKeys.generic("report-daily-reports", { country }),
     })
     return { dailyReports: response ?? [], loading }
 }
 
 /** Clientes con derecho a una sección que no la tienen cargada (modal "Faltan: …"). */
-export const useSectionMissing = (period: string, sectionKey: string | null) => {
+export const useSectionMissing = (period: string, sectionKey: string | null, country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading } = useFetchQuery<SectionMissing>(API_ROUTES.REPORTS.SUMMARY_MISSING, {
-        queryParams: { year_month: period, section_key: sectionKey ?? "" },
-        customQueryKey: queryKeys.list("report-summary-missing", { period, sectionKey }),
+        queryParams: { year_month: period, section_key: sectionKey ?? "", country },
+        customQueryKey: queryKeys.list("report-summary-missing", { period, sectionKey, country }),
         enabled: !!sectionKey,
     })
     return { data: response, loading }
@@ -131,10 +134,10 @@ interface ClientsStatusResponse {
  * que conceden cada sección) + estado de cada celda. Todo resuelto en el backend (derecho por
  * plan real, demo excluidas, mes por-sección); el front no hardcodea catálogo ni planes.
  */
-export const useClientsStatus = (period: string) => {
+export const useClientsStatus = (period: string, country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading } = useFetchQuery<ClientsStatusResponse>(API_ROUTES.REPORTS.CLIENTS_STATUS, {
-        queryParams: { year_month: period },
-        customQueryKey: queryKeys.generic("report-clients-status", { period }),
+        queryParams: { year_month: period, country },
+        customQueryKey: queryKeys.generic("report-clients-status", { period, country }),
     })
     return { sections: response?.sections ?? [], clients: response?.clients ?? [], loading }
 }
@@ -160,10 +163,10 @@ export interface RejectedUpload {
     created_at: string
 }
 
-export const useRejectedUploads = (period: string) => {
+export const useRejectedUploads = (period: string, country: ReportsCountry = DEFAULT_COUNTRY) => {
     const { response, loading } = useFetchQuery<ApiRejected[]>(API_ROUTES.REPORTS.REJECTED, {
-        queryParams: { year_month: period },
-        customQueryKey: queryKeys.list("report-rejected", { period }),
+        queryParams: { year_month: period, country },
+        customQueryKey: queryKeys.list("report-rejected", { period, country }),
     })
     const items: RejectedUpload[] = useMemo(
         () =>

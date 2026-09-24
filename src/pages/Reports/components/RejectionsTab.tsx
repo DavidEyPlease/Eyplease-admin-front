@@ -1,6 +1,6 @@
 import { Panel } from "./ui"
 import { useRejectedUploads, RejectedUpload } from "../useReports"
-import { decodeError, periodLabel, fmtDateTime } from "../reports.constants"
+import { decodeError, periodLabel, fmtDateTime, type ReportsCountry } from "../reports.constants"
 
 const Card = ({ name, account, section, reason, when }: { name: string; account: string; section: string; reason: string; when: string }) => (
     <div className="flex items-start gap-3 rounded-xl border border-rose-100 bg-rose-500/10 p-3.5">
@@ -19,8 +19,8 @@ const Card = ({ name, account, section, reason, when }: { name: string; account:
     </div>
 )
 
-const RejectionsTab = ({ period }: { period: string }) => {
-    const { items, loading } = useRejectedUploads(period)
+const RejectionsTab = ({ period, country }: { period: string; country: ReportsCountry }) => {
+    const { items, loading } = useRejectedUploads(period, country)
 
     return (
         <Panel>

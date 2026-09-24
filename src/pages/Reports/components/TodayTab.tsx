@@ -3,6 +3,8 @@ import { CloudDownloadIcon, SlidersHorizontalIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useDailyReports, useDispatchDownloadRun, useDownloadRuns, type DownloadRun } from "../useReports"
+import { DEFAULT_COUNTRY, type ReportsCountry } from "../reports.constants"
+import RobotCountryNotice from "./RobotCountryNotice"
 
 /** Los tres reportes que el robot baja a diario; es lo que relanza «Descargar lo que falta». */
 const DAILY_SECTIONS = ["early", "pink_circle_hearts", "pink_circle_vip_plus"]
@@ -31,8 +33,10 @@ const resultOf = (run: DownloadRun): { label: string, tone: string } => {
  * La vista de HOY del monitor: qué bajó el robot, a qué hora y qué hubo que reintentar. Lo del mes
  * (resumen, estado por clienta, rechazos) sigue en sus pestañas.
  */
-const TodayTab = ({ onOpenOptions }: { onOpenOptions: () => void }) => {
-    const { dailyReports: reports } = useDailyReports()
+const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenOptions: () => void }) => {
+    const { dailyReports: reports } = useDailyReports(country)
+    /* El robot sólo entra al portal de México: fuera de él no hay corridas ni descargas que lanzar */
+    const robot = country === DEFAULT_COUNTRY
     const { runs } = useDownloadRuns()
     const { dispatch, dispatching } = useDispatchDownloadRun()
 
@@ -59,14 +63,14 @@ const TodayTab = ({ onOpenOptions }: { onOpenOptions: () => void }) => {
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-5">
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            {robot ? <div className="flex flex-wrap items-center justify-end gap-2">
                 <button type="button" onClick={onOpenOptions} className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-border bg-card/60 px-4 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground">
                     <SlidersHorizontalIcon className="size-4" /> Elegir qué y para quién
                 </button>
                 <button type="button" disabled={dispatching} onClick={downloadMissing} className="shell-grad inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl px-4 text-[13px] font-bold text-white shadow-[0_10px_22px_-10px_rgba(108,71,255,.9)] transition hover:brightness-105 disabled:opacity-60">
                     <CloudDownloadIcon className="size-4" /> {missing > 0 ? `Descargar lo que falta (${missing})` : "Descargar ahora"}
                 </button>
-            </div>
+            </div> : <RobotCountryNotice country={country} />}
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {list.map(report => {
@@ -86,7 +90,7 @@ const TodayTab = ({ onOpenOptions }: { onOpenOptions: () => void }) => {
                 </div>
             </div>
 
-            <section className="shell-glass overflow-hidden rounded-3xl">
+            {robot && <section className="shell-glass overflow-hidden rounded-3xl">
                 <div className="flex items-center justify-between gap-3 px-5 pt-[18px] pb-2">
                     <h2 className="text-[15px] font-extrabold tracking-tight">Corridas del robot</h2>
                     <span className="text-[11.5px] text-muted-foreground">las últimas 20</span>
@@ -117,7 +121,7 @@ const TodayTab = ({ onOpenOptions }: { onOpenOptions: () => void }) => {
                     </table>
                 </div>
                 {!runs.length && <p className="px-5 py-9 text-center text-[13px] text-muted-foreground">Todavía no hay corridas registradas.</p>}
-            </section>
+            </section>}
         </div>
     )
 }
