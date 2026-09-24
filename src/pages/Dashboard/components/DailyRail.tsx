@@ -1,4 +1,4 @@
-import { CheckIcon, ClockIcon, TriangleAlertIcon } from "lucide-react"
+import { CheckIcon, ClockIcon, MinusIcon, TriangleAlertIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { DailySection, DailyTodayStatus } from "@/interfaces/overview"
@@ -14,6 +14,7 @@ import { DailySection, DailyTodayStatus } from "@/interfaces/overview"
 const STATUS_DOT: Record<DailyTodayStatus, string> = {
     ok: "bg-emerald-500",
     partial: "bg-amber-500",
+    empty: "bg-slate-400",
     scheduled: "bg-slate-300",
     missing: "bg-red-500",
 }
@@ -21,6 +22,7 @@ const STATUS_DOT: Record<DailyTodayStatus, string> = {
 const STATUS_LABEL: Record<DailyTodayStatus, string> = {
     ok: "Publicado hoy",
     partial: "Salió con fallas",
+    empty: "Sin piezas hoy",
     scheduled: "Programado",
     missing: "No corrió hoy",
 }
@@ -28,6 +30,7 @@ const STATUS_LABEL: Record<DailyTodayStatus, string> = {
 const StatusIcon = ({ status }: { status: DailyTodayStatus }) => {
     if (status === "ok") return <CheckIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
     if (status === "partial") return <CheckIcon className="size-3.5 text-amber-600 dark:text-amber-400" />
+    if (status === "empty") return <MinusIcon className="size-3.5 text-muted-foreground" />
     if (status === "scheduled") return <ClockIcon className="size-3.5 text-muted-foreground" />
     return <TriangleAlertIcon className="size-3.5 text-red-600 dark:text-red-400" />
 }
@@ -45,6 +48,7 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
         <div className="grid min-w-0 gap-2.5">
             {sections.map((section) => {
                 const covered = new Set(section.covered_days)
+                const empties = new Set(section.empty_days ?? [])
                 const pct = section.days_expected
                     ? Math.round((section.days_covered / section.days_expected) * 100)
                     : 100
@@ -79,7 +83,7 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                     className={cn(
                                         section.today_status === "ok" && "text-emerald-700 dark:text-emerald-300",
                                         section.today_status === "partial" && "text-amber-700 dark:text-amber-300",
-                                        section.today_status === "scheduled" && "text-muted-foreground",
+                                        (section.today_status === "scheduled" || section.today_status === "empty") && "text-muted-foreground",
                                         section.today_status === "missing" && "text-red-700 dark:text-red-300"
                                     )}
                                 >
@@ -97,6 +101,8 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                     const isToday = day === daysElapsed
                                     const isFuture = day > daysElapsed
                                     const done = covered.has(day)
+                                    // Corrió y no había a quién hacerle pieza: cubierto, pero no «publicado»
+                                    const empty = done && empties.has(day)
 
                                     // Hoy, mientras no llegue su hora, no es un
                                     // hueco: pintarlo en rojo contradice el
@@ -106,13 +112,17 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                     const tone =
                                         isFuture || pending
                                             ? "bg-muted"
-                                            : done
+                                            : empty
+                                              ? "bg-slate-300 dark:bg-slate-600"
+                                              : done
                                               ? "bg-emerald-500"
                                               : "bg-red-300 dark:bg-red-400/40"
 
                                     const label = isFuture
                                         ? "aún no llega"
-                                        : done
+                                        : empty
+                                          ? "sin piezas: no había a quién"
+                                          : done
                                           ? "publicado"
                                           : pending
                                             ? `programado para las ${section.scheduled_at}`

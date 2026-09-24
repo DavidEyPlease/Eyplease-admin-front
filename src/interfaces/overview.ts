@@ -11,8 +11,11 @@ export interface OverviewRevenuePeriod {
     total_count: number
 }
 
-/** Cómo va hoy una sección que debe correr todos los días. `partial` = salió, pero alguna pieza falló. */
-export type DailyTodayStatus = "ok" | "partial" | "scheduled" | "missing"
+/**
+ * Cómo va hoy una sección que debe correr todos los días. `partial` = salió, pero alguna pieza falló;
+ * `empty` = corrió y no había a quién hacerle pieza (una noche sin cumpleaños nacionales, por ejemplo).
+ */
+export type DailyTodayStatus = "ok" | "partial" | "empty" | "scheduled" | "missing"
 
 export interface DailySection {
     key: string
@@ -27,6 +30,8 @@ export interface DailySection {
     days_missing: number
     /** Días del mes en los que sí corrió, para el calendario. */
     covered_days: number[]
+    /** De esos, los días en que no había a quién hacerle pieza (con un API viejo no viene). */
+    empty_days?: number[]
     failed_jobs: number
     /** Piezas que fallaron en las corridas de hoy (con un API viejo no viene). */
     failed_today?: number

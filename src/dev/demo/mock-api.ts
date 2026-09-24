@@ -25,7 +25,7 @@ const daily = ([['early', 'Ordenantes del mes', '09:00'], ['birthdays', 'Cumplea
     const [h, m] = scheduled_at.split(':').map(Number)
     const due = now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m)
     return {
-        key, name, scheduled_at, ran_today: due, today_status: due ? (key === 'birthdays' ? 'partial' : 'ok') : 'scheduled', failed_today: due && key === 'birthdays' ? 3 : 0,
+        key, name, scheduled_at, ran_today: due, today_status: due ? (key === 'birthdays' ? 'partial' : key === 'anniversaries' ? 'empty' : 'ok') : 'scheduled', failed_today: due && key === 'birthdays' ? 3 : 0, empty_days: key === 'anniversaries' ? [2, 9, ...(due ? [today] : [])] : [],
         days_covered: due ? today : today - 1, days_expected: due ? today : today - 1, days_missing: index === 2 ? 1 : 0,
         covered_days: Array.from({ length: due ? today : today - 1 }, (_, d) => d + 1), failed_jobs: 0, last_run_at: due ? iso(30) : iso(60 * 17),
     }
