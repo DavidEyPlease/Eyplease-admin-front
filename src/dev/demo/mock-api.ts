@@ -63,6 +63,8 @@ const liveNews = {
 
 const dailyReports = [['early', 'Ventas Mensuales Personales', 98, 98], ['pink_circle_hearts', 'Corazones · VIP Gold', 98, 97], ['pink_circle_vip_plus', 'Corazones · VIP Plus', 29, 29]]
     .map(([section_key, name, usual, loaded]) => ({ section_key, name, usual, loaded, rejected: 0, date: ymd(), last_at: iso(200) }))
+/* Colombia (`?country=COL`): una cuenta de ejemplo y nada bajado solo, porque el robot aún no entra a su portal */
+const colombiaDailyReports = dailyReports.map(report => ({ ...report, usual: report.section_key === 'early' ? 0 : 1, loaded: 0, last_at: null }))
 
 /* Finanzas: resumen y balance con la forma real (las listas de pagos y clientas abren vacías) */
 const monthsSoFar = Array.from({ length: now.getMonth() + 1 }, (_, index) => index + 1)
@@ -212,6 +214,10 @@ const clientsStatus = {
         cells: Object.fromEntries(reportSections.slice(0, 4 + (index % 3)).map(([key], column) => [key, (index === 2 && column > 1) || (index === 7 && column === 0) ? 'missing' : 'completed'])),
     })),
 }
+const colombiaClientsStatus = {
+    sections: clientsStatus.sections,
+    clients: [{ id: 'col-1', name: 'Clienta de ejemplo en Colombia', account: 'EJ-COL1', plan: 'Plan de ejemplo C', cells: Object.fromEntries(reportSections.slice(0, 4).map(([key]) => [key, 'missing'])) }],
+}
 const reportSummary = {
     period: period(1),
     kpis: { progress: 94, loaded: 512, expected: 545, clients_with_newsletter: 98, missing: 33, rejected: 2, empty: 1 },
@@ -326,7 +332,7 @@ export const installMockApi = () => {
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
         else if (path === '/live-news') response = respond(liveNews)
-        else if (path === '/reports/daily-reports') response = respond(dailyReports)
+        else if (path === '/reports/daily-reports') response = respond(url.searchParams.get('country') === 'COL' ? colombiaDailyReports : dailyReports)
         else if (path === '/copilot' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { message: string, conversation_id: string | null }
             const id = body.conversation_id ?? crypto.randomUUID()
@@ -454,7 +460,7 @@ export const installMockApi = () => {
             const account = decodeURIComponent(path.split('/')[3])
             response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? null)
         }
-        else if (path === '/reports/clients-status') response = respond(clientsStatus)
+        else if (path === '/reports/clients-status') response = respond(url.searchParams.get('country') === 'COL' ? colombiaClientsStatus : clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)
         else if (path === '/whatsapp/stats') response = respond({ conversations: waConversations.length, manual: 1, bot: 3, open_tickets: 2, delivery_failures: 0 })
         else if (path === '/whatsapp/conversations') response = respond(waPage(waConversations))
