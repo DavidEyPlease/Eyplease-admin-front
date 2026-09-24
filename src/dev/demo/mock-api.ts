@@ -318,6 +318,11 @@ export const installMockApi = () => {
         if (path === '/me') response = respond(me)
         else if (path === '/util-data') response = respond(utilData)
         else if (path === '/overview') response = respond(overview)
+        // Aviso a clientas: el API sólo lo encola (el cuerpo queda en window.__demoLastNotice para revisarlo)
+        else if (path === '/notifications/clients' && method === 'POST') {
+            Object.assign(window, { __demoLastNotice: typeof init?.body === 'string' ? JSON.parse(init.body) : null })
+            response = respond({ message: 'Notificaciones en cola para envio.' })
+        }
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
         else if (path === '/live-news') response = respond(liveNews)
