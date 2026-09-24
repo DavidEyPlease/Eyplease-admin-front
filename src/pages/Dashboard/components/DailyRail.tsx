@@ -13,18 +13,21 @@ import { DailySection, DailyTodayStatus } from "@/interfaces/overview"
 
 const STATUS_DOT: Record<DailyTodayStatus, string> = {
     ok: "bg-emerald-500",
+    partial: "bg-amber-500",
     scheduled: "bg-slate-300",
     missing: "bg-red-500",
 }
 
 const STATUS_LABEL: Record<DailyTodayStatus, string> = {
     ok: "Publicado hoy",
+    partial: "Salió con fallas",
     scheduled: "Programado",
     missing: "No corrió hoy",
 }
 
 const StatusIcon = ({ status }: { status: DailyTodayStatus }) => {
     if (status === "ok") return <CheckIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+    if (status === "partial") return <CheckIcon className="size-3.5 text-amber-600 dark:text-amber-400" />
     if (status === "scheduled") return <ClockIcon className="size-3.5 text-muted-foreground" />
     return <TriangleAlertIcon className="size-3.5 text-red-600 dark:text-red-400" />
 }
@@ -75,11 +78,14 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                 <span
                                     className={cn(
                                         section.today_status === "ok" && "text-emerald-700 dark:text-emerald-300",
+                                        section.today_status === "partial" && "text-amber-700 dark:text-amber-300",
                                         section.today_status === "scheduled" && "text-muted-foreground",
                                         section.today_status === "missing" && "text-red-700 dark:text-red-300"
                                     )}
                                 >
-                                    {STATUS_LABEL[section.today_status]}
+                                    {section.today_status === "partial" && section.failed_today
+                                        ? `Salió, con ${section.failed_today} ${section.failed_today === 1 ? "falla" : "fallas"}`
+                                        : STATUS_LABEL[section.today_status]}
                                 </span>
                             </span>
                         </div>
