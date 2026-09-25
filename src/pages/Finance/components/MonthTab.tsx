@@ -6,6 +6,7 @@ import { FinanceClient } from "@/interfaces/finance"
 import { cn } from "@/lib/utils"
 import { MONTH_LABELS, formatMoney, periodLabel, periodRemaining } from "@/utils/finance"
 import useFinanceBalance from "../useFinanceBalance"
+import CardIssues from "./CardIssues"
 import { useFinanceClientsPage, useReviewReceipt } from "../useFinanceClients"
 import { useFinanceSummary } from "../useFinanceSummary"
 import "@/pages/Hoy/hoy.css"
@@ -112,6 +113,9 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
                     {summary && <span className="ml-auto">Ticket promedio <b className="text-foreground tabular-nums">{whole(month?.avg_ticket ?? 0)}</b> · {summary.active_clients} activas</span>}
                 </div>
             </section>
+
+            {/* Lo que Stripe no pudo cobrar, con el porqué: va antes que todo porque es dinero que se está yendo */}
+            <CardIssues />
 
             {/* Lo que hay que hacer */}
             <div className="grid gap-[18px] lg:grid-cols-2">

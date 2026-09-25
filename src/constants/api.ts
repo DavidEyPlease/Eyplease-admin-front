@@ -132,6 +132,10 @@ export const API_ROUTES = {
     FINANCE: {
         CLIENTS: '/finance/clients',
         CLIENT_DETAIL: '/finance/clients/{id}',
+        /** Cobros con tarjeta que Stripe no pudo hacer: la lista, «revisar ahora» y la liga para cambiar la tarjeta. */
+        CARD_ISSUES: '/finance/card-issues',
+        CARD_ISSUES_SCAN: '/finance/card-issues/scan',
+        CARD_ISSUE_LINK: '/finance/card-issues/{id}/card-link',
         SUMMARY: '/finance/summary',
         BALANCE: '/finance/balance',
         EXPENSES: {

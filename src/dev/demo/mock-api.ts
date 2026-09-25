@@ -58,12 +58,13 @@ const colombiaOverview = {
 const countryAttention = [{ country: 'MEX', attention: 4 }, { country: 'COL', attention: 1 }]
 
 const notifications = {
-    unread: { whatsapp: 6, service_requests: 3, corrections: 1, delivery_failures: 0 }, unread_total: 10,
-    seen_at: { whatsapp: null, service_requests: null, corrections: null, delivery_failures: null },
+    unread: { whatsapp: 6, service_requests: 3, corrections: 1, delivery_failures: 0, card_failures: 1 }, unread_total: 11,
+    seen_at: { whatsapp: null, service_requests: null, corrections: null, delivery_failures: null, card_failures: null },
     items: [
         { id: 'n1', channel: 'whatsapp', title: 'Clienta de ejemplo A', detail: '¿Ya quedó mi invitación?', at: iso(12), count: 2, ref: null },
         { id: 'n2', channel: 'service_requests', title: '#581 Invitación · Junta de unidad', detail: 'Sin asignar', at: iso(40), count: 1, ref: 'task-581' },
         { id: 'n3', channel: 'corrections', title: '#572 Invitación · cambiar la hora', detail: 'Pidió corrección', at: iso(95), count: 1, ref: 'task-572' },
+        { id: 'n4', channel: 'card_failures', title: 'Clienta de ejemplo C', detail: '2026-09 · $659 · Su tarjeta está vencida', at: iso(180), count: 1, ref: 'EJ-003' },
     ],
 }
 
@@ -245,6 +246,13 @@ const pinkCircleColombia = () => {
         totals: { members: members.length, in_circle: members.filter(m => m.in_circle).length, current_month_reached: members.filter(m => m.current_month_reached).length, needs_capture: members.filter(m => m.needs_capture).length },
     }
 }
+
+/* Cobros con tarjeta que Stripe no pudo hacer (INVENTADOS): tarjeta vencida, factura por correo y suscripción «sin pagar» */
+const cardIssues = [
+    { id: 'ci-1', client: { user_id: 'u-2', name: 'CLIENTA DE EJEMPLO C', account: 'EJ-003', phone: '5500000003', country: 'MEX', plan: 'Plan de ejemplo C' }, period: period(0), amount: 659, currency: 'MXN', reason_code: 'expired_card', reason: 'Su tarjeta está vencida', invoice_status: 'open', attempts: 5, payment_url: 'https://invoice.stripe.com/i/EJEMPLO', platform_status: 'overdue', detected_at: iso(60 * 24 * 3) },
+    { id: 'ci-2', client: { user_id: 'u-4', name: 'CLIENTA DE EJEMPLO E', account: 'EJ-005', phone: '5500000005', country: 'MEX', plan: 'Plan de ejemplo B' }, period: period(0), amount: 450, currency: 'MXN', reason_code: 'invoice_by_email', reason: 'Stripe le manda la factura por correo (no cobra su tarjeta solo) y no la ha pagado', invoice_status: 'open', attempts: 0, payment_url: 'https://invoice.stripe.com/i/EJEMPLO2', platform_status: 'overdue', detected_at: iso(60 * 5) },
+    { id: 'ci-3', client: { user_id: 'u-8', name: 'CLIENTA DE EJEMPLO I', account: 'EJ-009', phone: null, country: 'MEX', plan: 'Plan de ejemplo A' }, period: period(1), amount: 349, currency: 'MXN', reason_code: 'subscription_unpaid', reason: 'Stripe dejó de emitir sus cobros: su suscripción quedó «sin pagar» por un cobro anterior · Último rechazo del banco (31/08): su tarjeta está vencida', invoice_status: 'draft', attempts: 0, payment_url: null, platform_status: 'paid', detected_at: iso(60 * 5) },
+]
 
 /* Cobranza con la forma real: cada clienta trae sus pagos por periodo (YYYY-MM). «Aprobar» un
    comprobante lo pasa a pagado de verdad, para poder probar la cola. */
@@ -525,6 +533,10 @@ export const installMockApi = () => {
             await wait(300)
             response = respond(pinkCircleColombia())
         }
+        else if (path === '/finance/card-issues') response = respond(cardIssues)
+        else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }
+        /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
+        else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
         else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
         else if (path === '/finance/payments/review' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, decision: string }

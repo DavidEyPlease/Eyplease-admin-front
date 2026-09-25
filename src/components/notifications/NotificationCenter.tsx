@@ -3,6 +3,7 @@ import { useNavigate } from "react-router"
 import {
     BellIcon,
     CheckCheckIcon,
+    CreditCardIcon,
     MessageCircleIcon,
     PencilRulerIcon,
     SparklesIcon,
@@ -28,7 +29,12 @@ const CHANNEL = {
     service_requests: { label: "Solicitud", icon: SparklesIcon, tone: "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300" },
     corrections: { label: "Corrección", icon: PencilRulerIcon, tone: "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200" },
     delivery_failures: { label: "No entregado", icon: TriangleAlertIcon, tone: "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300" },
+    card_failures: { label: "Cobro con tarjeta", icon: CreditCardIcon, tone: "bg-rose-100 dark:bg-rose-400/15 text-rose-700 dark:text-rose-300" },
 } as const satisfies Record<NotificationChannel, { label: string; icon: typeof BellIcon; tone: string }>
+
+/* Un canal que la API estrene antes que el panel no debe tumbar la campana: se pinta genérico. */
+const UNKNOWN_CHANNEL = { label: "Aviso", icon: BellIcon, tone: "bg-foreground/[.06] text-muted-foreground" }
+const channelOf = (channel: string) => (CHANNEL as Record<string, typeof UNKNOWN_CHANNEL>)[channel] ?? UNKNOWN_CHANNEL
 
 function timeAgo(iso: string | null): string {
     if (!iso) return ""
@@ -61,6 +67,10 @@ const NotificationCenter = () => {
         }
         if (item.channel === "delivery_failures") {
             navigate(APP_ROUTES.WHATSAPP.INBOX)
+            return
+        }
+        if (item.channel === "card_failures") {
+            navigate(APP_ROUTES.FINANCES.DASHBOARD)
             return
         }
         navigate(APP_ROUTES.TASKS.LIST)
@@ -114,7 +124,7 @@ const NotificationCenter = () => {
                     ) : (
                         <ul className="divide-y divide-border">
                             {items.map((item) => {
-                                const meta = CHANNEL[item.channel]
+                                const meta = channelOf(item.channel)
                                 const Icon = meta.icon
                                 return (
                                     <li key={item.id}>

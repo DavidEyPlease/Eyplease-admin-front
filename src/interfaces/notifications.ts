@@ -5,6 +5,8 @@ export type NotificationChannel =
     | "service_requests"
     | "corrections"
     | "delivery_failures"
+    /** Cobros con tarjeta domiciliada que Stripe no pudo hacer (con el porqué). */
+    | "card_failures"
 
 export interface NotificationItem {
     id: string
