@@ -13,9 +13,10 @@ export interface OverviewRevenuePeriod {
 
 /**
  * Cómo va hoy una sección que debe correr todos los días. `partial` = salió, pero alguna pieza falló;
- * `empty` = corrió y no había a quién hacerle pieza (una noche sin cumpleaños nacionales, por ejemplo).
+ * `empty` = corrió y no había a quién hacerle pieza (una noche sin cumpleaños nacionales, por ejemplo);
+ * `running` = ya arrancó y ninguna corrida ha terminado (con un API viejo no viene).
  */
-export type DailyTodayStatus = "ok" | "partial" | "empty" | "scheduled" | "missing"
+export type DailyTodayStatus = "ok" | "partial" | "empty" | "scheduled" | "running" | "missing"
 
 export interface DailySection {
     key: string

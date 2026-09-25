@@ -40,13 +40,14 @@ const ScheduleCard = ({ lanes, daily, ranKeys, partial }: Props) => {
                     const missing = section?.today_status === 'missing'
                     const failed = section?.today_status === 'partial' ? section.failed_today ?? 0 : 0
                     const empty = section?.today_status === 'empty'
+                    const running = section?.today_status === 'running'
                     const past = lane.time <= now
-                    const isNow = current?.key === lane.key && current.time === lane.time && !missing
+                    const isNow = running || (current?.key === lane.key && current.time === lane.time && !missing)
                     const state = missing ? 'bad' : isNow ? 'now' : past || ranKeys.has(lane.key) ? 'done' : ''
                     return (
                         <div key={`${lane.time}-${lane.key}`} className={cn('lane', state)}>
                             <time>{lane.time}</time><i />
-                            <span><b>{lane.label}</b><small>{missing ? 'Le tocaba y no ha salido' : failed ? `Salió, con ${failed} ${failed === 1 ? 'falla' : 'fallas'}` : empty ? 'Sin piezas hoy' : lane.hint}</small></span>
+                            <span><b>{lane.label}</b><small>{missing ? 'Le tocaba y no ha salido' : running ? 'En curso: generando las piezas' : failed ? `Salió, con ${failed} ${failed === 1 ? 'falla' : 'fallas'}` : empty ? 'Sin piezas hoy' : lane.hint}</small></span>
                         </div>
                     )
                 })}

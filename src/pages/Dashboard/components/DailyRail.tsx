@@ -1,4 +1,4 @@
-import { CheckIcon, ClockIcon, MinusIcon, TriangleAlertIcon } from "lucide-react"
+import { CheckIcon, ClockIcon, LoaderCircleIcon, MinusIcon, TriangleAlertIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { DailySection, DailyTodayStatus } from "@/interfaces/overview"
@@ -16,6 +16,7 @@ const STATUS_DOT: Record<DailyTodayStatus, string> = {
     partial: "bg-amber-500",
     empty: "bg-slate-400",
     scheduled: "bg-slate-300",
+    running: "bg-sky-500",
     missing: "bg-red-500",
 }
 
@@ -24,6 +25,7 @@ const STATUS_LABEL: Record<DailyTodayStatus, string> = {
     partial: "Salió con fallas",
     empty: "Sin piezas hoy",
     scheduled: "Programado",
+    running: "En curso",
     missing: "No corrió hoy",
 }
 
@@ -32,6 +34,7 @@ const StatusIcon = ({ status }: { status: DailyTodayStatus }) => {
     if (status === "partial") return <CheckIcon className="size-3.5 text-amber-600 dark:text-amber-400" />
     if (status === "empty") return <MinusIcon className="size-3.5 text-muted-foreground" />
     if (status === "scheduled") return <ClockIcon className="size-3.5 text-muted-foreground" />
+    if (status === "running") return <LoaderCircleIcon className="size-3.5 animate-spin text-sky-600 dark:text-sky-400" />
     return <TriangleAlertIcon className="size-3.5 text-red-600 dark:text-red-400" />
 }
 
@@ -83,6 +86,7 @@ const DailyRail = ({ sections, daysInMonth, daysElapsed }: Props) => {
                                     className={cn(
                                         section.today_status === "ok" && "text-emerald-700 dark:text-emerald-300",
                                         section.today_status === "partial" && "text-amber-700 dark:text-amber-300",
+                                        section.today_status === "running" && "text-sky-700 dark:text-sky-300",
                                         (section.today_status === "scheduled" || section.today_status === "empty") && "text-muted-foreground",
                                         section.today_status === "missing" && "text-red-700 dark:text-red-300"
                                     )}
