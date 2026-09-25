@@ -35,13 +35,14 @@ const CountrySwitch = ({ className }: { className?: string }) => {
                         onClick={() => setCountry(option.value)}
                         title={pending ? `${option.label}: ${pending} por atender` : `Ver ${option.label}`}
                         className={cn(
-                            'relative cursor-pointer rounded-full px-3 py-1 text-[12.5px] font-bold transition',
+                            'inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-[12.5px] font-bold transition',
                             active ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
                         )}
                     >
-                        {option.label}
+                        <span className="hidden xl:inline">{option.label}</span>
+                        <span className="xl:hidden">{option.short}</span>
                         {pending > 0 && (
-                            <span className="absolute -top-1 -right-1 grid min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9.5px] leading-4 font-extrabold text-white tabular-nums">
+                            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[9.5px] leading-none font-extrabold text-white tabular-nums">
                                 {pending > 9 ? '9+' : pending}
                             </span>
                         )}

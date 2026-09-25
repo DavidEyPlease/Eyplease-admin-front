@@ -165,22 +165,31 @@ const TopBar = ({ copilot, copilotOpen, onToggleCopilot }: Props) => {
                         onClick={onToggleCopilot}
                         className={cn('hidden h-[38px] cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[12.5px] font-bold transition-colors lg:flex', copilotOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground')}
                     >
-                        <SparklesIcon className="size-4" /> <span className="hidden xl:inline">Copiloto</span>
+                        <SparklesIcon className="size-4" /> <span className="hidden 2xl:inline">Copiloto</span>
                     </button>
                 )}
-                <DarkModeSelector />
+                {/* Debajo de 1280 px el tema se muda al menú de la cuenta: en la barra no cabía todo */}
+                <span className="hidden xl:block"><DarkModeSelector /></span>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger className="group ml-0.5 flex cursor-pointer items-center gap-2 rounded-[14px] py-1 pr-2 pl-1 outline-none transition-colors hover:bg-foreground/5 data-[state=open]:bg-foreground/5">
                         {user && <LoggedUserAvatar user={user} />}
-                        <span className="hidden text-left leading-tight whitespace-nowrap lg:block">
+                        {/* El nombre sólo con pantalla ancha: debajo de 1536 px la barra se salía de su caja */}
+                        <span className="hidden text-left leading-tight whitespace-nowrap 2xl:block">
                             <b className="block max-w-[130px] truncate text-[12.5px] font-bold">{user?.name}</b>
                             <small className="block text-[10.5px] text-muted-foreground">{user?.role?.name}</small>
                         </span>
                         <ChevronDownIcon className="size-3.5 opacity-55 transition-transform duration-300 group-data-[state=open]:rotate-180" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" sideOffset={12} className="shell-drop min-w-60 rounded-[20px] p-2">
-                        <DropdownMenuLabel className="px-2.5 pt-2 pb-1 text-[10px] font-extrabold tracking-[.12em] text-muted-foreground uppercase">Tu cuenta</DropdownMenuLabel>
+                        <DropdownMenuLabel className="px-2.5 pt-2 pb-1 text-[10px] font-extrabold tracking-[.12em] text-muted-foreground uppercase">
+                            <span className="normal-case tracking-normal 2xl:hidden"><b className="block text-[12.5px] font-bold text-foreground">{user?.name}</b><small className="block pb-1 text-[10.5px] font-medium">{user?.role?.name}</small></span>
+                            Tu cuenta
+                        </DropdownMenuLabel>
+                        <div className="flex items-center justify-between gap-3 px-2.5 py-1.5 xl:hidden">
+                            <span className="text-[12.5px] font-semibold text-muted-foreground">Tema</span>
+                            <DarkModeSelector />
+                        </div>
                         <DropdownMenuItem className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2" onClick={() => navigate(APP_ROUTES.HOME.PROFILE)}>
                             <BadgeCheckIcon /> Perfil
                         </DropdownMenuItem>

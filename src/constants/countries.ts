@@ -9,6 +9,8 @@ export const DEFAULT_COUNTRY: Country = 'MEX'
 export interface CountryInfo {
     value: Country
     label: string
+    /** Para donde no cabe el nombre: la barra en pantallas medianas. */
+    short: string
     /** Moneda en la que se cobra ahí. */
     currency: 'MXN' | 'COP'
     /** Cómo se escriben ahí los números: en Colombia los miles van con punto. */
@@ -16,8 +18,8 @@ export interface CountryInfo {
 }
 
 export const COUNTRIES: CountryInfo[] = [
-    { value: 'MEX', label: 'México', currency: 'MXN', locale: 'es-MX' },
-    { value: 'COL', label: 'Colombia', currency: 'COP', locale: 'es-CO' },
+    { value: 'MEX', label: 'México', short: 'MX', currency: 'MXN', locale: 'es-MX' },
+    { value: 'COL', label: 'Colombia', short: 'CO', currency: 'COP', locale: 'es-CO' },
 ]
 
 export const countryInfo = (country: Country): CountryInfo =>

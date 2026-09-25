@@ -51,14 +51,20 @@ const CommandBar = ({ copilot = false }: { copilot?: boolean }) => {
 
     return (
         <>
+            {/* Se queda con el espacio que sobra en la barra y enseña sólo lo que le cabe: el texto
+                desde 200 px, el atajo desde 88 px, y si no, una lupa sola. Aplastado a la fuerza
+                se quedaba en 26 px, pegado al selector de país, y parecía roto. */}
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="ml-1.5 hidden h-[38px] min-w-0 flex-1 cursor-text items-center gap-2 rounded-xl border border-border bg-foreground/[.03] px-3 text-[12.5px] text-muted-foreground transition-colors hover:border-[#6C47FF]/40 hover:bg-foreground/[.05] lg:flex lg:max-w-[420px]"
+                title={copilot ? 'Pregúntale al Copiloto o ve a una página' : 'Ir a una página'}
+                className="@container ml-1.5 hidden h-[38px] min-w-[38px] flex-1 cursor-text rounded-xl border border-border bg-foreground/[.03] text-[12.5px] text-muted-foreground transition-colors hover:border-[#6C47FF]/40 hover:bg-foreground/[.05] lg:block lg:max-w-[420px]"
             >
-                <SearchIcon className="size-[15px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-left">{copilot ? 'Pregúntale al Copiloto o ve a una página…' : 'Ir a una página…'}</span>
-                <kbd className="shrink-0 rounded-md border border-border bg-card/70 px-1.5 py-0.5 text-[10px] font-bold">{IS_MAC ? '⌘' : 'Ctrl'} K</kbd>
+                <span className="flex h-full items-center justify-center gap-2 @min-[88px]:justify-start @min-[88px]:px-3">
+                    <SearchIcon className="size-[15px] shrink-0" />
+                    <span className="hidden min-w-0 flex-1 truncate text-left @min-[200px]:block">{copilot ? 'Pregúntale al Copiloto o ve a una página…' : 'Ir a una página…'}</span>
+                    <kbd className="ml-auto hidden shrink-0 rounded-md border border-border bg-card/70 px-1.5 py-0.5 text-[10px] font-bold @min-[88px]:inline">{IS_MAC ? '⌘' : 'Ctrl'} K</kbd>
+                </span>
             </button>
 
             <CommandDialog open={open} onOpenChange={setOpen} title="Ir a" description="Escribe el nombre de una página del panel" className="shell-drop top-[22%] translate-y-0 rounded-[22px] sm:max-w-[540px]">
