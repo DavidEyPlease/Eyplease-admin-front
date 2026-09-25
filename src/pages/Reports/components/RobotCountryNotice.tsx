@@ -5,8 +5,9 @@ import { COUNTRY_OPTIONS, MESES, fmtDateTime, type ReportsCountry } from "../rep
 import { useDispatchDownloadRun, useDispatchImport, useDownloadRuns, type DownloadRun } from "../useReports"
 
 /**
- * Lo que el robot baja en Colombia: sólo los reportes que se comprobaron en su portal. Ventas en
- * puntos e Iniciación (iguales a los de México) y Ventas en PESOS, de donde sale su Círculo Rosa.
+ * Lo que el robot baja en Colombia cada mes: sólo los reportes que se comprobaron en su portal. Ventas
+ * en puntos e Iniciación (iguales a los de México) y Ventas en PESOS, de donde sale su Círculo Rosa.
+ * Los Cumpleaños van aparte, en la corrida de boletines de fin de mes.
  */
 const COLOMBIA_REPORTS = ["unity_monthly_personal_sales", "initiators", "pink_circle_constancy"]
 
@@ -95,7 +96,8 @@ const RobotCountryNotice = ({ country }: { country: ReportsCountry }) => {
                         <p className="mt-1 text-[13px] text-muted-foreground">
                             Después de México baja sus <b className="text-foreground">Ventas en puntos</b>, su <b className="text-foreground">Iniciación</b> y
                             sus <b className="text-foreground">Ventas en pesos</b> (de ahí sale su Círculo Rosa). Luego se importan con el botón de siempre.
-                            Los demás reportes de México todavía no se comprueban allá: esos se suben a mano desde «Resumen del mes».
+                            Y los 2 últimos días de cada mes baja sus <b className="text-foreground">Cumpleaños</b> del mes siguiente, igual que en México.
+                            Los demás reportes de México no se le piden a Colombia mientras allá no se usen.
                         </p>
                     </div>
                 </div>
