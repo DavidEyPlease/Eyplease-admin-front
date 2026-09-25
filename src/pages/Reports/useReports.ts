@@ -223,6 +223,8 @@ export interface DispatchDownloadRunInput {
     sections: string[]
     clients?: string[]
     reset?: boolean
+    /** Portal al que entra el robot. Sin él, México (o el de las clientas). */
+    country?: ReportsCountry
 }
 
 const ACTIVE_RUN_STATUSES: DownloadRunStatus[] = ["queued", "running"]

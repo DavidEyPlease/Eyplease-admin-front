@@ -78,8 +78,8 @@ const liveNews = {
 
 const dailyReports = [['early', 'Ventas Mensuales Personales', 98, 98], ['pink_circle_hearts', 'Corazones · VIP Gold', 98, 97], ['pink_circle_vip_plus', 'Corazones · VIP Plus', 29, 29]]
     .map(([section_key, name, usual, loaded]) => ({ section_key, name, usual, loaded, rejected: 0, date: ymd(), last_at: iso(200) }))
-/* Colombia (`?country=COL`): una cuenta de ejemplo y nada bajado solo, porque el robot aún no entra a su portal */
-const colombiaDailyReports = dailyReports.map(report => ({ ...report, usual: report.section_key === 'early' ? 0 : 1, loaded: 0, last_at: null }))
+/* Colombia (`?country=COL`): sólo las ventas del día (los Corazones no existen allá) y nada bajado todavía */
+const colombiaDailyReports = dailyReports.filter(report => report.section_key === 'early').map(report => ({ ...report, usual: 0, loaded: 0, last_at: null }))
 
 /* Finanzas: resumen y balance con la forma real (las listas de pagos y clientas abren vacías) */
 const monthsSoFar = Array.from({ length: now.getMonth() + 1 }, (_, index) => index + 1)
@@ -440,6 +440,15 @@ export const installMockApi = () => {
         else if (path === '/posts/runs') response = respond(postRuns)
         else if (path === '/pulse') response = respond(url.searchParams.get('country') === 'COL' ? { ...pulse, pieces: pulse.pieces.slice(0, 1).map(item => ({ ...item, posts: 1, clients: 1 })) } : pulse)
         else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
+        /* Bajar ahora (México o Colombia): la corrida entra arriba de la lista, «en cola» */
+        else if (path === '/reports/download-runs' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { sections?: string[], reset?: boolean }
+            const run = { run_id: `demo-${Date.now()}`, process: 'monthly', sections: body.sections ?? null, clients: null, reset: !!body.reset, status: 'queued', result: null, error: null, queued_at: iso(0), finished_at: null }
+            ;(downloadRuns as unknown[]).unshift(run)
+            await wait(300)
+            response = respond([run])
+        }
+        else if (path === '/reports/dispatch-import' && method === 'POST') { await wait(300); response = respond(true) }
         // Ventas (fase 3/4): regalos y paquetes, quién quiere subir de plan, Directoras invitadas
         else if (path.startsWith('/plan-gifts') || path.startsWith('/plan-interests') || path.startsWith('/director-prospects')) {
             const demoUser = (name: string, code: string, plan: string) => ({ id: `u-${code}`, name, email: `${code.toLowerCase()}@ejemplo.com`, phone: '4611234567', username: code, network_person: { id: `np-${code}`, name, consultant_code: code }, plan: { id: 'p', name: plan } })

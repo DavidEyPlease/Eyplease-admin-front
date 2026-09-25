@@ -6,7 +6,7 @@ import { COUNTRIES, Country, DEFAULT_COUNTRY as HOME_COUNTRY } from "@/constants
 /** Cada país se mide aparte: tiene su portal de Mary Kay, sus reportes y sus cuentas (ver @/constants/countries). */
 export type ReportsCountry = Country
 
-/** México: el único portal al que entra el robot, y lo que la API mide si no se le pide otro. */
+/** México: el país que la API mide si no se le pide otro (el robot entra además al de Colombia). */
 export const DEFAULT_COUNTRY: ReportsCountry = HOME_COUNTRY
 
 export const COUNTRY_OPTIONS: { value: ReportsCountry; label: string }[] = COUNTRIES.map(({ value, label }) => ({ value, label }))
