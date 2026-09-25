@@ -44,6 +44,9 @@ type UseListInitParams<F = unknown> = {
     enabled?: boolean
     requireActiveFilters?: boolean
     refetchOnWindowFocus?: boolean
+    /** Parámetros fijos que no son filtros de la pantalla (p. ej. el país del panel): van en cada
+        petición y en la llave del caché, y limpiar los filtros no los quita. */
+    extraParams?: Record<string, string | number | boolean>
 }
 
 const useListQuery = <T, F = unknown>({
@@ -59,7 +62,8 @@ const useListQuery = <T, F = unknown>({
     cacheTime,
     enabled = true,
     requireActiveFilters,
-    refetchOnWindowFocus
+    refetchOnWindowFocus,
+    extraParams
 }: UseListInitParams<F>): UseListInitResult<T, F> => {
     const [search, setSearch] = useState(defaultSearch)
     const [page, setPage] = useState(defaultPage)
@@ -69,9 +73,19 @@ const useListQuery = <T, F = unknown>({
     const [sortBy, setSortBy] = useState(defaultSortBy)
     const [sortOrder, setSortOrder] = useState<SortOrder>(defaultSortOrder)
 
+    /* Llave estable: quien lo llama suele pasar un objeto nuevo en cada render */
+    const extraKey = JSON.stringify(extraParams ?? {})
+    /* Otro país (u otro parámetro fijo) es otra lista: se vuelve a la página 1 */
+    const [lastExtraKey, setLastExtraKey] = useState(extraKey)
+    if (lastExtraKey !== extraKey) {
+        setLastExtraKey(extraKey)
+        setPage(1)
+    }
+
     const queryParams = useMemo(() => {
-        return { search, page, perPage, ...(sortBy && { sort_by: sortBy, sort_order: sortOrder }), ...filters }
-    }, [search, page, perPage, sortBy, sortOrder, filters])
+        const extra = JSON.parse(extraKey) as Record<string, string | number | boolean>
+        return { search, page, perPage, ...(sortBy && { sort_by: sortBy, sort_order: sortOrder }), ...filters, ...extra }
+    }, [search, page, perPage, sortBy, sortOrder, filters, extraKey])
 
     const generatedQueryKey = useMemo(() => {
         if (typeof customQueryKey === 'function') return customQueryKey(queryParams)

@@ -161,7 +161,7 @@ const pulse = {
     ],
 }
 
-const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
+const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], currency: 'MXN' as string, active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
 
 const demoDesigners = ['Ana Ejemplo', 'Beto Ejemplo', 'Carla Ejemplo'].map((name, index) => ({ id: `d-${index}`, name, email: `d${index}@ejemplo.com`, profile_picture: null, photo: null, username: `DIS${index}`, country: 'MEX', phone: '', active: true, on_notifications: true, on_biometric_auth: false, role: { id: 'r-des', name: 'Diseñador', role_key: 'designer', permissions: [] } }))
 
@@ -206,7 +206,8 @@ const demoClients = ([
 /* Una clienta de COLOMBIA, para ver la pestaña de Círculo Rosa de allá (meses con descuento, no corazones) */
 demoClients.push({
     ...demoClients[1], id: 'c-10', name: 'Clienta de ejemplo en Colombia', account: 'EJ-COL1', country: 'COL', card_subscription: false,
-    user: { ...demoClients[1].user, id: 'u-10', name: 'Clienta de ejemplo en Colombia', username: 'EJ-COL1', country: 'COL', plan: plans[2] },
+    /* El plan le llega con el precio de SU país, en pesos colombianos, como lo manda el API */
+    user: { ...demoClients[1].user, id: 'u-10', name: 'Clienta de ejemplo en Colombia', username: 'EJ-COL1', country: 'COL', plan: { ...plans[2], price: 278300, currency: 'COP' } },
 })
 
 /* Círculo Rosa de Colombia: consultoras INVENTADAS con sus 13 meses, del en curso al más viejo
@@ -500,9 +501,13 @@ export const installMockApi = () => {
         else if (/^\/tasks\/task-\d+\/attachments$/.test(path)) response = respond([])
         else if (path === '/clients' && method === 'GET') {
             const search = (url.searchParams.get('search') ?? '').toLowerCase()
-            response = respond(page(demoClients.filter(client => !search || `${client.name} ${client.account}`.toLowerCase().includes(search))))
+            /* `?country=` como el API: sólo las de ese país; sin él, todas */
+            const country = url.searchParams.get('country')
+            response = respond(page(demoClients.filter(client => (!country || client.user.country === country) && (!search || `${client.name} ${client.account}`.toLowerCase().includes(search)))))
         }
-        else if (path === '/clients/metrics') response = respond({ active: 98, inactive: 7, pending_payment: 4, total_reports: 545, uploaded_reports: 512 })
+        else if (path === '/clients/metrics') response = respond(url.searchParams.get('country') === 'COL'
+            ? { active_clients: 1, inactive: 0, pending_payment: 0, total_upload_reports: 1, upload_percentage: 100, missing_reports: 0 }
+            : { active_clients: 98, inactive: 7, pending_payment: 4, total_upload_reports: 90, upload_percentage: 91.84, missing_reports: 8 })
         /* Activar / desactivar, como `change-status`: cambia `user.active` DE VERDAD, para que al recargar siga igual */
         else if (/^\/clients\/c-\d+\/change-status$/.test(path) && method === 'PATCH') {
             const client = demoClients.find(item => item.id === path.split('/')[2])

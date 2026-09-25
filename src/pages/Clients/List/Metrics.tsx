@@ -4,16 +4,19 @@ import useFetchQuery from "@/hooks/useFetchQuery";
 import { IUploadReportsStats } from "@/interfaces/dashboard";
 import { Badge } from "@/uishadcn/ui/badge";
 import { queryKeys } from "@/utils/queryKeys";
+import useCountryStore from "@/store/country";
 import { FileCheckIcon, TimerOffIcon, UserCheck2Icon, UserLockIcon } from "lucide-react";
 
 const ClientsMetrics = () => {
+    const country = useCountryStore(state => state.country)
     const { response: metrics } = useFetchQuery<{
         total: number,
         active_clients: number,
         inactive: number,
         pending_payment: number
     } & IUploadReportsStats>(API_ROUTES.CLIENTS.METRICS, {
-        customQueryKey: queryKeys.list('clients/metrics')
+        queryParams: { country },
+        customQueryKey: queryKeys.list('clients/metrics', { country })
     })
 
     return (

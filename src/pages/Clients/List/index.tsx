@@ -21,6 +21,8 @@ import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 import StatusBoard from "./StatusBoard"
 import { cn } from "@/lib/utils"
+import useCountryStore from "@/store/country"
+import { countryInfo } from "@/constants/countries"
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
@@ -31,6 +33,8 @@ const ClientsListPage = () => {
     const newShell = isNewShell()
     const [view, setView] = useState<'board' | 'table'>(newShell ? 'board' : 'table')
     const { utilData } = useAuthStore(state => state)
+    /* Sólo las clientas del país que se mira arriba: sus cuentas, su moneda y sus programas no se mezclan */
+    const country = useCountryStore(state => state.country)
 
     const {
         selectedFilters,
@@ -51,7 +55,8 @@ const ClientsListPage = () => {
         endpoint: API_ROUTES.CLIENTS.LIST,
         defaultSortBy: 'previous_month_points',
         defaultSortOrder: 'desc',
-        customQueryKey: (params) => queryKeys.list('clients/list', params)
+        customQueryKey: (params) => queryKeys.list('clients/list', params),
+        extraParams: { country },
     })
 
     const filterList = CLIENTS_FILTER_ITEMS.map(i => {
@@ -66,7 +71,7 @@ const ClientsListPage = () => {
 
     return (
         <div className="grid grid-cols-[minmax(0,1fr)] pt-2 gap-y-4">
-            <PageHead eyebrow="Clientas" title={<>Todas las clientas · <em>una fila, todo su estado</em></>} sub="Plan, pago, reportes del mes, puntos y acceso sin salir de la lista. Entra a una para verla a fondo.">
+            <PageHead eyebrow={`Clientas · ${countryInfo(country).label}`} title={<>Todas las clientas · <em>una fila, todo su estado</em></>} sub="Plan, pago, reportes del mes, puntos y acceso sin salir de la lista. Entra a una para verla a fondo.">
                 <div className="inline-flex rounded-xl bg-foreground/5 p-[3px]">
                     {([['board', 'Estado'], ['table', 'Tabla de trabajo']] as const).map(([key, label]) => (
                         <button key={key} type="button" onClick={() => setView(key)} className={cn('h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors', view === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{label}</button>

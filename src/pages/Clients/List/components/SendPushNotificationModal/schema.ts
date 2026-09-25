@@ -63,11 +63,13 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
  * lee con Carbon::parse, y una hora sin zona la tomaría como UTC (la junta de las 7 p. m. saldría
  * a la 1 p. m.). El navegador del equipo está en México, así que se convierten desde ahí.
  */
-export const toPayload = (values: ClientNotificationForm) => {
+/** `country`: sólo a las clientas de ese país (el que se mira en el panel); sin él, a todas. */
+export const toPayload = (values: ClientNotificationForm, country?: string) => {
     const link = values.link.trim();
     const linkLabel = values.link_label.trim();
 
     return {
+        ...(country ? { country } : {}),
         title: values.title,
         body: values.body,
         segment: values.segment,

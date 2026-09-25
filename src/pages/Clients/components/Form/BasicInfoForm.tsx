@@ -12,6 +12,7 @@ import { IClient } from "@/interfaces/clients";
 import { ApiResponse } from "@/interfaces/common";
 import { toast } from "sonner";
 import { API_ROUTES } from "@/constants/api";
+import useCountryStore from "@/store/country";
 
 interface BasicInfoProps {
     client?: IClient;
@@ -19,6 +20,8 @@ interface BasicInfoProps {
 }
 
 const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
+    /* Una clienta nueva nace en el país que se está mirando arriba (se puede cambiar en el campo) */
+    const country = useCountryStore(state => state.country)
     const form = useCustomForm(
         CreateClientSchema,
         client ? {
@@ -28,7 +31,7 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
             plan_id: client.user.plan?.id || '',
             country: client.country,
             mk_password: '',
-        } : FORM_DEFAULT_VALUES
+        } : { ...FORM_DEFAULT_VALUES, country }
     );
 
     const { request, requestState } = useRequestQuery({

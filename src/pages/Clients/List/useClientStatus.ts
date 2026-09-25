@@ -5,6 +5,8 @@ import useRequestQuery from '@/hooks/useRequestQuery'
 import { IClientListItem } from '@/interfaces/clients'
 import { PaginationResponse } from '@/interfaces/common'
 import { queryKeys } from '@/utils/queryKeys'
+import useCountryStore from '@/store/country'
+import { boardKey } from './useClientsBoard'
 
 /**
  * Activar o desactivar una clienta desde el padrón «Estado».
@@ -16,6 +18,7 @@ import { queryKeys } from '@/utils/queryKeys'
  */
 const useClientStatus = () => {
     const queryClient = useQueryClient()
+    const country = useCountryStore(state => state.country)
     const { request, requestState } = useRequestQuery({ onError: () => { } })
 
     const setActive = async (clientId: string, active: boolean) => {
@@ -29,7 +32,7 @@ const useClientStatus = () => {
             throw new Error(response?.message || 'No se pudo cambiar el estado')
         }
 
-        queryClient.setQueryData<PaginationResponse<IClientListItem>>(queryKeys.list('clients/board'), old => old && {
+        queryClient.setQueryData<PaginationResponse<IClientListItem>>(boardKey(country), old => old && {
             ...old,
             items: old.items.map(item => item.id === clientId
                 ? { ...item, user: { ...item.user, active } } as IClientListItem

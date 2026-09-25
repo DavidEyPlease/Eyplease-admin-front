@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { initials, titleCase } from './names'
 import StatusDialog from './StatusDialog'
 import useClientsBoard, { BoardClient, PaymentState } from './useClientsBoard'
+import { countryInfo, moneyIn } from '@/constants/countries'
+import useCountryStore from '@/store/country'
 import '@/pages/Hoy/hoy.css'
 
 const PAYMENT: Record<PaymentState, { label: string, tone: string }> = {
@@ -33,6 +35,10 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
     const { client, payment, reports } = row
     const active = client.user?.active !== false
     const plan = client.user?.plan
+    /* El plan ya llega con el precio y la moneda de SU país (Colombia en pesos colombianos). La tarjeta
+       sólo se ha probado en pesos mexicanos: a quien se cobra en otra moneda no se le ofrece liga */
+    const currency = plan?.currency ?? 'MXN'
+    const cardPayable = currency === 'MXN'
     const pay = PAYMENT[payment]
     const reportsDone = !!reports && reports.loaded >= reports.entitled
     const open = () => navigate(replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, client.id))
@@ -51,7 +57,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
                 </div>
             </td>
             <td className="px-3 py-3 whitespace-nowrap">
-                {plan ? <><span className="pulse-tag plain">{plan.name}</span> <small className="ml-1 text-[11.5px] text-muted-foreground">${Number(plan.price).toLocaleString('es-MX')}/mes</small></> : <span className="text-[12px] text-muted-foreground">Sin plan</span>}
+                {plan ? <><span className="pulse-tag plain">{plan.name}</span> <small className="ml-1 text-[11.5px] text-muted-foreground">{moneyIn(Number(plan.price), currency)}{currency !== 'MXN' && ` ${currency}`}/mes</small></> : <span className="text-[12px] text-muted-foreground">Sin plan</span>}
                 {client.promotion && <small className="mt-1 block text-[11px] text-emerald-600 dark:text-emerald-400">{client.promotion.name ?? 'Con promoción'}</small>}
             </td>
             <td className="px-3 py-3 whitespace-nowrap">{active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}</td>
@@ -75,7 +81,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" sideOffset={6} className="w-60 rounded-2xl p-1.5">
                         {/* Quien paga domiciliada no necesita liga: el cargo le llega solo */}
-                        {!client.card_subscription && <>
+                        {!client.card_subscription && cardPayable && <>
                             <DropdownMenuItem onSelect={() => onPaymentLink(row)} className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold">
                                 <CreditCardIcon className="size-4" /> Liga de pago con tarjeta
                             </DropdownMenuItem>
@@ -102,6 +108,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
  */
 const StatusBoard = () => {
     const { rows, loading } = useClientsBoard()
+    const country = useCountryStore(state => state.country)
     const [search, setSearch] = useState('')
     const [plan, setPlan] = useState<string>('all')
     const [quick, setQuick] = useState<Quick>('all')
@@ -171,7 +178,7 @@ const StatusBoard = () => {
                     </table>
                 </div>
                 {loading && <div className="grid gap-2 p-4">{Array.from({ length: 6 }, (_, index) => <span key={index} className="h-12 animate-pulse rounded-xl bg-foreground/[.06]" />)}</div>}
-                {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : 'Todavía no hay clientas.'}</p>}
+                {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : `Todavía no hay clientas en ${countryInfo(country).label}.`}</p>}
             </section>
 
             <StatusDialog client={changing} onClose={() => setChanging(null)} />

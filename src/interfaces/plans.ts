@@ -4,6 +4,9 @@ export interface IPlan {
     id: string
     name: string
     price: number
+    /** Moneda de `price`: la del país de la clienta cuando viene dentro de ella (Colombia, COP). Opcional
+        porque una API sin actualizar no la manda; sin ella es MXN. */
+    currency?: string
     features: string[]
     accesses: IPermission[]
     active: boolean

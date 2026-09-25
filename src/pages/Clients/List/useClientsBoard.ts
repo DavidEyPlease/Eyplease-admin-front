@@ -7,9 +7,14 @@ import { PaginationResponse } from '@/interfaces/common'
 import { defaultPeriod, STATUS_LOADED } from '@/pages/Reports/reports.constants'
 import { ClientStatus } from '@/pages/Reports/useReports'
 import { queryKeys } from '@/utils/queryKeys'
+import useCountryStore from '@/store/country'
+import { Country } from '@/constants/countries'
 
 /** Todas caben en una sola carga (la cartera son ~100); así buscar, filtrar y ordenar es instantáneo */
 const ALL = 500
+
+/** La llave del padrón en el caché: una por país, para que al cambiar de país no se vea la lista del otro */
+export const boardKey = (country: Country) => queryKeys.list('clients/board', { country })
 
 export type PaymentState = 'ok' | 'pending' | 'in_review' | 'overdue' | 'unknown'
 
@@ -34,10 +39,13 @@ const accountsOf = (response?: FinanceIds) => new Set((response?.items ?? []).ma
 const useClientsBoard = () => {
     const year = new Date().getFullYear()
     const period = defaultPeriod()
+    /* Sólo las del país que se mira arriba. La cobranza se cruza por número de cuenta, así que la de
+       otro país simplemente no encuentra fila aquí */
+    const country = useCountryStore(state => state.country)
 
     const clients = useFetchQuery<PaginationResponse<IClientListItem>>(API_ROUTES.CLIENTS.LIST, {
-        queryParams: { page: 1, perPage: ALL, sort_by: 'previous_month_points', sort_order: 'desc' },
-        customQueryKey: queryKeys.list('clients/board'),
+        queryParams: { page: 1, perPage: ALL, sort_by: 'previous_month_points', sort_order: 'desc', country },
+        customQueryKey: boardKey(country),
         staleTime: 60_000,
     })
 
@@ -50,9 +58,11 @@ const useClientsBoard = () => {
     const inReview = useFetchQuery<FinanceIds>(API_ROUTES.FINANCE.CLIENTS, finance('in_review'))
     const pending = useFetchQuery<FinanceIds>(API_ROUTES.FINANCE.CLIENTS, finance('pending'))
 
+    /* Los reportes a los que tiene derecho cada una dependen de su país (Colombia no tiene Corazones ni VIP+):
+       la misma matriz y la misma llave que usa Reportes */
     const matrix = useFetchQuery<{ clients: ClientStatus[] }>(API_ROUTES.REPORTS.CLIENTS_STATUS, {
-        queryParams: { year_month: period },
-        customQueryKey: queryKeys.generic('report-clients-status', { period }),
+        queryParams: { year_month: period, country },
+        customQueryKey: queryKeys.generic('report-clients-status', { period, country }),
         staleTime: 60_000,
     })
 

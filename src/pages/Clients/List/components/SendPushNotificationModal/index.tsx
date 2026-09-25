@@ -15,6 +15,8 @@ import { Label } from "@/uishadcn/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group";
 import { Textarea } from "@/uishadcn/ui/textarea";
 import { ClientNotificationForm, ClientNotificationPayload, ClientNotificationSchema, endOfDay, FORM_DEFAULT_VALUES, NoticeKind, toPayload } from "./schema";
+import useCountryStore from "@/store/country";
+import { countryInfo } from "@/constants/countries";
 
 interface SendPushNotificationModalProps {
     open: boolean;
@@ -48,6 +50,9 @@ const pinnedUntilText = ({ pinned_until, event_at, kind }: Pick<ClientNotificati
 const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationModalProps) => {
     const form = useCustomForm<ClientNotificationForm>(ClientNotificationSchema, FORM_DEFAULT_VALUES);
     const { request, requestState } = useRequest("POST");
+    /* Una junta de México no les sirve a las de Colombia (ni al revés): el aviso va sólo al país que se mira arriba */
+    const country = useCountryStore(state => state.country);
+    const countryName = countryInfo(country).label;
 
     const kind = form.watch("kind");
     const pinned = form.watch("pinned");
@@ -56,10 +61,10 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
     const kindOption = KIND_OPTIONS.find((option) => option.value === kind) ?? KIND_OPTIONS[0];
 
     const onSubmit = form.handleSubmit(async (values) => {
-        const response = await request<ApiResponse<boolean>, ClientNotificationPayload>(API_ROUTES.CLIENTS_NOTIFICATIONS, toPayload(values));
+        const response = await request<ApiResponse<boolean>, ClientNotificationPayload>(API_ROUTES.CLIENTS_NOTIFICATIONS, toPayload(values, country));
 
         if (response.success) {
-            toast.success(values.pinned ? "Aviso enviado y fijado arriba de Hoy en la app" : "Aviso enviado a las clientas");
+            toast.success(values.pinned ? `Aviso enviado a las clientas de ${countryName} y fijado arriba de Hoy en la app` : `Aviso enviado a las clientas de ${countryName}`);
             form.reset(FORM_DEFAULT_VALUES);
             onOpenChange(false);
         }
@@ -242,6 +247,10 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                             </FormItem>
                         )}
                     />
+
+                    <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
+                        Les llega sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b>, el país que estás viendo arriba.
+                    </p>
 
                     <div className="flex justify-end gap-3 pt-2">
                         <Button
