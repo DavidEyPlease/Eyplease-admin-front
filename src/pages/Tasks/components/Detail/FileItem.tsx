@@ -9,7 +9,7 @@ import { ITaskFile, TaskStatusTypes } from "@/interfaces/tasks";
 import { TasksService } from "@/services/tasks.service";
 import { Button } from "@/uishadcn/ui/button";
 import { Card, CardContent } from "@/uishadcn/ui/card";
-import { isImage } from "@/utils";
+import { isImage, isVideo } from "@/utils";
 import { formatDate } from "@/utils/dates";
 import { DownloadIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
@@ -26,6 +26,9 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
     const { fileLoadingAction, downloadFile } = useFiles()
     const [selectedFile, setSelectedFile] = useState<IFile | null>(null)
     const [loadingDelete, setLoadingDelete] = useState('');
+    const video = isVideo(attachment.file.ext)
+    // Las imágenes y los videos entregados (reel con clon) se pueden abrir y descargar.
+    const viewable = attachment.file_type === 'image' || video
 
     const onDelete = async (fileId: string) => {
         setLoadingDelete(fileId);
@@ -53,10 +56,12 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                         <div className="flex items-center gap-4">
                             <div
                                 className="size-10 bg-card shadow-md rounded flex cursor-pointer items-center justify-center"
-                                onClick={() => attachment.file_type === 'image' && setSelectedFile(attachment.file)}
+                                onClick={() => viewable && setSelectedFile(attachment.file)}
                             >
                                 {isImage(attachment.file.ext) ? (
                                     <img src={attachment.file.url} className="rounded object-cover max-w-full h-full" alt="" />
+                                ) : video ? (
+                                    <video src={`${attachment.file.url}#t=1`} muted playsInline preload="metadata" className="rounded object-cover size-full" />
                                 ) : (
                                     <span className="text-xs font-medium uppercase">{attachment.file.ext}</span>
                                 )}
@@ -68,7 +73,7 @@ const FileItem = ({ attachment, taskId, taskStatus, onSuccessFile }: FileItemPro
                         </div>
 
                         <div className="flex gap-1 absolute right-2 -top-4">
-                            {attachment.file_type === 'image' &&
+                            {viewable &&
                                 <Button
                                     variant="outline"
                                     size="icon"

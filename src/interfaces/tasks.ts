@@ -59,8 +59,21 @@ export interface ITask extends IBaseDBProperties {
         secondaryColor?: string
         tools_section?: string
         plan_ids?: string[]
-    }
+    } & Partial<ICloneReelMetadata>
 }
+
+/** Lo que pidió la Directora en un «Reel con mi clon» (API: config/clone_reels.php). */
+export interface ICloneReelMetadata {
+    kind: 'clone_reel'
+    topic: string
+    script: string | null
+    product: string | null
+    audience: 'clientas' | 'unidad' | 'prospectas' | null
+    variants: number
+}
+
+/** Un reel con clon es un pedido de clienta como los demás; lo distingue su metadata. */
+export const isCloneReel = (task?: Pick<ITask, 'metadata'> | null) => task?.metadata?.kind === 'clone_reel'
 
 export interface ITaskDetail extends ITask {
     event?: IEvent | null
@@ -93,6 +106,6 @@ export type TemplateAssetType = 'image' | 'video' | null;
 export interface ITaskFile extends IBaseDBProperties {
     uploaded_by: IUser;
     file: IFile
-    file_type: 'image' | 'nexrender_template'
+    file_type: 'image' | 'video' | 'nexrender_template' | null
     template_asset_type: TemplateAssetType
 }

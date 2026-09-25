@@ -36,6 +36,7 @@ export const API_ROUTES = {
         REMOVE_PROMOTION: '/clients/{id}/promotion',
         UPDATE_NETWORK: '/clients/{id}/update-network',
         SET_STATUS: '/clients/{id}/change-status',
+        CLONE_REEL: '/clients/{id}/clone-reel',
     },
     PLANS: {
         LIST: '/plans',

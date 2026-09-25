@@ -22,6 +22,7 @@
 .mesa-card.kind-request { --kind: #A855F7; }
 .mesa-card.kind-tools { --kind: #14B8A6; }
 .mesa-card.kind-trainings { --kind: #6366F1; }
+.mesa-card.kind-reel { --kind: #14B8C8; }
 @keyframes mesa-in { from { opacity: 0; transform: translateY(8px); } }
 
 .mesa-due { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--muted-foreground); }

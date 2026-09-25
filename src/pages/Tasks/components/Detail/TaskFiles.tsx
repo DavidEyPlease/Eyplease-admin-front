@@ -9,7 +9,8 @@ import { AttachmentViewer } from "@/components/generics/AttachmentViewer";
 import { API_ROUTES } from "@/constants/api";
 import useRequestQuery from "@/hooks/useRequestQuery";
 import { IFile } from "@/interfaces/common";
-import { ITask, ITaskFile } from "@/interfaces/tasks";
+import { ITask, ITaskFile, isCloneReel } from "@/interfaces/tasks";
+import { isVideo } from "@/utils";
 import useUploadStore from "@/store/uploadStore";
 
 import DynamicTabs from "@/components/generics/DynamicTabs"
@@ -42,7 +43,8 @@ const TaskFiles = ({ task }: IProps) => {
         {
             customQueryKey: queryKeys.list(`tasks-files-${task.id}`),
             enabled: !!task.id,
-            queryParams: { file_type: 'image' }
+            // Un reel con clon se entrega en MP4 (file_type video): se piden todos sus archivos, no sólo imágenes.
+            queryParams: isCloneReel(task) ? {} : { file_type: 'image' }
         }
     )
 
@@ -67,7 +69,7 @@ const TaskFiles = ({ task }: IProps) => {
                 uploadUri: `private/tasks/${task.id}/attachments`,
                 onAllSuccess: async (uploadedResults) => {
                     const newTask = await request<unknown, ITaskFile[]>('POST', API_ROUTES.TASKS.STORE_ATTACHMENTS.replace('{id}', task.id), {
-                        file_uris: uploadedResults
+                        file_uris: uploadedResults.map(file => isVideo(file.extension) ? { ...file, file_type: 'video' } : file)
                     })
                     onSuccessFiles([...newTask.data, ...(filesList || [])]);
                     // clean input file

@@ -11,6 +11,7 @@ import LinkedAccounts from "./components/LinkedAccounts";
 import PinkCircleColombia from "./components/PinkCircleColombia";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/uishadcn/ui/tabs";
 import SetPlan from "./components/SetPlan";
+import CloneReelToggle from "./components/CloneReelToggle";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
@@ -89,11 +90,12 @@ const ClientDetailPage = () => {
                                             )}
                                         </TabsContent>
                                         <TabsContent value="actions">
-                                            <div className="grid grid-cols-1 md:grid-cols-2">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                 <SetPlan
                                                     activePlanId={client.user?.plan?.id || ''}
                                                     clientId={client.id}
                                                 />
+                                                <CloneReelToggle clientId={client.id} userId={client.user?.id} />
                                             </div>
                                         </TabsContent>
                                     </Tabs>

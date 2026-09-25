@@ -4,7 +4,7 @@ import { toast } from "sonner"
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { TypographySmall } from "@/components/common/Typography"
 import { MAP_TASK_STATUS_COLORS, MAP_TASK_TYPES_COLORS, TOOLS_TYPES } from "@/constants/app"
-import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes } from "@/interfaces/tasks"
+import { ITask, ITaskDetail, ITaskUpdate, TaskStatusTypes, TaskTypes, isCloneReel } from "@/interfaces/tasks"
 import useAuthStore from "@/store/auth"
 import { Button } from "@/uishadcn/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/uishadcn/ui/dialog"
@@ -30,6 +30,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertConfirm } from "@/components/generics/AlertConfirm"
 import PlanSelector from "@/components/generics/PlanSelector"
 import NexrenderConfig from "./NexrenderConfig"
+import CloneReelInfo from "./CloneReelInfo"
 
 interface TaskDetailProps {
     task: ITask;
@@ -351,6 +352,8 @@ const TaskDetail = ({ task, onClose }: TaskDetailProps) => {
                                     </AccordionItem>
                                 </Accordion>
                             </div>
+
+                            {isCloneReel(task) && <CloneReelInfo task={task} />}
 
                             {task.task_type?.slug === TaskTypes.SERVICE && (
                                 <>

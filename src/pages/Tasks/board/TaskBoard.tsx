@@ -3,7 +3,7 @@ import { CalendarClockIcon, PaperclipIcon, SearchIcon } from 'lucide-react'
 
 import useAuth from '@/hooks/useAuth'
 import { RoleKeys } from '@/interfaces/common'
-import { ITask, TaskTypes } from '@/interfaces/tasks'
+import { ITask, TaskTypes, isCloneReel } from '@/interfaces/tasks'
 import { cn } from '@/lib/utils'
 import useAuthStore from '@/store/auth'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/uishadcn/ui/dropdown-menu'
@@ -11,11 +11,17 @@ import useTaskBoard, { STAGES, StageKey, stageOf } from './useTaskBoard'
 import '@/pages/Hoy/hoy.css'
 import './board.css'
 
+const CLONE_REEL = 'clone-reel'
+
 const KIND: Record<string, { label: string, css: string }> = {
     [TaskTypes.SERVICE]: { label: 'De clienta', css: 'kind-request' },
     [TaskTypes.TOOLS]: { label: 'Biblioteca', css: 'kind-tools' },
     [TaskTypes.TRAININGS]: { label: 'Entrenamiento', css: 'kind-trainings' },
+    [CLONE_REEL]: { label: 'Reel con clon', css: 'kind-reel' },
 }
+
+/** El reel con clon es un pedido de clienta más (mismo tipo); se distingue por su metadata. */
+const kindOf = (task: ITask) => isCloneReel(task) ? CLONE_REEL : task.task_type?.slug
 
 type Horizon = 'week' | 'month' | 'all'
 
@@ -54,7 +60,7 @@ interface CardProps {
 
 const Card = ({ task, busy, canAssign, onOpen, onAssign, onDragState, dragging }: CardProps) => {
     const designers = useAuthStore(state => state.utilData.designers)
-    const kind = KIND[task.task_type?.slug] ?? { label: task.task_type?.name ?? 'Tarea', css: '' }
+    const kind = KIND[kindOf(task)] ?? { label: task.task_type?.name ?? 'Tarea', css: '' }
     const finished = stageOf(task) === 'done'
     const due = dueLabel(task, finished)
 
@@ -125,7 +131,7 @@ const TaskBoard = ({ onOpen }: { onOpen: (task: ITask) => void }) => {
         const text = search.trim().toLowerCase()
         const limit = horizon === 'week' ? 7 : horizon === 'month' ? 31 : Infinity
         return tasks.filter(task => {
-            if (kind !== 'all' && task.task_type?.slug !== kind) return false
+            if (kind !== 'all' && kindOf(task) !== kind) return false
             if (who === 'none' ? !!task.assigned_to : who !== 'all' && task.assigned_to?.id !== who) return false
             if (text && !`${task.consecutive} ${task.title}`.toLowerCase().includes(text)) return false
             /* El horizonte sólo recorta lo que viene: lo atrasado y lo ya entregado siempre se ven */
@@ -144,7 +150,7 @@ const TaskBoard = ({ onOpen }: { onOpen: (task: ITask) => void }) => {
     ]
 
     const load = designers.map(designer => ({ designer, count: open.filter(task => task.assigned_to?.id === designer.id).length })).sort((a, b) => b.count - a.count)
-    const kinds = Object.entries(KIND).filter(([slug]) => tasks.some(task => task.task_type?.slug === slug))
+    const kinds = Object.entries(KIND).filter(([slug]) => tasks.some(task => kindOf(task) === slug))
 
     const chip = (active: boolean) => cn('inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors', active ? 'border-transparent bg-foreground text-background' : 'border-border bg-card/60 text-muted-foreground hover:border-[#6C47FF]/40 hover:text-foreground')
 
