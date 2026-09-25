@@ -8,6 +8,7 @@ import { useParams } from "react-router";
 import Network from "./components/Network";
 import Summary from "./components/Summary";
 import LinkedAccounts from "./components/LinkedAccounts";
+import PinkCircleColombia from "./components/PinkCircleColombia";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/uishadcn/ui/tabs";
 import SetPlan from "./components/SetPlan";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
@@ -34,6 +35,8 @@ const ClientDetailPage = () => {
 
     const client = response?.client;
     const stats = response?.stats;
+    // Círculo Rosa de Colombia se cuenta aparte (meses con descuento, no corazones): sólo en sus cuentas.
+    const esColombia = ['COL', 'CO'].includes((client?.country || '').toUpperCase());
 
     useEffect(() => {
         subscribeEvent('client-updated', handleClientUpdate as EventListener)
@@ -62,12 +65,18 @@ const ClientDetailPage = () => {
                                     <Tabs defaultValue="vendors">
                                         <TabsList>
                                             <TabsTrigger value="vendors">Vendedoras (es)</TabsTrigger>
+                                            {esColombia && <TabsTrigger value="pink-circle">Círculo Rosa</TabsTrigger>}
                                             <TabsTrigger value="edit" disabled={!client}>Editar</TabsTrigger>
                                             <TabsTrigger value="actions">Acciones</TabsTrigger>
                                         </TabsList>
                                         <TabsContent value="vendors">
                                             <Network clientId={params.id || ''} />
                                         </TabsContent>
+                                        {esColombia && (
+                                            <TabsContent value="pink-circle">
+                                                <PinkCircleColombia clientId={client.id} />
+                                            </TabsContent>
+                                        )}
                                         <TabsContent value="edit">
                                             {client && (
                                                 <ClientForm

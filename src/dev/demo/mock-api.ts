@@ -202,6 +202,50 @@ const demoClients = ([
     current_month_points: 1800 + ((index * 7919) % 5200), previous_month_points: 2400 + ((index * 3571) % 6100), client_current_month_points: 600, client_previous_month_points: 900,
     user: { id: `u-${index}`, name: `Clienta de ejemplo ${letter}`, email: `clienta${index + 1}@ejemplo.com`, profile_picture: null, username: `EJ-00${index + 1}`, country: 'MEX', phone: '0000000000', active, on_notifications: true, on_biometric_auth: false, role: { id: 'r-client', name: 'Cliente', role_key: 'client', permissions: [] }, plan: plans[planIndex] },
 }))
+/* Una clienta de COLOMBIA, para ver la pestaña de Círculo Rosa de allá (meses con descuento, no corazones) */
+demoClients.push({
+    ...demoClients[1], id: 'c-10', name: 'Clienta de ejemplo en Colombia', account: 'EJ-COL1', country: 'COL', card_subscription: false,
+    user: { ...demoClients[1].user, id: 'u-10', name: 'Clienta de ejemplo en Colombia', username: 'EJ-COL1', country: 'COL', plan: plans[2] },
+})
+
+/* Círculo Rosa de Colombia: consultoras INVENTADAS con sus 13 meses, del en curso al más viejo
+   (S = llegó al 30%, . = no llegó, ? = en curso y aún no llega). La captura vive en memoria. */
+const crCapturas: Record<string, number> = {}
+const crGente: Array<[string, string, string]> = [
+    ['Consultora de ejemplo Uno', 'A2', '?SSSSSSSSSSSS'], ['Consultora de ejemplo Dos', 'A1', 'SSSSSSSSSSSSS'],
+    ['Consultora de ejemplo Tres', 'A2', '?SSSSSSSS.SS.'], ['Consultora de ejemplo Cuatro', 'A2', 'SSS.S...SSSS.'],
+    ['Consultora de ejemplo Cinco', 'A2', '?S..S...SSSS.'], ['Consultora de ejemplo Seis', 'A3', '?.S...SS..S.S'],
+    ['Consultora de ejemplo Siete', 'T1', '?............'], ['Consultora de ejemplo Ocho', 'P2', '?...S....S...'],
+]
+const pinkCircleColombia = () => {
+    const members = crGente.map(([name, status, strip], index) => {
+        const id = `cr-${index}`
+        const history = strip.split('').map((letra, back) => ({
+            month: period(back), status: letra === 'S' ? 'yes' : letra === '.' ? 'no' : 'pending',
+            amount: letra === 'S' ? 690000 + ((index * 7919 + back * 3571) % 900000) : letra === '.' ? ((index + back) % 3) * 150000 : 180000,
+        }))
+        let seguidos = 0
+        while (seguidos + 1 < history.length && history[seguidos + 1].status === 'yes') seguidos++
+        const alMenos = seguidos === history.length - 1
+        const capturados = crCapturas[id] ?? null
+        const months = capturados ?? seguidos
+        const reached = history[0].status === 'yes'
+        const now = months + (reached ? 1 : 0)
+        return {
+            id, account: `EJ${index + 1}CO`, name: name.toLowerCase(), status, months, at_least: capturados === null && alMenos, source: capturados === null ? 'report' : 'capture',
+            as_of: period(1), current_month_reached: reached, months_now: now, in_circle: now >= 3, next_milestone: [3, 6, 9, 18, 24, 36].find(hito => hito > now) ?? null,
+            needs_capture: capturados === null && alMenos && seguidos > 0,
+            capture: capturados === null ? null : { months: capturados, as_of: period(1), captured_at: iso(3), captured_by: me.name },
+            history,
+        }
+    }).sort((a, b) => Number(b.needs_capture) - Number(a.needs_capture) || b.months_now - a.months_now || a.name.localeCompare(b.name))
+    return {
+        report: { current_month: period(0), closed_month: period(1), uploaded_at: `${ymd()} 09:15:00`, threshold: 645000 },
+        members,
+        totals: { members: members.length, in_circle: members.filter(m => m.in_circle).length, current_month_reached: members.filter(m => m.current_month_reached).length, needs_capture: members.filter(m => m.needs_capture).length },
+    }
+}
+
 /* Cobranza con la forma real: cada clienta trae sus pagos por periodo (YYYY-MM). «Aprobar» un
    comprobante lo pasa a pagado de verdad, para poder probar la cola. */
 const cur = period(0), prev = period(1)
@@ -464,6 +508,14 @@ export const installMockApi = () => {
             ] : [])
         }
         else if (/^\/clients\/c-\d+\/accounts$/.test(path)) { await wait(300); response = respond(true) }
+        else if (/^\/clients\/c-\d+\/pink-circle$/.test(path)) response = respond(pinkCircleColombia())
+        else if (/^\/clients\/c-\d+\/pink-circle\/[^/]+$/.test(path)) {
+            const id = path.split('/')[4]
+            if (method === 'PUT') crCapturas[id] = Number(JSON.parse(String(init?.body ?? '{}')).months)
+            if (method === 'DELETE') delete crCapturas[id]
+            await wait(300)
+            response = respond(pinkCircleColombia())
+        }
         else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
         else if (path === '/finance/payments/review' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, decision: string }
