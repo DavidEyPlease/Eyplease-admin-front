@@ -2,12 +2,14 @@ import { useMemo } from 'react'
 
 import { API_ROUTES } from '@/constants/api'
 import { APP_ROUTES } from '@/constants/app'
+import { DEFAULT_COUNTRY } from '@/constants/countries'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import { LiveNews } from '@/interfaces/liveNews'
 import { AdminOverview, ServiceRequest } from '@/interfaces/overview'
 import { IPostRenderRun } from '@/interfaces/posts'
 import { AdminPulse, PulseLane, PulsePieces } from '@/interfaces/pulse'
 import { DownloadRun } from '@/pages/Reports/useReports'
+import useCountryStore from '@/store/country'
 import { clock, isToday, lanesFromDaily } from './lib'
 
 const REFRESH_MS = 2 * 60_000
@@ -72,12 +74,17 @@ const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseE
  */
 const usePulse = () => {
     const opts = { staleTime: 60_000, refetchInterval: REFRESH_MS }
-    const overview = useFetchQuery<AdminOverview>('/overview', { customQueryKey: ['admin', 'overview'], ...opts })
-    const reports = useFetchQuery<DailyReport[]>('/reports/daily-reports', { customQueryKey: ['admin', 'daily-reports'], ...opts })
+    /* Lo del negocio se pide del país que se mira; las corridas (piezas y robot) son maquinaria
+       compartida y sólo se cuentan en México, que es donde corre el robot */
+    const country = useCountryStore(state => state.country)
+    const machinery = country === DEFAULT_COUNTRY
+    const byCountry = { country }
+    const overview = useFetchQuery<AdminOverview>('/overview', { queryParams: byCountry, customQueryKey: ['admin', 'overview', country], ...opts })
+    const reports = useFetchQuery<DailyReport[]>('/reports/daily-reports', { queryParams: byCountry, customQueryKey: ['admin', 'daily-reports', country], ...opts })
     const renderRuns = useFetchQuery<IPostRenderRun[]>(API_ROUTES.POSTS.RUNS, { customQueryKey: ['admin', 'pulse', 'render-runs'], ...opts })
     const robotRuns = useFetchQuery<DownloadRun[]>(API_ROUTES.REPORTS.DOWNLOAD_RUNS, { customQueryKey: ['admin', 'pulse', 'robot-runs'], ...opts })
-    const liveNews = useFetchQuery<LiveNews>('/live-news', { customQueryKey: ['admin', 'live-news'], ...opts })
-    const pulse = useFetchQuery<AdminPulse>('/pulse', { customQueryKey: ['admin', 'pulse', 'today'], ...opts })
+    const liveNews = useFetchQuery<LiveNews>('/live-news', { queryParams: byCountry, customQueryKey: ['admin', 'live-news', country], ...opts })
+    const pulse = useFetchQuery<AdminPulse>('/pulse', { queryParams: byCountry, customQueryKey: ['admin', 'pulse', 'today', country], ...opts })
 
     const data = overview.response
     const dailyReports = useMemo(() => Array.isArray(reports.response) ? reports.response : [], [reports.response])
@@ -99,8 +106,9 @@ const usePulse = () => {
         }
 
         /* Corridas de publicación de hoy. Imagen, cuadrada y video de la misma sección arrancan
-           juntas y son UN hecho: se juntan por sección y cuarto de hora. */
-        const runs = (Array.isArray(renderRuns.response) ? renderRuns.response : []).filter(run => isToday(run.started_at))
+           juntas y son UN hecho: se juntan por sección y cuarto de hora. Fuera de México no se
+           cuentan (son de todos los países): abajo se cuentan SUS piezas. */
+        const runs = (machinery && Array.isArray(renderRuns.response) ? renderRuns.response : []).filter(run => isToday(run.started_at))
         const grouped = new Map<string, IPostRenderRun[]>()
         runs.forEach(run => {
             const slot = Math.floor(new Date(run.started_at).getTime() / (15 * 60_000))
@@ -138,8 +146,24 @@ const usePulse = () => {
             })
         })
 
-        /* Corridas del robot de hoy */
-        ;(Array.isArray(robotRuns.response) ? robotRuns.response : []).filter(run => isToday(run.queued_at ?? run.finished_at)).forEach(run => {
+        /* Las piezas de hoy de las clientas de ese país (fuera de México) */
+        if (!machinery) {
+            pieces.forEach(item => out.push({
+                id: `pieces-${item.section_key}-${item.live ? 'live' : 'batch'}`,
+                at: item.last_at ?? new Date().toISOString(),
+                time: clock(item.last_at),
+                group: item.live ? 'live' : 'publishing',
+                tag: item.live ? 'En vivo' : 'Publicaciones',
+                tone: item.live ? 'live' : 'ok',
+                title: `${item.section_name}: ${plural(item.posts, 'pieza', 'piezas')}`,
+                text: `Para ${plural(item.clients, 'clienta', 'clientas')}.`,
+                thumbs: item.thumbs.slice(0, 4),
+                actions: [{ label: 'Ver en Publicaciones', to: APP_ROUTES.POSTS.DASHBOARD }],
+            }))
+        }
+
+        /* Corridas del robot de hoy (sólo entra al portal de México) */
+        ;(machinery && Array.isArray(robotRuns.response) ? robotRuns.response : []).filter(run => isToday(run.queued_at ?? run.finished_at)).forEach(run => {
             const names = (run.sections ?? []).map(section => ROBOT_SECTION[section] ?? section).join(' + ') || 'reportes'
             const result = run.result
             const done = run.status !== 'queued' && run.status !== 'running'
@@ -200,10 +224,13 @@ const usePulse = () => {
 
         /* Lo de hoy primero y del más reciente al más viejo; lo arrastrado de otros días, al final */
         return out.sort((a, b) => Number(!!a.carried) - Number(!!b.carried) || b.at.localeCompare(a.at))
-    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces])
+    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery])
 
     return {
         loading: overview.loading && !data,
+        country,
+        /** El robot y las corridas se cuentan aquí (México); en otro país, sólo lo suyo */
+        machinery,
         overview: data,
         dailyReports,
         schedule,

@@ -41,6 +41,21 @@ const overview = {
     corrections: { count: 1, latest: [request(572, 'Invitación · cambiar la hora', 'Clienta de ejemplo D', 1)] },
     clients: { active: 98, inactive: 7, new_this_month: 4 },
 }
+/* Colombia (`?country=COL`): una clienta de ejemplo, su dinero en pesos colombianos y nada pendiente;
+   las corridas diarias son las mismas (maquinaria compartida) */
+const colombiaOverview = {
+    ...overview,
+    country: 'COL',
+    revenue: {
+        current: { ...revenue(0, 0, 179900), currency: 'COP' },
+        previous: { ...revenue(1, 179900, 0), currency: 'COP' },
+    },
+    publishing: { ...overview.publishing, monthly: { covered: 2, total: 11, missing: [] } },
+    service_requests: { new: 0, in_review: 0, latest: [] },
+    corrections: { count: 1, latest: [request(590, 'Invitación · Colombia', 'Clienta de ejemplo en Colombia', 0)] },
+    clients: { active: 1, inactive: 0, new_this_month: 1 },
+}
+const countryAttention = [{ country: 'MEX', attention: 4 }, { country: 'COL', attention: 1 }]
 
 const notifications = {
     unread: { whatsapp: 6, service_requests: 3, corrections: 1, delivery_failures: 0 }, unread_total: 10,
@@ -323,7 +338,8 @@ export const installMockApi = () => {
 
         if (path === '/me') response = respond(me)
         else if (path === '/util-data') response = respond(utilData)
-        else if (path === '/overview') response = respond(overview)
+        else if (path === '/overview') response = respond(url.searchParams.get('country') === 'COL' ? colombiaOverview : overview)
+        else if (path === '/overview/attention') response = respond(countryAttention)
         // Aviso a clientas: el API sólo lo encola (el cuerpo queda en window.__demoLastNotice para revisarlo)
         else if (path === '/notifications/clients' && method === 'POST') {
             Object.assign(window, { __demoLastNotice: typeof init?.body === 'string' ? JSON.parse(init.body) : null })
@@ -331,7 +347,7 @@ export const installMockApi = () => {
         }
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
-        else if (path === '/live-news') response = respond(liveNews)
+        else if (path === '/live-news') response = respond(url.searchParams.get('country') === 'COL' ? { ...liveNews, star_level_up: [], star_close: [], new_beginning: [], totals: { star_level_up: 0, star_close: 0, new_beginning: 0 } } : liveNews)
         else if (path === '/reports/daily-reports') response = respond(url.searchParams.get('country') === 'COL' ? colombiaDailyReports : dailyReports)
         else if (path === '/copilot' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { message: string, conversation_id: string | null }
@@ -378,7 +394,7 @@ export const installMockApi = () => {
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
         else if (path === '/posts/runs') response = respond(postRuns)
-        else if (path === '/pulse') response = respond(pulse)
+        else if (path === '/pulse') response = respond(url.searchParams.get('country') === 'COL' ? { ...pulse, pieces: pulse.pieces.slice(0, 1).map(item => ({ ...item, posts: 1, clients: 1 })) } : pulse)
         else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
         // Ventas (fase 3/4): regalos y paquetes, quién quiere subir de plan, Directoras invitadas
         else if (path.startsWith('/plan-gifts') || path.startsWith('/plan-interests') || path.startsWith('/director-prospects')) {

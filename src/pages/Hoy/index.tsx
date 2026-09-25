@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import Spinner from '@/components/common/Spinner'
+import { countryInfo } from '@/constants/countries'
 import { cn } from '@/lib/utils'
 import MoneyCard from './components/MoneyCard'
 import PulseFeed from './components/PulseFeed'
@@ -27,7 +28,7 @@ const Kpi = ({ label, value, suffix, sub, index }: { label: string, value: numbe
  * No reutiliza la pantalla del Inicio de siempre (sigue intacta tras el interruptor), sólo sus datos.
  */
 const HoyPage = () => {
-    const { loading, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events } = usePulse()
+    const { loading, country, machinery, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events } = usePulse()
 
     const ranKeys = useMemo(() => new Set(events.filter(event => event.id.startsWith('run-')).map(event => event.id.slice(4).split('|')[0])), [events])
 
@@ -39,7 +40,8 @@ const HoyPage = () => {
     const verdict = urgent > 0 ? `${urgent} ${urgent === 1 ? 'cosa urgente' : 'cosas urgentes'}.` : attention > 0 ? `${attention} por atender.` : 'Todo al día.'
 
     const reportsDone = dailyReports.filter(report => report.loaded >= report.usual).length
-    const robotAccounts = dailyReports.reduce((max, report) => Math.max(max, report.usual), 0)
+    /* El robot sólo entra al portal de México: en otro país no visita a nadie */
+    const robotAccounts = machinery ? dailyReports.reduce((max, report) => Math.max(max, report.usual), 0) : 0
     const runEvents = today.filter(event => event.group === 'live' || event.group === 'publishing')
     const pendingDesign = overview.service_requests.new + overview.corrections.count
 
@@ -54,7 +56,7 @@ const HoyPage = () => {
 
             <div className="mx-auto grid w-full max-w-[780px] min-w-0 gap-[18px]">
                 <header className="pulse-rise">
-                    <div className="text-[11px] font-extrabold tracking-[.14em] text-primary uppercase">{longToday()} · {clock(new Date())}</div>
+                    <div className="text-[11px] font-extrabold tracking-[.14em] text-primary uppercase">{countryInfo(country).label} · {longToday()} · {clock(new Date())}</div>
                     <h1 className="shell-title mt-1.5 text-[30px] leading-[1.08] font-extrabold tracking-[-.035em]">
                         Torre de control. <em className={cn(urgent > 0 && '!bg-none !text-rose-500')}>{verdict}</em>
                     </h1>
@@ -65,7 +67,7 @@ const HoyPage = () => {
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     <Kpi index={0} label="Reportes descargados" value={reportsDone} suffix={`/ ${dailyReports.length}`} sub="los diarios, completos" />
-                    <Kpi index={1} label="Cuentas que visita el robot" value={robotAccounts} sub="con derecho y contraseña" />
+                    <Kpi index={1} label="Cuentas que visita el robot" value={robotAccounts} sub={machinery ? 'con derecho y contraseña' : 'sólo entra al portal de México'} />
                     <Kpi index={2} label="Carriles que ya corrieron" value={runEvents.length} sub={runEvents.length ? 'publicaciones y en vivo' : 'todavía ninguno hoy'} />
                     <Kpi index={3} label="Diseño por atender" value={pendingDesign} sub={`${overview.service_requests.new} ${overview.service_requests.new === 1 ? 'nueva' : 'nuevas'} · ${overview.corrections.count} ${overview.corrections.count === 1 ? 'corrección' : 'correcciones'}`} />
                 </div>

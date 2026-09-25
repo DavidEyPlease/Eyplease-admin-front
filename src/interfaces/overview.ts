@@ -1,6 +1,8 @@
 /** Datos del Inicio: /admin/overview. */
 
 export interface OverviewRevenuePeriod {
+    /** Moneda de las cifras: la del país que se mira (con un API viejo no viene: pesos mexicanos). */
+    currency?: 'MXN' | 'COP'
     period: string
     collected: number
     outstanding: number
@@ -85,6 +87,8 @@ export interface OverviewCorrections {
 
 export interface AdminOverview {
     period: string
+    /** País que se pidió (MEX, COL); nulo = todos. */
+    country?: string | null
     revenue: {
         current: OverviewRevenuePeriod
         previous: OverviewRevenuePeriod

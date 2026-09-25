@@ -1,16 +1,15 @@
 // Constantes de presentación del módulo de Reportes. El catálogo de secciones y el derecho
 // por plan ya NO viven aquí: los resuelve el backend (endpoints /reports/*).
 
-/** Cada país se mide aparte: tiene su portal de Mary Kay, sus reportes y sus cuentas. */
-export type ReportsCountry = "MEX" | "COL"
+import { COUNTRIES, Country, DEFAULT_COUNTRY as HOME_COUNTRY } from "@/constants/countries"
+
+/** Cada país se mide aparte: tiene su portal de Mary Kay, sus reportes y sus cuentas (ver @/constants/countries). */
+export type ReportsCountry = Country
 
 /** México: el único portal al que entra el robot, y lo que la API mide si no se le pide otro. */
-export const DEFAULT_COUNTRY: ReportsCountry = "MEX"
+export const DEFAULT_COUNTRY: ReportsCountry = HOME_COUNTRY
 
-export const COUNTRY_OPTIONS: { value: ReportsCountry; label: string }[] = [
-    { value: "MEX", label: "México" },
-    { value: "COL", label: "Colombia" },
-]
+export const COUNTRY_OPTIONS: { value: ReportsCountry; label: string }[] = COUNTRIES.map(({ value, label }) => ({ value, label }))
 
 export const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 

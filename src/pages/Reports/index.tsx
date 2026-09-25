@@ -10,7 +10,8 @@ import RobotCountryNotice from "./components/RobotCountryNotice"
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 import "@/pages/Hoy/hoy.css"
-import { buildPeriodOptions, COUNTRY_OPTIONS, DEFAULT_COUNTRY, defaultPeriod, type ReportsCountry } from "./reports.constants"
+import useCountryStore from "@/store/country"
+import { buildPeriodOptions, COUNTRY_OPTIONS, DEFAULT_COUNTRY, defaultPeriod } from "./reports.constants"
 
 /* Con el marco nuevo el monitor abre en HOY (el robot y sus corridas); lo del mes sigue en sus pestañas */
 const NEW_SHELL = isNewShell()
@@ -30,8 +31,8 @@ const PERIOD_OPTIONS = buildPeriodOptions()
 const ReportsPage = () => {
     const [tab, setTab] = useState<TabKey>(NEW_SHELL ? "today" : "summary")
     const [period, setPeriod] = useState<string>(defaultPeriod())
-    /* Cada país se mide aparte: sus cuentas, sus reportes y sus rechazos no se mezclan */
-    const [country, setCountry] = useState<ReportsCountry>(DEFAULT_COUNTRY)
+    /* Cada país se mide aparte: el mismo país que se eligió arriba para todo el panel */
+    const { country, setCountry } = useCountryStore()
 
     const showPeriod = tab !== "dispatch-imports" && tab !== "today"
 
@@ -47,7 +48,8 @@ const ReportsPage = () => {
                     </div>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
-                    <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur" role="group" aria-label="País">
+                    {/* Con el marco nuevo el país se elige en la barra de arriba; el marco viejo no la tiene */}
+                    {!NEW_SHELL && <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur" role="group" aria-label="País">
                         {COUNTRY_OPTIONS.map((option) => {
                             const active = country === option.value
                             return (
@@ -62,7 +64,7 @@ const ReportsPage = () => {
                                 </button>
                             )
                         })}
-                    </div>
+                    </div>}
                     {showPeriod && (
                         <div className="w-44">
                             <Dropdown placeholder="Periodo" value={period} items={PERIOD_OPTIONS} onChange={(v) => setPeriod(v)} />

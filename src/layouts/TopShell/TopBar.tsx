@@ -3,6 +3,7 @@ import { BadgeCheckIcon, ChevronDownIcon, LogOutIcon, SparklesIcon, UndoIcon } f
 
 import ISOTIPO from '@/assets/images/icon-white.png'
 import ButtonBack from '@/components/generics/ButtonBack'
+import CountrySwitch from '@/components/generics/CountrySwitch'
 import { DarkModeSelector } from '@/components/generics/DarkModeSelector'
 import LoggedUserAvatar from '@/components/generics/LoggedUserAvatar'
 import NetworkPeopleSearch from '@/components/generics/NetworkPeopleSearch'
@@ -153,6 +154,8 @@ const TopBar = ({ copilot, copilotOpen, onToggleCopilot }: Props) => {
                 {/* Las acciones que cada página sube a la cabecera (HeaderActionsProvider) conservan su sitio */}
                 {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
                 {isSuperAdmin && <span className="hidden 2xl:block"><NetworkPeopleSearch /></span>}
+                {/* México | Colombia: todo el panel se ve un país a la vez */}
+                <CountrySwitch className="hidden sm:inline-flex" />
                 {isSuperAdmin && <NotificationCenter />}
                 {copilot && (
                     <button

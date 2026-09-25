@@ -2,9 +2,10 @@ import { Link } from 'react-router'
 import { ArrowRightIcon } from 'lucide-react'
 
 import { APP_ROUTES } from '@/constants/app'
+import { moneyIn } from '@/constants/countries'
 import { AdminOverview } from '@/interfaces/overview'
 import { useFinanceSummary } from '@/pages/Finance/useFinanceSummary'
-import { money, monthName } from '../lib'
+import { monthName } from '../lib'
 
 /** La curva del año, con lo cobrado por mes. Sin datos no se pinta: nada de curvas de adorno. */
 const Sparkline = ({ values }: { values: number[] }) => {
@@ -35,7 +36,11 @@ const MoneyCard = ({ revenue }: { revenue: AdminOverview['revenue'] }) => {
 
     const expected = current.collected + current.outstanding
     const pct = expected > 0 ? Math.round((current.collected / expected) * 100) : 0
-    const months = (summary?.months ?? []).filter(item => item.month <= month).map(item => item.income)
+    /* Cada país en su moneda. La curva del año sale de Finanzas, que todavía mide México: fuera
+       de pesos mexicanos no se pinta, para no mezclar */
+    const currency = current.currency ?? 'MXN'
+    const money = (amount: number) => moneyIn(amount, currency)
+    const months = currency === 'MXN' ? (summary?.months ?? []).filter(item => item.month <= month).map(item => item.income) : []
 
     return (
         <section className="shell-glass pulse-rise rounded-3xl p-[20px]" style={{ '--i': 2 } as React.CSSProperties}>
