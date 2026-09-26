@@ -37,6 +37,7 @@ interface ApiFinanceClient {
     promotion: FinanceClientPromotion | null
     next_charge_date: string | null
     next_charge_amount: number | null
+    promised_until?: string | null
     payments: Record<string, ApiPayment>
 }
 
@@ -60,11 +61,13 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     promotion: c.promotion ?? null,
     nextChargeDate: c.next_charge_date ?? null,
     nextChargeAmount: c.next_charge_amount ?? null,
+    promisedUntil: c.promised_until ?? null,
     payments: Object.entries(c.payments ?? {}).reduce<Record<string, MonthlyPayment>>((acc, [period, p]) => {
         acc[period] = {
             amount: p.amount ?? null,
             paid: p.paid ?? null,
             status: p.status ?? null,
+            paidAt: p.paid_at ?? null,
             receiptUrl: p.receipt_url ?? null,
             referenceNumber: p.reference_number ?? null,
             receiptUploadedAt: p.receipt_uploaded_at ?? null,
@@ -109,12 +112,15 @@ export interface UseFinanceClientsPageParams {
     paymentDay?: number
     /** Which payment states the client must have in the year (default: anything unpaid). */
     collectionStatus?: CollectionStatus
+    /** Bajas con adeudo: las cuentas DESACTIVADAS en vez de las activas. */
+    inactive?: boolean
 }
 
 /**
- * Paginated, active-only client list for the Collections tab.
+ * Paginated client list for the Collections tab: the active ones, or the
+ * deactivated ones with debt (`inactive`).
  */
-export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus = DEFAULT_COLLECTION_STATUS }: UseFinanceClientsPageParams) => {
+export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus = DEFAULT_COLLECTION_STATUS, inactive = false }: UseFinanceClientsPageParams) => {
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
@@ -126,8 +132,9 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
                 min_overdue: minOverdue,
                 payment_day: paymentDay,
                 collection_status: collectionStatus,
+                inactive: inactive ? 1 : undefined,
             },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus }),
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus, inactive }),
         }
     )
 
@@ -175,6 +182,25 @@ export const useMarkPayment = () => {
         request<MarkPaymentInput, unknown>("POST", API_ROUTES.FINANCE.PAYMENTS.CREATE, input)
 
     return { markPayment, marking: requestState.loading }
+}
+
+/**
+ * Promesa de pago de una clienta: `promisedUntil` 'YYYY-MM-DD', o null para quitarla.
+ * Refresca la ficha y la lista de cobranza.
+ */
+export const usePaymentPromise = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY)],
+    })
+
+    const setPromise = (account: string, promisedUntil: string | null) =>
+        request<{ promised_until: string | null }, unknown>(
+            "PUT",
+            replaceRecordIdInPath(API_ROUTES.FINANCE.CLIENT_PROMISE, account),
+            { promised_until: promisedUntil },
+        )
+
+    return { setPromise, saving: requestState.loading }
 }
 
 export interface ReviewReceiptInput {

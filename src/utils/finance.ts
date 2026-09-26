@@ -44,6 +44,33 @@ export const formatDueDate = (isoDate: string | null | undefined): string =>
 /** Period 'YYYY-MM' of an API date 'YYYY-MM-DD'. */
 export const periodOf = (isoDate: string) => isoDate.slice(0, 7)
 
+// ---- Fecha del pago y promesa de pago (en hora de México) ----
+
+const MX_TZ = "America/Mexico_City"
+const ymdMx = new Intl.DateTimeFormat("en-CA", { timeZone: MX_TZ, year: "numeric", month: "2-digit", day: "2-digit" })
+const paidAtFmt = new Intl.DateTimeFormat("es-MX", { timeZone: MX_TZ, day: "numeric", month: "short" })
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+
+/** Hoy en México, 'YYYY-MM-DD'. */
+export const todayMx = () => ymdMx.format(new Date())
+
+/**
+ * `paid_at` para la API a partir del día elegido en el calendario: al MEDIODÍA de México.
+ * El ingreso cuenta en el mes de esa fecha en hora de México; a medianoche UTC, un pago
+ * del día 1 caería en el mes anterior.
+ */
+export const paidAtOn = (day: Date) => `${ymd(day)}T12:00:00-06:00`
+
+/** 'YYYY-MM-DD' del día elegido en el calendario (sin corrimiento de zona). */
+export const dateOnly = (day: Date) => ymd(day)
+
+/** «5 sep» de un `paid_at` de la API, en hora de México. */
+export const formatPaidAt = (iso: string | null | undefined) => (iso ? paidAtFmt.format(new Date(iso)) : "—")
+
+/** Si la promesa sigue en pie (hasta ese día incluido) o ya se venció. */
+export const promiseState = (promisedUntil: string | null | undefined): "active" | "expired" | null =>
+    !promisedUntil ? null : promisedUntil >= todayMx() ? "active" : "expired"
+
 // ---- Pagos parciales / abonos ----
 
 interface PeriodLike { amount: number | null; paid?: number | null; status: string | null }

@@ -258,20 +258,30 @@ const cardIssues = [
 /* Cobranza con la forma real: cada clienta trae sus pagos por periodo (YYYY-MM). «Aprobar» un
    comprobante lo pasa a pagado de verdad, para poder probar la cola. */
 const cur = period(0), prev = period(1)
-const financeLedger: Record<string, Record<string, { amount: number, paid: number | null, status: string, receipt_url?: string | null, reference_number?: string | null, receipt_uploaded_at?: string | null }>> = {
+type DemoPayment = { amount: number, paid: number | null, status: string, paid_at?: string | null, receipt_url?: string | null, reference_number?: string | null, receipt_uploaded_at?: string | null }
+const financeLedger: Record<string, Record<string, DemoPayment>> = {
     'EJ-003': { [prev]: { amount: 1490, paid: 0, status: 'overdue' }, [cur]: { amount: 1490, paid: 0, status: 'overdue' } },
     'EJ-008': { [cur]: { amount: 690, paid: 0, status: 'overdue' } },
     'EJ-005': { [cur]: { amount: 552, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-4471', receipt_uploaded_at: iso(95) } },
     'EJ-001': { [cur]: { amount: 1490, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-9020', receipt_uploaded_at: iso(260) } },
     'EJ-002': { [cur]: { amount: 990, paid: 0, status: 'pending' } }, 'EJ-004': { [cur]: { amount: 690, paid: 0, status: 'pending' } }, 'EJ-009': { [cur]: { amount: 990, paid: 0, status: 'pending' } },
 }
+/* Bajas con adeudo: cuentas desactivadas que se fueron debiendo (sólo salen con `inactive=1`) */
+const financeInactiveLedger: Record<string, Record<string, DemoPayment>> = {
+    'EJ-010': { [period(2)]: { amount: 349, paid: 0, status: 'overdue' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
+}
+/* Promesas de pago por cuenta ('YYYY-MM-DD'): una en pie y, al guardarlas, las que se pongan */
+const ymdAhead = (days: number) => { const d = new Date(now.getTime() + days * 86400000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
+const financePromises: Record<string, string> = { 'EJ-008': ymdAhead(10) }
 const STATUS_GROUP: Record<string, string[]> = { overdue: ['overdue', 'partial'], in_review: ['in_review'], pending: ['pending'], paid: ['paid'], collectable: ['overdue', 'partial', 'pending', 'in_review'] }
-const financeClients = (status: string) => {
+const financeClients = (status: string, inactive = false) => {
     const wanted = STATUS_GROUP[status] ?? STATUS_GROUP.collectable
-    const items = Object.entries(financeLedger).filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status))).map(([account, payments], index) => {
+    const ledger = inactive ? financeInactiveLedger : financeLedger
+    const items = Object.entries(ledger).filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status))).map(([account, payments], index) => {
         const client = demoClients.find(item => item.account === account)
-        return { id: account, user_id: client?.user.id, name: client?.name ?? account, plan: client?.user.plan.name ?? null, fixed_payment: client?.user.plan.price ?? null, billing_type: index % 3 === 0 ? 'stripe' : 'manual', app_status: 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, payments }
+        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
     })
+    if (inactive) return { ...page(items), total_overdue: 698, total_pending: 0, total_in_review: 0 }
     return { ...page(items), total_overdue: 3670, total_pending: 2670, total_in_review: 2042 }
 }
 const reportSections = [['early', 'Tempraneras'], ['pink_circle', 'Círculo Rosa'], ['stars', 'Estrellas'], ['honor_roll', 'Cuadro de Honor'], ['new_beginnings', 'Nuevos inicios'], ['birthdays', 'Cumpleaños']]
@@ -542,7 +552,27 @@ export const installMockApi = () => {
         else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }
         /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
         else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
-        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable'))
+        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1'))
+        /* Registrar un pago como la API: «pagado» liquida con su fecha, un monto solo es abono, y
+           deshacer un pagado lo deja debiéndose entero */
+        else if (path === '/finance/payments' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, status?: string, amount?: number, paid_at?: string }
+            const ledger = financeLedger[body.account] ? financeLedger : financeInactiveLedger
+            const row = ((ledger[body.account] ??= {})[body.period] ??= { amount: 349, paid: 0, status: 'pending' })
+            if (body.status === 'paid') { row.paid = row.amount; row.status = 'paid'; row.paid_at = body.paid_at ?? new Date().toISOString() }
+            else if (body.status) { if (row.status === 'paid') { row.paid = 0; row.paid_at = null } row.status = body.status }
+            else if (body.amount) { row.paid = (row.paid ?? 0) + body.amount; row.status = row.paid >= row.amount ? 'paid' : 'partial'; row.paid_at = body.paid_at ?? null }
+            await wait(300)
+            response = respond(true)
+        }
+        else if (/^\/finance\/clients\/[^/]+\/promise$/.test(path) && method === 'PUT') {
+            const account = decodeURIComponent(path.split('/')[3])
+            const until = (JSON.parse(String(init?.body ?? '{}')) as { promised_until: string | null }).promised_until
+            if (until) financePromises[account] = until
+            else delete financePromises[account]
+            await wait(300)
+            response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? null)
+        }
         else if (path === '/finance/payments/review' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, decision: string }
             const payment = financeLedger[body.account]?.[body.period]
@@ -552,7 +582,7 @@ export const installMockApi = () => {
         }
         else if (/^\/finance\/clients\/[^/]+$/.test(path)) {
             const account = decodeURIComponent(path.split('/')[3])
-            response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? null)
+            response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? financeClients('collectable', true).items.find(item => item.id === account) ?? null)
         }
         else if (path === '/reports/clients-status') response = respond(url.searchParams.get('country') === 'COL' ? colombiaClientsStatus : clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)

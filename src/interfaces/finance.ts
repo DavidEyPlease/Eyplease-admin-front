@@ -10,6 +10,8 @@ export interface MonthlyPayment {
     /** Suma de abonos registrados para el periodo (pagos parciales). */
     paid?: number | null
     status: PaymentStatus
+    /** Cuándo se pagó (ISO, UTC). Decide en qué mes cuenta como ingreso. */
+    paidAt?: string | null
     /** Comprobante subido por el cliente (URL temporal firmada) y sus datos. */
     receiptUrl?: string | null
     referenceNumber?: string | null
@@ -48,6 +50,8 @@ export interface FinanceClient {
     promotion: FinanceClientPromotion | null
     /** Next charge resolved by the API ('YYYY-MM-DD'): skips months paid ahead. */
     nextChargeDate: string | null
+    /** Promesa de pago ('YYYY-MM-DD'): hasta ese día no escala ni le llegan recordatorios. */
+    promisedUntil: string | null
     /** What that next charge will cost (plan price minus the discount in force). */
     nextChargeAmount: number | null
     /** Payments keyed by period 'YYYY-MM'. */

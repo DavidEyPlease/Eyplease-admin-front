@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { BanknoteIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, FileTextIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react"
+import { BanknoteIcon, CalendarIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, FileTextIcon, HandshakeIcon, SearchIcon, SlidersHorizontalIcon, UserXIcon, XIcon } from "lucide-react"
 import dayjs from "dayjs"
 import { toast } from "sonner"
 
@@ -18,7 +18,7 @@ import UIPagination from "@/components/generics/Pagination"
 import PaymentLinkDialog from "@/components/generics/PaymentLinkDialog"
 import { COLLECTION_STATUS_OPTIONS, CollectionStatus, FinanceClient, FinanceClientPromotion, PaymentStatus } from "@/interfaces/finance"
 import { formatDate } from "@/utils/dates"
-import { formatDueDate, formatMoney, periodLabel, periodOf, periodPaid, periodRemaining, periodsForYear } from "@/utils/finance"
+import { formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodOf, periodPaid, periodRemaining, periodsForYear, promiseState } from "@/utils/finance"
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
@@ -125,6 +125,21 @@ const PromoBadge = ({ promotion }: { promotion: FinanceClientPromotion | null })
     )
 }
 
+/** Promesa de pago: en pie (hasta ese día no escala ni le llegan recordatorios) o ya vencida. */
+const PromiseChip = ({ client }: { client: FinanceClient }) => {
+    const state = promiseState(client.promisedUntil)
+    if (!state) return null
+    return state === "active" ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-[#5B47E0]/10 px-1.5 py-0.5 text-[11px] font-semibold text-[#5B47E0] dark:text-[#A99BFF]">
+            <HandshakeIcon className="h-3 w-3" /> Promete pagar el {formatDueDate(client.promisedUntil)}
+        </span>
+    ) : (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+            <HandshakeIcon className="h-3 w-3" /> Promesa vencida ({formatDueDate(client.promisedUntil)})
+        </span>
+    )
+}
+
 /** "Día 10 · próx. 10 sep" — the day is the agreement, the date comes resolved from the API. */
 const ChargeDay = ({ client, compact = false }: { client: FinanceClient; compact?: boolean }) => {
     if (!client.paymentDay && !client.nextChargeDate) return <>—</>
@@ -203,6 +218,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
        estados como fichas y los filtros finos detrás de un botón. La lógica es la misma. */
     const newShell = isNewShell()
     const [showFilters, setShowFilters] = useState(false)
+    /* Bajas con adeudo: las cuentas desactivadas que se fueron debiendo. No cuentan en la
+       cobranza del día ni en el Resumen, pero su adeudo sigue en su ficha (si vuelve, le aparece). */
+    const [inactive, setInactive] = useState(false)
+    const toggleInactive = () => { setInactive((v) => !v); setPage(1) }
 
     // "4" en el dropdown = 4+ (sólo mínimo); el resto es un rango exacto de meses.
     const monthsRange = useMemo(() => {
@@ -221,6 +240,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         overdueMonthsMax: monthsRange.max,
         minOverdue: minAmount || undefined,
         paymentDay: payDate ? dayjs(payDate).date() : undefined,
+        inactive,
     })
     const { markPayment, marking } = useMarkPayment()
     const { reviewReceipt, reviewing } = useReviewReceipt()
@@ -231,6 +251,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const [cardLinkFor, setCardLinkFor] = useState<{ account: string, name: string } | null>(null)
     const [showTransfer, setShowTransfer] = useState(false)
     const [abono, setAbono] = useState<Record<string, string>>({}) // monto de abono por periodo
+    /* El día en que entró el dinero (por defecto hoy). Decide en qué mes cuenta el ingreso:
+       un depósito del 30 que se registra el 2 se pone aquí con su día. */
+    const [paidOn, setPaidOn] = useState<Date>(() => new Date())
 
     useEffect(() => {
         FinanceService.getPaymentMethods().then(setMethods).catch(() => { })
@@ -251,7 +274,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     // Reset to the first page when the year changes.
     useEffect(() => { setPage(1) }, [year])
 
-    const closeManage = () => { setManageId(null); setShowTransfer(false); setAbono({}) }
+    const closeManage = () => { setManageId(null); setShowTransfer(false); setAbono({}); setPaidOn(new Date()) }
 
     const rows = useMemo(() => clients.map((client) => buildRow(client, periods)), [clients, periods])
 
@@ -265,7 +288,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         setFiltersVersion((v) => v + 1)
         setPage(1)
     }
-    const emptyCopy = otherFiltersActive ? "Sin resultados con estos filtros." : EMPTY_COPY[status]
+    const emptyCopy = otherFiltersActive
+        ? "Sin resultados con estos filtros."
+        : inactive ? "Ninguna cuenta desactivada se fue debiendo." : EMPTY_COPY[status]
 
     const manageRow = rows.find((r) => r.client.id === manageId)
     const manageCollectable = manageRow ? collectablePeriods(manageRow) : []
@@ -275,12 +300,12 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const advancePeriod = manageRow?.client.nextChargeDate ? periodOf(manageRow.client.nextChargeDate) : null
 
     const markPeriodPaid = async (account: string, period: string, method?: "transfer") => {
-        await markPayment({ account, period, status: "paid", source: "manual", method })
+        await markPayment({ account, period, status: "paid", source: "manual", method, paid_at: paidAtOn(paidOn) })
     }
 
     const markMonthPaid = async (account: string, period: string) => {
         await markPeriodPaid(account, period)
-        toast.success(`${periodLabel(period)} marcado como pagado`)
+        toast.success(`${periodLabel(period)} pagado el ${formatPaidAt(paidAtOn(paidOn))}`)
     }
 
     const markAllPaid = async (row: CollectionRow) => {
@@ -307,7 +332,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const registerAbono = async (account: string, period: string) => {
         const amount = Number(abono[period])
         if (!amount || amount <= 0) return
-        await markPayment({ account, period, amount, source: "manual" })
+        await markPayment({ account, period, amount, source: "manual", paid_at: paidAtOn(paidOn) })
         toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabel(period)}`)
         setAbono((prev) => ({ ...prev, [period]: "" }))
     }
@@ -315,7 +340,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     // Pays the next open month before its due day. Only offered to manual
     // clients with nothing pending, so periods are always settled in order.
     const registerAdvance = async (row: CollectionRow, period: string) => {
-        await markPayment({ account: row.client.id, period, status: "paid", source: "manual" })
+        await markPayment({ account: row.client.id, period, status: "paid", source: "manual", paid_at: paidAtOn(paidOn) })
         toast.success(`Adelanto de ${periodLabel(period)} registrado · ${row.client.name}`)
     }
 
@@ -332,7 +357,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 <section className="shell-glass rounded-3xl p-[22px]">
                     <div className="flex flex-wrap items-end justify-between gap-4">
                         <div>
-                            <small className="text-[11px] font-bold tracking-[.08em] text-muted-foreground uppercase">Por cobrar en {year}</small>
+                            <small className="text-[11px] font-bold tracking-[.08em] text-muted-foreground uppercase">{inactive ? `Lo que dejaron debiendo en ${year}` : `Por cobrar en ${year}`}</small>
                             <b className="mt-1 block text-[34px] leading-none font-extrabold tracking-[-.035em] tabular-nums">{whole(totalOverdue + totalPending)}</b>
                         </div>
                         <span className="text-[12.5px] text-muted-foreground"><b className="text-foreground tabular-nums">{totalItems}</b> {totalItems === 1 ? "clienta" : "clientas"} con este filtro</span>
@@ -360,6 +385,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     {COLLECTION_STATUS_OPTIONS.map((option) => (
                         <button key={option.value} type="button" onClick={() => { setStatus(option.value as CollectionStatus); setPage(1) }} className={chip(status === option.value)}>{option.label}</button>
                     ))}
+                    <button type="button" onClick={toggleInactive} className={chip(inactive)} title="Cuentas desactivadas que se fueron debiendo">
+                        <UserXIcon className="size-3.5" /> Bajas con adeudo
+                    </button>
                     <button type="button" onClick={() => setShowFilters((v) => !v)} className={chip(showFilters || otherFiltersActive)}>
                         <SlidersHorizontalIcon className="size-3.5" /> Más filtros{otherFiltersActive ? " ·" : ""}
                     </button>
@@ -391,10 +419,22 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     placeholder="Día de pago"
                     className="w-full sm:w-auto"
                 />
+                {!newShell && (
+                    <button type="button" onClick={toggleInactive} className={cn("inline-flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm transition", inactive ? "border-transparent bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:text-foreground")}>
+                        <UserXIcon className="h-4 w-4" /> Bajas con adeudo
+                    </button>
+                )}
                 {filtersActive && !newShell && (
                     <button onClick={clearFilters} className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF] hover:underline">Limpiar filtros</button>
                 )}
             </div>
+
+            {inactive && (
+                <p className="flex items-start gap-2 rounded-xl border border-border bg-foreground/[.03] px-4 py-3 text-[13px] text-muted-foreground">
+                    <UserXIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    Cuentas desactivadas que se fueron debiendo. No salen en la cobranza ni cuentan en el Resumen, y ya no les llegan recordatorios; si reactivas una, le vuelve a aparecer lo que debe.
+                </p>
+            )}
 
             {loading ? (
                 <Panel className="p-12"><Spinner size="md" color="primary" /></Panel>
@@ -420,9 +460,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     {rows.length ? rows.map((row) => (
                                         <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-border transition hover:bg-foreground/[.04]">
                                             <td className="px-5 py-3.5 font-medium text-foreground">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <span>{row.client.name}</span>
                                                     <BillingTypeChip type={row.client.billingType} />
+                                                    <PromiseChip client={row.client} />
                                                 </div>
                                                 {newShell && <small className="mt-0.5 block text-[11.5px] font-normal text-muted-foreground">{row.client.id} · {row.client.plan ?? "sin plan"}</small>}
                                             </td>
@@ -472,6 +513,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         </div>
                                         <p className="text-xs text-muted-foreground">{row.client.id} · {row.client.plan ?? "—"}</p>
                                         <ChargeDay client={row.client} compact />
+                                        {row.client.promisedUntil && <div className="mt-1"><PromiseChip client={row.client} /></div>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
                                         <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} /></div>
                                     </div>
@@ -503,6 +545,19 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     </DialogHeader>
                     {manageRow ? (
                         <div className="space-y-4">
+                            {/* El día en que entró el dinero: vale para Pagado, Transferencia, Abono y Adelanto */}
+                            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border px-3 py-2">
+                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Fecha del pago</span>
+                                <DateInput value={paidOn} onChange={(d) => setPaidOn(d ?? new Date())} className="ml-auto py-1.5 text-xs" />
+                                <span className="basis-full text-[11px] text-muted-foreground">Es la que decide en qué mes cuenta el ingreso. Si pagó otro día, cámbiala antes de marcar.</span>
+                            </div>
+                            {promiseState(manageRow.client.promisedUntil) === "active" && (
+                                <p className="flex items-start gap-2 rounded-xl bg-[#5B47E0]/[.06] px-3 py-2 text-xs text-muted-foreground">
+                                    <HandshakeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5B47E0] dark:text-[#A99BFF]" />
+                                    Prometió pagar el {formatDueDate(manageRow.client.promisedUntil)}. Hasta ese día no se le bloquea ni le llegan recordatorios.
+                                </p>
+                            )}
                             {/* Charge what's collectable: card or transfer */}
                             {manageCollectable.length > 0 && (
                                 <div className="rounded-xl bg-foreground/[.03] p-3">

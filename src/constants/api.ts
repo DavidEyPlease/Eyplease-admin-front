@@ -133,6 +133,8 @@ export const API_ROUTES = {
     FINANCE: {
         CLIENTS: '/finance/clients',
         CLIENT_DETAIL: '/finance/clients/{id}',
+        /** Promesa de pago: hasta ese día no escala ni le llegan recordatorios (vacío la quita). */
+        CLIENT_PROMISE: '/finance/clients/{id}/promise',
         /** Cobros con tarjeta que Stripe no pudo hacer: la lista, «revisar ahora» y la liga para cambiar la tarjeta. */
         CARD_ISSUES: '/finance/card-issues',
         CARD_ISSUES_SCAN: '/finance/card-issues/scan',
