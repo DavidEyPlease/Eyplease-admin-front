@@ -427,7 +427,7 @@ const demoRetoDetail = (reto: DemoReto) => ({
     period: period(0), starts_on: `${period(0)}-01`, ends_on: `${period(0)}-${daysInMonth}`, is_open: true, progress: reto.progress,
     piece: { url: demoPieceImg, status: 'completed', status_name: 'Entregado' },
     rows: reto.rows.map((row: DemoReto) => ({ ...row, piece: reto.celebrated.some((entry: DemoReto) => entry.person_id === row.id && entry.post_id) ? { url: demoPieceImg, status: 'published' } : null })),
-    client: reto.client, kit_task: { id: 'task-616', title: `Kit del reto · ${reto.title}` }, template: reto.template, celebrated: reto.celebrated,
+    client: reto.client, kit_task: { id: 'task-616', title: reto.type === 'unit_reactivation' ? 'Flyer · Promo reactivación T1-T7 · hasta 30 sep' : `Kit del reto · ${reto.title}` }, template: reto.template, celebrated: reto.celebrated,
 })
 const demoRetoItem = (reto: DemoReto) => ({
     id: reto.id, type: reto.type, title: reto.title, prize: reto.prize, period: period(0), ends_on: `${period(0)}-${daysInMonth}`, progress: reto.progress, is_open: true,

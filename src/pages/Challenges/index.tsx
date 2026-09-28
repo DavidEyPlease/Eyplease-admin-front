@@ -78,7 +78,7 @@ const ChallengesPage = () => {
         : waiting > 0 ? `${waiting} ${waiting === 1 ? 'espera su base' : 'esperan su base'}.` : items.length ? 'Todo al día.' : 'Sin retos.'
 
     return (
-        <div className="mx-auto grid w-full max-w-[860px] min-w-0 gap-[18px]">
+        <div className="mx-auto grid w-full max-w-[860px] min-w-0 grid-cols-1 gap-[18px]">
             {isNewShell() ? (
                 <PageHead
                     eyebrow="Operación · Retos"
@@ -102,7 +102,7 @@ const ChallengesPage = () => {
                 </div>
             )}
 
-            <div className="grid gap-3">
+            <div className="grid min-w-0 grid-cols-1 gap-3">
                 {items.map((item, index) => <Card key={item.id} item={item} index={index} />)}
             </div>
         </div>

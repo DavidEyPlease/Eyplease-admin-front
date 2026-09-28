@@ -96,12 +96,12 @@ const ChallengeDetailPage = () => {
 
     return (
         <div className="mx-auto grid w-full max-w-[1180px] min-w-0 grid-cols-1 items-start gap-[18px] xl:grid-cols-[290px_minmax(0,1fr)]">
-            <aside className="pulse-rail order-2 grid gap-3.5 xl:order-1 xl:sticky xl:top-[90px]">
+            <aside className="pulse-rail order-2 grid min-w-0 grid-cols-1 gap-3.5 xl:order-1 xl:sticky xl:top-[90px]">
                 <Link to={APP_ROUTES.CHALLENGES.LIST} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground">
                     <ArrowLeftIcon className="size-4" /> Todos los retos
                 </Link>
 
-                <section className="shell-glass grid gap-2.5 rounded-[22px] p-4">
+                <section className="shell-glass grid min-w-0 grid-cols-1 gap-2.5 rounded-[22px] p-4">
                     <div className="flex items-center gap-3">
                         <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-primary/10 text-[12px] font-extrabold text-primary">{initials(detail.client.name)}</span>
                         <div className="min-w-0">
@@ -123,7 +123,7 @@ const ChallengeDetailPage = () => {
                         <div className="rt-bar mt-1.5"><i style={{ width: `${Math.max(percent, 3)}%` }} /></div>
                     </div>
                     {detail.piece?.url && (
-                        <a href={detail.piece.url} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 rounded-[14px] border border-border p-2 hover:bg-foreground/5">
+                        <a href={detail.piece.url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2.5 rounded-[14px] border border-border p-2 hover:bg-foreground/5">
                             <img src={detail.piece.url} alt="" className="h-14 w-10 shrink-0 rounded-md object-cover" />
                             <span className="min-w-0 text-[11.5px] leading-snug">
                                 <b className="block">Su anuncio (kit)</b>
@@ -133,7 +133,7 @@ const ChallengeDetailPage = () => {
                     )}
                 </section>
 
-                <section className="shell-glass grid gap-3 rounded-[22px] p-4">
+                <section className="shell-glass grid min-w-0 grid-cols-1 gap-3 rounded-[22px] p-4">
                     <div>
                         <b className="block text-[13.5px]">La base de sus ganadoras</b>
                         <small className="block text-[11.5px] leading-snug text-muted-foreground">El diseño sin persona ni nombre. Se mide una vez y de ahí sale cada ganadora.</small>
@@ -167,7 +167,7 @@ const ChallengeDetailPage = () => {
                 </section>
             </aside>
 
-            <div className="order-1 grid min-w-0 gap-[18px] xl:order-2">
+            <div className="order-1 grid min-w-0 grid-cols-1 gap-[18px] xl:order-2">
                 {isNewShell() ? (
                     <PageHead
                         eyebrow={`Operación · Retos · ${TYPE_LABEL[detail.type] ?? ''}`}
