@@ -1,0 +1,51 @@
+/* Retos: cada reto es una tarjeta con el canto del color de su base; el medidor pinta encima de la base lo que el
+   sistema va a poner (la cara, el nombre y el número) para que se acomode a ojo, y la vista previa lo confirma. */
+
+.rt-card { position: relative; display: block; border-radius: 22px; padding: 16px 18px 15px 20px; overflow: hidden; transition: transform .22s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s; }
+.rt-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--edge, #6C47FF); }
+.rt-card:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -18px rgba(27, 20, 80, .55); }
+.dark .rt-card:hover { box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .8); }
+.rt-card[data-tone="hot"] { --edge: linear-gradient(180deg, #E5077D, #6C47FF); }
+.rt-card[data-tone="warn"] { --edge: linear-gradient(180deg, #F59E0B, #E5077D); }
+.rt-card[data-tone="plain"] { --edge: linear-gradient(180deg, #6C47FF, #2CD4D9); }
+.rt-card[data-tone="ok"] { --edge: linear-gradient(180deg, #10B981, #2CD4D9); }
+.rt-card.is-closed { opacity: .78; }
+
+.rt-tag { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+.rt-tag.hot { background: color-mix(in oklab, #E5077D 14%, transparent); color: #C2066A; }
+.rt-tag.warn { background: color-mix(in oklab, #F59E0B 18%, transparent); color: #B45309; }
+.rt-tag.plain { background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--muted-foreground); }
+.rt-tag.ok { background: color-mix(in oklab, #10B981 15%, transparent); color: #047857; }
+.dark .rt-tag.hot { color: #FF6BB5; }
+.dark .rt-tag.warn { color: #FCD34D; }
+.dark .rt-tag.ok { color: #34D399; }
+
+.rt-bar { height: 5px; border-radius: 99px; background: color-mix(in oklab, var(--foreground) 9%, transparent); overflow: hidden; }
+.rt-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #6C47FF, #2CD4D9); }
+
+.rt-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); color: var(--foreground); cursor: pointer; transition: background-color .2s, border-color .2s, transform .2s; }
+.rt-btn:hover:not(:disabled) { background: color-mix(in oklab, var(--foreground) 6%, transparent); border-color: color-mix(in oklab, #6C47FF 40%, transparent); }
+.rt-btn:disabled { opacity: .5; cursor: default; }
+.rt-btn.cta { border-color: transparent; color: #fff; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); box-shadow: 0 10px 24px -12px rgba(108, 71, 255, .9); }
+.rt-btn.cta:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.15); border-color: transparent; }
+
+/* El medidor: la base con las zonas encima */
+.rt-stage { position: relative; width: 100%; user-select: none; touch-action: none; border-radius: 16px; overflow: hidden; background: color-mix(in oklab, var(--foreground) 6%, transparent); }
+.rt-stage > img { display: block; width: 100%; height: auto; pointer-events: none; }
+.rt-zone { position: absolute; cursor: grab; }
+.rt-zone:active { cursor: grabbing; }
+.rt-face { border-radius: 50%; border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(0, 0, 0, .35); background: rgba(229, 7, 125, .16); }
+.rt-box { border: 2px dashed rgba(255, 255, 255, .9); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); background: rgba(108, 71, 255, .06); border-radius: 6px; }
+.rt-box.value { background: rgba(44, 212, 217, .07); }
+.rt-label { position: absolute; left: 6px; top: -22px; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 800; color: #fff; background: rgba(20, 16, 50, .78); white-space: nowrap; pointer-events: none; }
+.rt-handle { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid #6C47FF; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.rt-handle.ew { cursor: ew-resize; }
+.rt-handle.ns { cursor: ns-resize; }
+.rt-line { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed rgba(255, 255, 255, .9); cursor: ns-resize; }
+.rt-line::after { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 16px; }
+.rt-line > span { position: absolute; right: 8px; top: -21px; padding: 1px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(20, 16, 50, .72); pointer-events: none; }
+.rt-ghost { position: absolute; pointer-events: none; }
+
+.rt-field { display: grid; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--muted-foreground); }
+.rt-field input[type="color"] { width: 100%; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: transparent; padding: 2px; cursor: pointer; }
+.rt-field input[type="number"], .rt-field select { width: 100%; min-width: 0; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); padding: 0 10px; font-size: 13px; font-weight: 600; color: var(--foreground); }

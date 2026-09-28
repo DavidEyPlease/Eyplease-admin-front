@@ -35,6 +35,8 @@ export const PermissionKeys = {
     WHATSAPP_PROSPECTS: 'whatsapp_prospects',
     // Ventas: quién quiere subir de plan, regalar Eyplease+ a su unidad o llegó invitada (la app no cobra: aquí se cierra)
     SALES: 'sales',
+    // Retos de las Directoras: la base de las piezas de ganadora (se mide aquí) y publicar las que esperan
+    CHALLENGES: 'challenges',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];

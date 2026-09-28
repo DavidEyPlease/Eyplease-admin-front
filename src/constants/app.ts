@@ -66,6 +66,10 @@ export const APP_ROUTES = {
     SALES: {
         OPPORTUNITIES: '/ventas',
     },
+    CHALLENGES: {
+        LIST: '/retos',
+        DETAIL: '/retos/:id',
+    },
 }
 
 export const SESSION_KEY = 'EyWebPleaseTokenAdm'
@@ -134,6 +138,15 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
                 permissionKeys: [PermissionKeys.WHATSAPP, PermissionKeys.WHATSAPP_TICKETS],
             },
         ],
+    },
+    {
+        key: PermissionKeys.CHALLENGES,
+        label: 'Retos',
+        path: APP_ROUTES.CHALLENGES.LIST,
+        requiredPermission: true,
+        // Lo mueve quien lleva los pedidos de diseño o las clientas; 'challenges' queda para un permiso propio
+        permissionKeys: [PermissionKeys.CHALLENGES, PermissionKeys.TASKS, PermissionKeys.CLIENTS],
+        icon: 'challenges',
     },
     {
         key: PermissionKeys.TRAININGS,

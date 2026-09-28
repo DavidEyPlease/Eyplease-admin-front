@@ -2,6 +2,9 @@
 // simulador de la web de clientas. Todo lo que se ve aquí es de EJEMPLO (gente y cifras inventadas):
 // sirve para revisar el marco y las pantallas, no para leer el negocio. No entra en el build.
 
+import demoBaseImg from './retos/base-ejemplo.jpg'
+import demoPieceImg from './retos/pieza-ejemplo.jpg'
+
 const now = new Date()
 const pad = (n: number) => String(n).padStart(2, '0')
 const ymd = (d = now) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -385,12 +388,59 @@ export const calls: Array<{ method: string, path: string, mocked: boolean }> = [
 const respond = (data: unknown, status = 200) => new Response(JSON.stringify({ success: status < 400, data, message: status < 400 ? 'OK' : 'Simulado' }), { status, headers: { 'Content-Type': 'application/json' } })
 const page = <T,>(items: T[]) => ({ items, current_page: 1, last_page: 1, per_page: 15, total_items: items.length, next_cursor: null })
 
+/* Retos (admin/challenges): tres retos de EJEMPLO, uno en cada momento de su base — por medir, pedida a diseño y
+   lista — con ganadoras inventadas. La base y la pieza son imágenes de ejemplo (sin personas reales). */
+const demoRetoClient = (n: number, name: string) => ({ id: `u-reto-${n}`, name, username: `EJ-00${n}`, network_person_id: `np-reto-${n}`, country_code: 'MEX' })
+const demoRetoRow = (id: string, name: string, extra: Record<string, unknown>) => ({ id, name, photo: { has_photo: false, url: null }, done: true, awarded: false, ...extra })
+const demoAcomodo = {
+    cara: { cx: 724, cy: 496, ancho: 307 }, velo: [720, 960], min_cara: 200,
+    nombre: { cx: 512, base2: 1028, cap: 71, interlinea: 80, ancho_max: 640, peso: 800, sx: 0.83, fuente: 'playfair', grad: [[253, 233, 225], [240, 176, 172]], relieve: true, brillo: true },
+    valor: { cx: 512, base: 1200, alto: 124, ancho_max: 440, peso: 900, sx: 0.8, fuente: 'playfair', grad: [[251, 216, 210], [230, 156, 152]], relieve: true, brillo: true },
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- datos de ejemplo de forma libre, sólo en la demo
+type DemoReto = Record<string, any>
+const demoRetos: DemoReto[] = [
+    {
+        id: 'reto-1', type: 'unit_reactivation', title: 'Pon tu negocio en acción', prize: 'Kit especial por $139', target: 1,
+        client: demoRetoClient(10, 'Rocío Sánchez Beltrán'), progress: { current: 2, goal: 69, measure: 'people', done: false, detail: '2 de 69 inactivas ya regresaron', data_missing: false },
+        rows: [demoRetoRow('np-r1', 'Arcelia Medina Ruiz', { current: 1, goal: 1, returned_on: `${period(0)}-15` }), demoRetoRow('np-r2', 'Beatriz Nava Olmos', { current: 1, goal: 1, returned_on: `${period(0)}-19` })],
+        template: { state: 'por_medir', has_value: false, base: null, acomodo: null, registered_at: null, candidate: { uri: 'service-requests/demo/base.jpg', url: demoBaseImg, task_id: 'task-620', at: iso(40) }, base_task: { id: 'task-620', title: 'Base de tus ganadoras · Pon tu negocio en acción', status: 'ready-for-review', status_name: 'Lista para revisión' } },
+        celebrated: [],
+    },
+    {
+        id: 'reto-2', type: 'unit_points', title: 'Llegar a 1,000 puntos', prize: 'Kit de brochas', target: 1000,
+        client: demoRetoClient(11, 'Julieta Ruiz Maldonado'), progress: { current: 3, goal: 214, measure: 'people', done: false, detail: null, data_missing: false },
+        rows: [demoRetoRow('np-p1', 'Carmen Ortiz Salas', { current: 1502, goal: 1000 }), demoRetoRow('np-p2', 'Dolores Peña Vidal', { current: 1184, goal: 1000 }), demoRetoRow('np-p3', 'Elena Robles Cano', { current: 1045, goal: 1000 })],
+        template: { state: 'lista', has_value: true, base: { uri: 'private/challenges/demo/plantilla/base.jpg', url: demoBaseImg }, acomodo: demoAcomodo, registered_at: iso(3 * 1440), candidate: null, base_task: { id: 'task-601', title: 'Base de tus ganadoras · Llegar a 1,000 puntos', status: 'completed', status_name: 'Completada' } },
+        celebrated: [{ person_id: 'np-p1', post_id: 'post-1', via: 'plantilla', photo: 'avatar', avatar_reason: 'no tiene foto', at: iso(2 * 1440) }, { person_id: 'np-p2', post_id: 'post-2', via: 'plantilla', photo: 'avatar', avatar_reason: 'la foto corta la cabeza arriba', at: iso(1440) }],
+    },
+    {
+        id: 'reto-3', type: 'unit_hearts', title: 'Ganar 2 corazones este mes', prize: 'Pashmina rosa', target: 2,
+        client: demoRetoClient(12, 'Ana María Tovar'), progress: { current: 0, goal: 96, measure: 'people', done: false, detail: null, data_missing: false },
+        rows: [],
+        template: { state: 'pedida', has_value: true, base: null, acomodo: null, registered_at: null, candidate: null, base_task: { id: 'task-622', title: 'Base de tus ganadoras · Ganar 2 corazones este mes', status: 'in-progress', status_name: 'En proceso' } },
+        celebrated: [],
+    },
+]
+const demoRetoDetail = (reto: DemoReto) => ({
+    id: reto.id, scope: 'unit', type: reto.type, title: reto.title, description: null, target: reto.target, prize: reto.prize,
+    period: period(0), starts_on: `${period(0)}-01`, ends_on: `${period(0)}-${daysInMonth}`, is_open: true, progress: reto.progress,
+    piece: { url: demoPieceImg, status: 'completed', status_name: 'Entregado' },
+    rows: reto.rows.map((row: DemoReto) => ({ ...row, piece: reto.celebrated.some((entry: DemoReto) => entry.person_id === row.id && entry.post_id) ? { url: demoPieceImg, status: 'published' } : null })),
+    client: reto.client, kit_task: { id: 'task-616', title: `Kit del reto · ${reto.title}` }, template: reto.template, celebrated: reto.celebrated,
+})
+const demoRetoItem = (reto: DemoReto) => ({
+    id: reto.id, type: reto.type, title: reto.title, prize: reto.prize, period: period(0), ends_on: `${period(0)}-${daysInMonth}`, progress: reto.progress, is_open: true,
+    client: reto.client, template_state: reto.template.state, celebrated_count: reto.celebrated.length, published_count: reto.celebrated.filter((entry: DemoReto) => entry.post_id).length,
+})
+
 export const installMockApi = () => {
     const base = import.meta.env.VITE_API_URL as string
     const realFetch = window.fetch.bind(window)
 
     window.fetch = async (input, init) => {
         const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+        if (raw.startsWith('https://demo-s3.invalid/')) { await wait(500); return new Response(null, { status: 200 }) }
         if (!raw.startsWith(base)) return realFetch(input, init)
 
         const url = new URL(raw)
@@ -599,6 +649,42 @@ export const installMockApi = () => {
         else if (path === '/whatsapp/tickets') response = respond(waPage(waTickets))
         else if (path === '/whatsapp/templates') response = respond([{ name: 'recordatorio_pago', status: 'APPROVED', category: 'UTILITY', language: 'es_MX', body: 'Hola {{1}}, te recordamos tu pago de Eyplease+.', varCount: 1 }])
         else if (path.startsWith('/whatsapp/') && method === 'POST') response = respond(true)
+        else if (path === '/challenges' && method === 'GET') response = respond(demoRetos.map(demoRetoItem))
+        else if (/^\/challenges\/reto-\d+$/.test(path)) {
+            const reto = demoRetos.find(item => item.id === path.split('/')[2])
+            response = respond(reto ? demoRetoDetail(reto) : null, reto ? 200 : 404)
+        }
+        else if (/^\/challenges\/reto-\d+\/request-base$/.test(path) && method === 'POST') {
+            const reto = demoRetos.find(item => item.id === path.split('/')[2])!
+            reto.template = { ...reto.template, state: 'pedida', base_task: { id: 'task-630', title: `Base de tus ganadoras · ${reto.title}`, status: 'pending', status_name: 'Recibido' } }
+            await wait(500)
+            response = respond(demoRetoDetail(reto), 201)
+        }
+        /* Como en el servidor: arma la pieza (aquí, siempre la misma imagen de ejemplo) sin guardar nada */
+        else if (/^\/challenges\/reto-\d+\/winner-preview$/.test(path) && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { person_id?: string | null }
+            await wait(1600)
+            response = respond({ uri: 'private/challenges/demo/vista-previa.jpg', url: demoPieceImg, fill: body.person_id ? { foto: 'avatar', motivo: 'la foto corta la cabeza arriba', lineas: [] } : { foto: 'avatar', motivo: 'no tiene foto', lineas: ['María Guadalupe', 'Hernández Villaseñor'] } })
+        }
+        else if (/^\/challenges\/reto-\d+\/winner-template$/.test(path) && method === 'PUT') {
+            const reto = demoRetos.find(item => item.id === path.split('/')[2])!
+            const body = JSON.parse(String(init?.body ?? '{}')) as { base: string, acomodo: unknown }
+            reto.template = { ...reto.template, state: 'lista', base: { uri: body.base, url: reto.template.candidate?.url ?? demoBaseImg }, acomodo: body.acomodo, registered_at: new Date().toISOString(), candidate: null }
+            await wait(700)
+            response = respond({ winner_template: reto.template })
+        }
+        else if (/^\/challenges\/reto-\d+\/celebrate$/.test(path) && method === 'POST') {
+            const reto = demoRetos.find(item => item.id === path.split('/')[2])!
+            const dry = !!JSON.parse(String(init?.body ?? '{}')).dry_run
+            const pending = reto.rows.filter((row: DemoReto) => !reto.celebrated.some((entry: DemoReto) => entry.person_id === row.id && entry.post_id))
+            if (!dry) reto.celebrated = [...reto.celebrated.filter((entry: DemoReto) => !pending.some((row: DemoReto) => row.id === entry.person_id)), ...pending.map((row: DemoReto) => ({ person_id: row.id, post_id: `post-${row.id}`, via: 'plantilla', photo: 'avatar', avatar_reason: 'no tiene foto', at: new Date().toISOString() }))]
+            await wait(600)
+            response = respond({ dry_run: dry, winners: pending.map((row: DemoReto) => ({ challenge: reto.title, person: row.name, task_id: null })) })
+        }
+        else if (path === '/files/sign-url' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { fileName: string }
+            response = respond({ url: `https://demo-s3.invalid/${encodeURIComponent(body.fileName)}`, key: body.fileName, disk: 'private' })
+        }
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
         /* Lo no previsto contesta vacío: la pantalla abre en su estado «sin datos», que también hay que ver */

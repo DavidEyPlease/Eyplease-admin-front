@@ -34,6 +34,8 @@ import TemplateReportEditorPage from "./pages/Templates/EditorReports"
 import WhatsAppInboxPage from "./pages/WhatsApp"
 import WhatsAppTicketsPage from "./pages/WhatsApp/Tickets"
 import SalesPage from '@/pages/Sales'
+import ChallengesPage from '@/pages/Challenges'
+import ChallengeDetailPage from '@/pages/Challenges/Detail'
 
 const Router = () => {
     const { isLogged, pending: sessionLoading, getMe } = useAuth();
@@ -86,6 +88,9 @@ const Router = () => {
                 <Route path={APP_ROUTES.WHATSAPP.TICKETS} element={<WhatsAppTicketsPage />} />
 
                 <Route path={APP_ROUTES.SALES.OPPORTUNITIES} element={<SalesPage />} />
+
+                <Route path={APP_ROUTES.CHALLENGES.LIST} element={<ChallengesPage />} />
+                <Route path={APP_ROUTES.CHALLENGES.DETAIL} element={<ChallengeDetailPage />} />
             </Route>
         </Routes>
     )
