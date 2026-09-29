@@ -36,6 +36,7 @@ import WhatsAppTicketsPage from "./pages/WhatsApp/Tickets"
 import SalesPage from '@/pages/Sales'
 import GrowthFunnelPage from '@/pages/Growth/Funnel'
 import GrowthProspectsPage from '@/pages/Growth/Prospects'
+import GrowthSocialPage from '@/pages/Growth/Social'
 import ChallengesPage from '@/pages/Challenges'
 import ChallengeDetailPage from '@/pages/Challenges/Detail'
 
@@ -92,6 +93,7 @@ const Router = () => {
                 <Route path={APP_ROUTES.SALES.OPPORTUNITIES} element={<SalesPage />} />
                 <Route path={APP_ROUTES.GROWTH.FUNNEL} element={<GrowthFunnelPage />} />
                 <Route path={APP_ROUTES.GROWTH.PROSPECTS} element={<GrowthProspectsPage />} />
+                <Route path={APP_ROUTES.GROWTH.SOCIAL} element={<GrowthSocialPage />} />
 
                 <Route path={APP_ROUTES.CHALLENGES.LIST} element={<ChallengesPage />} />
                 <Route path={APP_ROUTES.CHALLENGES.DETAIL} element={<ChallengeDetailPage />} />

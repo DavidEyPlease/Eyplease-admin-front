@@ -190,4 +190,13 @@ export const API_ROUTES = {
         CONTACT: '/growth/contacts/{id}',
         TO_SALES: '/growth/prospects/{id}/to-sales',
     },
+    SOCIAL: {
+        POSTS: '/social/posts',
+        POST: '/social/posts/{id}',
+        APPROVE: '/social/posts/{id}/approve',
+        REQUEST_CHANGE: '/social/posts/{id}/request-change',
+        UNSCHEDULE: '/social/posts/{id}/unschedule',
+        PUBLISH_NOW: '/social/posts/{id}/publish-now',
+        MEDIA: '/social/media',
+    },
 }

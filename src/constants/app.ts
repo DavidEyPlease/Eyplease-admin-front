@@ -69,6 +69,7 @@ export const APP_ROUTES = {
     GROWTH: {
         FUNNEL: '/crecimiento',
         PROSPECTS: '/crecimiento/prospectos',
+        SOCIAL: '/crecimiento/redes',
     },
     CHALLENGES: {
         LIST: '/retos',
@@ -127,6 +128,14 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         requiredPermission: true,
         permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
         icon: 'prospects',
+    },
+    {
+        key: PermissionKeys.GROWTH_SOCIAL,
+        label: 'Redes',
+        path: APP_ROUTES.GROWTH.SOCIAL,
+        requiredPermission: true,
+        permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
+        icon: 'social',
     },
     {
         key: PermissionKeys.REPORTS_MONITOR,

@@ -41,6 +41,7 @@ export const PermissionKeys = {
     // quien ve Ventas, y la API lo cuida con `staff`)
     GROWTH_FUNNEL: 'growth_funnel',
     GROWTH_PROSPECTS: 'growth_prospects',
+    GROWTH_SOCIAL: 'growth_social',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];

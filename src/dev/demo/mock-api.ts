@@ -66,6 +66,35 @@ const growthProspects = () => {
     const summary = Object.fromEntries(['lista', 'nueva', 'fria', 'calentando'].map(group => [group, items.filter(item => item.group === group).length]))
     return { items, summary, bot: { allowed: true, available: true }, days: 60, generated_at: iso(0) }
 }
+
+/* Redes de EJEMPLO: el calendario vive en memoria; publicar no toca Meta */
+const socialDay = (offset: number, hour: number) => { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, hour, 0, 0); return d.toISOString() }
+const socialPosts: Array<Record<string, unknown>> = [
+    { id: 'sp-1', title: 'Tu asistente, a distancia', pillar: 'app', format: 'carousel', channels: ['ig', 'fb'], caption: 'Le escribes «¿quién de mi unidad cumple años esta semana?» y te contesta con nombres y su pieza lista.\nDescárgala gratis → liga en la bio', media: [{ url: demoPieceImg, type: 'image' }, { url: demoBaseImg, type: 'image' }], scheduled_at: socialDay(-1, 19), status: 'published', change_note: null, approved_at: iso(3000), approved_by: 'Administración Demo', created_by: 'Claude', published_at: socialDay(-1, 19), results: { ig: { id: '1', permalink: 'https://www.instagram.com/' }, fb: { id: '2', permalink: 'https://www.facebook.com/' } }, last_error: null, attempts: 1, metrics: { ig: { reach: 4210, likes: 212, comments: 9, saved: 96, shares: 14 }, fb: { reach: 1880, likes: 64, comments: 3, shares: 5 } }, metrics_at: iso(40) },
+    { id: 'sp-2', title: 'El mes pasado perdiste horas', pillar: 'dolor', format: 'post', channels: ['ig', 'fb'], caption: 'El mes pasado perdiste horas diseñando. Ese tiempo no vuelve.\nEste mes que lo haga tu asistente → liga en la bio.', media: [{ url: demoPieceImg, type: 'image' }], scheduled_at: socialDay(1, 19), status: 'review', change_note: null, approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+    { id: 'sp-3', title: 'Rocío: «mi asistente a distancia»', pillar: 'prueba', format: 'story', channels: ['ig'], caption: '', media: [{ url: demoBaseImg, type: 'image' }], scheduled_at: socialDay(2, 13), status: 'review', change_note: null, approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+    { id: 'sp-4', title: 'Ejemplos reales de septiembre', pillar: 'app', format: 'carousel', channels: ['ig', 'fb'], caption: 'Seis piezas que salieron de la app este mes.', media: [{ url: demoPieceImg, type: 'image' }, { url: demoBaseImg, type: 'image' }], scheduled_at: socialDay(4, 12), status: 'scheduled', change_note: null, approved_at: iso(60), approved_by: 'Administración Demo', created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+    { id: 'sp-5', title: '5 cosas que tu unidad agradece', pillar: 'tip', format: 'carousel', channels: ['ig', 'fb'], caption: null, media: [], scheduled_at: socialDay(6, 11), status: 'production', change_note: 'La portada más cálida', approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+    { id: 'sp-6', title: 'Círculo Rosa: el lugar al que llegas', pillar: 'reconocimiento', format: 'post', channels: ['ig', 'fb'], caption: null, media: [], scheduled_at: null, status: 'idea', change_note: null, approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+]
+const socialPillars = [['app', 'La app en acción', 5], ['prueba', 'Prueba social', 4], ['dolor', 'Dolor → alivio', 3], ['tip', 'Tip de valor', 3], ['adentro', 'Desde adentro', 2], ['reconocimiento', 'Reconocimiento', 2]] as const
+const socialCalendar = (from: string, to: string) => {
+    const inRange = (post: Record<string, unknown>) => !post.scheduled_at ? post.status !== 'published' : String(post.scheduled_at).slice(0, 10) >= from && String(post.scheduled_at).slice(0, 10) <= to
+    const published = socialPosts.filter(post => post.status === 'published')
+    const reach = (post: Record<string, unknown>) => { const m = post.metrics as { ig?: { reach?: number }, fb?: { reach?: number } } | null; return (m?.ig?.reach ?? 0) + (m?.fb?.reach ?? 0) }
+    return {
+        items: socialPosts.filter(inRange), from, to,
+        month: {
+            label: now.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' }), planned: socialPosts.filter(post => post.status !== 'idea').length, published: published.length,
+            reach: published.reduce((sum, post) => sum + reach(post), 0),
+            pillars: socialPillars.map(([key, label, target]) => ({ key, label, target, count: socialPosts.filter(post => post.pillar === key).length })),
+            arrivals: { instagram: 4, facebook: 1 },
+            best: published.map(post => ({ id: post.id, title: post.title, format: post.format, thumb: (post.media as Array<{ url: string }>)[0]?.url ?? null, published_at: post.published_at, reach: reach(post), metrics: post.metrics })),
+        },
+        pillars: socialPillars.map(([key, label]) => ({ key, label })),
+        meta: { ready: true, page: 'EyPlease', instagram: 'eyplease.mx' },
+    }
+}
 const growthFunnel = (period: string) => {
     const scale = period === 'trimestre' ? 7 : period === 'mes' ? 3 : 1
     const bySource = [
@@ -775,6 +804,45 @@ export const installMockApi = () => {
             response = respond([run])
         }
         else if (path === '/reports/dispatch-import' && method === 'POST') { await wait(300); response = respond(true) }
+        // Redes: el calendario (EJEMPLO, no toca Meta)
+        else if (path === '/social/posts' && method === 'GET') response = respond(socialCalendar(url.searchParams.get('from') ?? ymd(), url.searchParams.get('to') ?? ymd()))
+        else if (path === '/social/media' && method === 'POST') {
+            const file = (init?.body as FormData | undefined)?.get('file') as File | null
+            await wait(500)
+            response = respond({ url: file ? URL.createObjectURL(file) : demoPieceImg, path: null, type: file?.type.startsWith('video/') ? 'video' : 'image' })
+        }
+        else if (path === '/social/posts' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+            const media = (body.media as unknown[] | undefined) ?? []
+            const post = { id: `sp-${Date.now()}`, pillar: null, format: 'post', channels: ['ig', 'fb'], caption: null, scheduled_at: null, change_note: null, approved_at: null, approved_by: null, created_by: 'Administración Demo', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null, ...body, media, status: media.length ? 'review' : 'idea' }
+            socialPosts.push(post)
+            await wait(250)
+            response = respond(post)
+        }
+        else if (/^\/social\/posts\/[^/]+$/.test(path) && (method === 'PUT' || method === 'DELETE')) {
+            const index = socialPosts.findIndex(post => post.id === path.split('/')[3])
+            if (method === 'DELETE') { socialPosts.splice(index, 1); response = respond({ deleted: true }) }
+            else {
+                const body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+                const next = { ...socialPosts[index], ...body }
+                if (next.status === 'idea' && (next.media as unknown[]).length) next.status = 'review'
+                if (next.status === 'failed') next.status = 'review'
+                socialPosts[index] = next
+                await wait(250)
+                response = respond(next)
+            }
+        }
+        else if (/^\/social\/posts\/[^/]+\/(approve|request-change|unschedule|publish-now)$/.test(path) && method === 'POST') {
+            const [, , , id, action] = path.split('/')
+            const post = socialPosts.find(item => item.id === id)!
+            const body = JSON.parse(String(init?.body ?? '{}')) as { note?: string }
+            if (action === 'approve') Object.assign(post, { status: 'scheduled', approved_at: iso(0), approved_by: 'Administración Demo', change_note: null })
+            if (action === 'request-change') Object.assign(post, { status: 'production', change_note: body.note ?? null, approved_at: null, approved_by: null })
+            if (action === 'unschedule') Object.assign(post, { status: 'review', approved_at: null, approved_by: null })
+            if (action === 'publish-now') Object.assign(post, { status: 'scheduled', scheduled_at: iso(0), approved_by: 'Administración Demo' })
+            await wait(300)
+            response = respond(post)
+        }
         // Crecimiento: el embudo y a quién escribirle (datos de EJEMPLO)
         else if (path === '/growth/funnel') response = respond(growthFunnel(url.searchParams.get('period') ?? 'semana'))
         else if (path === '/growth/prospects') response = respond(growthProspects())

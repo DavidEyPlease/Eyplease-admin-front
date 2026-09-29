@@ -9,6 +9,7 @@ const GrowthTabs = () => (
         {[
             { to: APP_ROUTES.GROWTH.FUNNEL, label: 'Embudo' },
             { to: APP_ROUTES.GROWTH.PROSPECTS, label: 'Prospectos' },
+            { to: APP_ROUTES.GROWTH.SOCIAL, label: 'Redes' },
         ].map(tab => (
             <NavLink key={tab.to} to={tab.to} end className={({ isActive }) => cn(isActive && 'on')}>{tab.label}</NavLink>
         ))}
