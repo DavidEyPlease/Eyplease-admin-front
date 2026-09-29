@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import TaskBoard from './board/TaskBoard'
 import TaskCalendar from './calendar/TaskCalendar'
 import TaskList from './list/TaskList'
+import TaskSheet from './sheet/TaskSheet'
 
 type ViewMode = 'board' | 'calendar' | 'todo'
 
@@ -147,8 +148,10 @@ const TasksPage = () => {
                 </SideModal>
             )}
 
-            {selectedTask && (
-                <TaskDetail task={selectedTask} onClose={() => setSelectedTask(null)} />
+            {/* La ficha con la piel nueva va con el marco nuevo; con el de siempre, la de siempre */}
+            {selectedTask && (newShell
+                ? <TaskSheet key={selectedTask.id} task={selectedTask} onClose={() => setSelectedTask(null)} />
+                : <TaskDetail task={selectedTask} onClose={() => setSelectedTask(null)} />
             )}
         </div>
     )

@@ -91,11 +91,8 @@ export interface ITaskUpdate {
     status?: string;
     type?: string;
     user?: string | null;
-    metadata?: {
-        primaryColor?: string
-        secondaryColor?: string
-        tools_section?: string
-    }
+    /* La metadata va completa (la de Biblioteca se valida entera en la API: sección, fecha y planes) */
+    metadata?: Partial<ITask['metadata']> & { publication_date?: string | Date }
 }
 
 export interface ITaskActivity extends IBaseDBProperties {

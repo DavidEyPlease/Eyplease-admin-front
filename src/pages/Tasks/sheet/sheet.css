@@ -1,0 +1,253 @@
+/* La ficha de un pedido de diseño con la piel nueva: una ventana grande sobre la mesa, con la cabecera (qué es y
+   en qué etapa va), el trabajo al centro (lo que se pidió y los diseños en grande) y a un lado los datos y la
+   conversación. Va en portal, fuera de `.shell-page`: por eso trae sus propios tonos (y los redefine para que
+   las utilidades de Tailwind de adentro, como `bg-card`, tomen los mismos). */
+
+.ficha {
+    --background: #F5F4FB;
+    --card: #FFFFFF;
+    /* El gris del tema sobre este fondo lila quedaba en 4.4:1; un punto más oscuro pasa de 4.5 en todo */
+    --muted-foreground: #5F5B74;
+    --border: rgba(26, 24, 48, .09);
+    --line: rgba(26, 24, 48, .08);
+    --soft: rgba(26, 24, 48, .045);
+    position: fixed; z-index: 50; left: 50%; top: 50%;
+    width: min(1240px, calc(100vw - 32px)); height: min(920px, calc(100dvh - 32px));
+    display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
+    border-radius: 26px; background: var(--background); color: var(--foreground);
+    border: 1px solid var(--border);
+    box-shadow: 0 50px 120px -40px rgba(14, 8, 60, .7), 0 0 0 1px rgba(255, 255, 255, .5) inset;
+    transform: translate(-50%, -50%); outline: none;
+    animation: ficha-in .34s cubic-bezier(.2, .8, .2, 1) both;
+}
+.dark .ficha {
+    --muted-foreground: oklch(0.705 0.015 286.067);
+    --background: #100E1F;
+    --card: #17142B;
+    --border: rgba(255, 255, 255, .09);
+    --line: rgba(255, 255, 255, .07);
+    --soft: rgba(255, 255, 255, .05);
+    box-shadow: 0 50px 120px -40px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+}
+/* La luz de marca de arriba, la misma del marco */
+.ficha::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 240px; pointer-events: none; z-index: 0;
+    background: radial-gradient(55% 120% at 0% 0%, rgba(108, 71, 255, .13), transparent 62%), radial-gradient(45% 100% at 100% 0%, rgba(44, 212, 217, .11), transparent 60%);
+}
+.ficha > * { position: relative; z-index: 1; }
+@keyframes ficha-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 16px)) scale(.985); } }
+
+.ficha-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(14, 10, 38, .42); -webkit-backdrop-filter: blur(6px) saturate(1.2); backdrop-filter: blur(6px) saturate(1.2); animation: ficha-fade .25s ease both; }
+.dark .ficha-overlay { background: rgba(2, 1, 10, .6); }
+@keyframes ficha-fade { from { opacity: 0; } }
+
+/* ── Cabecera ─────────────────────────────────────────────────────────────────────────────────── */
+.ficha-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 16px 22px 14px; border-bottom: 1px solid var(--line); }
+.ficha-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; min-width: 0; padding-right: 84px; font-size: 12.5px; color: var(--muted-foreground); }
+/* Cerrar y «más» siempre en la esquina, aunque la línea de arriba se parta en dos */
+.ficha-actions { position: absolute; top: 12px; right: 14px; z-index: 2; display: flex; align-items: center; gap: 2px; }
+.ficha-meta .mesa-kind { font-size: 11.5px; color: color-mix(in oklab, var(--kind) 55%, var(--foreground)); }
+.ficha-num { font-weight: 800; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.ficha-saving { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: #059669; opacity: .9; transition: opacity .2s; }
+.ficha-saving.on { color: var(--muted-foreground); }
+.dark .ficha-saving { color: #34D399; }
+.dark .ficha-saving.on { color: var(--muted-foreground); }
+.ficha-x { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: var(--muted-foreground); cursor: pointer; transition: background .15s, color .15s; }
+.ficha-x:hover, .ficha-x[data-state="open"] { background: var(--soft); color: var(--foreground); }
+
+.ficha-title {
+    display: block; width: calc(100% + 18px); margin: 0 -9px; padding: 3px 9px;
+    resize: none; overflow: hidden; border: 0; outline: none; border-radius: 12px; background: transparent;
+    font-size: 23px; line-height: 1.22; font-weight: 800; letter-spacing: -.022em; color: var(--foreground);
+    transition: background .15s, box-shadow .15s;
+}
+.ficha-title:hover:not(:disabled) { background: var(--soft); }
+.ficha-title:focus { background: var(--card); box-shadow: 0 0 0 2px color-mix(in oklab, #6C47FF 55%, transparent); }
+.ficha-title:disabled { cursor: default; }
+
+.ficha-stagerow { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; min-width: 0; }
+.ficha-stages { position: relative; display: inline-flex; gap: 3px; padding: 3px; max-width: 100%; overflow-x: auto; border-radius: 14px; background: var(--soft); scrollbar-width: none; }
+.ficha-stages::-webkit-scrollbar { display: none; }
+.ficha-stage { --stage: #6C47FF; display: inline-flex; align-items: center; gap: 7px; flex: none; height: 34px; padding: 0 12px; border-radius: 11px; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground); white-space: nowrap; cursor: pointer; outline: none; transition: background .15s, color .15s, box-shadow .15s; }
+.ficha-stage i { width: 8px; height: 8px; flex: none; border-radius: 50%; background: color-mix(in oklab, var(--stage) 50%, transparent); transition: box-shadow .2s, background .2s; }
+.ficha-stage:hover:not(:disabled):not(.on), .ficha-stage[data-state="open"]:not(.on) { background: var(--soft); color: var(--foreground); }
+.ficha-stage:focus-visible { box-shadow: 0 0 0 2px color-mix(in oklab, #6C47FF 60%, transparent); }
+.ficha-stage.on { background: var(--card); color: var(--foreground); box-shadow: 0 1px 2px rgba(20, 16, 50, .08), 0 6px 16px -10px color-mix(in oklab, var(--stage) 80%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--stage) 50%, transparent); }
+.ficha-stage.on i { background: var(--stage); box-shadow: 0 0 0 3px color-mix(in oklab, var(--stage) 24%, transparent); }
+.ficha-stage small { font-size: 11.5px; font-weight: 700; color: color-mix(in oklab, var(--stage) 70%, var(--foreground)); }
+.ficha-stage:disabled { cursor: default; }
+.ficha-stages.locked .ficha-stage:not(.on) { opacity: .45; }
+
+.ficha-due { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--muted-foreground); background: var(--soft); }
+.ficha-due.late { color: #BE123C; background: rgba(244, 63, 94, .12); }
+.ficha-due.today { color: #92400E; background: rgba(245, 158, 11, .15); }
+.ficha-due.review { color: #0E7490; background: rgba(34, 211, 238, .14); }
+.ficha-due.stale { color: #92400E; background: rgba(245, 158, 11, .14); }
+.ficha-due.done { color: #065F46; background: rgba(16, 185, 129, .14); }
+.dark .ficha-due.late { color: #FB7185; }
+.dark .ficha-due.today, .dark .ficha-due.stale { color: #FCD34D; }
+.dark .ficha-due.review { color: #67E8F9; }
+.dark .ficha-due.done { color: #34D399; }
+.ficha-hint { margin-top: -2px; font-size: 12.5px; line-height: 1.4; color: var(--muted-foreground); }
+
+/* ── Cuerpo: el trabajo al centro, los datos y la conversación a un lado ───────────────────────── */
+.ficha-body { display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; }
+.ficha-main, .ficha-side { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 14px; scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent) transparent; }
+.ficha-main { padding: 18px 22px 30px; }
+.ficha-side { padding: 18px 18px 30px; border-left: 1px solid var(--line); background: color-mix(in oklab, var(--foreground) 2%, transparent); }
+
+.ficha-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; padding: 16px 18px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(20, 16, 50, .04); }
+.ficha-card__head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-width: 0; }
+.ficha-h { font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--foreground); }
+.ficha-sub { font-size: 11.5px; color: var(--muted-foreground); }
+.ficha-count { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--muted-foreground); background: var(--soft); }
+
+/* Botones y etiquetas de la ficha */
+.ficha-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 16px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); background: var(--card); color: var(--foreground); cursor: pointer; transition: background-color .2s, border-color .2s, transform .2s, filter .2s, opacity .2s; }
+.ficha-btn:hover:not(:disabled) { background: var(--soft); border-color: color-mix(in oklab, #6C47FF 40%, transparent); }
+.ficha-btn:disabled { opacity: .5; cursor: default; }
+.ficha-btn.sm { height: 32px; padding: 0 13px; font-size: 12.5px; }
+.ficha-btn.cta { border-color: transparent; color: #fff; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); box-shadow: 0 10px 24px -12px rgba(108, 71, 255, .9); }
+.ficha-btn.cta:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.15); border-color: transparent; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); }
+.ficha-btn.danger { border-color: transparent; color: #fff; background: #E11D48; box-shadow: 0 10px 22px -12px rgba(225, 29, 72, .9); }
+.ficha-btn.danger:hover:not(:disabled) { background: #BE123C; border-color: transparent; }
+
+.ficha-tag { display: inline-flex; align-items: center; gap: 4px; height: 21px; padding: 0 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .01em; white-space: nowrap; color: var(--muted-foreground); background: var(--soft); }
+.ficha-tag.hot { color: #BE123C; background: rgba(244, 63, 94, .12); }
+.dark .ficha-tag.hot { color: #FB7185; }
+
+.ficha-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--muted-foreground); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.ficha-chip:hover { color: var(--foreground); border-color: color-mix(in oklab, #6C47FF 40%, transparent); }
+.ficha-chip.on { background: var(--foreground); border-color: transparent; color: var(--background); }
+
+/* ── Lo que se pidió ──────────────────────────────────────────────────────────────────────────── */
+.ficha-desc { display: block; width: calc(100% + 16px); margin: -4px -8px; padding: 6px 8px; resize: none; overflow: hidden; border: 0; outline: none; border-radius: 12px; background: transparent; font-size: 14px; line-height: 1.6; color: var(--foreground); white-space: pre-wrap; transition: background .15s, box-shadow .15s; }
+.ficha-desc::placeholder { color: var(--muted-foreground); }
+.ficha-desc:hover:not(:disabled) { background: var(--soft); }
+.ficha-desc:focus { background: var(--background); box-shadow: 0 0 0 2px color-mix(in oklab, #6C47FF 50%, transparent); }
+.ficha-desc:disabled { cursor: default; }
+
+.ficha-swatch { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; font-variant-numeric: tabular-nums; }
+.ficha-swatch i { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.ficha-swatch b { margin-right: 6px; font-weight: 700; color: var(--muted-foreground); }
+
+.ficha-event { display: grid; gap: 8px; padding: 12px 14px; border-radius: 16px; background: var(--soft); }
+
+/* ── Diseños ──────────────────────────────────────────────────────────────────────────────────── */
+.ficha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); gap: 14px; }
+.ficha-grid.small { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.ficha-tile { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; min-width: 0; margin: 0; cursor: grab; }
+.ficha-grid.small .ficha-tile { cursor: default; }
+.ficha-tile__img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: var(--soft); border: 1px solid var(--border); cursor: zoom-in; outline: none; transition: box-shadow .2s, border-color .2s; }
+.ficha-tile__img:focus-visible { box-shadow: 0 0 0 2px #6C47FF; }
+.ficha-tile:hover .ficha-tile__img { border-color: color-mix(in oklab, #6C47FF 45%, transparent); box-shadow: 0 16px 30px -20px rgba(76, 52, 196, .7); }
+.ficha-tile__img img, .ficha-tile__img video { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.2, .8, .2, 1); }
+.ficha-tile:hover .ficha-tile__img img { transform: scale(1.03); }
+.ficha-tile__file { display: grid; place-items: center; align-content: center; gap: 6px; height: 100%; font-size: 12px; font-weight: 800; letter-spacing: .04em; color: var(--muted-foreground); }
+.ficha-tile__num { position: absolute; left: 8px; top: 8px; display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #fff; background: rgba(15, 12, 40, .6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); pointer-events: none; }
+.ficha-tile__acts { position: absolute; right: 8px; top: 8px; display: flex; gap: 5px; opacity: 0; transform: translateY(-4px); transition: opacity .15s, transform .15s; }
+.ficha-tile:hover .ficha-tile__acts, .ficha-tile:focus-within .ficha-tile__acts { opacity: 1; transform: none; }
+@media (hover: none) { .ficha-tile__acts { opacity: 1; transform: none; } }
+.ficha-tile__cap { min-width: 0; font-size: 11.5px; line-height: 1.35; color: var(--muted-foreground); }
+.ficha-tile__cap b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--foreground); }
+.ficha-grid.small .ficha-tile__cap { display: none; }
+
+.ficha-iconbtn { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; color: #1A1830; background: rgba(255, 255, 255, .94); box-shadow: 0 6px 14px -6px rgba(0, 0, 0, .45); cursor: pointer; transition: transform .15s, color .15s; }
+.ficha-iconbtn:hover { transform: translateY(-1px); color: #4E31C0; }
+.ficha-iconbtn.danger:hover { color: #E11D48; }
+.ficha-iconbtn.plain { background: transparent; box-shadow: none; color: var(--muted-foreground); }
+.ficha-iconbtn.plain:hover { background: var(--soft); }
+
+/* Formkit marca así la tarjeta que se arrastra */
+.ficha-grid [data-dragging], .ficha-tile.dragging { opacity: .45; }
+
+.ficha-drop { display: grid; place-items: center; gap: 6px; width: 100%; padding: 30px 16px; border-radius: 18px; border: 1.5px dashed color-mix(in oklab, var(--foreground) 18%, transparent); text-align: center; font-size: 12.5px; line-height: 1.45; color: var(--muted-foreground); cursor: pointer; transition: border-color .15s, background .15s; }
+.ficha-drop:hover { border-color: color-mix(in oklab, #6C47FF 55%, transparent); background: color-mix(in oklab, #6C47FF 5%, transparent); }
+.ficha-dropmask { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; align-content: center; gap: 8px; border-radius: 20px; border: 2px dashed #6C47FF; background: color-mix(in oklab, #6C47FF 10%, var(--card)); font-size: 14px; font-weight: 800; color: #5B47E0; pointer-events: none; }
+.dark .ficha-dropmask { color: #B9ABFF; }
+
+.ficha-template { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 12px; border-radius: 14px; background: var(--soft); }
+.ficha-seg { display: inline-flex; flex: none; padding: 2px; border-radius: 10px; background: var(--soft); }
+.ficha-seg button { height: 26px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--muted-foreground); cursor: pointer; }
+.ficha-seg button.on { background: var(--card); color: var(--foreground); box-shadow: 0 1px 3px rgba(20, 16, 50, .12); }
+
+/* ── Datos ────────────────────────────────────────────────────────────────────────────────────── */
+.ficha-facts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin: 0 -6px; }
+.ficha-fact { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: 6px; min-height: 40px; }
+.ficha-fact > dt { display: flex; align-items: center; gap: 7px; padding-left: 6px; font-size: 12px; font-weight: 600; color: var(--muted-foreground); }
+.ficha-control { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; height: 36px; padding: 0 10px; border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--foreground); text-align: left; cursor: pointer; outline: none; transition: background .15s; }
+.ficha-control:hover:not(:disabled), .ficha-control[data-state="open"] { background: var(--soft); }
+.ficha-control:focus-visible { box-shadow: 0 0 0 2px color-mix(in oklab, #6C47FF 55%, transparent); }
+.ficha-control:disabled { cursor: default; }
+.ficha-control .chev { flex: none; margin-left: auto; opacity: .45; }
+.ficha-control:disabled .chev { display: none; }
+.ficha-late.late { color: #BE123C; }
+.ficha-late.today { color: #92400E; }
+.dark .ficha-late.late { color: #FB7185; }
+.dark .ficha-late.today { color: #FCD34D; }
+.ficha-plan { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: var(--soft); }
+.ficha-plan i { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ── Conversación ─────────────────────────────────────────────────────────────────────────────── */
+.ficha-composer { display: grid; gap: 8px; padding: 10px 10px 10px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--background); transition: border-color .15s, box-shadow .15s; }
+.ficha-composer:focus-within { border-color: color-mix(in oklab, #6C47FF 55%, transparent); box-shadow: 0 0 0 3px color-mix(in oklab, #6C47FF 14%, transparent); }
+.ficha-composer textarea { display: block; width: 100%; min-height: 42px; max-height: 180px; padding: 2px 0; resize: none; border: 0; outline: none; background: transparent; font-size: 13.5px; line-height: 1.45; color: var(--foreground); overflow-y: auto; }
+.ficha-composer textarea::placeholder { color: var(--muted-foreground); }
+
+.ficha-timeline { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.ficha-msg { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; min-width: 0; }
+.ficha-msg__head { display: flex; align-items: center; gap: 6px; min-width: 0; margin-bottom: 4px; font-size: 12.5px; }
+.ficha-msg__head b { font-weight: 800; }
+.ficha-msg__head time { font-size: 11px; color: var(--muted-foreground); }
+.ficha-msg__body { padding: 9px 12px; border-radius: 4px 14px 14px 14px; background: var(--soft); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+.ficha-msg__body * { max-width: 100%; }
+.ficha-msg.fix .ficha-msg__body { background: rgba(244, 63, 94, .09); box-shadow: inset 0 0 0 1px rgba(244, 63, 94, .28); }
+.ficha-sys { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; font-size: 12px; line-height: 1.4; color: var(--muted-foreground); }
+.ficha-sys > span:first-child { display: grid; place-items: center; width: 28px; height: 18px; }
+.ficha-sys b { font-weight: 700; color: color-mix(in oklab, var(--foreground) 80%, transparent); }
+.ficha-sys time { white-space: nowrap; opacity: .85; }
+
+/* ── El visor de diseños ──────────────────────────────────────────────────────────────────────── */
+.ficha-viewer-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(6, 4, 18, .9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: ficha-fade .2s ease both; }
+.ficha-viewer { position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; color: #fff; outline: none; animation: ficha-fade .2s ease both; }
+.ficha-viewer__bar { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 18px; }
+.ficha-viewer__btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 11px; font-size: 12.5px; font-weight: 700; color: #fff; background: rgba(255, 255, 255, .1); cursor: pointer; transition: background .15s; }
+.ficha-viewer__btn:hover { background: rgba(255, 255, 255, .2); }
+/* Filas y columnas con medida: sin ellas el `max-height: 100%` de la imagen no tiene contra qué medirse y la pieza
+   se sale por abajo */
+.ficha-viewer__stage { position: relative; display: grid; grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); place-items: center; min-height: 0; padding: 0 72px 12px; }
+.ficha-viewer__stage img, .ficha-viewer__stage video { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .9); animation: ficha-fade .25s ease both; }
+.ficha-viewer__nav { position: absolute; top: 50%; display: grid; place-items: center; width: 48px; height: 48px; margin-top: -24px; border-radius: 50%; color: #fff; background: rgba(255, 255, 255, .12); cursor: pointer; transition: background .15s, transform .15s; }
+.ficha-viewer__nav:hover { background: rgba(255, 255, 255, .24); transform: scale(1.05); }
+.ficha-viewer__nav.left { left: 16px; }
+.ficha-viewer__nav.right { right: 16px; }
+.ficha-viewer__strip { display: flex; justify-content: center; gap: 8px; padding: 6px 18px 18px; overflow-x: auto; }
+.ficha-viewer__strip button { flex: none; width: 48px; height: 60px; overflow: hidden; border-radius: 9px; opacity: .5; outline: 2px solid transparent; outline-offset: 2px; cursor: pointer; transition: opacity .15s, outline-color .15s; background: rgba(255, 255, 255, .08); font-size: 10px; font-weight: 800; }
+.ficha-viewer__strip button.on { opacity: 1; outline-color: #fff; }
+.ficha-viewer__strip button:hover { opacity: .9; }
+.ficha-viewer__strip img, .ficha-viewer__strip video { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── En pantallas chicas: una sola columna que se desplaza entera ─────────────────────────────── */
+@media (max-width: 1023px) {
+    /* Sin `max-content` y con el `min-height: 0` de escritorio, las dos partes se encogían y se encimaban */
+    .ficha-body { grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; overflow-y: auto; }
+    .ficha-main, .ficha-side { min-height: auto; overflow: visible; }
+    .ficha-side { border-left: 0; border-top: 1px solid var(--line); background: transparent; }
+}
+@media (max-width: 640px) {
+    .ficha { left: 0; top: 0; width: 100vw; height: 100dvh; border-radius: 0; border: 0; transform: none; animation-name: ficha-in-phone; }
+    .ficha-head { padding: 14px 16px 12px; }
+    .ficha-title { font-size: 20px; }
+    .ficha-main { padding: 14px 12px 20px; }
+    .ficha-side { padding: 14px 12px 28px; }
+    .ficha-card { padding: 14px; border-radius: 18px; }
+    .ficha-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .ficha-viewer__stage { padding: 0 8px 10px; }
+    .ficha-viewer__nav { top: auto; bottom: 18px; margin-top: 0; }
+    .ficha-stagerow .ficha-btn.cta { width: 100%; margin-left: 0; }
+}
+@keyframes ficha-in-phone { from { opacity: 0; transform: translateY(24px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .ficha, .ficha-overlay, .ficha-viewer, .ficha-viewer-overlay, .ficha-viewer__stage img { animation: none !important; }
+}

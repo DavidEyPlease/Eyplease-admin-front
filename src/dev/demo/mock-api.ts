@@ -142,7 +142,7 @@ const downloadRuns = ([
 })).reverse()
 
 /* Una pieza de mentira: un mosaico con su rótulo, sin imágenes de nadie */
-const tile = (label: string, a: string, b: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="200" cy="190" r="70" fill="rgba(255,255,255,.22)"/><rect x="90" y="300" width="220" height="18" rx="9" fill="rgba(255,255,255,.55)"/><rect x="130" y="332" width="140" height="12" rx="6" fill="rgba(255,255,255,.35)"/><text x="200" y="440" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="800" fill="rgba(255,255,255,.85)">${label}</text></svg>`)}`
+const tile = (label: string, a: string, b: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="200" cy="190" r="70" fill="rgba(255,255,255,.22)"/><rect x="90" y="300" width="220" height="18" rx="9" fill="rgba(255,255,255,.55)"/><rect x="130" y="332" width="140" height="12" rx="6" fill="rgba(255,255,255,.35)"/><text x="200" y="440" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="800" fill="rgba(255,255,255,.85)">${label}</text></svg>`)}`
 const tiles = (label: string, n: number, a: string, b: string) => Array.from({ length: n }, (_, index) => tile(`${label} ${index + 1}`, index % 2 ? b : a, index % 2 ? a : b))
 
 const pulse = {
@@ -175,6 +175,22 @@ const utilData = {
     task_statuses: [['Sin asignar', 'unassigned'], ['En proceso', 'in-progress'], ['Lista para revisión', 'ready-for-review'], ['Corrección', 'correction'], ['Completada', 'completed'], ['Lista para publicar', 'ready-for-publish'], ['Subir recursos AE', 'upload_ae_resources'], ['Publicada', 'published']].map(([name, slug], index) => ({ id: `ts-${index}`, name, slug })),
 }
 
+/* Lo que se pidió, de EJEMPLO: los pedidos de clienta llegan del Asistente en renglones «Campo: valor» */
+const demoBrief = (consecutive: number, title: string, type: number) => {
+    const [piece, ...rest] = title.split(' · ')
+    if (consecutive === 597) return null
+    if (type === 0) return [`Tipo de pieza: ${piece}`, `Asunto: ${rest.join(' · ') || piece}`, consecutive === 581 ? 'Datos: junta con las nuevas estrellas del mes, que se note la celebración' : 'Nota: pedido de EJEMPLO para revisar la ficha', 'Formato: historia y publicación'].join('\n')
+    if (type === 1) return `Diseño para la biblioteca de las clientas: ${title}. Texto e imagen de EJEMPLO; se personaliza con la foto de cada una.`
+    return `Material de entrenamiento: ${title}. Pedido de EJEMPLO.`
+}
+
+const demoMetadata = (consecutive: number, type: number, days: number): Record<string, unknown> => {
+    if (consecutive === 597) return { kind: 'clone_reel', topic: 'Rutina de noche en tres pasos', script: null, product: 'TimeWise Repair', audience: 'clientas', variants: 2 }
+    if (type === 0) return consecutive % 2 ? { primaryColor: '#6C47FF', secondaryColor: '#F9A8D4' } : {}
+    if (type === 1) return { tools_section: consecutive === 189 ? 'get_started' : 'learn', plan_ids: consecutive % 2 ? ['plan-0', 'plan-1', 'plan-2'] : ['plan-1', 'plan-2'], publication_date: dueIn(days) }
+    return {}
+}
+
 /* Tareas: el tablero espera una LISTA (no una página). Hay de todo: de clientas, de Biblioteca y de
    entrenamientos, en todas las etapas, con atrasadas y de hoy para que se vean los avisos. */
 const dueIn = (days: number, hour = 22) => { const d = new Date(now); d.setDate(d.getDate() + days); d.setHours(hour, 0, 0, 0); return d.toISOString() }
@@ -188,15 +204,113 @@ const demoTasks = ([
     [4, 'Premios trimestrales', 2, 1, -246, 2, 0], [41, 'Entérate Ya · marzo', 2, 2, -210, 2, 0], [189, 'Frases para comenzar en Mary Kay', 1, 1, -141, 2, 0],
     [592, 'Flyer · Promo de reactivación', 2, 0, -1, null, 1], [594, 'Invitación · Desayuno de estrellas', 2, 0, -4, null, 2],
     [548, 'Historia · Tip de maquillaje', 7, 1, -10, 2, 0], [545, 'Carrusel · Rutina de noche', 7, 1, -12, 0, 1], [541, 'Reconocimiento · Reina del mes', 4, 0, -14, 1, 1], [538, 'Publicación · Frase del viernes', 7, 1, -16, 2, 0],
+    /* Un reel con su clon: pedido de clienta que se distingue por su metadata */
+    [597, 'Reel con mi clon · Rutina de noche', 1, 0, 1, 0, 0],
 ] as Array<[number, string, number, number, number, number | null, number]>).map(([consecutive, title, status, type, days, designer, files]) => ({
-    id: `task-${consecutive}`, consecutive, title, description: 'Pedido de EJEMPLO para revisar el tablero.',
+    id: `task-${consecutive}`, consecutive, title, description: demoBrief(consecutive, title, type) as string | null,
     started_at: dueIn(days - 1, 9), expired_at: dueIn(days), task_status: utilData.task_statuses[status], task_type: utilData.task_types[type],
-    created_by: type === 0 ? { id: `u-${consecutive % 10}`, name: `Clienta de ejemplo ${'ABCDEFGHIJ'[consecutive % 10]}` } : null,
-    assigned_to: designer === null ? null : demoDesigners[designer], files: Array.from({ length: files }, (_, index) => ({ id: `f-${consecutive}-${index}` })), metadata: {},
+    created_by: type === 0 ? { id: `u-${consecutive % 10}`, name: `CLIENTA DE EJEMPLO ${'ABCDEFGHIJ'[consecutive % 10]}` } : { id: 'demo-admin', name: 'Administración Demo' },
+    assigned_to: designer === null ? null : demoDesigners[designer] as (typeof demoDesigners)[number] | null, files: Array.from({ length: files }, (_, index) => ({ id: `f-${consecutive}-${index}` })),
+    metadata: demoMetadata(consecutive, type, days) as Record<string, unknown>,
     created_at: iso((5 - days) * 1440), updated_at: iso(30),
     /* Desde cuándo espera: lo entregado a revisión, desde su entrega */
     last_activity_at: iso(Math.max(0, -days) * 1440 + 90), completed_at: [4, 5, 7].includes(status) ? dueIn(days) : null,
 }))
+type DemoTask = (typeof demoTasks)[number]
+
+/* La ficha: archivos (diseños del equipo y lo que mandó la clienta), plantillas de Nexrender y la conversación de
+   cada pedido. Se arman la primera vez que se abre y luego cambian de verdad (subir, borrar, ordenar, comentar). */
+type DemoPerson = { id: string, name: string, profile_picture?: null }
+type DemoFile = { id: string, uploaded_by: DemoPerson, file: { id: string, url: string, uri: string, name: string, ext: string, sort: number }, file_type: string | null, template_asset_type: string | null, created_at: string }
+type DemoActivity = { id: string, activity_type: string, activity_description: string, user: DemoPerson | null, created_at: string }
+const demoFiles = new Map<string, DemoFile[]>()
+const demoActivity = new Map<string, DemoActivity[]>()
+let demoSeq = 0
+const demoId = (prefix: string) => `${prefix}-${++demoSeq}`
+const PALETTES: Array<[string, string]> = [['#6C47FF', '#2CD4D9'], ['#E5077D', '#6C47FF'], ['#F59E0B', '#E5077D'], ['#4E31C0', '#2CD4D9'], ['#10B981', '#2CD4D9']]
+const slugOf = (text: string) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 28)
+
+const demoFile = (task: DemoTask, name: string, by: DemoPerson, sort: number, minutesAgo: number, fileType: string | null = 'image', label?: string): DemoFile => {
+    const ext = name.split('.').pop() ?? 'png'
+    const [a, b] = PALETTES[(task.consecutive + sort) % PALETTES.length]
+    return {
+        id: demoId('att'), uploaded_by: { id: by.id, name: by.name },
+        file: { id: demoId('file'), url: fileType === 'nexrender_template' ? '' : tile(label ?? `${ext.toUpperCase()} ${sort + 1}`, a, b), uri: `private/tasks/${task.id}/attachments/${name}`, name, ext, sort },
+        file_type: fileType, template_asset_type: fileType === 'nexrender_template' ? 'image' : null, created_at: iso(minutesAgo),
+    }
+}
+
+const filesOf = (task: DemoTask) => {
+    if (!demoFiles.has(task.id)) {
+        const designer = task.assigned_to ?? demoDesigners[0]
+        const base = slugOf(task.title)
+        const list: DemoFile[] = []
+        /* Lo que mandó la clienta: su foto y una referencia (sólo en sus pedidos) */
+        if (task.task_type.slug === 'user-service-request' && task.created_by && task.consecutive % 3 !== 1) {
+            list.push(demoFile(task, 'referencia-que-me-gusta.jpg', task.created_by, list.length, 3 * 1440, null, 'Referencia'))
+            if (task.consecutive % 2) list.push(demoFile(task, 'foto-de-la-festejada.jpg', task.created_by, list.length, 3 * 1440 - 5, null, 'Foto'))
+        }
+        task.files.forEach((_, index) => list.push(demoFile(task, `${base}-${index + 1}.png`, designer, list.length, 1440 - index * 3, 'image', `Propuesta ${index + 1}`)))
+        if (task.task_type.slug === 'tools' && task.files.length) list.push(demoFile(task, `biblioteca_${task.consecutive}.zip`, designer, list.length, 600, 'nexrender_template'))
+        demoFiles.set(task.id, list)
+    }
+    return demoFiles.get(task.id)!
+}
+
+const activityOf = (task: DemoTask) => {
+    if (!demoActivity.has(task.id)) {
+        const created = new Date(task.created_at).getTime()
+        const at = (hours: number) => new Date(Math.min(Date.now() - 60_000, created + hours * 3_600_000)).toISOString()
+        const creator: DemoPerson = task.created_by ?? { id: 'demo-admin', name: 'Administración Demo' }
+        const designer: DemoPerson = task.assigned_to ?? demoDesigners[0]
+        const list: DemoActivity[] = [{ id: demoId('act'), activity_type: 'created', activity_description: 'ha creado esta tarea', user: creator, created_at: at(0) }]
+        const stage = task.task_status.slug
+        if (task.assigned_to) {
+            list.push({ id: demoId('act'), activity_type: 'updated', activity_description: `ha cambiado el responsable de la tarea a ${designer.name}`, user: { id: 'demo-admin', name: 'Administración Demo' }, created_at: at(1) })
+            list.push({ id: demoId('act'), activity_type: 'comment', activity_description: 'Arranco con esto. Si hay foto de la festejada, la uso de fondo.', user: designer, created_at: at(2) })
+        }
+        filesOf(task).filter(file => file.uploaded_by.id === designer.id && file.file_type !== 'nexrender_template').forEach((file, index) => list.push({ id: demoId('act'), activity_type: 'attachment', activity_description: `Ha agregado el adjunto ${file.file.name}`, user: designer, created_at: at(5 + index * .02) }))
+        if (!['unassigned', 'in-progress'].includes(stage)) list.push({ id: demoId('act'), activity_type: 'updated', activity_description: 'ha cambiado el estado de la tarea a Lista para revisión', user: designer, created_at: at(6) })
+        if (stage === 'correction') {
+            list.push({ id: demoId('act'), activity_type: 'request_correction', activity_description: '¿Me lo cambian a las <b>11:00</b>? La junta se movió. Gracias', user: creator, created_at: at(8) })
+            list.push({ id: demoId('act'), activity_type: 'updated', activity_description: 'ha cambiado el estado de la tarea a Corrección', user: creator, created_at: at(8.01) })
+        }
+        demoActivity.set(task.id, list.sort((a, b) => b.created_at.localeCompare(a.created_at)))
+    }
+    return demoActivity.get(task.id)!
+}
+
+const logActivity = (task: DemoTask, activity_type: string, activity_description: string, user: DemoPerson = { id: me.id, name: me.name }) =>
+    activityOf(task).unshift({ id: demoId('act'), activity_type, activity_description, user, created_at: new Date().toISOString() })
+
+/* La invitación de la #581 trae su evento (fecha, hora y lugar), como las que llegan del registro de eventos */
+const demoEvent = (task: DemoTask) => task.consecutive !== 581 ? null : {
+    id: 'ev-581', title: task.title, description: null, start_date: dueIn(4, 10), event_type: 'presential', service: null, online_data: null,
+    event_dates: [{ id: 'evd-1', start_date: dueIn(4, 10), end_date: dueIn(4, 13), location: 'Salón Las Palmas · Av. Juárez 120, Celaya' }],
+}
+
+/* XHR hacia el S3 de mentira: la subida de archivos del panel usa XMLHttpRequest (para la barra de progreso), no fetch */
+const installDemoUploads = () => {
+    const open = XMLHttpRequest.prototype.open
+    const send = XMLHttpRequest.prototype.send
+    XMLHttpRequest.prototype.open = function (this: XMLHttpRequest & { demoS3?: boolean }, method: string, url: string | URL, ...rest: unknown[]) {
+        this.demoS3 = String(url).startsWith('https://demo-s3.invalid/')
+        return (open as (...args: unknown[]) => void).call(this, method, url, ...rest)
+    } as typeof XMLHttpRequest.prototype.open
+    XMLHttpRequest.prototype.send = function (this: XMLHttpRequest & { demoS3?: boolean }, body?: Document | XMLHttpRequestBodyInit | null) {
+        if (!this.demoS3) return send.call(this, body)
+        const total = body instanceof Blob ? body.size || 1 : 1
+        let loaded = 0
+        const tick = () => {
+            loaded = Math.min(total, loaded + total / 3)
+            ;(this.upload.onprogress as ((event: ProgressEvent) => void) | null)?.(new ProgressEvent('progress', { lengthComputable: true, loaded, total }))
+            if (loaded < total) return void setTimeout(tick, 180)
+            Object.defineProperty(this, 'status', { value: 200, configurable: true })
+            ;(this.onload as ((event: ProgressEvent) => void) | null)?.(new ProgressEvent('load'))
+        }
+        setTimeout(tick, 180)
+    }
+}
 
 /* ── Clientas, cobranza y matriz de reportes (gente inventada) ─────────────────────────────── */
 const demoClients = ([
@@ -512,6 +626,7 @@ const demoRetoItem = (reto: DemoReto) => ({
 export const installMockApi = () => {
     const base = import.meta.env.VITE_API_URL as string
     const realFetch = window.fetch.bind(window)
+    installDemoUploads()
 
     window.fetch = async (input, init) => {
         const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
@@ -624,18 +739,111 @@ export const installMockApi = () => {
             response = respond(demoTasks.filter(task => (!statuses.length || statuses.includes(task.task_status.id)) && (!month || new Date(task.started_at).getMonth() + 1 === month || new Date(task.expired_at).getMonth() + 1 === month)))
         }
         else if (/^\/tasks\/task-\d+$/.test(path) && method === 'PATCH') {
-            const body = JSON.parse(String(init?.body ?? '{}')) as { status?: string, user?: string | null }
+            /* Como TaskService::patchTask: asignar a alguien lo regresa a «En proceso»; «Sin asignar» le quita a quien lo hace */
+            const body = JSON.parse(String(init?.body ?? '{}')) as { status?: string, user?: string | null, title?: string, description?: string, started_at?: string, expired_at?: string, expired_at_time?: string, metadata?: Record<string, unknown> }
             const task = demoTasks.find(item => item.id === path.split('/')[2])
-            if (task && body.status) task.task_status = utilData.task_statuses.find(item => item.id === body.status) ?? task.task_status
-            if (task && 'user' in body) task.assigned_to = demoDesigners.find(item => item.id === body.user) ?? null
+            const byId = (slug: string) => utilData.task_statuses.find(item => item.slug === slug)!
+            if (task && body.status) {
+                task.task_status = utilData.task_statuses.find(item => item.id === body.status) ?? task.task_status
+                if (task.task_status.slug === 'unassigned') task.assigned_to = null
+                if (['completed', 'ready-for-publish', 'published'].includes(task.task_status.slug)) task.completed_at = new Date().toISOString()
+                logActivity(task, 'updated', `ha cambiado el estado de la tarea a ${task.task_status.name}`)
+            }
+            if (task && 'user' in body) {
+                task.assigned_to = demoDesigners.find(item => item.id === body.user) ?? null
+                if (task.assigned_to) task.task_status = byId('in-progress')
+                logActivity(task, 'updated', task.assigned_to ? `ha cambiado el responsable de la tarea a ${task.assigned_to.name}` : 'ha eliminado el responsable de la tarea')
+            }
+            if (task && body.title) task.title = body.title
+            if (task && typeof body.description === 'string') task.description = body.description
             /* El calendario cambia de día un pedido con `started_at` */
-            if (task && (body as { started_at?: string }).started_at) task.started_at = (body as { started_at: string }).started_at
+            if (task && body.started_at) task.started_at = new Date(body.started_at).toISOString()
+            if (task && (body.expired_at || body.expired_at_time)) {
+                const next = body.expired_at ? new Date(body.expired_at) : new Date(task.expired_at)
+                const [hours, minutes] = (body.expired_at_time ?? '').split(':').map(Number)
+                const previous = new Date(task.expired_at)
+                next.setHours(body.expired_at_time ? hours : previous.getHours(), body.expired_at_time ? minutes : previous.getMinutes(), 0, 0)
+                task.expired_at = next.toISOString()
+                logActivity(task, 'updated', `establecio que la fecha de vencimiento de la tarea fuera: ${next.toLocaleDateString('es-MX')} ${next.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })}`)
+            }
+            if (task && body.metadata) task.metadata = body.metadata
+            if (task) task.last_activity_at = new Date().toISOString()
             await wait(350)
-            response = respond(task ?? null, task ? 200 : 404)
+            response = respond(task ? { ...task, created_by: undefined } : null, task ? 200 : 404)
         }
-        else if (/^\/tasks\/task-\d+$/.test(path) && method === 'GET') response = respond(demoTasks.find(item => item.id === path.split('/')[2]) ?? null)
-        else if (/^\/tasks\/task-\d+\/activity$/.test(path)) response = respond([])
-        else if (/^\/tasks\/task-\d+\/attachments$/.test(path)) response = respond([])
+        else if (/^\/tasks\/task-\d+$/.test(path) && method === 'DELETE') {
+            const index = demoTasks.findIndex(item => item.id === path.split('/')[2])
+            if (index >= 0) demoTasks.splice(index, 1)
+            await wait(400)
+            response = respond({ message: 'Task deleted successfully' }, index >= 0 ? 200 : 404)
+        }
+        else if (/^\/tasks\/task-\d+$/.test(path) && method === 'GET') {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])
+            response = respond(task ? { ...task, event: demoEvent(task) } : null, task ? 200 : 404)
+        }
+        else if (/^\/tasks\/task-\d+\/activity$/.test(path)) {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])
+            const type = url.searchParams.get('activity_type')
+            await wait(250)
+            response = respond(task ? activityOf(task).filter(item => !type || type === 'all' || item.activity_type === type) : [])
+        }
+        else if (/^\/tasks\/task-\d+\/comment$/.test(path) && method === 'POST') {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])
+            const comment = String(JSON.parse(String(init?.body ?? '{}')).comment ?? '')
+            if (task) logActivity(task, 'comment', comment)
+            await wait(300)
+            response = respond(task ? activityOf(task)[0] : null, task ? 200 : 404)
+        }
+        else if (/^\/tasks\/task-\d+\/attachments$/.test(path) && method === 'GET') {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])
+            const type = url.searchParams.get('file_type')
+            await wait(300)
+            const list = task ? [...filesOf(task)].sort((a, b) => a.file.sort - b.file.sort) : []
+            response = respond(type ? list.filter(file => file.file_type === type) : list)
+        }
+        else if (/^\/tasks\/task-\d+\/attachments$/.test(path) && method === 'POST') {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])!
+            const uris = (JSON.parse(String(init?.body ?? '{}')).file_uris ?? []) as Array<{ fileUri: string, name: string, extension: string, file_type?: string }>
+            const list = filesOf(task)
+            const created = uris.map(item => {
+                const file = demoFile(task, item.name, { id: me.id, name: me.name }, list.length, 0, item.file_type ?? null, item.name.replace(/\.[^.]+$/, '').slice(0, 16))
+                list.push(file)
+                logActivity(task, 'attachment', `Ha agregado el adjunto ${item.name.replace(/\.[^.]+$/, '')}`)
+                return file
+            })
+            await wait(400)
+            response = respond(created)
+        }
+        else if (/^\/tasks\/task-\d+\/attachments\/[\w-]+$/.test(path) && method === 'DELETE') {
+            const [, , taskId, , attachmentId] = path.split('/')
+            const task = demoTasks.find(item => item.id === taskId)
+            const list = task ? filesOf(task) : []
+            const index = list.findIndex(item => item.id === attachmentId)
+            const [gone] = index >= 0 ? list.splice(index, 1) : []
+            if (task && gone) logActivity(task, 'attachment', `Ha eliminado el archivo adjunto ${gone.file.name}`)
+            await wait(350)
+            response = respond(gone ?? null, gone ? 200 : 404)
+        }
+        else if (/^\/tasks\/task-\d+\/attachments\/[\w-]+$/.test(path) && method === 'PATCH') {
+            const [, , taskId, , attachmentId] = path.split('/')
+            const task = demoTasks.find(item => item.id === taskId)
+            const file = task ? filesOf(task).find(item => item.id === attachmentId) : null
+            if (file) file.template_asset_type = JSON.parse(String(init?.body ?? '{}')).template_asset_type ?? null
+            response = respond(file ? 1 : 0)
+        }
+        else if (/^\/tasks\/task-\d+\/upload-template$/.test(path) && method === 'POST') {
+            const task = demoTasks.find(item => item.id === path.split('/')[2])!
+            const uri = String(JSON.parse(String(init?.body ?? '{}')).file_uri ?? 'plantilla.zip')
+            filesOf(task).push(demoFile(task, uri.split('/').pop() ?? 'plantilla.zip', { id: me.id, name: me.name }, filesOf(task).length, 0, 'nexrender_template'))
+            await wait(700)
+            response = respond([])
+        }
+        else if (path === '/files/sort' && method === 'PUT') {
+            const ids = (JSON.parse(String(init?.body ?? '{}')).file_ids ?? []) as string[]
+            demoFiles.forEach(list => list.forEach(item => { const index = ids.indexOf(item.file.id); if (index >= 0) item.file.sort = index }))
+            await wait(250)
+            response = respond(true)
+        }
         else if (path === '/clients' && method === 'GET') {
             const search = (url.searchParams.get('search') ?? '').toLowerCase()
             /* `?country=` como el API: sólo las de ese país; sin él, todas */
