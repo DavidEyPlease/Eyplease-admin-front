@@ -16,7 +16,10 @@ export interface ClientDebt {
     currency: string
     periods: DebtPeriod[]
     days_overdue: number
+    /** Activa: si la app sólo la deja entrar a pagar. Dada de baja: si así quedaría al reactivarla. */
     account_blocked: boolean
+    /** Dada de baja: el mes en curso que se le crearía al reactivarla (null si ya lo debe o no se le cobra por fecha). */
+    on_reactivation?: { period: string, amount: number } | null
 }
 
 /**

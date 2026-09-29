@@ -11,6 +11,30 @@ const ymd = (d = now) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.ge
 const iso = (minutesAgo = 0) => new Date(now.getTime() - minutesAgo * 60000).toISOString()
 const period = (back = 0) => { const d = new Date(now.getFullYear(), now.getMonth() - back, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}` }
 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+
+/* El cierre de mes de EJEMPLO: cuatro que llegan debiendo el mes y una que se salva por su promesa de pago */
+const demoMonthClose = { enabled: false }
+const monthClosePreview = () => {
+    const closing = period(0)
+    const next = (() => { const d = new Date(now.getFullYear(), now.getMonth() + 1, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}` })()
+    const row = (n: number, name: string, total: number, days: number, nextAmount: number, extra: Record<string, unknown> = {}) => ({
+        user_id: `u-mc-${n}`, account: `EJ-01${n}`, name, email: `ejemplo${n}@ejemplo.com`,
+        owed: [{ period: closing, amount: total, status: 'overdue' }], total, currency: 'MXN', days_late: days,
+        next_period: next, next_amount: nextAmount, ...extra,
+    })
+    return {
+        period: closing, next_period: next, enabled: demoMonthClose.enabled,
+        pause: [
+            row(1, 'Clienta de ejemplo Uno', 349, 24, 349),
+            row(2, 'Clienta de ejemplo Dos', 377, 21, 659, { owed: [{ period: closing, amount: 377, status: 'partial' }] }),
+            row(3, 'Clienta de ejemplo Tres', 969, 24, 969),
+            row(4, 'Clienta de ejemplo Cuatro', 349, 10, 349, { email: null }),
+        ],
+        spared: [row(5, 'Clienta de ejemplo Cinco', 659, 24, 659, { reason: 'promesa de pago hasta el 5 de octubre' })],
+    }
+}
+const monthCloseMail = (row: { name: string, total: number, next_amount: number }) => `<!doctype html><html lang="es"><body style="margin:0;padding:32px;background:#f4f4f5;font-family:Arial,sans-serif"><div style="max-width:560px;margin:auto;background:#fff;border-radius:12px;padding:40px"><h1 style="font-size:22px;color:#18181b">¡Hola, ${row.name.split(' ')[0]}!</h1><p style="color:#52525b;font-size:15px;line-height:1.6">Correo de EJEMPLO (el real lo arma la API): su cuenta quedó en pausa. Para volver: $${row.total} pendientes + $${row.next_amount} del mes en curso.</p></div></body></html>`
+
 const today = now.getDate()
 
 const me = {
@@ -874,7 +898,8 @@ export const installMockApi = () => {
                 .map(([key, payment]) => ({ period: key, remaining: payment.amount - (payment.paid ?? 0), status: payment.status }))
             const late = periods.some(item => item.status !== 'pending')
             await wait(350)
-            response = respond({ total: periods.reduce((sum, item) => sum + item.remaining, 0), currency: 'MXN', periods, days_overdue: gone ? 85 : late ? 12 : 0, account_blocked: gone })
+            /* Dada de baja: al reactivarla se le crea el mes en curso (como la API desde el cierre de mes) */
+            response = respond({ total: periods.reduce((sum, item) => sum + item.remaining, 0), currency: 'MXN', periods, days_overdue: gone ? 85 : late ? 12 : 0, account_blocked: gone, on_reactivation: gone ? { period: period(0), amount: 349 } : null })
         }
         else if (/^\/clients\/c-\d+$/.test(path) && method === 'GET') {
             /* La ficha espera `{ client, stats }`, no la clienta suelta */
@@ -898,6 +923,18 @@ export const installMockApi = () => {
             if (method === 'DELETE') delete crCapturas[id]
             await wait(300)
             response = respond(pinkCircleColombia())
+        }
+        /* El cierre de mes (MonthCloseService): quién se pausaría el día 1 y el correo; el interruptor vive en los ajustes */
+        else if (path === '/finance/month-close' && method === 'GET') response = respond(monthClosePreview())
+        else if (path === '/finance/month-close/mail' && method === 'GET') {
+            const row = [...monthClosePreview().pause, ...monthClosePreview().spared].find(item => item.account === url.searchParams.get('account'))
+            response = row ? new Response(monthCloseMail(row), { status: 200, headers: { 'Content-Type': 'text/html' } }) : respond(null, 404)
+        }
+        else if (path === '/finance/payment-methods/settings' && method === 'PUT') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { month_close_enabled?: boolean }
+            if (typeof body.month_close_enabled === 'boolean') demoMonthClose.enabled = body.month_close_enabled
+            await wait(350)
+            response = respond({ month_close_enabled: demoMonthClose.enabled })
         }
         else if (path === '/finance/card-issues') response = respond(cardIssues)
         else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }

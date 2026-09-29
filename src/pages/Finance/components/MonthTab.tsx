@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { MONTH_LABELS, formatMoney, periodLabelIn, periodRemaining } from "@/utils/finance"
 import useFinanceBalance from "../useFinanceBalance"
 import CardIssues from "./CardIssues"
+import MonthClose from "./MonthClose"
 import { useFinanceClientsPage, useReviewReceipt } from "../useFinanceClients"
 import { useFinanceSummary } from "../useFinanceSummary"
 import "@/pages/Hoy/hoy.css"
@@ -117,6 +118,9 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
 
             {/* Lo que Stripe no pudo cobrar, con el porqué: va antes que todo porque es dinero que se está yendo */}
             <CardIssues />
+
+            {/* Quién llega debiendo al día 1 y qué le pasará (el cierre de mes) */}
+            <MonthClose />
 
             {/* Lo que hay que hacer */}
             <div className="grid gap-[18px] lg:grid-cols-2">

@@ -32,24 +32,33 @@ const monthsOwed = (periods: string[]) => {
 }
 
 /**
- * Lo que debe, dicho ANTES de confirmar. Al activarla es un aviso: le vuelve a aparecer y, si ya pasó
- * el plazo, la app sólo la deja entrar a pagar. Al desactivarla, que no se pierde: se queda guardado.
+ * Lo que debe, dicho ANTES de confirmar. Al activarla es un aviso: le vuelve a aparecer, se le crea el mes en curso y
+ * la app sólo la deja entrar a pagar hasta que pague todo (lo que debía más ese mes). Al desactivarla, que no se
+ * pierde: se queda guardado.
  */
 const DebtNotice = ({ debt, activating }: { debt: ClientDebt, activating: boolean }) => {
     const amount = moneyIn(debt.total, debt.currency)
     const months = monthsOwed(debt.periods.map(item => item.period))
     const late = debt.days_overdue > 0
+    const current = activating ? debt.on_reactivation ?? null : null
 
     if (!activating) {
         return <p><b className="font-semibold text-foreground">Lo que debe ({amount} de {months}) se queda guardado</b> en Finanzas → Cobranza → «Bajas con adeudo», y le vuelve a aparecer si la activas.</p>
     }
 
+    const currentText = current ? `se le crea ${periodLabel(current.period).toLowerCase()} (${moneyIn(current.amount, debt.currency)})` : null
+    const toReturn = moneyIn(debt.total + (current?.amount ?? 0), debt.currency)
+
     return (
         <p className="flex gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-[13px] text-amber-800 dark:text-amber-300">
             <ReceiptTextIcon className="mt-0.5 size-4 shrink-0" />
             <span>
-                <b className="font-semibold">Debe {amount}</b> de {months}. Al activarla le vuelve a aparecer en {late ? '«A quién cobrarle»' : 'la cobranza'}
-                {debt.account_blocked ? ' y la app sólo la dejará entrar a pagar hasta que se ponga al corriente.' : late ? ' y la app le mostrará el aviso de pago.' : '.'}
+                {debt.total > 0 ? <><b className="font-semibold">Debe {amount}</b> de {months}. </> : <><b className="font-semibold">No debe nada.</b> </>}
+                Al activarla {debt.total > 0 ? `le vuelve a aparecer en ${late ? '«A quién cobrarle»' : 'la cobranza'}` : ''}
+                {currentText ? `${debt.total > 0 ? ', ' : ''}${currentText}` : ''}
+                {debt.account_blocked
+                    ? ` y la app sólo la dejará entrar a pagar ${current || debt.total > 0 ? toReturn : ''} hasta que se ponga al corriente.`
+                    : late ? ' y la app le mostrará el aviso de pago.' : '.'}
             </span>
         </p>
     )
@@ -114,13 +123,13 @@ const StatusDialog = ({ target, onClose, onChanged }: { target: StatusTarget | n
                                     <p><b className="font-semibold text-foreground">No se borra nada:</b> sus datos, sus pagos y sus piezas se quedan, y la puedes activar cuando quieras.</p>
                                 </>
                             ) : (
-                                <p>Vuelve a poder entrar con su contraseña de siempre, se le vuelven a hacer sus publicaciones y, si tiene día de pago, se le vuelve a generar su cobro.</p>
+                                <p>Vuelve a poder entrar con su contraseña de siempre y se le vuelven a hacer sus publicaciones. Antes de usar la app paga lo que deba más el mes en curso (si tiene día de pago, ese mes se le crea al activarla).</p>
                             )}
 
                             {checking && <p className="flex items-center gap-2 text-[12.5px]"><Loader2Icon className="size-3.5 animate-spin" />Revisando si debe algo…</p>}
                             {failed && <p className="text-[12.5px]">No se pudo revisar si debe algo.</p>}
-                            {debt && debt.total > 0 && <DebtNotice debt={debt} activating={!active} />}
-                            {debt && debt.total <= 0 && !active && <p className="text-[12.5px]">No debe nada.</p>}
+                            {debt && (debt.total > 0 || (!active && debt.on_reactivation)) && <DebtNotice debt={debt} activating={!active} />}
+                            {debt && debt.total <= 0 && !active && !debt.on_reactivation && <p className="text-[12.5px]">No debe nada.</p>}
 
                             {active && shown?.paysByCard && (
                                 <p className="flex gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-[13px] text-amber-800 dark:text-amber-300">

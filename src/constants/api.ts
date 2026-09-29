@@ -149,6 +149,9 @@ export const API_ROUTES = {
         CARD_ISSUES: '/finance/card-issues',
         CARD_ISSUES_SCAN: '/finance/card-issues/scan',
         CARD_ISSUE_LINK: '/finance/card-issues/{id}/card-link',
+        /** Cierre de mes: a quién se pausaría el día 1 (y por qué no a otras) y el correo que le llegaría. */
+        MONTH_CLOSE: '/finance/month-close',
+        MONTH_CLOSE_MAIL: '/finance/month-close/mail',
         SUMMARY: '/finance/summary',
         BALANCE: '/finance/balance',
         EXPENSES: {
