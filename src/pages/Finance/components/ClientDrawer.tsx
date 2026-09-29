@@ -6,15 +6,18 @@ import SideModal from "@/components/common/SideModal"
 import Spinner from "@/components/common/Spinner"
 import DateInput from "@/components/common/Inputs/DateInput"
 import { PaymentStatus } from "@/interfaces/finance"
-import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodLabelIn, periodYear, periodsForYear, promiseState } from "@/utils/finance"
+import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodLabelIn, periodPaid, periodYear, periodsForYear, promiseState } from "@/utils/finance"
 import { MarkPaymentInput, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
 import { StatusPill } from "./ui"
 
 // "En revisión" only displays: it is set by the client's receipt upload and
 // resolved from Cobranza (Validar / Rechazar), never picked by hand.
+// «Parcial» tampoco se elige: sale de registrar un abono (Cobranza → Gestionar → Abonar). Sin
+// la opción, un mes abonado se veía «—», como si no tuviera nada.
 const STATUS_OPTIONS: { value: Exclude<PaymentStatus, null>; label: string; disabled?: boolean }[] = [
     { value: "paid", label: "Pagado" },
     { value: "overdue", label: "Retraso" },
+    { value: "partial", label: "Parcial", disabled: true },
     { value: "pending", label: "Pendiente" },
     { value: "in_review", label: "En revisión", disabled: true },
 ]
@@ -178,6 +181,9 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                         </div>
                                         {p?.status === "paid" && p.paidAt && (
                                             <span className="shrink-0 text-[11px] text-muted-foreground" title="Fecha del pago">{formatPaidAt(p.paidAt)}</span>
+                                        )}
+                                        {p?.status === "partial" && (
+                                            <span className="shrink-0 text-[11px] text-sky-600 dark:text-sky-400" title="Lo abonado del mes">abonó {formatMoney(periodPaid(p))}</span>
                                         )}
                                         {p?.receiptUrl && (
                                             <a href={p.receiptUrl} target="_blank" rel="noreferrer" title="Ver comprobante" className="shrink-0 text-[#5B47E0] dark:text-[#A99BFF] hover:opacity-80">

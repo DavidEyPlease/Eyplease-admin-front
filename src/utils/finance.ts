@@ -58,13 +58,16 @@ export const formatPct = (n: number | null | undefined) =>
     Number.isFinite(n) ? `${Math.round(n as number)}%` : "—"
 
 const dueDateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" })
+const dueDateWithYearFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", year: "numeric" })
 
 /**
  * Human due date from an API date 'YYYY-MM-DD': "5 ago" (or "—"). Parsed as a
  * calendar date, not as UTC midnight, so it never slips a day west of UTC.
+ * La de otro año lleva su año («5 dic 2026» visto en enero): con la deuda de años
+ * anteriores a la vista, «5 dic» a secas se leería como el diciembre que viene.
  */
 export const formatDueDate = (isoDate: string | null | undefined): string =>
-    isoDate ? dueDateFmt.format(toLocalDateFromUtc(isoDate)) : "—"
+    isoDate ? (isoDate.slice(0, 4) === todayMx().slice(0, 4) ? dueDateFmt : dueDateWithYearFmt).format(toLocalDateFromUtc(isoDate)) : "—"
 
 /** Period 'YYYY-MM' of an API date 'YYYY-MM-DD'. */
 export const periodOf = (isoDate: string) => isoDate.slice(0, 7)
@@ -74,6 +77,7 @@ export const periodOf = (isoDate: string) => isoDate.slice(0, 7)
 const MX_TZ = "America/Mexico_City"
 const ymdMx = new Intl.DateTimeFormat("en-CA", { timeZone: MX_TZ, year: "numeric", month: "2-digit", day: "2-digit" })
 const paidAtFmt = new Intl.DateTimeFormat("es-MX", { timeZone: MX_TZ, day: "numeric", month: "short" })
+const paidAtWithYearFmt = new Intl.DateTimeFormat("es-MX", { timeZone: MX_TZ, day: "numeric", month: "short", year: "numeric" })
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
 /** Hoy en México, 'YYYY-MM-DD'. */
@@ -89,8 +93,12 @@ export const paidAtOn = (day: Date) => `${ymd(day)}T12:00:00-06:00`
 /** 'YYYY-MM-DD' del día elegido en el calendario (sin corrimiento de zona). */
 export const dateOnly = (day: Date) => ymd(day)
 
-/** «5 sep» de un `paid_at` de la API, en hora de México. */
-export const formatPaidAt = (iso: string | null | undefined) => (iso ? paidAtFmt.format(new Date(iso)) : "—")
+/** «5 sep» de un `paid_at` de la API, en hora de México; si es de otro año, con su año («20 dic 2026»). */
+export const formatPaidAt = (iso: string | null | undefined) => {
+    if (!iso) return "—"
+    const date = new Date(iso)
+    return (ymdMx.format(date).slice(0, 4) === todayMx().slice(0, 4) ? paidAtFmt : paidAtWithYearFmt).format(date)
+}
 
 /** Si la promesa sigue en pie (hasta ese día incluido) o ya se venció. */
 export const promiseState = (promisedUntil: string | null | undefined): "active" | "expired" | null =>

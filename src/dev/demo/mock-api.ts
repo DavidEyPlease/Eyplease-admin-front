@@ -273,7 +273,7 @@ const financeLedger: Record<string, Record<string, DemoPayment>> = {
 }
 /* Bajas con adeudo: cuentas desactivadas que se fueron debiendo (sólo salen con `inactive=1`) */
 const financeInactiveLedger: Record<string, Record<string, DemoPayment>> = {
-    'EJ-010': { [lastDecember]: { amount: 349, paid: 0, status: 'overdue' }, [period(2)]: { amount: 349, paid: 0, status: 'overdue' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
+    'EJ-010': { [lastDecember]: { amount: 349, paid: 0, status: 'overdue' }, [period(2)]: { amount: 349, paid: 300, status: 'partial' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
 }
 /* Promesas de pago por cuenta ('YYYY-MM-DD'): una en pie y, al guardarlas, las que se pongan */
 const ymdAhead = (days: number) => { const d = new Date(now.getTime() + days * 86400000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
@@ -292,7 +292,10 @@ const financeClients = (status: string, inactive = false, year = now.getFullYear
     const items = matching.map(([account, payments], index) => {
         const client = demoClients.find(item => item.account === account)
         const balance = Object.values(payments).reduce((sum, payment) => sum + remainingOf(payment), 0)
-        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance, promotion: null, next_charge_date: null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
+        const paymentDay = Math.min(28, today + 1 + index * 2)
+        /* Como la API: con deuda, el próximo cobro es el día de pago del mes más viejo que debe */
+        const oldestOwed = Object.keys(payments).sort().find(p => ['pending', 'partial', 'overdue'].includes(payments[p].status))
+        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: paymentDay, phone: null, balance, promotion: null, next_charge_date: oldestOwed ? `${oldestOwed}-${pad(paymentDay)}` : null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
     })
     /* Los totales, sobre TODO el filtro y con lo arrastrado, como getTotals de la API */
     const total = (statuses: string[]) => matching.reduce((sum, [, payments]) => sum + Object.values(payments).filter(payment => statuses.includes(payment.status)).reduce((acc, payment) => acc + remainingOf(payment), 0), 0)
