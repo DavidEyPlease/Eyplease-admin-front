@@ -66,6 +66,10 @@ export const APP_ROUTES = {
     SALES: {
         OPPORTUNITIES: '/ventas',
     },
+    GROWTH: {
+        FUNNEL: '/crecimiento',
+        PROSPECTS: '/crecimiento/prospectos',
+    },
     CHALLENGES: {
         LIST: '/retos',
         DETAIL: '/retos/:id',
@@ -106,6 +110,23 @@ export const SIDEBAR_ITEMS: MenuItem[] = [
         // Quien lleva clientas o finanzas también ve las oportunidades; 'sales' queda para un permiso propio en el panel
         permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
         icon: 'sales',
+    },
+    {
+        key: PermissionKeys.GROWTH_FUNNEL,
+        label: 'Embudo',
+        path: APP_ROUTES.GROWTH.FUNNEL,
+        requiredPermission: true,
+        // Lo ve quien ve Ventas: es la otra mitad del mismo trabajo
+        permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
+        icon: 'funnel',
+    },
+    {
+        key: PermissionKeys.GROWTH_PROSPECTS,
+        label: 'Prospectos',
+        path: APP_ROUTES.GROWTH.PROSPECTS,
+        requiredPermission: true,
+        permissionKeys: [PermissionKeys.SALES, PermissionKeys.FINANCES, PermissionKeys.CLIENTS],
+        icon: 'prospects',
     },
     {
         key: PermissionKeys.REPORTS_MONITOR,

@@ -37,6 +37,49 @@ const monthCloseMail = (row: { name: string, total: number, next_amount: number 
 
 const today = now.getDate()
 
+/* Crecimiento de EJEMPLO: gente inventada. La bitácora vive en memoria mientras la pestaña esté abierta */
+const growthContacts: Array<{ id: string, target: string, action: string, at: string, plan_interest?: boolean }> = []
+const growthPlans = { standard: { id: 'ps', name: 'Standard', price: 99 }, basico: { id: 'pb', name: 'Básico', price: 349 }, ejecutivo: { id: 'pe', name: 'Ejecutivo', price: 659 } }
+const gp = (n: number, group: string, name: string, extra: Record<string, unknown>) => ({
+    key: `user:u-g${n}`, kind: 'account', id: `u-g${n}`, group, name, account: `EJ-09${String(n).padStart(2, '0')}`, profile: 'Directora', rank: 'Directora de Ventas',
+    phone: `44231${String(80000 + n * 137).slice(0, 5)}`, country_code: 'MEX', email: `prospecto${n}@ejemplo.com`, plan: { name: 'Plan Gratis', free: true, price: 0 }, on_trial: false,
+    source: 'instagram', registered_at: iso(9 * 1440), last_activity_at: iso(120), uses_app: true, signals: [], suggested_plan: growthPlans.basico, contact: null, ...extra,
+})
+const growthProspects = () => {
+    const items = [
+        gp(1, 'lista', 'Laura Méndez Ortiz', { signals: ['Llegó al tope: 10 de 10 clientas', 'Compartió 14 piezas', 'Subió 2 reportes'] }),
+        gp(2, 'lista', 'Karina Ríos Salazar', { rank: 'Directora Ejecutiva', source: 'invitacion', registered_at: iso(4 * 1440), signals: ['La invitó Ana Luisa Pérez (EJ-0231)', 'Pidió el Plan Ejecutivo', 'Subió 1 reporte'], suggested_plan: growthPlans.ejecutivo }),
+        gp(3, 'lista', 'Patricia Solís Vega', { profile: 'Consultora', rank: 'Consultora de Belleza', source: 'facebook', registered_at: iso(12 * 1440), plan: { name: 'Plan Gratis Consultora', free: true, price: 0 }, signals: ['Llegó al tope: 5 de 5 clientas', 'Compartió 6 piezas'], suggested_plan: growthPlans.standard }),
+        { key: 'wa:5214772210000', kind: 'whatsapp', id: '5214772210000', group: 'lista', name: 'Guadalupe Herrera', account: null, profile: 'Consultora', rank: null, phone: '5214772210000', country_code: null, email: null, plan: null, on_trial: false, source: 'whatsapp', registered_at: iso(6 * 1440), last_activity_at: iso(300), uses_app: false, signals: ['Escribió al WhatsApp', 'El bot la marcó como interesada', 'Le interesa: felicitar a sus clientas'], suggested_plan: null, contact: null, bot_stage: 'calificado' },
+        gp(5, 'nueva', 'Mónica Salgado', { source: 'invitacion', registered_at: iso(180), last_activity_at: iso(170), uses_app: false, signals: ['La invitó Karla Núñez (EJ-0412)', 'Sin reporte cargado'] }),
+        gp(6, 'nueva', 'Irma Fuentes', { profile: 'Consultora', rank: 'Consultora de Belleza', registered_at: iso(1300), uses_app: false, phone: null, plan: { name: 'Plan Gratis Consultora', free: true, price: 0 }, signals: [], suggested_plan: growthPlans.standard }),
+        gp(7, 'fria', 'Adriana Villegas', { registered_at: iso(11 * 1440), last_activity_at: iso(11 * 1440 - 30), uses_app: false, signals: ['Sin reporte cargado'] }),
+        gp(8, 'fria', 'Claudia Ibarra', { profile: 'Consultora', rank: 'Consultora de Belleza', source: 'directo', registered_at: iso(8 * 1440), last_activity_at: null, uses_app: false, plan: { name: 'Plan Gratis Consultora', free: true, price: 0 }, signals: [], suggested_plan: growthPlans.standard }),
+        gp(9, 'fria', 'Norma Ledesma', { source: 'facebook', registered_at: iso(6 * 1440), last_activity_at: iso(6 * 1440 - 20), uses_app: false, signals: ['Sin reporte cargado'] }),
+        gp(10, 'calentando', 'Rosa María Treviño', { registered_at: iso(7 * 1440), signals: ['Revisó los planes 2 veces', 'Compartió 3 piezas', 'Subió 1 reporte'] }),
+        gp(11, 'calentando', 'Verónica Almaraz', { source: 'facebook', registered_at: iso(10 * 1440), signals: ['Registró 2 clientas', 'Sin reporte cargado'] }),
+        gp(12, 'calentando', 'Elena Castañeda', { profile: 'Consultora', rank: 'Consultora de Belleza', source: 'invitacion', registered_at: iso(5 * 1440), plan: { name: 'Plan Gratis Consultora', free: true, price: 0 }, signals: ['Registró 3 clientas'], suggested_plan: growthPlans.standard }),
+    ].map(item => {
+        const last = [...growthContacts].reverse().find(contact => contact.target === item.key)
+        return last ? { ...item, contact: { id: last.id, action: last.action, note: null, at: last.at, by: 'Administración Demo' } } : item
+    }).filter(item => !item.contact || item.contact.action === 'written')
+    const summary = Object.fromEntries(['lista', 'nueva', 'fria', 'calentando'].map(group => [group, items.filter(item => item.group === group).length]))
+    return { items, summary, bot: { allowed: true, available: true }, days: 60, generated_at: iso(0) }
+}
+const growthFunnel = (period: string) => {
+    const scale = period === 'trimestre' ? 7 : period === 'mes' ? 3 : 1
+    const bySource = [
+        { source: 'invitacion', registered: 5 * scale, uses: 4 * scale, pays: 2 * scale, monthly: 698 * scale },
+        { source: 'instagram', registered: 14 * scale, uses: 7 * scale, pays: 1 * scale, monthly: 349 * scale },
+        { source: 'facebook', registered: 9 * scale, uses: 4 * scale, pays: 1 * scale, monthly: 99 * scale },
+        { source: 'directo', registered: 6 * scale, uses: 3 * scale, pays: 0, monthly: 0 },
+        { source: 'whatsapp', registered: 4 * scale, uses: 3 * scale, pays: 0, monthly: 0 },
+    ]
+    const sum = (key: 'registered' | 'uses' | 'pays' | 'monthly') => bySource.reduce((total, row) => total + row[key], 0)
+    const current = { registered: sum('registered'), uses: sum('uses'), wants: 9 * scale, pays: sum('pays'), lost: 15 * scale, monthly: sum('monthly'), by_source: bySource }
+    return { period, from: iso(7 * 1440 * scale), to: iso(0), current, previous: { registered: 29 * scale, uses: 16 * scale, wants: 6 * scale, pays: 3 * scale, lost: 12 * scale, monthly: 1047 * scale } }
+}
+
 const me = {
     id: 'demo-admin', name: 'Administración Demo', email: 'demo@ejemplo.com', profile_picture: null, username: 'DEMOADMIN',
     country: 'MEX', phone: '0000000000', on_notifications: true, on_biometric_auth: false,
@@ -732,6 +775,27 @@ export const installMockApi = () => {
             response = respond([run])
         }
         else if (path === '/reports/dispatch-import' && method === 'POST') { await wait(300); response = respond(true) }
+        // Crecimiento: el embudo y a quién escribirle (datos de EJEMPLO)
+        else if (path === '/growth/funnel') response = respond(growthFunnel(url.searchParams.get('period') ?? 'semana'))
+        else if (path === '/growth/prospects') response = respond(growthProspects())
+        else if (path === '/growth/contacts' && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { target: string, action: string }
+            const contact = { id: `gc-${Date.now()}`, target: body.target, action: body.action, at: iso(0) }
+            growthContacts.push(contact)
+            await wait(250)
+            response = respond({ id: contact.id, action: contact.action, note: null, at: contact.at, by: 'Administración Demo' })
+        }
+        else if (path.startsWith('/growth/contacts/') && method === 'DELETE') {
+            const index = growthContacts.findIndex(contact => contact.id === path.split('/')[3])
+            if (index >= 0) growthContacts.splice(index, 1)
+            response = respond({ deleted: true })
+        }
+        else if (/^\/growth\/prospects\/[^/]+\/to-sales$/.test(path) && method === 'POST') {
+            const contact = { id: `gc-${Date.now()}`, target: `user:${path.split('/')[3]}`, action: 'to_sales', at: iso(0) }
+            growthContacts.push(contact)
+            await wait(300)
+            response = respond({ id: contact.id, action: contact.action, note: null, at: contact.at, by: 'Administración Demo' })
+        }
         // Ventas (fase 3/4): regalos y paquetes, quién quiere subir de plan, Directoras invitadas
         else if (path.startsWith('/plan-gifts') || path.startsWith('/plan-interests') || path.startsWith('/director-prospects')) {
             const demoUser = (name: string, code: string, plan: string) => ({ id: `u-${code}`, name, email: `${code.toLowerCase()}@ejemplo.com`, phone: '4611234567', username: code, network_person: { id: `np-${code}`, name, consultant_code: code }, plan: { id: 'p', name: plan } })

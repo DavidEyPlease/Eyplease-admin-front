@@ -37,6 +37,10 @@ export const PermissionKeys = {
     SALES: 'sales',
     // Retos de las Directoras: la base de las piezas de ganadora (se mide aquí) y publicar las que esperan
     CHALLENGES: 'challenges',
+    // Crecimiento: el embudo de las cuentas que se registran solas y a quién escribirle (llaves sólo del front: lo ve
+    // quien ve Ventas, y la API lo cuida con `staff`)
+    GROWTH_FUNNEL: 'growth_funnel',
+    GROWTH_PROSPECTS: 'growth_prospects',
 } as const;
 
 export type PermissionKeys = typeof PermissionKeys[keyof typeof PermissionKeys];

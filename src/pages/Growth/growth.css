@@ -1,0 +1,66 @@
+/* Crecimiento: reusa la fila de Ventas (ventas.css) y el pulso del Hoy (hoy.css); aquí sólo lo suyo. */
+
+/* El canto de color dice el grupo sin tener que leer */
+.gro-row[data-g="lista"] { --edge: linear-gradient(180deg, #E5077D, #6C47FF); }
+.gro-row[data-g="nueva"] { --edge: linear-gradient(180deg, #2CD4D9, #6C47FF); }
+.gro-row[data-g="fria"] { --edge: linear-gradient(180deg, #5B8DEF, #2CD4D9); }
+.gro-row[data-g="calentando"] { --edge: linear-gradient(180deg, #F59E0B, #E5077D); }
+
+.gro-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+
+.gro-signals { display: flex; flex-wrap: wrap; gap: 5px 14px; }
+.gro-signals span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted-foreground); }
+.gro-signals svg { color: #6C47FF; flex: 0 0 auto; }
+.dark .gro-signals svg { color: #A894FF; }
+
+/* El mensaje sugerido, con el verde de WhatsApp */
+.gro-msg { border-radius: 16px; padding: 12px 14px; background: color-mix(in oklab, #25D366 9%, transparent); border: 1px solid color-mix(in oklab, #25D366 28%, transparent); animation: pulse-rise .3s both; }
+.gro-msg-label { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #059669; }
+.dark .gro-msg-label { color: #34D399; }
+
+/* El botón que mueve de etapa: el degradado de la marca */
+.vta-btn.gro-primary { border-color: transparent; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); color: #fff; box-shadow: 0 10px 22px -12px rgba(108, 71, 255, .9); }
+.vta-btn.gro-primary:hover:not(:disabled) { filter: saturate(1.15); transform: translateY(-1px); }
+
+.gro-chip { display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); color: var(--muted-foreground); cursor: pointer; transition: background-color .2s, border-color .2s, color .2s; }
+.gro-chip:hover { color: var(--foreground); }
+.gro-chip.on { color: var(--foreground); border-color: color-mix(in oklab, #6C47FF 55%, transparent); background: color-mix(in oklab, #6C47FF 12%, transparent); }
+
+.gro-tabs { display: inline-flex; justify-self: start; gap: 3px; padding: 4px; border-radius: 16px; }
+.gro-tabs a { padding: 7px 15px; border-radius: 12px; font-size: 13px; font-weight: 700; color: var(--muted-foreground); transition: color .2s, background-color .2s; }
+.gro-tabs a:hover { color: var(--foreground); background: color-mix(in oklab, var(--foreground) 5%, transparent); }
+.gro-tabs a.on { color: #fff; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); box-shadow: 0 10px 24px -12px rgba(108, 71, 255, .9); }
+
+/* El embudo: cuatro escalones con su barra y lo que pasa al siguiente */
+.gro-funnel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.gro-step { min-width: 0; animation: pulse-rise .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+.gro-bar { height: 9px; border-radius: 999px; background: color-mix(in oklab, var(--foreground) 7%, transparent); overflow: hidden; }
+.gro-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(135deg, #4E31C0 0%, #6C47FF 48%, #2CD4D9 120%); transform-origin: left; animation: gro-grow 1s cubic-bezier(.2, .8, .2, 1) both .2s; }
+@keyframes gro-grow { from { transform: scaleX(0); } }
+.gro-conv { display: table; margin: 9px 0 0 auto; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; color: var(--muted-foreground); border: 1px solid var(--border); }
+.gro-conv.leak { color: #E11D48; border-color: rgba(244, 63, 94, .45); background: rgba(244, 63, 94, .1); }
+.dark .gro-conv.leak { color: #FB7185; }
+
+.gro-leak { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; border-radius: 22px; padding: 16px 20px; border: 1px solid rgba(229, 7, 125, .32); background: linear-gradient(120deg, rgba(229, 7, 125, .1), rgba(108, 71, 255, .07)); }
+.gro-leak-num { font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -.03em; color: #DB2777; }
+.dark .gro-leak-num { color: #FF5FAE; }
+
+.gro-table { border-collapse: collapse; font-size: 13px; }
+.gro-table th { text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted-foreground); padding: 0 10px 9px 0; white-space: nowrap; }
+.gro-table td { padding: 10px 10px 10px 0; border-top: 1px solid var(--border); vertical-align: middle; }
+.gro-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.gro-table tr.best td { background: color-mix(in oklab, #10B981 8%, transparent); }
+.gro-table tr.best td:first-child { box-shadow: inset 3px 0 0 #10B981; padding-left: 8px; }
+.gro-table td:first-child, .gro-table th:first-child { padding-left: 2px; }
+
+.gro-insight { font-size: 12.5px; line-height: 1.5; padding: 10px 13px; border-radius: 14px; background: color-mix(in oklab, #6C47FF 6%, transparent); border: 1px solid var(--border); color: var(--muted-foreground); }
+.gro-insight b { color: var(--foreground); }
+.gro-insight code { font-size: 11.5px; padding: 1px 5px; border-radius: 6px; background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--foreground); }
+
+@media (max-width: 767px) {
+    .gro-funnel { grid-template-columns: minmax(0, 1fr); }
+    .gro-leak { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .gro-step, .gro-bar i, .gro-msg { animation: none !important; }
+}

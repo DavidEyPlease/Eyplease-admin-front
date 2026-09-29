@@ -14,6 +14,8 @@ export const ADMIN_COPY: Partial<Record<PermissionKeys, { label?: string, hint: 
     [PermissionKeys.FINANCES]: { hint: 'Lo cobrado, lo pendiente y los comprobantes por validar' },
     [PermissionKeys.CONFIGURATION]: { label: 'Configuración', hint: 'Planes, precios y permisos de cada rol' },
     [PermissionKeys.SALES]: { hint: 'Quién quiere subir de plan, regalar Eyplease+ a su unidad, y las Directoras que llegan invitadas' },
+    [PermissionKeys.GROWTH_PROSPECTS]: { hint: 'A quién escribirle hoy: las que se registraron gratis y los que escribieron al WhatsApp' },
+    [PermissionKeys.GROWTH_FUNNEL]: { hint: 'Del registro al pago: dónde se quedan y de dónde vienen las que pagan' },
     [PermissionKeys.CHALLENGES]: { hint: 'Los retos de las Directoras: medir la base de sus ganadoras y publicar las que esperan' },
 }
 export const adminLabelOf = (item: MenuItem) => ADMIN_COPY[item.key]?.label ?? item.label

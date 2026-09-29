@@ -7,7 +7,7 @@ import { IconServices } from '@/components/Svg/IconServices'
 import { IconPosts } from '@/components/Svg/IconPosts'
 import { IconSetting } from '@/components/Svg/IconSetting'
 import { IconCardPos } from '@/components/Svg/IconCardPos'
-import { ProjectorIcon, ClipboardCheckIcon, MessageCircleMoreIcon, GiftIcon, TrophyIcon } from 'lucide-react'
+import { ProjectorIcon, ClipboardCheckIcon, MessageCircleMoreIcon, GiftIcon, TrophyIcon, FilterIcon, UsersRoundIcon } from 'lucide-react'
 
 export const ICONS: { [key: string]: React.FC } = {
     'home': IconHome,
@@ -24,4 +24,6 @@ export const ICONS: { [key: string]: React.FC } = {
     'chat': MessageCircleMoreIcon,
     'sales': GiftIcon,
     'challenges': TrophyIcon,
+    'funnel': FilterIcon,
+    'prospects': UsersRoundIcon,
 }

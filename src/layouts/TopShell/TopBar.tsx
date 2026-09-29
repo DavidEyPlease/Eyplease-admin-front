@@ -34,6 +34,8 @@ import { setNewShell } from './useNewShell'
 const DIRECT_FIRST: PermissionKeys[] = [PermissionKeys.DASHBOARD]
 const GROUPS: Array<{ label: string, keys: PermissionKeys[] }> = [
     { label: 'Clientas', keys: [PermissionKeys.CLIENTS, PermissionKeys.WHATSAPP, PermissionKeys.SALES] },
+    /* Las que todavía no son clientas: de dónde llegan y a quién escribirle antes de que pasen a Ventas */
+    { label: 'Crecimiento', keys: [PermissionKeys.GROWTH_PROSPECTS, PermissionKeys.GROWTH_FUNNEL] },
     /* Pedidos de diseño es operación (el trabajo que hay que sacar), no un dato de la clienta */
     { label: 'Operación', keys: [PermissionKeys.TASKS, PermissionKeys.CHALLENGES, PermissionKeys.PUBLISH_POSTS, PermissionKeys.REPORTS_MONITOR] },
     { label: 'Contenido', keys: [PermissionKeys.TEMPLATES, PermissionKeys.TRAININGS] },

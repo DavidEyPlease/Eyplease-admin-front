@@ -24,6 +24,7 @@ const SIGNAL_LABELS: Record<string, string> = {
     plan_card: 'miró la tarjeta del plan',
     plans_page: 'entró a Planes',
     request: 'pidió «Me interesa»',
+    crecimiento: 'la pasó el equipo desde Crecimiento',
 }
 export const signalsText = (signals: Record<string, number> | null | undefined) =>
     Object.entries(signals ?? {})

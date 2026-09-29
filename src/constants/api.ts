@@ -183,4 +183,11 @@ export const API_ROUTES = {
         PLAN_GIFT_FULFILLED: '/plan-gifts/{id}/fulfilled',
         DIRECTOR_PROSPECTS: '/director-prospects',
     },
+    GROWTH: {
+        FUNNEL: '/growth/funnel',
+        PROSPECTS: '/growth/prospects',
+        CONTACTS: '/growth/contacts',
+        CONTACT: '/growth/contacts/{id}',
+        TO_SALES: '/growth/prospects/{id}/to-sales',
+    },
 }
