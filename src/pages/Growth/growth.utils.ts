@@ -1,7 +1,7 @@
 /** Crecimiento: los nombres de cada origen y grupo, y el mensaje que se le sugiere a cada prospecto. */
 
 import { GrowthGroup, GrowthProspect } from '@/interfaces/growth'
-import { firstName } from '@/pages/Sales/sales.utils'
+import { firstName, waLink } from '@/pages/Sales/sales.utils'
 
 export const SOURCE_LABELS: Record<string, string> = {
     instagram: 'Instagram',
@@ -85,3 +85,11 @@ export const registeredText = (iso: string) => {
 export const CONTACT_STALE_DAYS = 2
 export const recentlyWritten = (row: GrowthProspect) =>
     row.contact?.action === 'written' && (daysSince(row.contact.at) ?? 99) < CONTACT_STALE_DAYS
+
+/** Lada por país de la cuenta (MEX 52 · COL 57 · USA 1): `waLink` sola asume México a 10 dígitos. */
+const DIAL: Record<string, string> = { MEX: '52', COL: '57', USA: '1' }
+export const waFor = (row: GrowthProspect, text: string) => {
+    const digits = (row.phone ?? '').replace(/\D+/g, '')
+    const dial = row.country_code ? DIAL[row.country_code] : undefined
+    return waLink(digits.length === 10 && dial ? `${dial}${digits}` : digits, text)
+}

@@ -6,10 +6,10 @@ import { GrowthProspect } from '@/interfaces/growth'
 import { cn } from '@/lib/utils'
 import { initials } from '@/pages/Clients/List/names'
 import { money } from '@/pages/Hoy/lib'
-import { agoText, waLink } from '@/pages/Sales/sales.utils'
+import { agoText } from '@/pages/Sales/sales.utils'
 import { formatDate } from '@/utils/dates'
 
-import { recentlyWritten, registeredText, sourceLabel, sourceTone, suggestedMessage, whyNow } from '../growth.utils'
+import { recentlyWritten, registeredText, sourceLabel, sourceTone, suggestedMessage, waFor, whyNow } from '../growth.utils'
 import { GrowthActions } from '../useGrowth'
 
 const STEPS = ['Se registró', 'Usa la app', 'Quiere pagar', 'Pagó']
@@ -30,7 +30,7 @@ const copy = async (value: string, done = 'Copiado') => {
 const ProspectRow = ({ row, index, actions }: { row: GrowthProspect, index: number, actions: GrowthActions }) => {
     const [open, setOpen] = useState(false)
     const message = suggestedMessage(row)
-    const wa = waLink(row.phone, message)
+    const wa = waFor(row, message)
     const working = actions.busy === row.key
     const written = recentlyWritten(row)
     const step = row.group === 'lista' ? 3 : row.uses_app ? 2 : 1
