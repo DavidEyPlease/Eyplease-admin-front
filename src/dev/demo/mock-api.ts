@@ -4,6 +4,8 @@
 
 import demoBaseImg from './retos/base-ejemplo.jpg'
 import demoPieceImg from './retos/pieza-ejemplo.jpg'
+import demoCumpleBaseImg from './plantillas-base/cumple-base.jpg'
+import demoCumplePieceImg from './plantillas-base/cumple-pieza.jpg'
 
 const now = new Date()
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -624,6 +626,17 @@ const demoArt = (title: string, hue: number, square = false) => {
 const MONTH_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 type DemoTemplate = Record<string, unknown> & { id: string, name: string, month: number, active: boolean, template_group: string, variants: Array<Record<string, unknown>> }
 const demoTemplates: DemoTemplate[] = []
+/* Las medidas de la base de prueba de cumpleaños (1080×1080), las mismas con que el servidor armó la pieza de ejemplo */
+const demoCumpleAcomodo = {
+    cara: { cx: 727, cy: 302, ancho: 270 }, velo: [600, 800],
+    nombre: { fuente: 'playfair', peso: 800, sx: 0.84, cap: 70, cx: 724, base2: 851, interlinea: 80, ancho_max: 540, grad: [[253, 236, 203], [253, 247, 229], [253, 227, 185]], sombra: [2, 3, 4, 0.5, [70, 12, 38]], relieve: false, brillo: false, renglones: 2, estricto: true, interlinea_escala: true },
+    valor: null,
+    firma: { fuente: 'playfair', peso: 400, cap: 20, cx: 700, base: 1000, ancho_max: 400, grad: [[251, 241, 241]], sombra: [1, 1.5, 2, 0.45, [70, 12, 38]] },
+    avatar: 'circulo',
+    circulo: { aro: [252, 240, 222], filo: [206, 160, 98], sombra: [60, 10, 30], diametro: 430, cx: 745 },
+}
+/** Lo que se subió en la demo (llave → la imagen en el navegador): una base nueva se ve al guardarla */
+const demoUploads = new Map<string, string>()
 {
     const curMonth = now.getMonth() + 1
     const prevMonth = ((curMonth + 10) % 12) + 1
@@ -665,6 +678,19 @@ const demoTemplates: DemoTemplate[] = []
     demoTemplates.push(make(curMonth, ['honor_roll', 'live-queen', 'CH en vivo - 1er lugar', 280, true, true, 'photo_name_points'], 40))
     demoTemplates.push(make(curMonth, ['honor_roll', 'live-consolidated', 'CH en vivo - Podio', 280, true, true, 'top3_honor_board'], 41))
     demoTemplates.push(make(curMonth, ['stars', 'emerald', 'Círculo del Éxito Esmeralda (Colombia)', 160, true, true, 'photo_name_points'], 42, { metadata: { country: 'COL' } }))
+    /* Con base (motor «llenado»): los cumpleaños del mes que corre, con llave fija para abrir su ficha directo. La
+       cuadrada ya está medida (su archivo ES la base, 1080×1080) y la vertical sigue por capas, para pasarla a base. */
+    const cumple = make(curMonth, ['birthdays', null, 'Cumpleaños de la unidad', 330, true, true, 'photo_name'], 13)
+    const id = 'tpl-cumples-base'
+    demoTemplates.push({
+        ...cumple, id, slug: id,
+        variants: cumple.variants.map(variant => {
+            const own = { ...variant, id: String(variant.id).replace(cumple.id, id), template_id: id }
+            if (variant.kind !== 'image_square') return own
+            const folder = `public/templates/posts/${id}/variants/image_square`
+            return { ...own, template_file_uri: `${folder}/base-cumples.jpg`, template_file_url: demoCumpleBaseImg, render_configuration: { engine: 'llenado', encima: `${folder}/encima-cumples.png`, acomodo: demoCumpleAcomodo } }
+        }),
+    })
 }
 
 /** Lo que se pidió y a qué se contestó: `window.__demo.calls` dice qué no estaba previsto. */
@@ -726,7 +752,11 @@ export const installMockApi = () => {
 
     window.fetch = async (input, init) => {
         const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
-        if (raw.startsWith('https://demo-s3.invalid/')) { await wait(500); return new Response(null, { status: 200 }) }
+        if (raw.startsWith('https://demo-s3.invalid/')) {
+            if (init?.body instanceof Blob) demoUploads.set(decodeURIComponent(raw.slice('https://demo-s3.invalid/'.length)), URL.createObjectURL(init.body))
+            await wait(500)
+            return new Response(null, { status: 200 })
+        }
         if (!raw.startsWith(base)) return realFetch(input, init)
 
         const url = new URL(raw)
@@ -1180,12 +1210,33 @@ export const installMockApi = () => {
             }
             response = respond(Object.entries(names[path.split('/')[3]] ?? {}).map(([item_key, name], index) => ({ id: `item-${index}`, item_key, name })))
         }
-        /* La ficha: la misma plantilla con sus variantes completas (sin capas: el editor abre vacío) */
+        /* La ficha: la misma plantilla con sus variantes completas (sin capas: el editor abre vacío; las que van con
+           base traen sus medidas) */
         else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'GET') {
             const template = demoTemplates.find(item => item.id === path.split('/')[2])
             response = template
-                ? respond({ ...template, variants: template.variants.map(variant => ({ ...variant, render_configuration: null, reference_file_url: variant.template_file_url, ai_draft_json: null, ai_analyzed_at: null, ai_image_hash: null, created_at: template.created_at, updated_at: template.updated_at })) })
+                ? respond({ ...template, variants: template.variants.map(variant => ({ ...variant, render_configuration: variant.render_configuration ?? null, reference_file_url: variant.template_file_url, ai_draft_json: null, ai_analyzed_at: null, ai_image_hash: null, created_at: template.created_at, updated_at: template.updated_at })) })
                 : respond(null, 404)
+        }
+        /* Con base, como en el servidor: la vista previa arma la pieza (aquí, siempre la de la persona de prueba) sin
+           guardar nada; guardar registra la máscara y las medidas y, si viene una base nueva, la vuelve el archivo de
+           la variante. Los cuerpos quedan en window.__demoLastFillPreview y window.__demoLastFill para revisarlos. */
+        else if (/^\/templates\/tpl-[\w-]+\/variants\/[\w-]+\/fill-preview$/.test(path) && method === 'POST') {
+            Object.assign(window, { __demoLastFillPreview: JSON.parse(String(init?.body ?? '{}')) })
+            await wait(1400)
+            response = respond({ uri: 'private/templates/demo/vista-previa.jpg', url: demoCumplePieceImg, fill: { foto: 'avatar', motivo: 'no tiene foto', escala: 0.576, lineas: ['María Guadalupe', 'Hernández Villaseñor'] } })
+        }
+        else if (/^\/templates\/tpl-[\w-]+\/variants\/[\w-]+\/fill$/.test(path) && method === 'PUT') {
+            const [, , templateId, , variantId] = path.split('/')
+            const variant = demoTemplates.find(item => item.id === templateId)?.variants.find(item => item.id === variantId)
+            const body = JSON.parse(String(init?.body ?? '{}')) as { base?: string, encima?: string | null, acomodo: unknown }
+            Object.assign(window, { __demoLastFill: body })
+            if (variant) {
+                if (body.base) Object.assign(variant, { template_file_uri: body.base, template_file_url: demoUploads.get(body.base) ?? variant.template_file_url })
+                variant.render_configuration = { engine: 'llenado', encima: body.encima ?? null, acomodo: body.acomodo }
+            }
+            await wait(700)
+            response = respond(variant ?? null, variant ? 200 : 404)
         }
         else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'PUT') {
             const template = demoTemplates.find(item => item.id === path.split('/')[2])
