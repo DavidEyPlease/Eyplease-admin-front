@@ -53,6 +53,9 @@ export interface ITask extends IBaseDBProperties {
     assigned_to: IUser | null
     /** Quién la creó. En un pedido de clienta, es la clienta. Sólo llega si el listado lo incluye. */
     created_by?: { id: string, name: string } | null
+    /** El último movimiento (entrega, comentario, cambio de etapa): dice desde cuándo espera tu visto bueno */
+    last_activity_at?: string | null
+    completed_at?: string | null
     files: ITaskFile[]
     metadata: {
         primaryColor?: string

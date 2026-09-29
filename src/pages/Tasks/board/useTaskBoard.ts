@@ -5,26 +5,14 @@ import { toast } from 'sonner'
 import { API_ROUTES } from '@/constants/api'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import { ITask, TaskStatusTypes } from '@/interfaces/tasks'
+import { STAGES, StageKey, stageOf } from '../lib'
 import { TasksService } from '@/services/tasks.service'
 import useAuthStore from '@/store/auth'
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from '@/utils/events'
 
-export type StageKey = 'todo' | 'doing' | 'review' | 'fix' | 'done'
-
-/** Las ocho etiquetas de estado de la base, leídas como las cinco etapas por las que pasa un diseño */
-export const STAGES: Array<{ key: StageKey, title: string, hint: string, statuses: TaskStatusTypes[], dropTo: TaskStatusTypes }> = [
-    { key: 'todo', title: 'Por asignar', hint: 'Nadie lo ha tomado', statuses: [TaskStatusTypes.UNASSIGNED], dropTo: TaskStatusTypes.UNASSIGNED },
-    { key: 'doing', title: 'En proceso', hint: 'Alguien lo está haciendo', statuses: [TaskStatusTypes.IN_PROGRESS, TaskStatusTypes.UPLOAD_AE_RESOURCES], dropTo: TaskStatusTypes.IN_PROGRESS },
-    { key: 'review', title: 'Por revisar', hint: 'Espera tu visto bueno', statuses: [TaskStatusTypes.READY_FOR_REVIEW], dropTo: TaskStatusTypes.READY_FOR_REVIEW },
-    { key: 'fix', title: 'Corrección', hint: 'La clienta pidió un cambio', statuses: [TaskStatusTypes.PENDING_CORRECTION], dropTo: TaskStatusTypes.PENDING_CORRECTION },
-    { key: 'done', title: 'Listo', hint: 'Entregado este mes', statuses: [TaskStatusTypes.READY_FOR_PUBLISH, TaskStatusTypes.COMPLETED, TaskStatusTypes.PUBLISHED], dropTo: TaskStatusTypes.COMPLETED },
-]
-
 const OPEN_SLUGS: TaskStatusTypes[] = STAGES.filter(stage => stage.key !== 'done').flatMap(stage => stage.statuses)
 const OPEN_KEY = ['tasks', 'board', 'open']
 const DONE_KEY = ['tasks', 'board', 'done']
-
-export const stageOf = (task: ITask): StageKey => STAGES.find(stage => stage.statuses.includes(task.task_status?.slug as TaskStatusTypes))?.key ?? 'todo'
 
 /**
  * La mesa de trabajo: TODO lo que sigue abierto (sea del mes que sea: lo atrasado del mes pasado es
@@ -43,7 +31,10 @@ const useTaskBoard = () => {
     const done = useFetchQuery<ITask[]>(API_ROUTES.TASKS.LIST, { queryParams: { statuses: doneIds, month: new Date().getMonth() + 1 }, customQueryKey: DONE_KEY, enabled: doneIds.length > 0, staleTime: 30_000 })
 
     const tasks = useMemo(() => {
-        const all = [...(Array.isArray(open.response) ? open.response : []), ...(Array.isArray(done.response) ? done.response : [])]
+        /* `month` en la API es sólo el número de mes, de CUALQUIER año: lo entregado se queda con el de este */
+        const year = new Date().getFullYear()
+        const delivered = (Array.isArray(done.response) ? done.response : []).filter(task => new Date(task.started_at).getFullYear() === year)
+        const all = [...(Array.isArray(open.response) ? open.response : []), ...delivered]
         /* Una tarjeta recién movida puede estar un instante en las dos listas */
         return [...new Map(all.map(task => [task.id, task])).values()]
     }, [open.response, done.response])

@@ -184,12 +184,18 @@ const demoTasks = ([
     [578, 'Invitación · Debut de Directora', 2, 0, 0, 1, 2], [585, 'Historia · Aspiracional del martes', 2, 1, 1, 2, 1],
     [572, 'Invitación · cambiar la hora', 3, 0, -2, 0, 4],
     [569, 'Portada de boletín de unidad', 4, 0, -3, 1, 2], [565, 'Reconocimiento · Cuadro de Honor', 4, 0, -5, 0, 1], [560, 'Publicación · Frase del lunes pasado', 7, 1, -6, 2, 1], [558, 'Deck · Entérate Ya de septiembre', 5, 2, -8, 1, 1],
+    /* Como en la vida real: lo que lleva MESES esperando el visto bueno y más entregados en el mes */
+    [4, 'Premios trimestrales', 2, 1, -246, 2, 0], [41, 'Entérate Ya · marzo', 2, 2, -210, 2, 0], [189, 'Frases para comenzar en Mary Kay', 1, 1, -141, 2, 0],
+    [592, 'Flyer · Promo de reactivación', 2, 0, -1, null, 1], [594, 'Invitación · Desayuno de estrellas', 2, 0, -4, null, 2],
+    [548, 'Historia · Tip de maquillaje', 7, 1, -10, 2, 0], [545, 'Carrusel · Rutina de noche', 7, 1, -12, 0, 1], [541, 'Reconocimiento · Reina del mes', 4, 0, -14, 1, 1], [538, 'Publicación · Frase del viernes', 7, 1, -16, 2, 0],
 ] as Array<[number, string, number, number, number, number | null, number]>).map(([consecutive, title, status, type, days, designer, files]) => ({
     id: `task-${consecutive}`, consecutive, title, description: 'Pedido de EJEMPLO para revisar el tablero.',
     started_at: dueIn(days - 1, 9), expired_at: dueIn(days), task_status: utilData.task_statuses[status], task_type: utilData.task_types[type],
     created_by: type === 0 ? { id: `u-${consecutive % 10}`, name: `Clienta de ejemplo ${'ABCDEFGHIJ'[consecutive % 10]}` } : null,
     assigned_to: designer === null ? null : demoDesigners[designer], files: Array.from({ length: files }, (_, index) => ({ id: `f-${consecutive}-${index}` })), metadata: {},
     created_at: iso((5 - days) * 1440), updated_at: iso(30),
+    /* Desde cuándo espera: lo entregado a revisión, desde su entrega */
+    last_activity_at: iso(Math.max(0, -days) * 1440 + 90), completed_at: [4, 5, 7].includes(status) ? dueIn(days) : null,
 }))
 
 /* ── Clientas, cobranza y matriz de reportes (gente inventada) ─────────────────────────────── */
@@ -622,6 +628,8 @@ export const installMockApi = () => {
             const task = demoTasks.find(item => item.id === path.split('/')[2])
             if (task && body.status) task.task_status = utilData.task_statuses.find(item => item.id === body.status) ?? task.task_status
             if (task && 'user' in body) task.assigned_to = demoDesigners.find(item => item.id === body.user) ?? null
+            /* El calendario cambia de día un pedido con `started_at` */
+            if (task && (body as { started_at?: string }).started_at) task.started_at = (body as { started_at: string }).started_at
             await wait(350)
             response = respond(task ?? null, task ? 200 : 404)
         }
