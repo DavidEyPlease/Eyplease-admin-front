@@ -91,9 +91,6 @@ export const sectionCatalog = (newsletters: INewsletter[]) => {
     }
 }
 
-/** El subgrupo en palabras de todos los días: «pink-vip-plus» → «Pink vip plus» */
-export const subgroupLabel = (subgroup: string | null) => subgroup ? prettify(subgroup) : null
-
 /**
  * Los meses se leen en orden de calendario alrededor de hoy: las plantillas no llevan año, así que el mes
  * que viene es el más nuevo y todo lo demás cuenta como pasado (en septiembre: may, jun, jul, ago, sep, oct).

@@ -785,7 +785,23 @@ export const installMockApi = () => {
             response = respond(demoTemplates)
         }
         else if (path === '/templates/presets' && method === 'GET') response = respond([])
-        else if (/^\/newsletters\/sections\/[^/]+\/items$/.test(path)) response = respond([])
+        /* Los subgrupos de cada sección con su nombre del boletín (los mismos que manda la API) */
+        else if (/^\/newsletters\/sections\/[^/]+\/items$/.test(path)) {
+            const names: Record<string, Record<string, string>> = {
+                honor_roll: { queen: 'Cuadro Honor - Reina', 'first-princess': 'Cuadro Honor - Primeras Princesas', 'second-princess': 'Cuadro Honor - Segundas Princesas', consolidated: 'Cuadro Honor - Top 3', 'live-queen': 'En curso · Reina', 'live-consolidated': 'En curso · Top 3' },
+                stars: { emerald: 'Esmeralda', diamond: 'Diamante', ruby: 'Rubí', sapphire: 'Zafiro', pearl: 'Perla' },
+                pink_circle: { pink: 'Rosa', 'pink-vip': 'Rosa Vip', 'pink-gold': 'Rosa Gold' },
+                new_beginnings: { 'previous-1': '2da Herramienta', 'previous-2': '3era Herramienta', 'previous-3': '4ta Herramienta' },
+            }
+            response = respond(Object.entries(names[path.split('/')[3]] ?? {}).map(([item_key, name], index) => ({ id: `item-${index}`, item_key, name })))
+        }
+        /* La ficha: la misma plantilla con sus variantes completas (sin capas: el editor abre vacío) */
+        else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'GET') {
+            const template = demoTemplates.find(item => item.id === path.split('/')[2])
+            response = template
+                ? respond({ ...template, variants: template.variants.map(variant => ({ ...variant, render_configuration: null, reference_file_url: variant.template_file_url, ai_draft_json: null, ai_analyzed_at: null, ai_image_hash: null, created_at: template.created_at, updated_at: template.updated_at })) })
+                : respond(null, 404)
+        }
         else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'PUT') {
             const template = demoTemplates.find(item => item.id === path.split('/')[2])
             if (template) Object.assign(template, JSON.parse(String(init?.body ?? '{}')))

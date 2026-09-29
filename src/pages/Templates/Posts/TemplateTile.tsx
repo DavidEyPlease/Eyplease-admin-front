@@ -7,7 +7,7 @@ import { ITemplate } from "@/interfaces/templates"
 import { cn } from "@/lib/utils"
 import { MONTH_LABELS } from "@/utils/finance"
 import SwitchAction from "../components/SwitchAction"
-import { countryOf, formatsOf, PostFormat, POST_FORMATS, subgroupLabel, thumbOf } from "./lib"
+import { countryOf, formatsOf, PostFormat, POST_FORMATS, thumbOf } from "./lib"
 import TemplateMenu from "./TemplateMenu"
 
 const FORMAT_ICON: Record<PostFormat, LucideIcon> = { image: RectangleVerticalIcon, image_square: SquareIcon, video: PlayIcon }
@@ -16,17 +16,16 @@ const FORMAT_ICON: Record<PostFormat, LucideIcon> = { image: RectangleVerticalIc
  * Una plantilla: su arte manda (la vertical, que es la pieza principal), encima los formatos en que sale y,
  * abajo, si está encendida y su menú. El arte y el nombre abren la ficha, donde se ajusta.
  */
-const TemplateTile = ({ template, showMonth = false }: { template: ITemplate, showMonth?: boolean }) => {
+const TemplateTile = ({ template, subgroup, showMonth = false }: { template: ITemplate, subgroup: string | null, showMonth?: boolean }) => {
     const [broken, setBroken] = useState(false)
     const thumb = thumbOf(template)
     const formats = formatsOf(template)
     const detail = APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', template.id)
-    const sub = subgroupLabel(template.template_subgroup)
     const colombia = countryOf(template) === 'COL'
 
     return (
         <article className={cn(
-            'group relative flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-border/70 bg-card/80 transition duration-200 hover:-translate-y-0.5 hover:border-[#6C47FF]/45 hover:shadow-[0_16px_34px_-20px_rgba(76,52,196,.6)]',
+            'group relative flex w-[150px] shrink-0 flex-col overflow-hidden rounded-[20px] border border-border/70 bg-card/80 transition duration-200 hover:-translate-y-0.5 hover:border-[#6C47FF]/45 hover:shadow-[0_16px_34px_-20px_rgba(76,52,196,.6)]',
             !template.active && 'opacity-75 hover:opacity-100',
         )}>
             <Link to={detail} aria-label={`Abrir ${template.name}`} className="relative block aspect-[9/16] overflow-hidden bg-foreground/[.06]">
@@ -68,7 +67,7 @@ const TemplateTile = ({ template, showMonth = false }: { template: ITemplate, sh
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-3 pt-2.5 pb-2">
                 <Link to={detail} className="line-clamp-2 text-[12.5px] leading-snug font-bold hover:underline" title={template.name}>{template.name}</Link>
                 <small className="truncate text-[11px] text-muted-foreground">
-                    {[showMonth && MONTH_LABELS[template.month - 1], sub].filter(Boolean).join(' · ') || ' '}
+                    {[showMonth && MONTH_LABELS[template.month - 1], subgroup].filter(Boolean).join(' · ') || '\u00a0'}
                 </small>
                 {!template.preset_slug && (
                     <small className="text-[10.5px] font-semibold text-amber-600 dark:text-amber-400" title="No tiene preset: el ajuste directo de la ficha no sabe qué capas lleva">Sin ajuste directo</small>

@@ -12,8 +12,8 @@ import useCountryStore from "@/store/country"
 import { MONTH_LABELS } from "@/utils/finance"
 import TemplateDialogs from "../components/TemplateDialogs"
 import { byName, countryOf, formatsOf, monthsInOrder, plain, PostFormat, POST_FORMATS, sectionCatalog, SectionInfo } from "./lib"
+import TemplateSection from "./TemplateSection"
 import NewTemplateDialog from "./NewTemplateDialog"
-import TemplateTile from "./TemplateTile"
 import usePostTemplates from "./usePostTemplates"
 import "@/pages/Hoy/hoy.css"
 
@@ -33,14 +33,12 @@ const chip = (on: boolean) => cn(
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 const TileSkeleton = () => (
-    <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card/60">
+    <div className="w-[150px] shrink-0 overflow-hidden rounded-[20px] border border-border/70 bg-card/60">
         <span className="block aspect-[9/16] animate-pulse bg-foreground/[.07]" />
         <span className="m-3 block h-3 w-3/4 animate-pulse rounded-full bg-foreground/[.07]" />
         <span className="mx-3 mb-3 block h-2.5 w-1/2 animate-pulse rounded-full bg-foreground/[.05]" />
     </div>
 )
-
-const TILES = "grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3"
 
 /**
  * Plantillas de publicaciones con la piel del rediseño: el arte que usa el motor en cada sección, mes por
@@ -183,7 +181,7 @@ const PostsTemplatesPage = () => {
             {loading && (
                 <section className="shell-glass rounded-3xl p-4 sm:p-5">
                     <span className="mb-4 block h-4 w-40 animate-pulse rounded-full bg-foreground/[.07]" />
-                    <div className={TILES}>{Array.from({ length: 6 }, (_, index) => <TileSkeleton key={index} />)}</div>
+                    <div className="flex flex-wrap gap-3">{Array.from({ length: 6 }, (_, index) => <TileSkeleton key={index} />)}</div>
                 </section>
             )}
 
@@ -218,31 +216,11 @@ const PostsTemplatesPage = () => {
                 </div>
             )}
 
-            {!loading && groups.map(group => {
-                const off = group.items.filter(template => !template.active).length
-                const formats = POST_FORMATS
-                    .map(item => ({ ...item, count: group.items.filter(template => formatsOf(template).includes(item.key)).length }))
-                    .filter(item => item.count > 0)
-
-                return (
-                    <section key={group.info.key} className="shell-glass min-w-0 rounded-3xl p-4 sm:p-5">
-                        <header className="mb-3.5 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
-                            <div className="min-w-0">
-                                {group.info.newsletter && <small className="block text-[10.5px] font-extrabold tracking-[.12em] text-muted-foreground uppercase">{group.info.newsletter}</small>}
-                                <h2 className="text-[16px] font-extrabold tracking-tight">{group.info.name}</h2>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="pulse-tag plain">{plural(group.items.length, 'plantilla', 'plantillas')}</span>
-                                {off > 0 && <span className="pulse-tag warn">{plural(off, 'apagada', 'apagadas')}</span>}
-                                {formats.length > 0 && <small className="text-[11.5px] text-muted-foreground">{formats.map(item => `${item.count} ${item.count === 1 ? item.label.toLowerCase() : item.plural}`).join(' · ')}</small>}
-                            </div>
-                        </header>
-                        <div className={TILES}>
-                            {group.items.map(template => <TemplateTile key={template.id} template={template} showMonth={searching} />)}
-                        </div>
-                    </section>
-                )
-            })}
+            {!loading && groups.length > 0 && (
+                <div className="flex min-w-0 flex-wrap items-start gap-[18px]">
+                    {groups.map(group => <TemplateSection key={group.info.key} info={group.info} items={group.items} showMonth={searching} />)}
+                </div>
+            )}
 
             <TemplateDialogs />
             <NewTemplateDialog open={creating} onClose={() => setCreating(false)} />
