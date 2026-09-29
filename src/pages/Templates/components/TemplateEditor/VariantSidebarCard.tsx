@@ -20,7 +20,7 @@ import {
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
 import TemplatePreview from "../TemplatePreview"
-import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
+import { kindIcon, kindLabel } from "../../page-utils"
 
 interface VariantSidebarCardProps {
     templateId: string
@@ -42,7 +42,7 @@ const VariantSidebarCard = ({
     onSelect,
     onEdit,
 }: VariantSidebarCardProps) => {
-    const Icon = KIND_ICONS[variant.kind]
+    const Icon = kindIcon(variant.kind)
     const previewUrl = variant.reference_file_url ?? variant.template_file_url ?? null
     const hasAnyFile = Boolean(variant.template_file_url || variant.reference_file_url)
     const [filesPreviewOpen, setFilesPreviewOpen] = useState(false)
@@ -83,7 +83,7 @@ const VariantSidebarCard = ({
                     <TemplatePreview
                         url={previewUrl}
                         fallbackKind={variant.kind}
-                        alt={`Variante ${KIND_LABELS[variant.kind]}`}
+                        alt={`Variante ${kindLabel(variant.kind)}`}
                     />
                     {hasAnyFile && (
                         <Button
@@ -106,7 +106,7 @@ const VariantSidebarCard = ({
                     <div className="flex items-center gap-1.5 min-w-0">
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                         <span className="text-xs font-medium truncate">
-                            {KIND_LABELS[variant.kind]}
+                            {kindLabel(variant.kind)}
                         </span>
                     </div>
 

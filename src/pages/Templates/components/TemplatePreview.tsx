@@ -4,7 +4,7 @@ import {
 
 import { TemplateVariantKind } from "@/interfaces/templates"
 import { cn } from "@/lib/utils"
-import { isVideoUrl, KIND_ICONS } from "../page-utils"
+import { isVideoUrl, kindIcon } from "../page-utils"
 
 type PreviewMode = "thumb" | "full"
 interface TemplatePreviewProps {
@@ -43,7 +43,7 @@ const TemplatePreview = ({
     const fitClass = isFull ? "object-contain" : "object-cover"
 
     if (!url) {
-        const FallbackIcon = fallbackKind ? KIND_ICONS[fallbackKind] : FileQuestionIcon
+        const FallbackIcon = fallbackKind ? kindIcon(fallbackKind) : FileQuestionIcon
         return (
             <div
                 className={cn(

@@ -13,6 +13,7 @@ import { TEMPLATE_GROUP_REPORTS } from "../page-utils"
 // name. Kept in this file because the only consumer is the list column.
 const VARIANT_KIND_LABELS: Record<TemplateVariantKind, string> = {
     image: "Imagen",
+    image_square: "Cuadrada",
     video: "Video",
     pdf: "PDF",
     pptx: "PPTX",

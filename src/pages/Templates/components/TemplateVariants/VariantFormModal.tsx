@@ -19,7 +19,7 @@ import {
 } from "../../useTemplateVariants"
 
 import VariantFilesPreviewModal from "./VariantFilesPreviewModal"
-import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
+import { KIND_LABELS, kindIcon, kindLabel } from "../../page-utils"
 
 interface UploadStatusProps {
     loaded: boolean
@@ -175,7 +175,7 @@ const VariantFormModal = ({ template, variant, open, onOpenChange }: VariantForm
 
     const renderEdit = () => {
         if (!variant) return null
-        const KindIcon = KIND_ICONS[variant.kind]
+        const KindIcon = kindIcon(variant.kind)
         const updateLoading = updateState.loading || uploadingKey !== null
 
         return (
@@ -183,7 +183,7 @@ const VariantFormModal = ({ template, variant, open, onOpenChange }: VariantForm
                 <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/40 p-4">
                     <div className="flex items-center gap-2">
                         <KindIcon className="w-4 h-4" />
-                        <span className="font-medium">{KIND_LABELS[variant.kind]}</span>
+                        <span className="font-medium">{kindLabel(variant.kind)}</span>
                         <span className="text-xs text-muted-foreground">
                             (no editable)
                         </span>
@@ -237,7 +237,7 @@ const VariantFormModal = ({ template, variant, open, onOpenChange }: VariantForm
     return (
         <>
             <Modal
-                title={isEdit ? `Editar variante: ${variant && KIND_LABELS[variant.kind]}` : "Agregar variante"}
+                title={isEdit ? `Editar variante: ${variant && kindLabel(variant.kind)}` : "Agregar variante"}
                 description={
                     isEdit
                         ? "Administra los archivos y el estado de la variante"

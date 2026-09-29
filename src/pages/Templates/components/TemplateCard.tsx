@@ -6,7 +6,7 @@ import { ITemplate } from "@/interfaces/templates"
 import { APP_ROUTES } from "@/constants/app"
 import SwitchAction from "./SwitchAction"
 import TemplateActions from "./Actions"
-import { KIND_ICONS, KIND_LABELS, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
+import { kindIcon, kindLabel, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
 import TemplatePreview from "./TemplatePreview"
 
 interface TemplateCardProps {
@@ -48,7 +48,7 @@ const TemplateCard = ({ template }: TemplateCardProps) => {
                 {kinds.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                         {kinds.map(kind => {
-                            const Icon = KIND_ICONS[kind]
+                            const Icon = kindIcon(kind)
                             return (
                                 <Badge
                                     key={kind}
@@ -56,7 +56,7 @@ const TemplateCard = ({ template }: TemplateCardProps) => {
                                     className="gap-1 text-xs font-medium"
                                 >
                                     <Icon className="w-3 h-3" />
-                                    {KIND_LABELS[kind]}
+                                    {kindLabel(kind)}
                                 </Badge>
                             )
                         })}

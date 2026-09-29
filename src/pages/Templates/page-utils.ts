@@ -5,6 +5,7 @@ import {
     FileTextIcon,
     ImageIcon,
     PresentationIcon,
+    SquareIcon,
     VideoIcon,
     type LucideIcon,
 } from "lucide-react"
@@ -31,6 +32,7 @@ export const TEMPLATE_ASSET_TYPE_OPTIONS = [
  */
 export const KIND_LABELS: Record<TemplateVariantKind, string> = {
     image: "Imagen",
+    image_square: "Cuadrada",
     video: "Video",
     pdf: "PDF",
     pptx: "PPTX",
@@ -38,10 +40,20 @@ export const KIND_LABELS: Record<TemplateVariantKind, string> = {
 
 export const KIND_ICONS: Record<TemplateVariantKind, LucideIcon> = {
     image: ImageIcon,
+    image_square: SquareIcon,
     video: VideoIcon,
     pdf: FileTextIcon,
     pptx: PresentationIcon,
 }
+
+/**
+ * Etiqueta e ícono de un formato, a prueba de formatos nuevos. `kind` es texto libre en la API: el
+ * día que llegó `image_square` el panel buscó su ícono, recibió `undefined` y se cayeron la lista de
+ * plantillas y la ficha enteras. Con estos, un formato desconocido sale con su nombre tal cual.
+ */
+export const kindLabel = (kind: string): string => KIND_LABELS[kind as TemplateVariantKind] ?? kind
+
+export const kindIcon = (kind: string): LucideIcon => KIND_ICONS[kind as TemplateVariantKind] ?? FileQuestionIcon
 
 const VIDEO_EXTENSIONS = /\.(mp4|webm|mov|m4v)$/i
 

@@ -14,7 +14,7 @@ import AIEditor from "../AIEditor"
 import VariantFormModal from "../TemplateVariants/VariantFormModal"
 import VariantSidebarCard from "./VariantSidebarCard"
 import VideoEditor from "./VideoEditor"
-import { KIND_LABELS } from "../../page-utils"
+import { KIND_LABELS, kindLabel } from "../../page-utils"
 
 interface TemplateEditorProps {
     template: ITemplate
@@ -52,7 +52,7 @@ const PendingEditorPlaceholder = ({
         <SparklesIcon className="h-4 w-4" />
         <AlertTitle>{title}</AlertTitle>
         <AlertDescription>
-            {description} (variante {KIND_LABELS[kind].toLowerCase()})
+            {description} (variante {kindLabel(kind).toLowerCase()})
         </AlertDescription>
     </Alert>
 )
@@ -83,7 +83,9 @@ const TemplateEditor = ({ template }: TemplateEditorProps) => {
     const renderEditor = () => {
         if (!selected) return <NoVariantPlaceholder />
 
-        if (selected.kind === "image") {
+        // La cuadrada es la misma imagen con su propio lienzo (1080×1080) y sus propias coordenadas,
+        // que vienen en su render_configuration: se edita con el mismo editor de capas.
+        if (selected.kind === "image" || selected.kind === "image_square") {
             // `key` forces a full remount when switching variants so the
             // editor's internal initial-state derivation re-runs from the
             // newly selected variant's render_configuration.

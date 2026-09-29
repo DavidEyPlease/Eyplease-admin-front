@@ -20,7 +20,7 @@ import {
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
 import VariantFilesPreviewModal from "./VariantFilesPreviewModal"
-import { KIND_ICONS, KIND_LABELS } from "../../page-utils"
+import { kindIcon, kindLabel } from "../../page-utils"
 
 interface VariantCardProps {
     templateId: string
@@ -29,7 +29,7 @@ interface VariantCardProps {
 }
 
 const VariantCard = ({ templateId, variant, onEdit }: VariantCardProps) => {
-    const Icon = KIND_ICONS[variant.kind]
+    const Icon = kindIcon(variant.kind)
     const [filesPreviewOpen, setFilesPreviewOpen] = useState(false)
 
     const { updateVariant, requestState: updateState } = useUpdateTemplateVariant(
@@ -51,7 +51,7 @@ const VariantCard = ({ templateId, variant, onEdit }: VariantCardProps) => {
                     <TemplatePreview
                         url={previewUrl}
                         fallbackKind={variant.kind}
-                        alt={`Variante ${KIND_LABELS[variant.kind]}`}
+                        alt={`Variante ${kindLabel(variant.kind)}`}
                     />
                     {hasAnyFile && (
                         <Button
@@ -72,7 +72,7 @@ const VariantCard = ({ templateId, variant, onEdit }: VariantCardProps) => {
                         <div className="flex items-center gap-2 min-w-0">
                             <Badge variant="secondary" className="gap-1 text-xs font-medium">
                                 <Icon className="w-3 h-3" />
-                                {KIND_LABELS[variant.kind]}
+                                {kindLabel(variant.kind)}
                             </Badge>
                         </div>
 

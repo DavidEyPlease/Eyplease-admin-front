@@ -14,7 +14,7 @@ import { publishEvent } from "@/utils/events"
 import SwitchAction from "./SwitchAction"
 import TemplateForm from "./TemplateForm"
 import TemplatePreview from "./TemplatePreview"
-import { KIND_ICONS, KIND_LABELS, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
+import { kindIcon, kindLabel, monthLabelFor, resolveBadgeKinds, resolvePreviewUrl } from "../page-utils"
 
 interface TemplateOverviewProps {
     template: ITemplate
@@ -68,11 +68,11 @@ const TemplateOverview = ({ template }: TemplateOverviewProps) => {
                         {kinds.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                                 {kinds.map(kind => {
-                                    const Icon = KIND_ICONS[kind]
+                                    const Icon = kindIcon(kind)
                                     return (
                                         <Badge key={kind} variant="secondary" className="gap-1 text-xs font-medium">
                                             <Icon className="w-3 h-3" />
-                                            {KIND_LABELS[kind]}
+                                            {kindLabel(kind)}
                                         </Badge>
                                     )
                                 })}

@@ -80,8 +80,10 @@ export type AIDraft = {
 }
 
 // Kinds supported by template_variants. Free-form string at the DB level;
-// these are the values currently allowed by the backend form requests.
-export type TemplateVariantKind = 'image' | 'video' | 'pdf' | 'pptx'
+// these are the values currently allowed by the backend form requests
+// (TemplateVariant::KINDS). `image_square` es la misma pieza en 1:1, con su
+// propio lienzo y sus propias coordenadas.
+export type TemplateVariantKind = 'image' | 'image_square' | 'video' | 'pdf' | 'pptx'
 
 /**
  * Layer hints exposed by a TemplatePreset. The AI analyzer treats these

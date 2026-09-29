@@ -1,7 +1,7 @@
 import Modal from "@/components/common/Modal"
 import { ITemplateVariant } from "@/interfaces/templates"
 import TemplatePreview from "../TemplatePreview"
-import { KIND_LABELS } from "../../page-utils"
+import { kindLabel } from "../../page-utils"
 
 interface VariantFilesPreviewModalProps {
     variant: ITemplateVariant | null
@@ -46,7 +46,7 @@ const VariantFilesPreviewModal = ({ variant, open, onOpenChange }: VariantFilesP
 
     return (
         <Modal
-            title={`Archivos de la variante: ${KIND_LABELS[variant.kind]}`}
+            title={`Archivos de la variante: ${kindLabel(variant.kind)}`}
             description="Vista previa de la plantilla limpia y la referencia renderizada"
             open={open}
             size="xxl"
