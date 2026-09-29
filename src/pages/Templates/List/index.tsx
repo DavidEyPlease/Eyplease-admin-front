@@ -2,10 +2,7 @@ import { useEffect, useState } from "react"
 import { GridIcon, TableIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import Modal from "@/components/common/Modal"
-import TemplateForm from "../components/TemplateForm"
-import ManageClients from "../components/ManageClients"
-import TemplateDetail from "../components/TemplateDetail"
+import TemplateDialogs from "../components/TemplateDialogs"
 import TemplatesTableList from "../components/TemplatesTableList"
 import TemplatesGridList from "../components/TemplatesGridList"
 import { TemplateFilters } from "../page-utils"
@@ -39,10 +36,7 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table', lockVi
     const [deleteState, setDeleteState] = useState<'initial' | 'loading' | 'success'>('initial')
 
     const {
-        actionDialogOpen,
-        selectedTemplate,
         selectedTemplates,
-        setSelectedTemplate,
         resetSelection,
     } = useTemplatesStore(state => state)
 
@@ -134,55 +128,7 @@ const TemplatesList = ({ isLoading, templates, defaultViewMode = 'table', lockVi
                 }}
             />
 
-            <Modal
-                title={`Editar plantilla: ${selectedTemplate?.name}`}
-                description="Edita la plantilla de boletín para tus clientes"
-                open={actionDialogOpen === 'edit'}
-                size="xxl"
-                onOpenChange={() => {
-                    setSelectedTemplate(null)
-                }}
-            >
-                <TemplateForm item={selectedTemplate || null} onSuccess={() => setSelectedTemplate(null)} />
-            </Modal>
-
-            <Modal
-                title={`Clonar plantilla: ${selectedTemplate?.name}`}
-                description="Crea una copia con toda la configuración de variantes. Ajusta los datos antes de guardar."
-                open={actionDialogOpen === 'clone'}
-                size="xxl"
-                onOpenChange={() => {
-                    setSelectedTemplate(null)
-                }}
-            >
-                <TemplateForm cloneFrom={selectedTemplate || null} onSuccess={() => setSelectedTemplate(null)} />
-            </Modal>
-
-            <Modal
-                title={`Vista de Plantilla: ${selectedTemplate?.name}`}
-                description="Fondos disponibles"
-                open={actionDialogOpen === 'view'}
-                size="xxl"
-                className="max-h-[80vh] overflow-y-auto"
-                onOpenChange={() => {
-                    setSelectedTemplate(null)
-                }}
-            >
-                {selectedTemplate && <TemplateDetail template={selectedTemplate} />}
-            </Modal>
-
-            <Modal
-                title={`Gestionar Clientes: Plantilla ${selectedTemplate?.name}`}
-                description="Activa o desactiva esta plantilla para clientes específicos"
-                open={actionDialogOpen === 'manageClient'}
-                size="xl"
-                className="max-h-[80vh] overflow-y-auto"
-                onOpenChange={() => {
-                    setSelectedTemplate(null)
-                }}
-            >
-                {selectedTemplate && <ManageClients template={selectedTemplate} />}
-            </Modal>
+            <TemplateDialogs />
         </>
     )
 }

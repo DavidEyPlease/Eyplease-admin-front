@@ -195,6 +195,8 @@ export interface ITemplate extends IBaseDBProperties {
     national_background_vertical: Backgrounds
     metadata?: {
         pink_circle_months?: string
+        // Sólo en las de otro país (MEX no lo lleva): el motor elige la de su país.
+        country?: string
     }
     // Eager-loaded by the backend on /templates/{id}. Optional on list
     // endpoints (which omit it for payload size).

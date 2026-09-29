@@ -396,6 +396,61 @@ const copilotAnswer = (question: string) => {
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+/* ── Plantillas de publicaciones (admin/templates) ────────────────────────────────────────────
+   El arte es de EJEMPLO: tarjetas SVG con el nombre de la sección, no el arte real. Hay de todo lo
+   que la pantalla tiene que saber pintar: vertical, cuadrada y video; apagadas; sin preset (sin
+   ajuste directo); una de Colombia; y dos meses, el pasado y el que corre. */
+const demoArt = (title: string, hue: number, square = false) => {
+    const [w, h] = square ? [540, 540] : [540, 960]
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${hue},62%,30%)'/><stop offset='1' stop-color='hsl(${(hue + 50) % 360},72%,58%)'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><circle cx='${w / 2}' cy='${h * 0.4}' r='${w * 0.2}' fill='rgba(255,255,255,.16)' stroke='rgba(255,255,255,.55)' stroke-width='4'/><text x='50%' y='${h * 0.72}' fill='white' font-family='Arial' font-size='30' font-weight='700' text-anchor='middle'>${title}</text><text x='50%' y='${h * 0.72 + 40}' fill='rgba(255,255,255,.75)' font-family='Arial' font-size='20' text-anchor='middle'>EJEMPLO</text></svg>`
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+const MONTH_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+type DemoTemplate = Record<string, unknown> & { id: string, name: string, month: number, active: boolean, template_group: string, variants: Array<Record<string, unknown>> }
+const demoTemplates: DemoTemplate[] = []
+{
+    const curMonth = now.getMonth() + 1
+    const prevMonth = ((curMonth + 10) % 12) + 1
+    /* [sección, subgrupo, nombre, tono, cuadrada, video, preset] */
+    const rows: Array<[string, string | null, string, number, boolean, boolean, string | null]> = [
+        ['honor_roll', 'queen', 'Cuadro de Honor - 1er lugar', 265, false, true, 'top3_honor_board'],
+        ['honor_roll', 'first-princess', 'Cuadro de Honor - 2do lugar', 265, false, true, 'top3_honor_board'],
+        ['honor_roll', 'second-princess', 'Cuadro de Honor - 3er lugar', 265, false, true, 'top3_honor_board'],
+        ['honor_roll', 'consolidated', 'Cuadro de Honor - Podio', 265, false, true, null],
+        ['stars', 'emerald', 'Círculo del Éxito Esmeralda', 150, true, true, 'photo_name_points'],
+        ['stars', 'diamond', 'Círculo del Éxito Diamante', 200, true, true, 'photo_name_points'],
+        ['stars', 'ruby', 'Círculo del Éxito Rubí', 350, true, true, 'photo_name_points'],
+        ['pink_circle', 'pink', 'Círculo Rosa - Rosa', 330, false, true, 'photo_name_client_logo'],
+        ['pink_circle', 'pink-vip', 'Círculo Rosa - VIP', 320, false, true, 'photo_name_client_logo'],
+        ['pink_circle', 'pink-gold', 'Círculo Rosa - Gold 13-23', 40, false, true, 'photo_name_client_logo'],
+        ['new_beginnings', 'previous-1', 'Nuevos Inicios - 2do mes', 190, false, true, 'photo_name'],
+        ['new_beginnings', 'previous-2', 'Nuevos Inicios - 3er mes', 190, false, true, 'photo_name'],
+        ['early', null, 'Ordenantes del mes', 25, true, false, 'photo_name_points'],
+        ['birthdays', null, 'Cumpleaños de la unidad', 300, true, true, 'photo_name'],
+        ['anniversaries', null, 'Aniversarios de la unidad', 280, true, true, 'photo_name_hearts_anniversary_next'],
+        ['national_birthdays', null, 'Cumpleaños nacional', 300, true, true, 'photo_name_client_logo'],
+        ['sales_cut', null, 'Target a Corte de Ventas', 220, false, true, null],
+    ]
+    const make = (month: number, [group, sub, name, hue, square, video, preset]: typeof rows[number], index: number, extra: Partial<DemoTemplate> = {}): DemoTemplate => {
+        const id = `tpl-${month}-${index}`
+        const variants: Array<Record<string, unknown>> = [{ id: `${id}-v`, template_id: id, kind: 'image', enabled: true, template_file_uri: `demo/${id}/v.svg`, template_file_url: demoArt(name.split(' - ').pop() ?? name, hue) }]
+        if (square) variants.push({ id: `${id}-c`, template_id: id, kind: 'image_square', enabled: true, template_file_uri: `demo/${id}/c.svg`, template_file_url: demoArt(name.split(' - ').pop() ?? name, hue, true) })
+        if (video) variants.push({ id: `${id}-m`, template_id: id, kind: 'video', enabled: true, template_file_uri: `demo/${id}/m.mp4`, template_file_url: null })
+        return {
+            id, name: `${name} - ${MONTH_SHORT[month - 1]}`, slug: id, month, active: true, template_group: group, template_subgroup: sub, preset_slug: preset,
+            metadata: null, variants, clients_count: 0, enabled_all_clients: false, template_asset_type: null, template_file_uri: null, template_file_url: null,
+            reference_file_url: null, picture: null, font_color: null, mock_values: null, render_provider_id: null, ai_analyzed_at: null,
+            created_at: iso(60 * 24 * (40 - month)), updated_at: iso(60 * 24 * 2), ...extra,
+        }
+    }
+    rows.forEach((row, index) => demoTemplates.push(make(prevMonth, row, index, index === 3 ? { active: false } : {})))
+    rows.slice(0, 13).forEach((row, index) => demoTemplates.push(make(curMonth, row, index, index === 9 ? { active: false } : {})))
+    /* En vivo: las del mes que corre, y una de Colombia (metadata.country) */
+    demoTemplates.push(make(curMonth, ['honor_roll', 'live-queen', 'CH en vivo - 1er lugar', 280, true, true, 'photo_name_points'], 40))
+    demoTemplates.push(make(curMonth, ['honor_roll', 'live-consolidated', 'CH en vivo - Podio', 280, true, true, 'top3_honor_board'], 41))
+    demoTemplates.push(make(curMonth, ['stars', 'emerald', 'Círculo del Éxito Esmeralda (Colombia)', 160, true, true, 'photo_name_points'], 42, { metadata: { country: 'COL' } }))
+}
+
 /** Lo que se pidió y a qué se contestó: `window.__demo.calls` dice qué no estaba previsto. */
 export const calls: Array<{ method: string, path: string, mocked: boolean }> = []
 
@@ -723,6 +778,25 @@ export const installMockApi = () => {
         else if (path === '/files/sign-url' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { fileName: string }
             response = respond({ url: `https://demo-s3.invalid/${encodeURIComponent(body.fileName)}`, key: body.fileName, disk: 'private' })
+        }
+        /* Plantillas: la API devuelve la LISTA entera (no pagina); encender, apagar y borrar cambian de verdad */
+        else if (path === '/templates' && method === 'GET') {
+            await wait(500)
+            response = respond(demoTemplates)
+        }
+        else if (path === '/templates/presets' && method === 'GET') response = respond([])
+        else if (/^\/newsletters\/sections\/[^/]+\/items$/.test(path)) response = respond([])
+        else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'PUT') {
+            const template = demoTemplates.find(item => item.id === path.split('/')[2])
+            if (template) Object.assign(template, JSON.parse(String(init?.body ?? '{}')))
+            await wait(350)
+            response = respond(template ?? null, template ? 200 : 404)
+        }
+        else if (/^\/templates\/tpl-[\w-]+$/.test(path) && method === 'DELETE') {
+            const index = demoTemplates.findIndex(item => item.id === path.split('/')[2])
+            if (index >= 0) demoTemplates.splice(index, 1)
+            await wait(350)
+            response = respond(null, index >= 0 ? 200 : 404)
         }
         else if (path === '/logout') response = respond(null)
         else if (path === '/sign-in') response = respond(null, 401)
