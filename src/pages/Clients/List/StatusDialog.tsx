@@ -66,10 +66,18 @@ const DebtNotice = ({ debt, activating }: { debt: ClientDebt, activating: boolea
 const StatusDialog = ({ target, onClose, onChanged }: { target: StatusTarget | null, onClose: () => void, onChanged?: (active: boolean) => void }) => {
     const { setActive } = useClientStatus()
     const [saving, setSaving] = useState(false)
-    const { debt, loading: checking, failed } = useClientDebt(target?.id ?? null)
+    const { debt: freshDebt, loading: checking, failed } = useClientDebt(target?.id ?? null)
 
-    const active = target?.active ?? true
-    const name = target ? titleCase(target.name) : ''
+    /* Al cerrar, `target` pasa a null ANTES de que termine la animación de salida: sin esto el título
+       cambiaba a «¿Desactivar a ?» y el aviso se esfumaba mientras el diálogo se desvanecía. Se pinta
+       la última clienta y lo último que se supo de lo que debe (estado derivado, no un efecto) */
+    const [last, setLast] = useState({ target, debt: freshDebt })
+    if (target && (target !== last.target || freshDebt !== last.debt)) setLast({ target, debt: freshDebt })
+    const shown = target ?? last.target
+    const debt = target ? freshDebt : last.debt
+
+    const active = shown?.active ?? true
+    const name = shown ? titleCase(shown.name) : ''
 
     const confirm = async () => {
         if (!target || saving) return
@@ -114,7 +122,7 @@ const StatusDialog = ({ target, onClose, onChanged }: { target: StatusTarget | n
                             {debt && debt.total > 0 && <DebtNotice debt={debt} activating={!active} />}
                             {debt && debt.total <= 0 && !active && <p className="text-[12.5px]">No debe nada.</p>}
 
-                            {active && target?.paysByCard && (
+                            {active && shown?.paysByCard && (
                                 <p className="flex gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-[13px] text-amber-800 dark:text-amber-300">
                                     <CreditCardIcon className="mt-0.5 size-4 shrink-0" />
                                     <span><b className="font-semibold">Paga con tarjeta automática.</b> Desactivarla aquí no cancela ese cobro: Stripe le seguirá cobrando cada mes hasta que canceles su suscripción en Stripe.</span>
