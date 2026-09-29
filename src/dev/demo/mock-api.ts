@@ -575,6 +575,22 @@ export const installMockApi = () => {
             await wait(400)
             response = respond(client ?? null, client ? 200 : 404)
         }
+        /* Lo que debe (todos los años), como `clients/{id}/debt`: la F, dada de baja, se fue debiendo tres
+           meses y ya pasó el plazo (activa, sólo podría entrar a pagar); las activas, lo de su cobranza */
+        else if (/^\/clients\/c-\d+\/debt$/.test(path) && method === 'GET') {
+            const client = demoClients.find(item => item.id === path.split('/')[2])
+            const gone = client?.id === 'c-5'
+            const owed: Record<string, DemoPayment> = gone
+                ? { [period(3)]: { amount: 349, paid: 300, status: 'partial' }, [period(2)]: { amount: 349, paid: 0, status: 'overdue' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } }
+                : financeLedger[client?.account ?? ''] ?? {}
+            const periods = Object.entries(owed)
+                .filter(([, payment]) => ['pending', 'partial', 'overdue'].includes(payment.status))
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([key, payment]) => ({ period: key, remaining: payment.amount - (payment.paid ?? 0), status: payment.status }))
+            const late = periods.some(item => item.status !== 'pending')
+            await wait(350)
+            response = respond({ total: periods.reduce((sum, item) => sum + item.remaining, 0), currency: 'MXN', periods, days_overdue: gone ? 85 : late ? 12 : 0, account_blocked: gone })
+        }
         else if (/^\/clients\/c-\d+$/.test(path) && method === 'GET') {
             /* La ficha espera `{ client, stats }`, no la clienta suelta */
             const found = demoClients.find(client => client.id === path.split('/')[2])

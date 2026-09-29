@@ -9,12 +9,12 @@ import useCountryStore from '@/store/country'
 import { boardKey } from './useClientsBoard'
 
 /**
- * Activar o desactivar una clienta desde el padrón «Estado».
+ * Activar o desactivar una clienta: lo llama StatusDialog, al que llegan el padrón «Estado» y el
+ * interruptor de la «Tabla de trabajo».
  *
- * Es el MISMO endpoint que el interruptor de la «Tabla de trabajo» (`change-status`); lo que cambia es
- * a quién avisa después: el tablero guarda su lista en su propia caché (`clients/board`, todas de una
- * vez), así que se corrige en sitio para que la fila cambie al instante sin volver a pedir las 160, y
- * la tabla de siempre se marca como vieja para que al abrirla ya salga bien.
+ * Después avisa a las dos listas: el tablero guarda la suya en su propia caché (`clients/board`, todas
+ * de una vez), así que se corrige en sitio para que la fila cambie al instante sin volver a pedir las
+ * 160, y la tabla de siempre se marca como vieja para que al abrirla ya salga bien.
  */
 const useClientStatus = () => {
     const queryClient = useQueryClient()

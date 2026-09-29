@@ -67,32 +67,12 @@ const useClientActions = () => {
         )
     }
 
-    const onChangeStatus = async (clientId: string, checked: boolean) => {
-        try {
-            setLoading(true)
-            const response = await request<IClientUpdate, IClient>(
-                'PATCH',
-                API_ROUTES.CLIENTS.SET_STATUS.replace('{id}', clientId),
-                { active: checked }
-            )
-            if (response.success) {
-                handleUpdateList({ id: clientId, user: { active: checked } } as Partial<IClient>)
-                /* El padrón «Estado» guarda la lista en su propia caché: sin esto, al volver a él la
-                   clienta seguía saliendo como estaba hasta que caducara */
-                queryClient.invalidateQueries({ queryKey: queryKeys.listBase('clients/board') })
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
     return {
         loading: requestState.loading || loading,
         patchUpdateClient,
         onChangePhoto,
         onChangeLogo,
         handleUpdateList,
-        onChangeStatus
     }
 }
 

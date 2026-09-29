@@ -9,6 +9,7 @@ import PaymentLinkDialog from '@/components/generics/PaymentLinkDialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/uishadcn/ui/dropdown-menu'
 import { initials, titleCase } from './names'
 import StatusDialog from './StatusDialog'
+import { statusTarget } from './statusTarget'
 import useClientsBoard, { BoardClient, PaymentState } from './useClientsBoard'
 import { countryInfo, moneyIn } from '@/constants/countries'
 import useCountryStore from '@/store/country'
@@ -181,7 +182,7 @@ const StatusBoard = () => {
                 {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : `Todavía no hay clientas en ${countryInfo(country).label}.`}</p>}
             </section>
 
-            <StatusDialog client={changing} onClose={() => setChanging(null)} />
+            <StatusDialog target={changing && statusTarget(changing.client)} onClose={() => setChanging(null)} />
             <PaymentLinkDialog account={paying?.client.account ?? null} name={paying ? titleCase(paying.client.name) : ''} onClose={() => setPaying(null)} />
         </div>
     )
