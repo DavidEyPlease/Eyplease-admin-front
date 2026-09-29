@@ -262,30 +262,41 @@ const cardIssues = [
    comprobante lo pasa a pagado de verdad, para poder probar la cola. */
 const cur = period(0), prev = period(1)
 type DemoPayment = { amount: number, paid: number | null, status: string, paid_at?: string | null, receipt_url?: string | null, reference_number?: string | null, receipt_uploaded_at?: string | null }
+/* Diciembre del año pasado: lo que quedó sin pagar se arrastra a la cobranza de este año (y lo pagado no) */
+const lastDecember = `${now.getFullYear() - 1}-12`
 const financeLedger: Record<string, Record<string, DemoPayment>> = {
-    'EJ-003': { [prev]: { amount: 1490, paid: 0, status: 'overdue' }, [cur]: { amount: 1490, paid: 0, status: 'overdue' } },
+    'EJ-003': { [lastDecember]: { amount: 1490, paid: 0, status: 'overdue' }, [prev]: { amount: 1490, paid: 0, status: 'overdue' }, [cur]: { amount: 1490, paid: 0, status: 'overdue' } },
     'EJ-008': { [cur]: { amount: 690, paid: 0, status: 'overdue' } },
     'EJ-005': { [cur]: { amount: 552, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-4471', receipt_uploaded_at: iso(95) } },
     'EJ-001': { [cur]: { amount: 1490, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-9020', receipt_uploaded_at: iso(260) } },
-    'EJ-002': { [cur]: { amount: 990, paid: 0, status: 'pending' } }, 'EJ-004': { [cur]: { amount: 690, paid: 0, status: 'pending' } }, 'EJ-009': { [cur]: { amount: 990, paid: 0, status: 'pending' } },
+    'EJ-002': { [lastDecember]: { amount: 990, paid: 990, status: 'paid', paid_at: `${lastDecember}-10T18:00:00Z` }, [cur]: { amount: 990, paid: 0, status: 'pending' } }, 'EJ-004': { [cur]: { amount: 690, paid: 0, status: 'pending' } }, 'EJ-009': { [cur]: { amount: 990, paid: 0, status: 'pending' } },
 }
 /* Bajas con adeudo: cuentas desactivadas que se fueron debiendo (sólo salen con `inactive=1`) */
 const financeInactiveLedger: Record<string, Record<string, DemoPayment>> = {
-    'EJ-010': { [period(2)]: { amount: 349, paid: 0, status: 'overdue' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
+    'EJ-010': { [lastDecember]: { amount: 349, paid: 0, status: 'overdue' }, [period(2)]: { amount: 349, paid: 0, status: 'overdue' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
 }
 /* Promesas de pago por cuenta ('YYYY-MM-DD'): una en pie y, al guardarlas, las que se pongan */
 const ymdAhead = (days: number) => { const d = new Date(now.getTime() + days * 86400000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
 const financePromises: Record<string, string> = { 'EJ-008': ymdAhead(10) }
 const STATUS_GROUP: Record<string, string[]> = { overdue: ['overdue', 'partial'], in_review: ['in_review'], pending: ['pending'], paid: ['paid'], collectable: ['overdue', 'partial', 'pending', 'in_review'] }
-const financeClients = (status: string, inactive = false) => {
+/* Como la API (Payment::forCollectionYear): los periodos del año y lo que quedó SIN PAGAR de años anteriores */
+const forCollectionYear = (payments: Record<string, DemoPayment>, year: number) =>
+    Object.fromEntries(Object.entries(payments).filter(([p, payment]) => p.startsWith(`${year}-`) || (p < `${year}-01` && payment.status !== 'paid')))
+const remainingOf = (payment: DemoPayment) => payment.status === 'paid' ? 0 : Math.max(0, payment.amount - (payment.paid ?? 0))
+const financeClients = (status: string, inactive = false, year = now.getFullYear()) => {
     const wanted = STATUS_GROUP[status] ?? STATUS_GROUP.collectable
     const ledger = inactive ? financeInactiveLedger : financeLedger
-    const items = Object.entries(ledger).filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status))).map(([account, payments], index) => {
+    const matching = Object.entries(ledger)
+        .map(([account, payments]) => [account, forCollectionYear(payments, year)] as const)
+        .filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status)))
+    const items = matching.map(([account, payments], index) => {
         const client = demoClients.find(item => item.account === account)
-        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance: 0, promotion: null, next_charge_date: null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
+        const balance = Object.values(payments).reduce((sum, payment) => sum + remainingOf(payment), 0)
+        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: Math.min(28, today + 1 + index * 2), phone: null, balance, promotion: null, next_charge_date: null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
     })
-    if (inactive) return { ...page(items), total_overdue: 698, total_pending: 0, total_in_review: 0 }
-    return { ...page(items), total_overdue: 3670, total_pending: 2670, total_in_review: 2042 }
+    /* Los totales, sobre TODO el filtro y con lo arrastrado, como getTotals de la API */
+    const total = (statuses: string[]) => matching.reduce((sum, [, payments]) => sum + Object.values(payments).filter(payment => statuses.includes(payment.status)).reduce((acc, payment) => acc + remainingOf(payment), 0), 0)
+    return { ...page(items), total_overdue: total(['overdue', 'partial']), total_pending: total(['pending']), total_in_review: total(['in_review']) }
 }
 const reportSections = [['early', 'Tempraneras'], ['pink_circle', 'Círculo Rosa'], ['stars', 'Estrellas'], ['honor_roll', 'Cuadro de Honor'], ['new_beginnings', 'Nuevos inicios'], ['birthdays', 'Cumpleaños']]
 const clientsStatus = {
@@ -618,7 +629,7 @@ export const installMockApi = () => {
         else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }
         /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
         else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
-        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1'))
+        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined))
         /* Registrar un pago como la API: «pagado» liquida con su fecha, un monto solo es abono, y
            deshacer un pagado lo deja debiéndose entero */
         else if (path === '/finance/payments' && method === 'POST') {
@@ -648,7 +659,8 @@ export const installMockApi = () => {
         }
         else if (/^\/finance\/clients\/[^/]+$/.test(path)) {
             const account = decodeURIComponent(path.split('/')[3])
-            response = respond(financeClients('collectable').items.find(item => item.id === account) ?? financeClients('paid').items.find(item => item.id === account) ?? financeClients('collectable', true).items.find(item => item.id === account) ?? null)
+            const year = Number(url.searchParams.get('year')) || undefined
+            response = respond(financeClients('collectable', false, year).items.find(item => item.id === account) ?? financeClients('paid', false, year).items.find(item => item.id === account) ?? financeClients('collectable', true, year).items.find(item => item.id === account) ?? null)
         }
         else if (path === '/reports/clients-status') response = respond(url.searchParams.get('country') === 'COL' ? colombiaClientsStatus : clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)

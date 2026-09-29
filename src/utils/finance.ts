@@ -16,8 +16,33 @@ export const periodMonth = (period: string) => Number(period.slice(5, 7))
 
 export const periodLabel = (period: string) => monthLabel(periodMonth(period))
 
+/** Extract the year from a 'YYYY-MM' period. */
+export const periodYear = (period: string) => Number(period.slice(0, 4))
+
+/* La cobranza de un año arrastra lo que quedó sin pagar de años anteriores (la API lo manda
+   junto): esos meses llevan su año, para que «diciembre» no se lea como el del año que se ve. */
+
+/** «Diciembre», o «Diciembre 2026» si el periodo es de otro año que el que se está viendo. */
+export const periodLabelIn = (period: string, year: number) =>
+    periodYear(period) === year ? periodLabel(period) : `${periodLabel(period)} ${periodYear(period)}`
+
+/** «Dic», o «Dic 2026» si el periodo es de otro año: la versión corta, para las fichas de mes. */
+export const periodShortIn = (period: string, year: number) =>
+    periodYear(period) === year ? periodLabel(period).slice(0, 3) : `${periodLabel(period).slice(0, 3)} ${periodYear(period)}`
+
+/** Los periodos de años anteriores que una clienta sigue debiendo, del más viejo al más nuevo. */
+export const carriedPeriods = (payments: Record<string, unknown>, year: number) =>
+    Object.keys(payments).filter((period) => period < toPeriod(year, 1)).sort()
+
 /** All 12 periods of a year, as 'YYYY-MM'. */
 export const periodsForYear = (year: number) => Array.from({ length: 12 }, (_, i) => toPeriod(year, i + 1))
+
+/** Primer año con cobranza en la plataforma. */
+const FIRST_FINANCE_YEAR = 2026
+
+/** Años del selector: del primero con cobranza al siguiente del actual (en 2027: 2026, 2027 y 2028). */
+export const financeYears = () =>
+    Array.from({ length: new Date().getFullYear() + 2 - FIRST_FINANCE_YEAR }, (_, i) => FIRST_FINANCE_YEAR + i)
 
 const mxn = new Intl.NumberFormat("es-MX", {
     style: "currency",

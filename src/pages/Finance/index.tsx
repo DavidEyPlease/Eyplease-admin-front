@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import Dropdown from "@/components/common/Inputs/Dropdown"
-import { MONTH_LABELS } from "@/utils/finance"
+import { MONTH_LABELS, financeYears } from "@/utils/finance"
 import SummaryTab from "./components/SummaryTab"
 import MonthTab from "./components/MonthTab"
 import CollectionsTab from "./components/CollectionsTab"
@@ -45,14 +45,15 @@ const GROUPS: Array<{ label: string; tabs: Array<{ key: TabKey; label: string }>
     { label: "Configurar", tabs: [{ key: "promociones", label: "Promociones" }, { key: "metodos-pago", label: "Métodos de pago" }] },
 ]
 
-const YEARS = [2026, 2027]
 const MONTH_OPTIONS = MONTH_LABELS.map((label, idx) => ({ label, value: String(idx + 1) }))
-const YEAR_OPTIONS = YEARS.map((y) => ({ label: String(y), value: String(y) }))
+const YEAR_OPTIONS = financeYears().map((y) => ({ label: String(y), value: String(y) }))
 
 const FinancePage = () => {
     const [tab, setTab] = useState<TabKey>(NEW_SHELL ? "mes" : "resumen")
     const [detailId, setDetailId] = useState<string | null>(null)
-    const [period, setPeriod] = useState({ year: 2026, month: new Date().getMonth() + 1 })
+    /* Abre en el mes y el AÑO en curso (antes el año iba fijo en 2026: en enero de 2027 habría
+       abierto «enero 2026»). Lo que quedó sin pagar de años anteriores lo trae la API junto. */
+    const [period, setPeriod] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }))
 
     const showPeriod = tab === "mes" || tab === "resumen" || tab === "gastos" || tab === "balance"
 

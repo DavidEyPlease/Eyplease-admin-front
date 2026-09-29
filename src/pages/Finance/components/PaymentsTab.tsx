@@ -13,14 +13,13 @@ import {
     PaymentSource,
 } from "@/interfaces/finance"
 import { formatDate } from "@/utils/dates"
-import { formatMoney, MONTH_LABELS, periodLabel } from "@/utils/finance"
+import { financeYears, formatMoney, MONTH_LABELS, periodLabel } from "@/utils/finance"
 import { useFinancePaymentsPage } from "../useFinancePayments"
 import { Panel, StatusPill } from "./ui"
 
 // Radix Select forbids an empty-string item value, so "all" is the sentinel
 // for the unfiltered option and is mapped back to an empty filter on change.
 const ALL = "all"
-const YEARS = [2026, 2027]
 
 const SOURCE_TONE: Record<PaymentSource, string> = {
     stripe: "bg-violet-500/10 text-violet-600",
@@ -86,7 +85,7 @@ const columns: ColumnDef<PaymentRecord>[] = [
     },
 ]
 
-const YEAR_OPTIONS = YEARS.map((y) => ({ label: String(y), value: String(y) }))
+const YEAR_OPTIONS = financeYears().map((y) => ({ label: String(y), value: String(y) }))
 const MONTH_OPTIONS = [{ label: "Todo el año", value: ALL }, ...MONTH_LABELS.map((label, idx) => ({ label, value: String(idx + 1) }))]
 const STATUS_OPTIONS = [{ label: "Todos", value: ALL }, ...Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => ({ label, value }))]
 const SOURCE_OPTIONS = [{ label: "Todos", value: ALL }, ...Object.entries(PAYMENT_SOURCE_LABELS).map(([value, label]) => ({ label, value }))]

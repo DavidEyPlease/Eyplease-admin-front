@@ -18,7 +18,7 @@ import UIPagination from "@/components/generics/Pagination"
 import PaymentLinkDialog from "@/components/generics/PaymentLinkDialog"
 import { COLLECTION_STATUS_OPTIONS, CollectionStatus, FinanceClient, FinanceClientPromotion, PaymentStatus } from "@/interfaces/finance"
 import { formatDate } from "@/utils/dates"
-import { formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodOf, periodPaid, periodRemaining, periodsForYear, promiseState } from "@/utils/finance"
+import { formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabelIn, periodOf, periodPaid, periodRemaining, periodShortIn, promiseState } from "@/utils/finance"
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
@@ -61,7 +61,7 @@ const CHIP_TONE_BY_STATUS: Partial<Record<Exclude<PaymentStatus, null>, ChipTone
     in_review: "violet",
 }
 
-/** A client's periods of the year, bucketed by what the admin can do with them. */
+/** A client's periods of the year (plus what she still owes from earlier years), bucketed by what the admin can do with them. */
 interface CollectionRow {
     client: FinanceClient
     /** overdue | partial — behind on payment. */
@@ -75,7 +75,10 @@ interface CollectionRow {
     reviewAmount: number
 }
 
-const buildRow = (client: FinanceClient, periods: string[]): CollectionRow => {
+/* Los periodos salen de sus pagos y no de los 12 meses del año: la API manda también lo que quedó
+   sin pagar de años anteriores, y eso también se cobra. */
+const buildRow = (client: FinanceClient): CollectionRow => {
+    const periods = Object.keys(client.payments).sort()
     const withStatus = (matches: (status: PaymentStatus) => boolean) =>
         periods.filter((p) => matches(client.payments[p]?.status ?? null))
     const remaining = (list: string[]) =>
@@ -158,15 +161,15 @@ const ChargeDay = ({ client, compact = false }: { client: FinanceClient; compact
     )
 }
 
-/** One chip per period, toned by its status; falls back to the balance or "Al día". */
-const PeriodChips = ({ row }: { row: CollectionRow }) => {
+/** One chip per period, toned by its status; falls back to the balance or "Al día". A month of another year carries its year. */
+const PeriodChips = ({ row, year }: { row: CollectionRow; year: number }) => {
     const periods = [...row.overduePeriods, ...row.pendingPeriods, ...row.reviewPeriods].sort()
     if (periods.length) {
         return (
             <>
                 {periods.map((p) => (
                     <MonthChip key={p} tone={CHIP_TONE_BY_STATUS[row.client.payments[p]?.status ?? "overdue"] ?? "rose"}>
-                        {periodLabel(p).slice(0, 3)}
+                        {periodShortIn(p, year)}
                     </MonthChip>
                 ))}
             </>
@@ -244,7 +247,6 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     })
     const { markPayment, marking } = useMarkPayment()
     const { reviewReceipt, reviewing } = useReviewReceipt()
-    const periods = useMemo(() => periodsForYear(year), [year])
 
     const [manageId, setManageId] = useState<string | null>(null)
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
@@ -276,7 +278,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     const closeManage = () => { setManageId(null); setShowTransfer(false); setAbono({}); setPaidOn(new Date()) }
 
-    const rows = useMemo(() => clients.map((client) => buildRow(client, periods)), [clients, periods])
+    const rows = useMemo(() => clients.map(buildRow), [clients])
 
     // Every filter is applied server-side; we only derive whether any is active
     // for the empty-state copy and the "Limpiar" link. The state filter has its
@@ -305,7 +307,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
     const markMonthPaid = async (account: string, period: string) => {
         await markPeriodPaid(account, period)
-        toast.success(`${periodLabel(period)} pagado el ${formatPaidAt(paidAtOn(paidOn))}`)
+        toast.success(`${periodLabelIn(period, year)} pagado el ${formatPaidAt(paidAtOn(paidOn))}`)
     }
 
     const markAllPaid = async (row: CollectionRow) => {
@@ -333,7 +335,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         const amount = Number(abono[period])
         if (!amount || amount <= 0) return
         await markPayment({ account, period, amount, source: "manual", paid_at: paidAtOn(paidOn) })
-        toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabel(period)}`)
+        toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabelIn(period, year)}`)
         setAbono((prev) => ({ ...prev, [period]: "" }))
     }
 
@@ -341,14 +343,14 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     // clients with nothing pending, so periods are always settled in order.
     const registerAdvance = async (row: CollectionRow, period: string) => {
         await markPayment({ account: row.client.id, period, status: "paid", source: "manual", paid_at: paidAtOn(paidOn) })
-        toast.success(`Adelanto de ${periodLabel(period)} registrado · ${row.client.name}`)
+        toast.success(`Adelanto de ${periodLabelIn(period, year)} registrado · ${row.client.name}`)
     }
 
     const resolveReceipt = async (row: CollectionRow, period: string, decision: "approve" | "reject") => {
         await reviewReceipt({ account: row.client.id, period, decision })
         toast.success(decision === "approve"
-            ? `Comprobante de ${periodLabel(period)} validado · ${row.client.name}`
-            : `Comprobante de ${periodLabel(period)} rechazado`)
+            ? `Comprobante de ${periodLabelIn(period, year)} validado · ${row.client.name}`
+            : `Comprobante de ${periodLabelIn(period, year)} rechazado`)
     }
 
     return (
@@ -357,7 +359,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                 <section className="shell-glass rounded-3xl p-[22px]">
                     <div className="flex flex-wrap items-end justify-between gap-4">
                         <div>
-                            <small className="text-[11px] font-bold tracking-[.08em] text-muted-foreground uppercase">{inactive ? `Lo que dejaron debiendo en ${year}` : `Por cobrar en ${year}`}</small>
+                            <small className="text-[11px] font-bold tracking-[.08em] text-muted-foreground uppercase">{inactive ? "Lo que dejaron debiendo" : "Por cobrar"}{year !== new Date().getFullYear() && ` · hasta ${year}`}</small>
                             <b className="mt-1 block text-[34px] leading-none font-extrabold tracking-[-.035em] tabular-nums">{whole(totalOverdue + totalPending)}</b>
                         </div>
                         <span className="text-[12.5px] text-muted-foreground"><b className="text-foreground tabular-nums">{totalItems}</b> {totalItems === 1 ? "clienta" : "clientas"} con este filtro</span>
@@ -472,7 +474,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <td className="px-5 py-3.5 text-muted-foreground"><ChargeDay client={row.client} /></td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
-                                                <div className="flex flex-wrap gap-1"><PeriodChips row={row} /></div>
+                                                <div className="flex flex-wrap gap-1"><PeriodChips row={row} year={year} /></div>
                                             </td>
                                             <td className="px-5 py-3.5 text-right"><RowAmount row={row} /></td>
                                             <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF]">Gestionar</span></td>
@@ -515,7 +517,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <ChargeDay client={row.client} compact />
                                         {row.client.promisedUntil && <div className="mt-1"><PromiseChip client={row.client} /></div>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
-                                        <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} /></div>
+                                        <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} year={year} /></div>
                                     </div>
                                     <div className="shrink-0 text-right">
                                         <RowAmount row={row} />
@@ -616,7 +618,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         return (
                                             <div key={p} className="rounded-xl border border-[#5B47E0]/20 bg-[#5B47E0]/[.06] px-3 py-2.5">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-foreground">{periodLabel(p)}</span>
+                                                    <span className="text-sm font-medium text-foreground">{periodLabelIn(p, year)}</span>
                                                     <span className="text-sm font-semibold text-foreground">{formatMoney(periodRemaining(pay, manageRow.client.fixedPayment ?? 0))}</span>
                                                 </div>
                                                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -655,7 +657,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <div key={p} className="rounded-xl border border-border px-3 py-2.5">
                                                 <div className="flex items-center justify-between">
                                                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                                                        {periodLabel(p)}
+                                                        {periodLabelIn(p, year)}
                                                         {upcoming && <MonthChip tone="amber">por vencer</MonthChip>}
                                                     </span>
                                                     <div className="text-right">
@@ -700,7 +702,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     )}
                                     {manageRow.client.billingType === "manual" && advancePeriod && (
                                         <button onClick={() => registerAdvance(manageRow, advancePeriod)} disabled={marking} className="mt-2 inline-flex items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 shadow-sm hover:bg-emerald-100 disabled:opacity-50">
-                                            <CheckIcon className="h-3.5 w-3.5" /> Registrar adelanto de {periodLabel(advancePeriod)}
+                                            <CheckIcon className="h-3.5 w-3.5" /> Registrar adelanto de {periodLabelIn(advancePeriod, year)}
                                         </button>
                                     )}
                                 </div>

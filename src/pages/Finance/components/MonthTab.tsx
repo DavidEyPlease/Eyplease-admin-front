@@ -4,7 +4,7 @@ import { CheckIcon, ExternalLinkIcon, XIcon } from "lucide-react"
 
 import { FinanceClient } from "@/interfaces/finance"
 import { cn } from "@/lib/utils"
-import { MONTH_LABELS, formatMoney, periodLabel, periodRemaining } from "@/utils/finance"
+import { MONTH_LABELS, formatMoney, periodLabelIn, periodRemaining } from "@/utils/finance"
 import useFinanceBalance from "../useFinanceBalance"
 import CardIssues from "./CardIssues"
 import { useFinanceClientsPage, useReviewReceipt } from "../useFinanceClients"
@@ -40,7 +40,8 @@ interface Props {
  * «La caja del mes»: Finanzas abre en lo que hay que HACER, no en un tablero de cifras. El mes en
  * una sola barra y, debajo, las colas de trabajo: comprobantes por validar (se aprueban aquí
  * mismo), a quién cobrarle y quién cobra esta semana. El año va en una tira al final. Todo sale de
- * los mismos endpoints que ya usan Resumen, Cobranza y Balance.
+ * los mismos endpoints que ya usan Resumen, Cobranza y Balance. Las colas traen también lo que
+ * quedó sin pagar de años anteriores (en enero, la deuda de diciembre), con su año en la etiqueta.
  */
 const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
     const { summary } = useFinanceSummary(period.year, period.month)
@@ -74,7 +75,7 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
     const resolve = async (account: string, name: string, p: string, decision: "approve" | "reject") => {
         try {
             await reviewReceipt({ account, period: p, decision })
-            toast.success(decision === "approve" ? `Comprobante de ${periodLabel(p)} validado · ${name}` : `Comprobante de ${periodLabel(p)} rechazado`)
+            toast.success(decision === "approve" ? `Comprobante de ${periodLabelIn(p, period.year)} validado · ${name}` : `Comprobante de ${periodLabelIn(p, period.year)} rechazado`)
         } catch {
             toast.error("No se pudo guardar la decisión")
         }
@@ -124,7 +125,7 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
                         <div key={`${client.id}-${p}`} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
                             <button type="button" onClick={() => onOpenClient(client.id)} className="min-w-0 flex-1 cursor-pointer text-left">
                                 <b className="block truncate text-[13.5px] font-bold hover:underline">{client.name}</b>
-                                <small className="block text-[11.5px] text-muted-foreground">{periodLabel(p)} · {formatMoney(payment?.amount ?? client.fixedPayment ?? 0)}{payment?.referenceNumber ? ` · ref. ${payment.referenceNumber}` : ""}</small>
+                                <small className="block text-[11.5px] text-muted-foreground">{periodLabelIn(p, period.year)} · {formatMoney(payment?.amount ?? client.fixedPayment ?? 0)}{payment?.referenceNumber ? ` · ref. ${payment.referenceNumber}` : ""}</small>
                             </button>
                             {payment?.receiptUrl && <a href={payment.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-xl px-2.5 text-[12px] font-bold text-primary hover:bg-primary/10"><ExternalLinkIcon className="size-3.5" />Ver</a>}
                             <button type="button" disabled={reviewing} onClick={() => resolve(client.id, client.name, p, "reject")} title="Rechazar" className="grid size-8 cursor-pointer place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-500 disabled:opacity-50"><XIcon className="size-4" /></button>
@@ -138,7 +139,7 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
                         <button key={client.id} type="button" onClick={() => onOpenClient(client.id)} className="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-foreground/[.035]">
                             <span className="min-w-0 flex-1">
                                 <b className="block truncate text-[13.5px] font-bold">{client.name}</b>
-                                <small className="block truncate text-[11.5px] text-muted-foreground">{client.plan ?? "Sin plan"} · debe {periods.map(p => periodLabel(p).toLowerCase()).join(", ")}</small>
+                                <small className="block truncate text-[11.5px] text-muted-foreground">{client.plan ?? "Sin plan"} · debe {periods.map(p => periodLabelIn(p, period.year).toLowerCase()).join(", ")}</small>
                             </span>
                             {periods.length > 1 && <span className="pulse-tag bad">{periods.length} meses</span>}
                             <b className="text-[14.5px] font-extrabold text-rose-600 tabular-nums dark:text-rose-400">{formatMoney(amount)}</b>

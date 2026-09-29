@@ -6,7 +6,7 @@ import SideModal from "@/components/common/SideModal"
 import Spinner from "@/components/common/Spinner"
 import DateInput from "@/components/common/Inputs/DateInput"
 import { PaymentStatus } from "@/interfaces/finance"
-import { dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodsForYear, promiseState } from "@/utils/finance"
+import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodLabelIn, periodYear, periodsForYear, promiseState } from "@/utils/finance"
 import { MarkPaymentInput, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
 import { StatusPill } from "./ui"
 
@@ -38,7 +38,11 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
     const { client, loading } = useFinanceClient(clientId, year)
     const { markPayment } = useMarkPayment()
     const { setPromise } = usePaymentPromise()
-    const periods = periodsForYear(year)
+    const yearPeriods = periodsForYear(year)
+    /* Lo que sigue debiendo de años anteriores va arriba del año: cuenta en el saldo (la app la
+       sigue cobrando) y desde aquí mismo se marca pagado. */
+    const carried = client ? carriedPeriods(client.payments, year) : []
+    const periods = [...carried, ...yearPeriods]
     /* El día en que entró el dinero: decide en qué mes cuenta el ingreso. Por defecto hoy; si
        el pago fue otro día (un depósito del 30 que se marca el 2), se cambia aquí antes de marcar. */
     const [paidOn, setPaidOn] = useState<Date>(() => new Date())
@@ -53,7 +57,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
             source: "manual",
             ...(paid ? { paid_at: paidAtOn(paidOn) } : {}),
         })
-        if (paid) toast.success(`${periodLabel(period)} pagado el ${formatPaidAt(paidAtOn(paidOn))}`)
+        if (paid) toast.success(`${periodLabelIn(period, year)} pagado el ${formatPaidAt(paidAtOn(paidOn))}`)
     }
 
     const onPromiseChange = async (date: Date | undefined) => {
@@ -67,7 +71,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
         if (!client) return
         const status = (client.payments[period]?.status ?? "pending") as MarkPaymentInput["status"]
         markPayment({ account: client.id, period, status, amount: amount ?? 0, source: "manual" })
-        toast.success(`Monto de ${periodLabel(period)} actualizado`)
+        toast.success(`Monto de ${periodLabelIn(period, year)} actualizado`)
     }
 
     return (
@@ -154,7 +158,10 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                 const p = client.payments[period]
                                 return (
                                     <div key={period} className="flex items-center gap-2 border-b border-border px-3 py-2 text-sm last:border-0">
-                                        <span className="w-16 shrink-0 text-muted-foreground">{periodLabel(period)}</span>
+                                        <span className="w-16 shrink-0 text-muted-foreground">
+                                            {periodLabel(period)}
+                                            {periodYear(period) !== year && <small className="block text-[10.5px] leading-tight text-rose-600 dark:text-rose-400">de {periodYear(period)}</small>}
+                                        </span>
                                         <div className="flex flex-1 items-center gap-1">
                                             <span className="text-muted-foreground">$</span>
                                             <input
@@ -193,7 +200,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="text-xs text-muted-foreground">Vista rápida:</span>
-                            {periods.map((period) => (
+                            {yearPeriods.map((period) => (
                                 <StatusPill key={period} status={client.payments[period]?.status ?? null} />
                             ))}
                         </div>
