@@ -6,9 +6,8 @@ import useFetchQuery from '@/hooks/useFetchQuery'
 import HttpService from '@/services/http'
 import { API_ROUTES } from '@/constants/api'
 import { ApiResponse } from '@/interfaces/common'
-import { FileTypes } from '@/interfaces/files'
 import { Acomodo, CelebrateResult, ChallengeDetail, ChallengeListItem, PreviewResult } from '@/interfaces/challenges'
-import { getSignUploadUrl } from '@/utils/apiUtils'
+import { uploadImageTo } from '@/utils/files'
 
 const detailUrl = (id: string) => API_ROUTES.CHALLENGES.DETAIL.replace('{id}', id)
 const listKey = ['challenges']
@@ -78,14 +77,7 @@ export const useChallengeActions = (id: string) => {
     })
 
     /** Sube una base a mano a la carpeta del reto; devuelve su llave (se registra al guardar). */
-    const upload = (file: File, folder: string) => run('upload', async () => {
-        const extension = (file.name.split('.').pop() || 'png').toLowerCase()
-        const random = Math.random().toString(36).slice(2, 10)
-        const { url, key } = await getSignUploadUrl({ fileName: `${folder}subida-${random}.${extension}`, fileType: (file.type || 'image/png') as FileTypes, disk: 'private' })
-        const response = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'image/png' } })
-        if (!response.ok) throw new Error('No se pudo subir la imagen')
-        return key
-    })
+    const upload = (file: File, folder: string) => run('upload', () => uploadImageTo(file, folder))
 
     /** Vuelve a llenar piezas ya publicadas (misma publicación, sin aviso): las de `personIds` o todas. */
     const refill = (personIds: string[] | null) => run('refill', async () => {

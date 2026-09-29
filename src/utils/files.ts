@@ -18,6 +18,20 @@ export const uploadFile = async (params: { file: File, fileType: FileTypes, file
     }
 }
 
+/**
+ * Sube una imagen a `folder` (termina en «/») con un nombre al azar y su propio tipo de contenido; devuelve su
+ * llave. La registra quien la usa (la base de un reto o de una plantilla se guarda con sus medidas).
+ */
+export const uploadImageTo = async (file: File, folder: string, prefix = 'subida') => {
+    const extension = (file.name.split('.').pop() || 'png').toLowerCase()
+    const random = Math.random().toString(36).slice(2, 10)
+    const type = file.type || 'image/png'
+    const { url, key } = await getSignUploadUrl({ fileName: `${folder}${prefix}-${random}.${extension}`, fileType: type as FileTypes, disk: 'private' })
+    const response = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': type } })
+    if (!response.ok) throw new Error('No se pudo subir la imagen')
+    return key
+}
+
 export const anchorDownload = (url: string, fileName: string, target?: string) => {
     const a = document.createElement('a')
     a.href = url

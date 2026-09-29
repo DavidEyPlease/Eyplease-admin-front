@@ -63,6 +63,17 @@ export interface NameLayout extends TextStyle {
     cap: number
     interlinea?: number
     ancho_max: number
+    /** 'auto': uno si cabe holgado, si no dos · 2: siempre dos · 3: tres si en dos se achica de más · 1: uno */
+    renglones?: 'auto' | 1 | 2 | 3
+    /** Achicar lo que haga falta para no pasarse de `ancho_max` (sin él, se detiene en `min_escala`) */
+    estricto?: boolean
+    /** El interlineado se achica con la letra */
+    interlinea_escala?: boolean
+    /** Con `renglones: 3`: van tres si en dos la letra quedaría más chica que esto (0.8) */
+    tres_si?: number
+    interlinea3?: number
+    /** Hasta dónde se achica la letra (0.7) */
+    min_escala?: number
 }
 
 export interface ValueLayout extends TextStyle {
@@ -72,14 +83,38 @@ export interface ValueLayout extends TextStyle {
     ancho_max: number
 }
 
+/** Un renglón suelto: el nombre de la Directora en los cumpleaños («Tu Directora» ya viene en la base). */
+export interface FirmaLayout extends TextStyle {
+    cx: number
+    /** Línea base del renglón */
+    base: number
+    /** Alto de las mayúsculas; si el nombre no cabe en `ancho_max`, se achica */
+    cap: number
+    ancho_max: number
+}
+
+/** El círculo de las fotos que cortan la cabeza (y del avatar, si la base lo pide): colores y, si no, junto a la cara */
+export interface CircleLayout {
+    filo?: [number, number, number]
+    aro?: [number, number, number]
+    sombra?: [number, number, number]
+    diametro?: number
+    cx?: number
+    cy?: number
+}
+
 export interface Acomodo {
     cara: { cx: number, cy: number, ancho: number }
     /** Las fotos que cortan la cabeza van en un círculo: su aro puede llevar un filo de color */
-    circulo?: { filo?: [number, number, number], diametro?: number } | null
+    circulo?: CircleLayout | null
     velo?: [number, number] | null
     min_cara?: number
     nombre: NameLayout
     valor?: ValueLayout | null
+    firma?: FirmaLayout | null
+    /** Sin foto que sirva: el avatar en el círculo (sobre un fondo liso) en vez de suelto */
+    avatar?: 'circulo'
+    avatar_fondo?: [number, number, number]
 }
 
 export type FontKey = 'playfair' | 'playfair-italica' | 'poppins' | 'lora' | 'inter'

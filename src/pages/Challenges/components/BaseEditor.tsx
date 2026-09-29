@@ -7,15 +7,29 @@ import { Acomodo, FontKey, PreviewResult } from '@/interfaces/challenges'
 
 import { fromHex, toHex } from '../retos.utils'
 
+type RGB = [number, number, number]
+type Shadow = [number, number, number, number, RGB]
 type Face = { cx: number, cy: number, ancho: number }
 type NameBox = { cx: number, base2: number, cap: number, ancho_max: number }
 type ValueBox = { cx: number, base: number, alto: number, ancho_max: number }
+type FirmaBox = { cx: number, base: number, cap: number, ancho_max: number }
 type Style = { fuente: FontKey, peso: number, sx: number, top: string, bottom: string, sombra: boolean, relieve: boolean, brillo: boolean }
-type Drag = 'face' | 'face-size' | 'name' | 'name-width' | 'name-height' | 'value' | 'value-width' | 'value-height' | 'velo-top' | 'velo-bottom'
+type FirmaStyle = { on: boolean, fuente: FontKey, peso: number, color: string, sombra: boolean }
+type Drag = 'face' | 'face-size' | 'name' | 'name-width' | 'name-height' | 'value' | 'value-width' | 'value-height' | 'firma' | 'firma-width' | 'firma-height' | 'velo-top' | 'velo-bottom'
+type Extras = Record<string, unknown>
+type Kept = { nameShadow: Shadow | null, firmaShadow: Shadow | null, middle: RGB[], interlinea: { cap: number, value: number } | null }
+
+const NOTHING_KEPT: Kept = { nameShadow: null, firmaShadow: null, middle: [], interlinea: null }
 
 /** Del alto de las mayúsculas al alto de los dos renglones (de la cima de la «M» de arriba a la línea base de abajo). */
 const TWO_LINES = 2.13
-const SHADOW: [number, number, number, number, [number, number, number]] = [2, 3, 3.5, 0.55, [6, 12, 30]]
+/* La zona de la firma va de los acentos a la cola de la «g» (en altos de mayúscula desde su línea base): así su orilla
+   no tapa la letra, que es chica */
+const FIRMA_ABOVE = 1.3
+const FIRMA_BELOW = 0.35
+const SHADOW: Shadow = [2, 3, 3.5, 0.55, [6, 12, 30]]
+/** La de la firma cuando no trae una: más corta, es letra chica */
+const FIRMA_SHADOW: Shadow = [1, 1.5, 2, 0.45, [6, 12, 30]]
 
 /* `cap`: alto de las mayúsculas entre el tamaño de la letra, medido en las fuentes del servidor (public/fonts) */
 const FONTS: Array<{ key: FontKey, label: string, family: string, css: string, cap: number }> = [
@@ -25,24 +39,59 @@ const FONTS: Array<{ key: FontKey, label: string, family: string, css: string, c
     { key: 'poppins', label: 'Poppins (moderna)', family: 'Poppins', css: 'Poppins, "Inter Variable", sans-serif', cap: 0.709 },
     { key: 'inter', label: 'Inter (sencilla)', family: 'Inter Variable', css: '"Inter Variable", Inter, sans-serif', cap: 0.728 },
 ]
-/* Las mismas familias que usa el servidor, sólo para que la muestra se parezca (la pieza de verdad sale de allá) */
-const GOOGLE_FONTS = 'https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Poppins:wght@600;700;800;900&display=swap'
+/* Las mismas familias que usa el servidor, sólo para que la muestra se parezca (la pieza de verdad sale de allá).
+   El 400 es para la firma, que va en letra normal. */
+const GOOGLE_FONTS = 'https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600;1,700;1,800;1,900&family=Poppins:wght@400;600;700;800;900&display=swap'
 const SAMPLE_LINES = ['María Guadalupe', 'Hernández Villaseñor']
 const SAMPLE_VALUE = '1,502'
+const SAMPLE_FIRMA = 'Ana Camila García González'
+const FIRMA_WEIGHTS: Array<[number, string]> = [[400, 'Normal'], [600, 'Seminegrita'], [700, 'Negrita']]
+
+/* Lo que el medidor dibuja y controla. Lo demás del acomodo (cuántos renglones lleva el nombre, el avatar en círculo,
+   los colores del aro…) pasa tal cual al guardar: así no se pierde lo que se ajustó a mano. */
+const MANAGED: Record<string, string[]> = {
+    top: ['cara', 'velo', 'nombre', 'valor', 'circulo', 'firma'],
+    cara: ['cx', 'cy', 'ancho'],
+    nombre: ['fuente', 'peso', 'sx', 'grad', 'sombra', 'relieve', 'brillo', 'cx', 'base2', 'cap', 'interlinea', 'ancho_max'],
+    valor: ['fuente', 'peso', 'sx', 'grad', 'sombra', 'relieve', 'brillo', 'cx', 'base', 'alto', 'ancho_max'],
+    firma: ['fuente', 'peso', 'grad', 'sombra', 'cx', 'base', 'cap', 'ancho_max'],
+    circulo: ['filo'],
+}
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const round = (value: number) => Math.round(value)
+const record = (value: unknown): Extras => value && typeof value === 'object' && !Array.isArray(value) ? value as Extras : {}
+const without = (value: unknown, keys: string[]) => Object.fromEntries(Object.entries(record(value)).filter(([key]) => !keys.includes(key)))
+const shadowOf = (value: unknown) => Array.isArray(value) && value.length === 5 ? value as Shadow : null
+/** JSON para leer: cada llave en su renglón y las listas de números (colores, medidas) en uno solo */
+const pretty = (value: unknown) => JSON.stringify(value, null, 2).replace(/\[[\d\s,.-]*\]/g, list => list.replace(/\s+/g, ' ').replace('[ ', '[').replace(' ]', ']'))
 
-export interface Sample { id: string | null, label: string, value: string | null }
+/** Lo que el medidor no toca, con la misma forma del acomodo y sólo con lo que traiga. Sin firma, la firma es de ésas. */
+const extrasOf = (acomodo: Acomodo, hasFirma: boolean): Extras => {
+    const extras = without(acomodo, MANAGED.top.filter(key => hasFirma || key !== 'firma'))
+    for (const part of ['cara', 'nombre', 'valor', 'circulo', ...(hasFirma ? ['firma'] : [])]) {
+        const rest = without(acomodo[part as keyof Acomodo], MANAGED[part])
+        if (Object.keys(rest).length) extras[part] = rest
+    }
+    return extras
+}
+
+export interface Sample { id: string | null, label: string, value: string | null, firma?: string | null }
 
 interface Props {
     /** La imagen que se mide (la base nueva o la vigente) */
     imageUrl: string
     /** El reto lleva número (puntos o corazones) */
     hasValue: boolean
+    /** Lleva un renglón más con el nombre de la Directora (los cumpleaños); su texto de muestra viene de `Sample.firma` */
+    hasFirma?: boolean
+    /** Enseña «Ajustes avanzados»: lo que el medidor no dibuja, en JSON */
+    advanced?: boolean
     /** Las medidas guardadas, si esta base ya se midió */
     initial: Acomodo | null
     samples: Sample[]
+    /** Lo que va arriba de «Probar con» (p. ej. dónde escribir con quién probar) */
+    sampleSlot?: React.ReactNode
     busy: string
     saveLabel: string
     onPreview: (acomodo: Acomodo, sample: Sample) => Promise<PreviewResult | null>
@@ -51,22 +100,30 @@ interface Props {
 
 /**
  * El medidor de la base (David, 28-sep-2026: la base va SIN molde y se mide a mano). Encima de la base se pintan las
- * zonas que el sistema va a llenar —la cara, el nombre en dos renglones y, si el reto lo lleva, el número— y se
- * acomodan arrastrando. La figura tenue alrededor de la cara es dónde caen la cabeza y los hombros. «Ver cómo sale»
- * arma la pieza de verdad en el servidor con estas medidas, sin guardarlas.
+ * zonas que el sistema va a llenar —la cara, el nombre en dos renglones y, si lo lleva, el número o el nombre de la
+ * Directora— y se acomodan arrastrando. La figura tenue alrededor de la cara es dónde caen la cabeza y los hombros.
+ * «Ver cómo sale» arma la pieza de verdad en el servidor con estas medidas, sin guardarlas.
  */
-const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onPreview, onSave }: Props) => {
+const BaseEditor = ({ imageUrl, hasValue, hasFirma = false, advanced = false, initial, samples, sampleSlot, busy, saveLabel, onPreview, onSave }: Props) => {
     const stage = useRef<HTMLDivElement>(null)
-    const drag = useRef<{ kind: Drag, x: number, y: number, face: Face, name: NameBox, value: ValueBox, velo: [number, number] } | null>(null)
+    const drag = useRef<{ kind: Drag, x: number, y: number, face: Face, name: NameBox, value: ValueBox, firma: FirmaBox, velo: [number, number] } | null>(null)
     const [size, setSize] = useState<{ w: number, h: number } | null>(null)
     const [shown, setShown] = useState(0)
     const [face, setFace] = useState<Face>({ cx: 0, cy: 0, ancho: 0 })
     const [name, setName] = useState<NameBox>({ cx: 0, base2: 0, cap: 0, ancho_max: 0 })
     const [value, setValue] = useState<ValueBox>({ cx: 0, base: 0, alto: 0, ancho_max: 0 })
+    const [firma, setFirma] = useState<FirmaBox>({ cx: 0, base: 0, cap: 0, ancho_max: 0 })
     const [velo, setVelo] = useState<[number, number]>([0, 0])
     const [veloOn, setVeloOn] = useState(true)
     const [filo, setFilo] = useState<string | null>(null)
     const [style, setStyle] = useState<Style>({ fuente: 'playfair', peso: 800, sx: 0.83, top: '#fde9e1', bottom: '#f0b0ac', sombra: true, relieve: true, brillo: true })
+    const [firmaStyle, setFirmaStyle] = useState<FirmaStyle>({ on: hasFirma, fuente: 'playfair', peso: 400, color: '#ffffff', sombra: true })
+    /* Lo que el medidor no enseña pero no debe cambiar al guardar: las sombras tal cual, los colores de en medio del
+       nombre y su interlineado (mientras no cambie la letra) */
+    const [kept, setKept] = useState<Kept>(NOTHING_KEPT)
+    const [extras, setExtras] = useState<Extras>({})
+    const [extrasText, setExtrasText] = useState('{}')
+    const [extrasError, setExtrasError] = useState<string | null>(null)
     const [sampleIndex, setSampleIndex] = useState(0)
     const [result, setResult] = useState<{ url: string, caption: string } | null>(null)
     const [fontTick, setFontTick] = useState(0)
@@ -88,6 +145,18 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
         const italic = style.fuente === 'playfair-italica' ? 'italic ' : ''
         document.fonts.load(`${italic}${style.peso} 40px "${family}"`).then(() => setFontTick(tick => tick + 1)).catch(() => undefined)
     }, [style.fuente, style.peso])
+    useEffect(() => {
+        if (!hasFirma) return
+        const family = (FONTS.find(item => item.key === firmaStyle.fuente) ?? FONTS[0]).family
+        const italic = firmaStyle.fuente === 'playfair-italica' ? 'italic ' : ''
+        document.fonts.load(`${italic}${firmaStyle.peso} 40px "${family}"`).then(() => setFontTick(tick => tick + 1)).catch(() => undefined)
+    }, [hasFirma, firmaStyle.fuente, firmaStyle.peso])
+
+    const startExtras = (next: Extras) => {
+        setExtras(next)
+        setExtrasText(pretty(next))
+        setExtrasError(null)
+    }
 
     /* Al cargar la imagen: sus medidas reales, y las zonas donde estaban (o unas de partida si es una base nueva) */
     const onLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -114,6 +183,21 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                 relieve: initial.nombre.relieve ?? true,
                 brillo: initial.nombre.brillo ?? true,
             })
+            /* Sin firma guardada, la de partida va debajo del nombre (apagada: no se agrega sola al guardar) */
+            const saved = initial.firma
+            setFirma(saved
+                ? { cx: saved.cx, base: saved.base, cap: saved.cap, ancho_max: saved.ancho_max }
+                : { cx: initial.nombre.cx, base: Math.min(0.97 * h, initial.nombre.base2 + 2.4 * initial.nombre.cap), cap: Math.max(12, 0.3 * initial.nombre.cap), ancho_max: 0.75 * initial.nombre.ancho_max })
+            setFirmaStyle(saved
+                ? { on: true, fuente: saved.fuente ?? 'playfair', peso: saved.peso ?? 400, color: toHex(saved.grad?.[0] ?? [255, 255, 255]), sombra: saved.sombra !== null }
+                : { on: false, fuente: initial.nombre.fuente ?? 'playfair', peso: 400, color: toHex(grad[0]), sombra: true })
+            setKept({
+                nameShadow: shadowOf(initial.nombre.sombra),
+                firmaShadow: shadowOf(saved?.sombra),
+                middle: grad.slice(1, -1),
+                interlinea: typeof initial.nombre.interlinea === 'number' ? { cap: round(initial.nombre.cap), value: initial.nombre.interlinea } : null,
+            })
+            startExtras(extrasOf(initial, hasFirma))
             return
         }
         const cap = 0.046 * h
@@ -121,6 +205,9 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
         setFace({ cx: 0.70 * w, cy: 0.33 * h, ancho: 0.30 * w })
         setName({ cx: w / 2, base2, cap, ancho_max: 0.62 * w })
         setValue({ cx: w / 2, base: 0.79 * h, alto: 0.081 * h, ancho_max: 0.43 * w })
+        setFirma({ cx: w / 2, base: Math.min(0.96 * h, base2 + 0.1 * h), cap: 0.02 * h, ancho_max: 0.45 * w })
+        setKept(NOTHING_KEPT)
+        startExtras({})
         const top = base2 - TWO_LINES * cap
         setVelo([top - 0.10 * h, top + 0.055 * h])
     }
@@ -134,12 +221,13 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
     }, [])
 
     const s = size && shown ? shown / size.w : 0
+    const showFirma = hasFirma && firmaStyle.on
 
     const start = (kind: Drag) => (event: React.PointerEvent) => {
         event.preventDefault()
         event.stopPropagation()
         ;(event.currentTarget as Element).setPointerCapture(event.pointerId)
-        drag.current = { kind, x: event.clientX, y: event.clientY, face, name, value, velo }
+        drag.current = { kind, x: event.clientX, y: event.clientY, face, name, value, firma, velo }
     }
 
     const move = (event: React.PointerEvent) => {
@@ -167,6 +255,14 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                 setValue({ ...d.value, alto: tall, base: top + tall })
                 break
             }
+            case 'firma': setFirma({ ...d.firma, cx: clamp(d.firma.cx + dx, 0, w), base: clamp(d.firma.base + dy, 0, h) }); break
+            case 'firma-width': setFirma({ ...d.firma, ancho_max: clamp(d.firma.ancho_max + 2 * dx, 0.08 * w, w) }); break
+            case 'firma-height': {
+                const top = d.firma.base - FIRMA_ABOVE * d.firma.cap
+                const cap = clamp(d.firma.cap + dy / (FIRMA_ABOVE + FIRMA_BELOW), 0.006 * h, 0.12 * h)
+                setFirma({ ...d.firma, cap, base: top + FIRMA_ABOVE * cap })
+                break
+            }
             case 'velo-top': setVelo([clamp(d.velo[0] + dy, 0, d.velo[1] - 10), d.velo[1]]); break
             case 'velo-bottom': setVelo([d.velo[0], clamp(d.velo[1] + dy, d.velo[0] + 10, h)]); break
         }
@@ -174,28 +270,57 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
 
     const end = () => { drag.current = null }
 
-    /* Lo que se manda: las medidas en píxeles de la base, como las lee llenar_ganadora.py */
+    /* «Ajustes avanzados»: sólo se usa lo que se puede leer; mientras no, no se arma ni se guarda */
+    const onExtras = (text: string) => {
+        setExtrasText(text)
+        try {
+            const parsed = JSON.parse(text.trim() || '{}')
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new TypeError('Tiene que ir entre llaves: { … }')
+            setExtras(parsed)
+            setExtrasError(null)
+        } catch (error) {
+            setExtrasError(error instanceof SyntaxError ? 'No se puede leer: revisa las comas, las comillas y las llaves' : (error as Error).message)
+        }
+    }
+
+    /* El interlineado guardado se respeta mientras no cambie la letra; si cambia, el de siempre (1.13 de la mayúscula) */
+    const interlineaOf = (cap: number) => kept.interlinea && round(cap) === kept.interlinea.cap ? kept.interlinea.value : round(1.13 * cap)
+
+    /* Lo que se manda: las medidas en píxeles de la base, como las lee llenar_ganadora.py, más lo que traía y aquí no se toca */
     const acomodo = (): Acomodo => {
         const text = {
             fuente: style.fuente,
             sx: style.sx,
-            grad: [fromHex(style.top), fromHex(style.bottom)] as Array<[number, number, number]>,
-            sombra: style.sombra ? SHADOW : null,
+            grad: [fromHex(style.top), ...kept.middle, fromHex(style.bottom)] as RGB[],
+            sombra: style.sombra ? kept.nameShadow ?? SHADOW : null,
             relieve: style.relieve,
             brillo: style.brillo,
         }
+        const circle = { ...without(extras.circulo, MANAGED.circulo), ...(filo ? { filo: fromHex(filo) } : {}) }
         return {
-            cara: { cx: round(face.cx), cy: round(face.cy), ancho: round(face.ancho) },
+            cara: { ...record(extras.cara), cx: round(face.cx), cy: round(face.cy), ancho: round(face.ancho) },
             velo: veloOn ? [round(velo[0]), round(velo[1])] : null,
             min_cara: 200,
-            nombre: { ...text, peso: style.peso, cx: round(name.cx), base2: round(name.base2), cap: round(name.cap), interlinea: round(1.13 * name.cap), ancho_max: round(name.ancho_max) },
-            valor: hasValue ? { ...text, peso: Math.min(900, style.peso + 100), cx: round(value.cx), base: round(value.base), alto: round(value.alto), ancho_max: round(value.ancho_max) } : null,
-            circulo: filo ? { filo: fromHex(filo) } : null,
-        }
+            ...without(extras, MANAGED.top.filter(key => hasFirma || key !== 'firma')),
+            nombre: { ...record(extras.nombre), ...text, peso: style.peso, cx: round(name.cx), base2: round(name.base2), cap: round(name.cap), interlinea: interlineaOf(name.cap), ancho_max: round(name.ancho_max) },
+            valor: hasValue ? { ...record(extras.valor), ...text, peso: Math.min(900, style.peso + 100), cx: round(value.cx), base: round(value.base), alto: round(value.alto), ancho_max: round(value.ancho_max) } : null,
+            ...(hasFirma ? {
+                firma: firmaStyle.on ? {
+                    ...record(extras.firma),
+                    fuente: firmaStyle.fuente,
+                    peso: firmaStyle.peso,
+                    grad: [fromHex(firmaStyle.color)],
+                    sombra: firmaStyle.sombra ? kept.firmaShadow ?? FIRMA_SHADOW : null,
+                    cx: round(firma.cx), base: round(firma.base), cap: round(firma.cap), ancho_max: round(firma.ancho_max),
+                } : null,
+            } : {}),
+            circulo: Object.keys(circle).length ? circle : null,
+        } as Acomodo
     }
 
+    const sample = samples[sampleIndex] ?? samples[0]
+
     const preview = async () => {
-        const sample = samples[sampleIndex] ?? samples[0]
         const data = await onPreview(acomodo(), sample)
         if (!data) return
         const why = data.fill?.foto === 'avatar' ? `avatar (${data.fill.motivo ?? 'sin foto'})`
@@ -213,13 +338,18 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
         measurer.font = `${italic ? 'italic ' : ''}${weight} ${px}px ${font.css}`
         return measurer.measureText(text).width * style.sx
     }
+    /* Lo que el nombre trae de más y cambia la muestra, como en poner_nombre: un solo renglón, hasta dónde se achica
+       (con `estricto`, lo que haga falta) y si el interlineado se achica con la letra */
+    const rules = record(extras.nombre)
+    const oneLine = rules.renglones === 1
+    const sampleLines = useMemo(() => oneLine ? [SAMPLE_LINES.join(' ')] : SAMPLE_LINES, [oneLine])
     const nameSize = useMemo(() => {
         let px = name.cap / font.cap
-        const least = 0.7 * px
-        while (Math.max(...SAMPLE_LINES.map(line => widthOf(line, px, style.peso))) > name.ancho_max && px >= least) px *= 0.97
+        const least = rules.estricto ? 8 : (typeof rules.min_escala === 'number' ? rules.min_escala : 0.7) * px
+        while (Math.max(...sampleLines.map(line => widthOf(line, px, style.peso))) > name.ancho_max && px >= least) px *= 0.97
         return px
         // eslint-disable-next-line react-hooks/exhaustive-deps -- widthOf depende de lo mismo que aquí se lista
-    }, [name.cap, name.ancho_max, font, style.peso, style.sx, fontTick, measurer])
+    }, [name.cap, name.ancho_max, font, style.peso, style.sx, fontTick, measurer, sampleLines, rules.estricto, rules.min_escala])
     const valueWeight = Math.min(900, style.peso + 100)
     const valueSize = useMemo(() => {
         const px = value.alto / font.cap
@@ -228,9 +358,29 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
         // eslint-disable-next-line react-hooks/exhaustive-deps -- widthOf depende de lo mismo que aquí se lista
     }, [value.alto, value.ancho_max, font, valueWeight, style.sx, fontTick, measurer])
 
+    /* La firma, como poner_firma: por el alto de las mayúsculas y, si no cabe en su ancho, se achica lo que haga falta */
+    const firmaFont = FONTS.find(item => item.key === firmaStyle.fuente) ?? FONTS[0]
+    const firmaItalic = firmaStyle.fuente === 'playfair-italica'
+    const firmaSx = Number(record(extras.firma).sx) || 1
+    const firmaText = sample?.firma || SAMPLE_FIRMA
+    const firmaSize = useMemo(() => {
+        const px = firma.cap / firmaFont.cap
+        if (!measurer) return px
+        measurer.font = `${firmaItalic ? 'italic ' : ''}${firmaStyle.peso} ${px}px ${firmaFont.css}`
+        const wide = measurer.measureText(firmaText).width * firmaSx
+        return wide > firma.ancho_max ? px * firma.ancho_max / wide : px
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- fontTick vuelve a medir cuando llega la letra
+    }, [firma.cap, firma.ancho_max, firmaFont, firmaItalic, firmaStyle.peso, firmaSx, firmaText, fontTick, measurer])
+    const firmaShade = (kept.firmaShadow ?? FIRMA_SHADOW)
+    const firmaShadowCss = `drop-shadow(0.5px 1px 1px rgba(${firmaShade[4].join(',')},${firmaShade[3]}))`
+
+    /* Quien no tiene foto va en un círculo si la base lo pide (`avatar: 'circulo'`): donde diga el círculo o junto a la cara */
+    const circle = extras.avatar === 'circulo' ? record(extras.circulo) : null
+    const circleAt = (key: 'cx' | 'cy' | 'diametro', fallback: number) => typeof circle?.[key] === 'number' ? circle[key] as number : fallback
+
     const nameTop = name.base2 - TWO_LINES * name.cap
-    const interline = 1.13 * name.cap
-    const squeeze = (cx: number) => `translate(${cx * s} 0) scale(${style.sx} 1) translate(${-cx * s} 0)`
+    const interline = interlineaOf(name.cap) * (rules.interlinea_escala ? nameSize / (name.cap / font.cap) : 1)
+    const squeeze = (cx: number, sx = style.sx) => `translate(${cx * s} 0) scale(${sx} 1) translate(${-cx * s} 0)`
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -243,6 +393,9 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                         <svg className="rt-ghost" style={{ left: 0, top: 0 }} width={shown} height={size.h * s} aria-hidden="true">
                             <ellipse cx={face.cx * s} cy={(face.cy - 0.12 * face.ancho) * s} rx={0.62 * face.ancho * s} ry={0.8 * face.ancho * s} fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.7)" strokeDasharray="5 5" />
                             <rect x={(face.cx - 1.6 * face.ancho) * s} y={(face.cy + 0.95 * face.ancho) * s} width={3.2 * face.ancho * s} height={2 * face.ancho * s} rx={0.8 * face.ancho * s} fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.55)" strokeDasharray="5 5" />
+                            {circle && (
+                                <circle cx={circleAt('cx', face.cx) * s} cy={circleAt('cy', face.cy + 0.09 * face.ancho) * s} r={circleAt('diametro', 1.85 * face.ancho) / 2 * s} fill="none" stroke="rgba(255,255,255,.8)" strokeWidth={2} strokeDasharray="2 6" strokeLinecap="round" />
+                            )}
                         </svg>
 
                         {/* La muestra: dónde y de qué tamaño queda el texto (la pieza real sale del servidor) */}
@@ -255,11 +408,11 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                                     <stop offset="0" stopColor={style.top} /><stop offset="1" stopColor={style.bottom} />
                                 </linearGradient>
                             </defs>
-                            {SAMPLE_LINES.map((line, index) => (
+                            {sampleLines.map((line, index) => (
                                 <text
                                     key={line}
                                     x={name.cx * s}
-                                    y={(index === 0 ? name.base2 - interline : name.base2) * s}
+                                    y={(sampleLines.length === 1 ? name.base2 - interline / 2 : index === 0 ? name.base2 - interline : name.base2) * s}
                                     textAnchor="middle"
                                     fontFamily={font.css}
                                     fontWeight={style.peso}
@@ -312,10 +465,28 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                             <span className="rt-handle ew" style={{ left: (value.cx + value.ancho_max / 2) * s - 7, top: (value.base - value.alto / 2) * s - 7 }} onPointerDown={start('value-width')} title="Ancho del número" />
                             <span className="rt-handle ns" style={{ left: value.cx * s - 7, top: value.base * s - 7 }} onPointerDown={start('value-height')} title="Tamaño del número" />
                         </>}
+
+                        {showFirma && <>
+                            <div
+                                className="rt-zone rt-box firma"
+                                style={{ left: (firma.cx - firma.ancho_max / 2) * s, top: (firma.base - FIRMA_ABOVE * firma.cap) * s, width: firma.ancho_max * s, height: (FIRMA_ABOVE + FIRMA_BELOW) * firma.cap * s }}
+                                onPointerDown={start('firma')}
+                                title="Arrastra para mover el nombre de la Directora"
+                            >
+                                <span className="rt-label">Directora</span>
+                            </div>
+                            {/* La muestra va encima de su zona: es letra chica y la orilla punteada no la debe tapar */}
+                            <svg className="rt-ghost" style={{ left: 0, top: 0, filter: firmaStyle.sombra ? firmaShadowCss : 'none' }} width={shown} height={size.h * s} aria-hidden="true">
+                                <text x={firma.cx * s} y={firma.base * s} textAnchor="middle" fontFamily={firmaFont.css} fontWeight={firmaStyle.peso} fontStyle={firmaItalic ? 'italic' : 'normal'} fontSize={firmaSize * s} fill={firmaStyle.color} transform={squeeze(firma.cx, firmaSx)}>{firmaText}</text>
+                            </svg>
+                            <span className="rt-handle ew" style={{ left: (firma.cx + firma.ancho_max / 2) * s - 7, top: (firma.base - (FIRMA_ABOVE - FIRMA_BELOW) / 2 * firma.cap) * s - 7 }} onPointerDown={start('firma-width')} title="Ancho del nombre de la Directora" />
+                            <span className="rt-handle ns" style={{ left: firma.cx * s - 7, top: (firma.base + FIRMA_BELOW * firma.cap) * s - 7 }} onPointerDown={start('firma-height')} title="Tamaño de la letra de la Directora" />
+                        </>}
                     </>}
                 </div>
                 <p className="mt-2 text-[11.5px] leading-snug text-muted-foreground">
-                    Arrastra la cara, el nombre{hasValue ? ' y el número' : ''}; los puntos blancos cambian su tamaño. La figura punteada es dónde caen la cabeza y los hombros de una foto normal. El nombre se achica solo si no cabe.
+                    Arrastra la cara, el nombre{hasValue ? ' y el número' : ''}{showFirma ? ' y el de la Directora' : ''}; los puntos blancos cambian su tamaño. La figura punteada es dónde caen la cabeza y los hombros de una foto normal. El nombre se achica solo si no cabe.
+                    {circle ? ' El círculo punteado es dónde va quien no tiene foto.' : ''}
                 </p>
             </div>
 
@@ -361,7 +532,7 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                         <Switch checked={veloOn} onCheckedChange={setVeloOn} />
                     </label>
                     <label className="flex items-center justify-between gap-3">
-                        <span>Filo de color en las fotos en círculo <small className="block text-[11px] font-normal text-muted-foreground">Las que cortan la cabeza salen en círculo con aro blanco</small></span>
+                        <span>Filo de color en las fotos en círculo <small className="block text-[11px] font-normal text-muted-foreground">{circle ? 'Las que cortan la cabeza y las que no tienen foto salen en círculo' : 'Las que cortan la cabeza salen en círculo con aro blanco'}</small></span>
                         <span className="flex items-center gap-2">
                             {filo && <input type="color" value={filo} onChange={event => setFilo(event.target.value)} className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent p-0.5" aria-label="Color del filo" />}
                             <Switch checked={!!filo} onCheckedChange={checked => setFilo(checked ? '#e5077d' : null)} />
@@ -369,22 +540,71 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                     </label>
                 </div>
 
+                {hasFirma && (
+                    <div className="grid gap-3 rounded-[16px] border border-border p-3">
+                        <label className="flex items-center justify-between gap-3 text-[12.5px] font-semibold">
+                            <span>Nombre de la Directora <small className="block text-[11px] font-normal text-muted-foreground">En un renglón; si no cabe, se achica solo</small></span>
+                            <Switch checked={firmaStyle.on} onCheckedChange={on => setFirmaStyle({ ...firmaStyle, on })} />
+                        </label>
+                        {firmaStyle.on && (
+                            <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
+                                <label className="rt-field">
+                                    Tipo de letra
+                                    <select value={firmaStyle.fuente} onChange={event => setFirmaStyle({ ...firmaStyle, fuente: event.target.value as FontKey })}>
+                                        {FONTS.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}
+                                    </select>
+                                </label>
+                                <label className="rt-field">
+                                    Grosor
+                                    <select value={firmaStyle.peso} onChange={event => setFirmaStyle({ ...firmaStyle, peso: Number(event.target.value) })}>
+                                        {FIRMA_WEIGHTS.map(([peso, label]) => <option key={peso} value={peso}>{label}</option>)}
+                                    </select>
+                                </label>
+                                <label className="rt-field">
+                                    Color
+                                    <input type="color" value={firmaStyle.color} onChange={event => setFirmaStyle({ ...firmaStyle, color: event.target.value })} />
+                                </label>
+                                <label className="flex items-center justify-between gap-2 self-end pb-2 text-[12.5px] font-semibold">
+                                    Sombra
+                                    <Switch checked={firmaStyle.sombra} onCheckedChange={sombra => setFirmaStyle({ ...firmaStyle, sombra })} />
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {advanced && (
+                    <details className="rounded-[16px] border border-border p-3" open={!!extrasError || undefined}>
+                        <summary className="cursor-pointer text-[12.5px] font-semibold">Ajustes avanzados</summary>
+                        <div className="mt-2 grid gap-2">
+                            <p className="text-[11px] leading-snug text-muted-foreground">
+                                Lo que el servidor lee y aquí no se dibuja: cuántos renglones lleva el nombre, el avatar en círculo, los colores del aro… Se guarda tal cual, junto con las medidas.
+                            </p>
+                            <textarea className="rt-code" rows={9} spellCheck={false} value={extrasText} onChange={event => onExtras(event.target.value)} aria-label="Ajustes avanzados" />
+                            {extrasError && <p className="text-[11px] font-semibold text-red-600 dark:text-red-400">{extrasError}</p>}
+                        </div>
+                    </details>
+                )}
+
                 <div className="grid gap-2 rounded-[16px] border border-border p-3">
+                    {sampleSlot}
                     <label className="rt-field">
                         Probar con
                         <select value={sampleIndex} onChange={event => setSampleIndex(Number(event.target.value))}>
-                            {samples.map((sample, index) => <option key={sample.id ?? 'prueba'} value={index}>{sample.label}</option>)}
+                            {samples.map((item, index) => <option key={item.id ?? 'prueba'} value={index}>{item.label}</option>)}
                         </select>
                     </label>
                     <div className="flex flex-wrap gap-2">
-                        <button type="button" className="rt-btn" disabled={!!busy || !size} onClick={preview}>
+                        <button type="button" className="rt-btn" disabled={!!busy || !size || !!extrasError} onClick={preview}>
                             <EyeIcon className="size-4" /> {busy === 'preview' ? 'Armando…' : 'Ver cómo sale'}
                         </button>
-                        <button type="button" className="rt-btn cta" disabled={!!busy || !size} onClick={() => onSave(acomodo())}>
+                        <button type="button" className="rt-btn cta" disabled={!!busy || !size || !!extrasError} onClick={() => onSave(acomodo())}>
                             <SaveIcon className="size-4" /> {busy === 'save' ? 'Guardando…' : saveLabel}
                         </button>
                     </div>
-                    <p className="text-[11px] leading-snug text-muted-foreground">«Ver cómo sale» arma la pieza de verdad en el servidor (unos segundos) sin guardar nada.</p>
+                    <p className="text-[11px] leading-snug text-muted-foreground">
+                        {extrasError ? 'Los ajustes avanzados tienen un error: corrígelo para ver cómo sale o guardar.' : '«Ver cómo sale» arma la pieza de verdad en el servidor (unos segundos) sin guardar nada.'}
+                    </p>
                 </div>
 
                 {result && (

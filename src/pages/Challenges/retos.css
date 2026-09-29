@@ -37,6 +37,9 @@
 .rt-face { border-radius: 50%; border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(0, 0, 0, .35); background: rgba(229, 7, 125, .16); }
 .rt-box { border: 2px dashed rgba(255, 255, 255, .9); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); background: rgba(108, 71, 255, .06); border-radius: 6px; }
 .rt-box.value { background: rgba(44, 212, 217, .07); }
+/* La firma es un renglón de letra chica: su orilla es más fina y su zona para agarrarla, más alta de lo que se ve */
+.rt-box.firma { border-width: 1.5px; background: rgba(253, 236, 203, .08); }
+.rt-box.firma::before { content: ""; position: absolute; inset: -6px -3px; }
 .rt-label { position: absolute; left: 6px; top: -22px; padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 800; color: #fff; background: rgba(20, 16, 50, .78); white-space: nowrap; pointer-events: none; }
 .rt-handle { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid #6C47FF; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
 .rt-handle.ew { cursor: ew-resize; }
@@ -49,3 +52,6 @@
 .rt-field { display: grid; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--muted-foreground); }
 .rt-field input[type="color"] { width: 100%; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: transparent; padding: 2px; cursor: pointer; }
 .rt-field input[type="number"], .rt-field select { width: 100%; min-width: 0; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); padding: 0 10px; font-size: 13px; font-weight: 600; color: var(--foreground); }
+.rt-field input[type="text"] { width: 100%; min-width: 0; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); padding: 0 10px; font-size: 13px; font-weight: 600; color: var(--foreground); }
+.rt-field input[type="text"]::placeholder { font-weight: 500; color: var(--muted-foreground); }
+.rt-code { width: 100%; min-width: 0; min-height: 150px; resize: vertical; border-radius: 10px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); padding: 8px 10px; font: 500 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--foreground); }
