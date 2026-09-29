@@ -22,6 +22,7 @@ export const API_ROUTES = {
         PREVIEW: '/challenges/{id}/winner-preview',
         TEMPLATE: '/challenges/{id}/winner-template',
         CELEBRATE: '/challenges/{id}/celebrate',
+        REFILL: '/challenges/{id}/refill',
     },
     CHANGE_PASSWORD: '/users/change-password',
     SORT_FILES: '/files/sort',

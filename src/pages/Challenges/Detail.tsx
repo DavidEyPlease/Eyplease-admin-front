@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { ArrowLeftIcon, ImageUpIcon, SendIcon, SparklesIcon } from 'lucide-react'
+import { ArrowLeftIcon, ImageUpIcon, RefreshCwIcon, SendIcon, SparklesIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import PageHead from '@/layouts/TopShell/PageHead'
@@ -239,7 +239,7 @@ const ChallengeDetailPage = () => {
                     <ul className="grid min-w-0 grid-cols-1 gap-2">
                         {winners.map(({ row, entry }) => {
                             const published = !!entry?.post_id
-                            const tag = published ? { tone: 'ok', text: entry?.photo === 'avatar' ? 'Publicada con avatar' : 'Publicada' }
+                            const tag = published ? { tone: 'ok', text: entry?.photo === 'avatar' ? 'Publicada con avatar' : entry?.photo === 'circulo' ? 'Publicada en círculo' : 'Publicada' }
                                 : entry ? { tone: 'plain', text: 'Armándose…' }
                                     : detail.template.state === 'lista' ? { tone: 'hot', text: 'Por publicar' } : { tone: 'warn', text: 'Esperando la base' }
                             return (
@@ -251,7 +251,7 @@ const ChallengeDetailPage = () => {
                                         <b className="block truncate text-[13px]">{titleCase(row.name)}</b>
                                         <small className="block truncate text-[11.5px] text-muted-foreground">
                                             {row.returned_on ? `Regresó el ${dayLabel(row.returned_on)}` : `${row.current.toLocaleString('es-MX')} de ${row.goal.toLocaleString('es-MX')}`}
-                                            {published && entry?.photo === 'avatar' && entry.avatar_reason ? ` · ${entry.avatar_reason}` : ''}
+                                            {published && entry?.photo !== 'propia' && entry?.avatar_reason ? ` · ${entry.avatar_reason}` : ''}
                                         </small>
                                     </span>
                                     <span className={cn('rt-tag shrink-0', tag.tone)}>{tag.text}</span>
@@ -259,6 +259,11 @@ const ChallengeDetailPage = () => {
                                         <a href={row.piece.url} target="_blank" rel="noreferrer" title="Ver su pieza" className="shrink-0 overflow-hidden rounded-lg border border-border">
                                             <img src={row.piece.url} alt="Su pieza" className="h-12 w-8 object-cover" />
                                         </a>
+                                    )}
+                                    {published && detail.template.state !== 'sin_base' && (
+                                        <button type="button" title="Rehacer su pieza con la base y su foto de hoy" aria-label={`Rehacer la pieza de ${titleCase(row.name)}`} className="rt-btn shrink-0 !h-8 !px-2.5" disabled={!!actions.busy} onClick={() => actions.refill([row.id])}>
+                                            <RefreshCwIcon className="size-3.5" />
+                                        </button>
                                     )}
                                 </li>
                             )

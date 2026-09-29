@@ -681,6 +681,14 @@ export const installMockApi = () => {
             await wait(600)
             response = respond({ dry_run: dry, winners: pending.map((row: DemoReto) => ({ challenge: reto.title, person: row.name, task_id: null })) })
         }
+        else if (/^\/challenges\/reto-\d+\/refill$/.test(path) && method === 'POST') {
+            const reto = demoRetos.find(item => item.id === path.split('/')[2])!
+            const ids = (JSON.parse(String(init?.body ?? '{}')).person_ids ?? null) as string[] | null
+            const redo = reto.celebrated.filter((entry: DemoReto) => entry.post_id && (!ids || ids.includes(entry.person_id)))
+            redo.forEach((entry: DemoReto) => { entry.photo = 'circulo'; entry.avatar_reason = 'la foto corta la cabeza arriba' })
+            await wait(500)
+            response = respond({ winners: redo.map((entry: DemoReto) => ({ challenge: reto.title, person: reto.rows.find((row: DemoReto) => row.id === entry.person_id)?.name ?? entry.person_id, task_id: null })) })
+        }
         else if (path === '/files/sign-url' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { fileName: string }
             response = respond({ url: `https://demo-s3.invalid/${encodeURIComponent(body.fileName)}`, key: body.fileName, disk: 'private' })

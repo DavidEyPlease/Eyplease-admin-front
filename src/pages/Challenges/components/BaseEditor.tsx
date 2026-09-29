@@ -65,6 +65,7 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
     const [value, setValue] = useState<ValueBox>({ cx: 0, base: 0, alto: 0, ancho_max: 0 })
     const [velo, setVelo] = useState<[number, number]>([0, 0])
     const [veloOn, setVeloOn] = useState(true)
+    const [filo, setFilo] = useState<string | null>(null)
     const [style, setStyle] = useState<Style>({ fuente: 'playfair', peso: 800, sx: 0.83, top: '#fde9e1', bottom: '#f0b0ac', sombra: true, relieve: true, brillo: true })
     const [sampleIndex, setSampleIndex] = useState(0)
     const [result, setResult] = useState<{ url: string, caption: string } | null>(null)
@@ -100,6 +101,7 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
             if (initial.valor) setValue({ cx: initial.valor.cx, base: initial.valor.base, alto: initial.valor.alto, ancho_max: initial.valor.ancho_max })
             else setValue({ cx: w / 2, base: 0.79 * h, alto: 0.081 * h, ancho_max: 0.43 * w })
             setVeloOn(!!initial.velo)
+            setFilo(initial.circulo?.filo ? toHex(initial.circulo.filo) : null)
             setVelo(initial.velo ?? [0.47 * h, 0.62 * h])
             const grad = initial.nombre.grad
             setStyle({
@@ -188,6 +190,7 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
             min_cara: 200,
             nombre: { ...text, peso: style.peso, cx: round(name.cx), base2: round(name.base2), cap: round(name.cap), interlinea: round(1.13 * name.cap), ancho_max: round(name.ancho_max) },
             valor: hasValue ? { ...text, peso: Math.min(900, style.peso + 100), cx: round(value.cx), base: round(value.base), alto: round(value.alto), ancho_max: round(value.ancho_max) } : null,
+            circulo: filo ? { filo: fromHex(filo) } : null,
         }
     }
 
@@ -195,7 +198,8 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
         const sample = samples[sampleIndex] ?? samples[0]
         const data = await onPreview(acomodo(), sample)
         if (!data) return
-        const why = data.fill?.foto === 'avatar' ? `avatar (${data.fill.motivo ?? 'sin foto'})` : 'su foto'
+        const why = data.fill?.foto === 'avatar' ? `avatar (${data.fill.motivo ?? 'sin foto'})`
+            : data.fill?.foto === 'circulo' ? `su foto en círculo (${data.fill.motivo ?? 'foto cerrada'})` : 'su foto'
         setResult({ url: data.url, caption: `${sample.label} · salió con ${why}` })
     }
 
@@ -355,6 +359,13 @@ const BaseEditor = ({ imageUrl, hasValue, initial, samples, busy, saveLabel, onP
                     <label className="flex items-center justify-between gap-3">
                         Fundir el cuerpo antes del nombre
                         <Switch checked={veloOn} onCheckedChange={setVeloOn} />
+                    </label>
+                    <label className="flex items-center justify-between gap-3">
+                        <span>Filo de color en las fotos en círculo <small className="block text-[11px] font-normal text-muted-foreground">Las que cortan la cabeza salen en círculo con aro blanco</small></span>
+                        <span className="flex items-center gap-2">
+                            {filo && <input type="color" value={filo} onChange={event => setFilo(event.target.value)} className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent p-0.5" aria-label="Color del filo" />}
+                            <Switch checked={!!filo} onCheckedChange={checked => setFilo(checked ? '#e5077d' : null)} />
+                        </span>
                     </label>
                 </div>
 

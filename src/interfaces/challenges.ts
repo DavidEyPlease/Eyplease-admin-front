@@ -74,6 +74,8 @@ export interface ValueLayout extends TextStyle {
 
 export interface Acomodo {
     cara: { cx: number, cy: number, ancho: number }
+    /** Las fotos que cortan la cabeza van en un círculo: su aro puede llevar un filo de color */
+    circulo?: { filo?: [number, number, number], diametro?: number } | null
     velo?: [number, number] | null
     min_cara?: number
     nombre: NameLayout
@@ -99,7 +101,7 @@ export interface CelebratedEntry {
     post_id?: string
     task_id?: string
     via?: string
-    photo?: 'propia' | 'avatar' | null
+    photo?: 'propia' | 'circulo' | 'avatar' | null
     avatar_reason?: string | null
     at?: string
     filled_at?: string
@@ -137,7 +139,7 @@ export interface ChallengeDetail {
 export interface PreviewResult {
     uri: string
     url: string
-    fill: { foto?: 'propia' | 'avatar', motivo?: string, escala?: number, lineas?: string[], recorte?: string | null }
+    fill: { foto?: 'propia' | 'circulo' | 'avatar', motivo?: string, escala?: number, lineas?: string[], recorte?: string | null }
 }
 
 export interface CelebrateResult {

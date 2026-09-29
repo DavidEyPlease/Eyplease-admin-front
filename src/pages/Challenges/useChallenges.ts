@@ -28,7 +28,7 @@ export const useChallengeDetail = (id: string) => useFetchQuery<ChallengeDetail>
  */
 export const useChallengeActions = (id: string) => {
     const queryClient = useQueryClient()
-    const [busy, setBusy] = useState<'' | 'request' | 'preview' | 'save' | 'celebrate' | 'upload'>('')
+    const [busy, setBusy] = useState<'' | 'request' | 'preview' | 'save' | 'celebrate' | 'upload' | 'refill'>('')
 
     const refresh = async () => {
         await queryClient.invalidateQueries({ queryKey: detailKey(id) })
@@ -87,5 +87,13 @@ export const useChallengeActions = (id: string) => {
         return key
     })
 
-    return { busy, requestBase, preview, save, celebrate, upload, refresh }
+    /** Vuelve a llenar piezas ya publicadas (misma publicación, sin aviso): las de `personIds` o todas. */
+    const refill = (personIds: string[] | null) => run('refill', async () => {
+        const { data } = await HttpService.post<ApiResponse<CelebrateResult>>(API_ROUTES.CHALLENGES.REFILL.replace('{id}', id), { person_ids: personIds })
+        toast.success(`Rehaciendo ${data.winners.length === 1 ? 'su pieza' : `${data.winners.length} piezas`}: en unos segundos se ve la nueva`)
+        window.setTimeout(() => { refresh() }, 9000)
+        return data
+    })
+
+    return { busy, requestBase, preview, save, celebrate, upload, refill, refresh }
 }
