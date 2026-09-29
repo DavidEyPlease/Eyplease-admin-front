@@ -1,5 +1,5 @@
 import { MONTHS_OPTIONS } from "@/constants/app"
-import { ITemplate, TemplateVariantKind } from "@/interfaces/templates"
+import { FillConfig, ITemplate, ITemplateVariant, TemplateVariantKind } from "@/interfaces/templates"
 import {
     FileQuestionIcon,
     FileTextIcon,
@@ -88,6 +88,21 @@ export const resolvePreviewUrl = (template: ITemplate): string | null => {
 }
 
 export const isVideoUrl = (url: string) => VIDEO_EXTENSIONS.test(url.split("?")[0])
+
+/**
+ * Las secciones cuyas variantes de imagen se pueden pasar a «con base»: las que el servidor ya sabe llenar. Hoy,
+ * los cumpleaños de la unidad (foto, nombre y Directora); las demás llevan logo, puntos o corazones.
+ */
+export const FILL_GROUPS = ["birthdays"]
+
+/**
+ * Su configuración si la variante sale «con base» (motor «llenado»: el servidor llena la base —el archivo de la
+ * variante— con la foto y los nombres); null si va por capas.
+ */
+export const fillConfigOf = (variant: ITemplateVariant | null | undefined): FillConfig | null => {
+    const config = variant?.render_configuration
+    return config?.engine === "llenado" && config.acomodo ? config as FillConfig : null
+}
 
 export const monthLabelFor = (month: number): string => {
     const padded = month < 10 ? `0${month}` : `${month}`

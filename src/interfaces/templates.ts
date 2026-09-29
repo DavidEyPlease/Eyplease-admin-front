@@ -1,3 +1,4 @@
+import { Acomodo } from "./challenges"
 import { IBaseDBProperties, NullishFile } from "./common"
 
 export type Backgrounds = {
@@ -16,6 +17,24 @@ export type RenderConfiguration = {
     backgroundUrl?: string
 
     layouts?: Record<string, any>
+
+    // «Con base» (motor «llenado»): ver FillConfig
+    engine?: string
+    encima?: string | null
+    acomodo?: Acomodo
+}
+
+/**
+ * Una variante «con base» (`engine: 'llenado'`): la base es el diseño sin persona ni nombres y el servidor la
+ * llena con la foto, el nombre de la consultora y el de su Directora, con las medidas de `acomodo` (en píxeles
+ * de la base, las mismas de las piezas de ganadora de los retos). La base es el archivo de la variante
+ * (`template_file_uri` / `template_file_url`): cambiarlo desde «Editar archivos» también cambia la base.
+ */
+export interface FillConfig {
+    engine: 'llenado'
+    /** Llave de una máscara PNG: lo blanco de la base queda ENCIMA de la persona (el titular, un listón) */
+    encima?: string | null
+    acomodo: Acomodo
 }
 
 export type EyrenderLayerBase = {

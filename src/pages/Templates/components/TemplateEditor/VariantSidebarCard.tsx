@@ -20,7 +20,7 @@ import {
     useUpdateTemplateVariant,
 } from "../../useTemplateVariants"
 import TemplatePreview from "../TemplatePreview"
-import { kindIcon, kindLabel } from "../../page-utils"
+import { fillConfigOf, kindIcon, kindLabel } from "../../page-utils"
 
 interface VariantSidebarCardProps {
     templateId: string
@@ -85,6 +85,14 @@ const VariantSidebarCard = ({
                         fallbackKind={variant.kind}
                         alt={`Variante ${kindLabel(variant.kind)}`}
                     />
+                    {fillConfigOf(variant) && (
+                        <span
+                            className="absolute top-1.5 left-1.5 rounded-full bg-[#4E31C0]/85 px-2 py-0.5 text-[10.5px] font-extrabold text-white backdrop-blur-sm"
+                            title="Sale de una base que el sistema llena con la foto y los nombres"
+                        >
+                            Con base
+                        </span>
+                    )}
                     {hasAnyFile && (
                         <Button
                             type="button"

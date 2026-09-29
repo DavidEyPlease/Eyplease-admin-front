@@ -85,6 +85,9 @@ export const API_ROUTES = {
             DETAIL: '/templates/{templateId}/variants/{variantId}',
             UPDATE: '/templates/{templateId}/variants/{variantId}',
             DELETE: '/templates/{templateId}/variants/{variantId}',
+            // «Con base» (motor «llenado»): armar una pieza de prueba sin guardar, y guardar base y medidas
+            FILL_PREVIEW: '/templates/{templateId}/variants/{variantId}/fill-preview',
+            FILL: '/templates/{templateId}/variants/{variantId}/fill',
         },
     },
     PERMISSIONS: {

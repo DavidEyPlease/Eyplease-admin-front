@@ -12,9 +12,10 @@ import {
 
 import AIEditor from "../AIEditor"
 import VariantFormModal from "../TemplateVariants/VariantFormModal"
+import FillVariantEditor, { NewBase, UseBaseButton } from "./FillVariantEditor"
 import VariantSidebarCard from "./VariantSidebarCard"
 import VideoEditor from "./VideoEditor"
-import { KIND_LABELS, kindLabel } from "../../page-utils"
+import { FILL_GROUPS, fillConfigOf, KIND_LABELS, kindLabel } from "../../page-utils"
 
 interface TemplateEditorProps {
     template: ITemplate
@@ -62,6 +63,8 @@ const TemplateEditor = ({ template }: TemplateEditorProps) => {
     const [selectedId, setSelectedId] = useState<string | null>(() => variants[0]?.id ?? null)
     const [createOpen, setCreateOpen] = useState(false)
     const [editingVariant, setEditingVariant] = useState<ITemplateVariant | null>(null)
+    // La base que se subió con «Usar base» para una variante que sigue por capas (hasta guardar sus medidas)
+    const [freshBase, setFreshBase] = useState<NewBase | null>(null)
 
     // Reconcile selection with the latest variants list. Triggers when:
     //   - the user just created a variant from an empty state (auto-pick it)
@@ -86,10 +89,33 @@ const TemplateEditor = ({ template }: TemplateEditorProps) => {
         // La cuadrada es la misma imagen con su propio lienzo (1080×1080) y sus propias coordenadas,
         // que vienen en su render_configuration: se edita con el mismo editor de capas.
         if (selected.kind === "image" || selected.kind === "image_square") {
+            // Con base (motor «llenado»): el servidor llena la base con la foto y los nombres, así que se mide
+            // en vez de armarse por capas. Una base recién subida abre el medidor aunque la variante siga por
+            // capas: nada cambia hasta guardar sus medidas.
+            const fresh = freshBase?.variantId === selected.id ? freshBase : null
+            if (fillConfigOf(selected) || fresh) {
+                return (
+                    <FillVariantEditor
+                        key={selected.id}
+                        template={template}
+                        variant={selected}
+                        fresh={fresh}
+                        onFreshDone={() => setFreshBase(null)}
+                    />
+                )
+            }
+
             // `key` forces a full remount when switching variants so the
             // editor's internal initial-state derivation re-runs from the
             // newly selected variant's render_configuration.
-            return <AIEditor key={selected.id} template={template} variant={selected} />
+            return (
+                <div className="flex flex-col gap-3">
+                    {FILL_GROUPS.includes(template.template_group) && (
+                        <UseBaseButton template={template} variant={selected} onUploaded={setFreshBase} />
+                    )}
+                    <AIEditor key={selected.id} template={template} variant={selected} />
+                </div>
+            )
         }
 
         if (selected.kind === "video") {

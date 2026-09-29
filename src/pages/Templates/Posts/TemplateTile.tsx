@@ -7,7 +7,7 @@ import { ITemplate } from "@/interfaces/templates"
 import { cn } from "@/lib/utils"
 import { MONTH_LABELS } from "@/utils/finance"
 import SwitchAction from "../components/SwitchAction"
-import { countryOf, formatsOf, PostFormat, POST_FORMATS, thumbOf } from "./lib"
+import { countryOf, formatsOf, PostFormat, POST_FORMATS, thumbOf, usesBase } from "./lib"
 import TemplateMenu from "./TemplateMenu"
 
 const FORMAT_ICON: Record<PostFormat, LucideIcon> = { image: RectangleVerticalIcon, image_square: SquareIcon, video: PlayIcon }
@@ -22,6 +22,7 @@ const TemplateTile = ({ template, subgroup, showMonth = false }: { template: ITe
     const formats = formatsOf(template)
     const detail = APP_ROUTES.CONFIGURATIONS.TEMPLATE_DETAIL.replace(':id', template.id)
     const colombia = countryOf(template) === 'COL'
+    const withBase = usesBase(template)
 
     return (
         <article className={cn(
@@ -50,7 +51,10 @@ const TemplateTile = ({ template, subgroup, showMonth = false }: { template: ITe
                 )}
 
                 <span className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 p-2">
-                    {!template.active ? <span className="rounded-full bg-black/65 px-2 py-0.5 text-[10.5px] font-extrabold text-amber-300 backdrop-blur-sm">Apagada</span> : <span />}
+                    <span className="flex flex-col items-start gap-1">
+                        {!template.active && <span className="rounded-full bg-black/65 px-2 py-0.5 text-[10.5px] font-extrabold text-amber-300 backdrop-blur-sm">Apagada</span>}
+                        {withBase && <span className="rounded-full bg-[#4E31C0]/85 px-2 py-0.5 text-[10.5px] font-extrabold text-white backdrop-blur-sm" title="Sale de una base que el sistema llena con la foto y los nombres">Con base</span>}
+                    </span>
                     {colombia && <span className="rounded-full bg-black/65 px-2 py-0.5 text-[10.5px] font-extrabold text-white backdrop-blur-sm" title="Plantilla de Colombia">CO</span>}
                 </span>
 

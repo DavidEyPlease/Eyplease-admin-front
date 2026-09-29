@@ -1,7 +1,7 @@
 import { INewsletter } from "@/interfaces/common"
 import { ITemplate } from "@/interfaces/templates"
 import { Country } from "@/constants/countries"
-import { isVideoUrl } from "../page-utils"
+import { fillConfigOf, isVideoUrl } from "../page-utils"
 
 /** Los tres formatos en que sale una publicación, con el nombre que les da el motor */
 export type PostFormat = 'image' | 'image_square' | 'video'
@@ -20,10 +20,14 @@ export const formatsOf = (template: ITemplate): PostFormat[] => {
     return template.template_asset_type === 'image' ? ['image'] : []
 }
 
+/** Alguna de sus variantes encendidas sale «con base»: el servidor llena la base con la foto y los nombres */
+export const usesBase = (template: ITemplate) => (template.variants ?? []).some(variant => variant.enabled && fillConfigOf(variant))
+
 /**
  * La imagen que la representa: la vertical, que es la pieza principal; si no tiene, la cuadrada; y si sólo
  * es video, el video (se ve su primer cuadro). El `template_file_url` suelto de la plantilla a veces apunta
- * a una carpeta y no a un archivo, así que sólo se usa en las viejas, que no tienen variantes.
+ * a una carpeta y no a un archivo, así que sólo se usa en las viejas, que no tienen variantes. En las que
+ * van con base, el archivo de la variante es la base: se ve el diseño sin persona.
  */
 export const thumbOf = (template: ITemplate): { url: string | null, kind: 'image' | 'square' | 'video' | null } => {
     const withFile = (template.variants ?? []).filter(variant => variant.enabled && variant.template_file_url)
