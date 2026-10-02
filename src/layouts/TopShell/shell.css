@@ -99,8 +99,16 @@
 .shell-page { animation: shell-page-in .55s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes shell-page-in { from { opacity: 0; transform: translateY(12px); } }
 
+/* La espera al entrar o recargar: aparece suave (si la sesión llega rápido ni se nota) y la
+   barra corre de lado a lado mientras tanto */
+.shell-loader { animation: shell-loader-in .45s ease .12s both; }
+@keyframes shell-loader-in { from { opacity: 0; } }
+.shell-loader-bar { display: block; width: 220px; height: 4px; border-radius: 999px; overflow: hidden; background: color-mix(in oklab, var(--foreground) 9%, transparent); }
+.shell-loader-bar i { display: block; width: 38%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4E31C0, #6C47FF 50%, #2CD4D9); animation: shell-loader-slide 1.35s cubic-bezier(.65, 0, .35, 1) infinite; }
+@keyframes shell-loader-slide { from { transform: translateX(-105%); } to { transform: translateX(265%); } }
+
 @media (prefers-reduced-motion: reduce) {
-    .shell-blob, .shell-mark::after, .shell-orb, .shell-orb::before, .shell-drop, .shell-drop-row, .shell-page { animation: none !important; }
+    .shell-blob, .shell-mark::after, .shell-orb, .shell-orb::before, .shell-drop, .shell-drop-row, .shell-page, .shell-loader, .shell-loader-bar i { animation: none !important; }
 }
 
 /* ── Pantallas de acceso ─────────────────────────────────────────────────────────────────── */

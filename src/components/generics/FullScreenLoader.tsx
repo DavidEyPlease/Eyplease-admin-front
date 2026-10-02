@@ -1,12 +1,16 @@
 import APP_LOGO from "@/assets/images/icon-white.png";
 import Spinner from "@/components/common/Spinner";
 import { Progress } from "@/uishadcn/ui/progress";
+import ShellLoader from "@/layouts/TopShell/ShellLoader";
+import { isNewShell } from "@/layouts/TopShell/useNewShell";
 
 interface FullScreenLoaderProps {
     label?: string;
 }
 
 const FullScreenLoader = ({ label = "Cargando..." }: FullScreenLoaderProps) => {
+    if (isNewShell()) return <ShellLoader label={label} />
+
     return (
         <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-background">
             <div className="flex w-full max-w-xs flex-col items-center gap-6 px-6 text-center">

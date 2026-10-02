@@ -266,13 +266,27 @@ const coverageSections = [
     coverageSection('national_birthdays', 'Cumpleaños nacionales', 'national_newsletter', 'daily', '20:00', { image: fmt(4, 0, 1), image_square: fmt(4, 0, 1), video: fmt(4, 0, 1) }),
 ]
 const postsCoverage = { period: period(0), snapshot_at: iso(8), current_target_period: period(0), sections: coverageSections }
+/* Por clienta: ocho de ejemplo con casos distintos (todo salió, le falta un formato, sin pieza y una sin
+   reporte importado). Las secciones nacionales sólo las incluye el plan Nacional. */
+const NATIONAL_KEYS = coverageSections.filter(section => section.newsletter === 'national_newsletter').map(section => section.section_key)
+const demoClient = (n: number, name: string, plan: string, holes: Record<string, 'empty' | 'partial'>) => {
+    const cells = Object.fromEntries(coverageSections.map(section => [section.section_key,
+        plan !== 'Plan Nacional' && NATIONAL_KEYS.includes(section.section_key) ? 'not_included' : holes[section.section_key] ?? 'full']))
+    return { client_id: `c-${n}`, client_name: name, client_account: `EJ-00${n}`, plan_name: plan, cells, gaps: Object.values(cells).filter(state => state === 'empty' || state === 'partial').length }
+}
 const clientCoverage = {
-    period: period(1), columns: coverageSections.map(section => ({ section_key: section.section_key, name: section.name, newsletter: section.newsletter, requires_video: section.artifacts.includes('video') })),
-    items: ['A', 'B', 'C', 'D', 'E', 'F'].map((letter, index) => {
-        const cells = Object.fromEntries(coverageSections.map((section, column) => [section.section_key, section.posts === 0 ? 'empty' : (index + column) % 7 === 0 ? 'partial' : 'full']))
-        return { client_id: `c-${index}`, client_name: `Clienta de ejemplo ${letter}`, client_account: `EJ-00${index + 1}`, plan_name: `Plan de ejemplo ${'ABC'[index % 3]}`, cells, gaps: Object.values(cells).filter(state => state !== 'full').length }
-    }),
-    total_items: 6, per_page: 15, current_page: 1, last_page: 1,
+    period: period(0), columns: coverageSections.map(section => ({ section_key: section.section_key, name: section.name, newsletter: section.newsletter, requires_video: section.artifacts.includes('video') })),
+    items: [
+        demoClient(1, 'Clienta de ejemplo Uno', 'Plan Elite', { stars: 'empty', pink_circle: 'empty', road_to_success: 'empty', new_beginnings: 'empty', birthdays: 'empty' }),
+        demoClient(2, 'Clienta de ejemplo Dos', 'Plan Nacional', { honor_roll_national: 'empty', road_to_success: 'empty', national_initiation_cut: 'partial' }),
+        demoClient(3, 'Clienta de ejemplo Tres', 'Plan Ejecutivo', { road_to_success: 'empty', new_beginnings: 'partial' }),
+        demoClient(4, 'Clienta de ejemplo Cuatro', 'Plan Elite', { pink_circle: 'empty', stars: 'partial' }),
+        demoClient(5, 'Clienta de ejemplo Cinco', 'Plan Básico', { road_to_success: 'empty' }),
+        demoClient(6, 'Clienta de ejemplo Seis', 'Plan Elite', { new_beginnings: 'partial' }),
+        demoClient(7, 'Clienta de ejemplo Siete', 'Plan Ejecutivo', {}),
+        demoClient(8, 'Clienta de ejemplo Ocho', 'Plan Básico', {}),
+    ],
+    total_items: 8, per_page: 20, current_page: 1, last_page: 1,
 }
 /* A su hora de HOY, y sólo lo que ya pasó: la demo tiene que cuadrar con el reloj de quien la mira */
 const at = (h: number, m: number) => { const d = new Date(now); d.setHours(h, m, 0, 0); return d }
@@ -673,6 +687,8 @@ const copilotAnswer = (question: string) => {
 }
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+/* `?lento=1`: la sesión tarda, para revisar la pantalla de espera. Se lee al arrancar: la demo cambia la URL enseguida */
+const SLOW_SESSION = new URLSearchParams(window.location.search).get('lento') === '1'
 
 /* ── Plantillas de publicaciones (admin/templates) ────────────────────────────────────────────
    El arte es de EJEMPLO: tarjetas SVG con el nombre de la sección, no el arte real. Hay de todo lo
@@ -825,7 +841,7 @@ export const installMockApi = () => {
         let known = true
         let response: Response
 
-        if (path === '/me') response = respond(me)
+        if (path === '/me') { if (SLOW_SESSION) await wait(6000); response = respond(me) }
         else if (path === '/util-data') response = respond(utilData)
         else if (path === '/overview') response = respond(url.searchParams.get('country') === 'COL' ? colombiaOverview : overview)
         else if (path === '/overview/attention') response = respond(countryAttention)
@@ -881,8 +897,13 @@ export const installMockApi = () => {
             })
         }
         else if (path === '/posts/coverage') response = respond(postsCoverage)
-        else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
+        else if (path === '/posts/coverage/clients') {
+            const term = (url.searchParams.get('search') ?? '').toLowerCase()
+            const items = clientCoverage.items.filter(item => !term || item.client_name.toLowerCase().includes(term) || item.client_account.toLowerCase().includes(term))
+            response = respond({ ...clientCoverage, items, total_items: items.length })
+        }
         else if (path === '/posts/runs') response = respond(postRuns)
+        else if (path === '/posts/publish-newsletter' && method === 'POST') { await wait(300); response = respond({ message: 'Encolado (demo)', total_queued: 1, queued: [] }) }
         /* Apagar / encender a propósito: lo pendiente pasa a «apagado» (o vuelve) en la cobertura de ejemplo */
         else if ((path === '/posts/pauses' || path === '/posts/pauses/resume') && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { section_key: string, sub_section: string | null, reason?: string }

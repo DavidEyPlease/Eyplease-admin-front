@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { toast } from 'sonner'
 
 import { API_ROUTES } from '@/constants/api'
@@ -126,6 +126,40 @@ export const usePublishPosts = (period: string) => {
 }
 
 /**
+ * Generar sólo lo de una clienta: una petición por sección, cada una con sus propios
+ * formatos y acotada a ella (`client_id`). El job sólo crea lo que le falta.
+ */
+export const usePublishForClient = (period: string) => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [RUNS_QUERY_KEY, queryKeys.listBase('posts/coverage'), queryKeys.listBase('posts/coverage/clients')],
+        onError: () => undefined,
+    })
+
+    const publishForClient = async (clientId: string, clientName: string, sections: { sectionKey: string, artifacts: PostArtifact[] }[]) => {
+        if (!sections.length) return false
+
+        const month = periodToMonthNumber(period)
+        const results = await Promise.allSettled(
+            sections.map(section => request('POST', API_ROUTES.POSTS.PUBLISH_NEWSLETTER, {
+                month,
+                artifacts: section.artifacts,
+                section_keys: [section.sectionKey],
+                client_id: clientId,
+            })),
+        )
+        const failed = results.filter(result => result.status === 'rejected').length
+
+        if (failed === sections.length) toast.error(`No se pudo generar lo de ${clientName}`)
+        else if (failed) toast.warning(`${clientName}: ${sections.length - failed} secciones encoladas · ${failed} fallaron`)
+        else toast.success(`${clientName}: ${sections.length === 1 ? 'sección encolada' : `${sections.length} secciones encoladas`}`)
+
+        return failed < sections.length
+    }
+
+    return { publishForClient, publishingClient: requestState.loading }
+}
+
+/**
  * Apagar a propósito una sección o subsección (sub null = toda la sección), o volver a
  * encenderla. Es informativo: deja de contar como faltante, no detiene ningún job.
  */
@@ -160,20 +194,3 @@ export const usePostPauses = () => {
 
     return { pause, resume, saving: requestState.loading }
 }
-
-/** Totales del periodo. Todo sale de posts + files salvo `pending`, que viene del snapshot. */
-export const usePeriodTotals = (coverage: IPostsCoverageResponse) =>
-    useMemo(() => {
-        const sections = coverage.sections
-
-        return {
-            posts: sections.reduce((total, section) => total + section.posts, 0),
-            missingVideo: sections.reduce(
-                (total, section) => total + (section.artifacts.includes('video') ? section.posts - section.with_video : 0),
-                0,
-            ),
-            emptySections: sections.filter(section => section.posts === 0).length,
-            pending: sections.reduce((total, section) => total + (section.pending ?? 0), 0),
-            hasPendingData: sections.some(section => section.pending !== null),
-        }
-    }, [coverage])

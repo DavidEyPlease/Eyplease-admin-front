@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { GridIcon, ListChecksIcon } from 'lucide-react'
 
 import { PostArtifact } from '@/interfaces/posts'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/uishadcn/ui/tabs'
 import Board from './components/Board'
-import Coverage from './components/Coverage'
+import ClientsTab from './components/Clients'
 import { defaultPeriod } from './page-utils'
-import { useClientCoverage, usePostPauses, usePostRenderRuns, usePostsCoverage, usePublishPosts } from './usePosts'
+import { useClientCoverage, usePostPauses, usePostRenderRuns, usePostsCoverage, usePublishForClient, usePublishPosts } from './usePosts'
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 import '@/pages/Hoy/hoy.css'
@@ -29,6 +29,7 @@ const PostsPage = () => {
     const { runs, loading: loadingRuns } = usePostRenderRuns()
     const { publish, publishing } = usePublishPosts(period)
     const { pause, resume, saving } = usePostPauses()
+    const { publishForClient, publishingClient } = usePublishForClient(period)
 
     const onPublish = (sectionKeys: string[], artifacts: PostArtifact[]) => {
         publish(sectionKeys, artifacts)
@@ -39,10 +40,11 @@ const PostsPage = () => {
         setPage(1)
     }
 
-    const onSearch = (next: string) => {
+    // Estable: la búsqueda de «Por clienta» la usa en un efecto con espera.
+    const onSearch = useCallback((next: string) => {
         setSearch(next)
         setPage(1)
-    }
+    }, [])
 
     return (
         <div className="flex min-w-0 flex-col gap-4">
@@ -83,19 +85,18 @@ const PostsPage = () => {
                 </TabsContent>
 
                 <TabsContent value="coverage">
-                    <Coverage
+                    <ClientsTab
                         coverage={coverage}
                         clientCoverage={clientCoverage}
-                        loading={loading}
-                        loadingClients={loadingClients}
-                        updatingClients={updatingClients}
-                        publishing={publishing}
+                        loading={loadingClients}
+                        updating={updatingClients}
+                        publishing={publishing || publishingClient}
                         period={period}
                         search={search}
                         onPeriodChange={onPeriodChange}
                         onSearch={onSearch}
                         onChangePage={setPage}
-                        onPublish={onPublish}
+                        onPublishClient={publishForClient}
                     />
                 </TabsContent>
             </Tabs>

@@ -51,7 +51,7 @@ const Router = () => {
     }, [getMe]);
 
     if (sessionLoading) {
-        return <FullScreenLoader label="Cargando sesión..." />
+        return <FullScreenLoader label="Cargando tu sesión…" />
     }
 
     return (

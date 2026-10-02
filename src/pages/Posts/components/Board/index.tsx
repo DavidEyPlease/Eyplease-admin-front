@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react'
 import { AlertTriangleIcon, ClockIcon, Loader2Icon } from 'lucide-react'
 
 import { IPostRenderRun, IPostsCoverageResponse, PostArtifact } from '@/interfaces/posts'
-import { Skeleton } from '@/uishadcn/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { Lane, SectionView, buildSectionView, closeMonthLabel } from '../../board.utils'
 import { formatPeriodLabel, formatRelativeTime } from '../../page-utils'
 import PeriodPicker from '../PeriodPicker'
+import BoardSkeleton from './BoardSkeleton'
 import ReasonLanes from './ReasonLanes'
 import RenderQueue from './RenderQueue'
 import Ribbon from './Ribbon'
@@ -47,17 +47,7 @@ const Board = ({ coverage, runs, loading, isRefetching, loadingRuns, publishing,
     // Generar pide todos los formatos de la sección: el job sólo crea lo que falta.
     const generate = (view: SectionView) => onPublish([view.section.section_key], view.section.artifacts)
 
-    if (loading) {
-        return (
-            <div className="grid gap-4">
-                <Skeleton className="h-36 w-full rounded-3xl" />
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-44 rounded-3xl" />)}
-                </div>
-                <Skeleton className="h-96 w-full rounded-3xl" />
-            </div>
-        )
-    }
+    if (loading) return <BoardSkeleton />
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-4">
