@@ -138,10 +138,12 @@ export const API_ROUTES = {
     },
     POSTS: {
         PUBLISH_NEWSLETTER: '/posts/publish-newsletter',
-        /* Pendientes de implementar en la API — hoy se consumen con mock (pages/Posts/mock.ts) */
         COVERAGE: '/posts/coverage',
         CLIENT_COVERAGE: '/posts/coverage/clients',
         RUNS: '/posts/runs',
+        /* Apagar / encender a propósito: deja de contar como faltante (no detiene jobs) */
+        PAUSES: '/posts/pauses',
+        PAUSES_RESUME: '/posts/pauses/resume',
     },
     FINANCE: {
         CLIENTS: '/finance/clients',

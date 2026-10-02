@@ -5,7 +5,7 @@
  *  - en vivo   → posts / with_image / with_video / notified (GROUP BY sobre posts + files)
  */
 
-export type PostArtifact = 'image' | 'video'
+export type PostArtifact = 'image' | 'image_square' | 'video'
 
 export type NewsletterCode = 'unit_newsletter' | 'national_newsletter'
 
@@ -21,6 +21,44 @@ export interface ICoverageSubsection {
     posts: number
     with_image: number
     with_video: number
+    /** Subsección de un carril en vivo (`live-*`, `welcome`): no tiene job de cierre ni pendientes */
+    is_live?: boolean
+    /** Motivo si está apagada a propósito (o lo está su sección); null si no */
+    paused?: string | null
+    formats?: Partial<Record<PostArtifact, IItemFormatCoverage>>
+}
+
+/** Un formato de una subsección. `pending`/`has_template` son null sin snapshot. */
+export interface IItemFormatCoverage {
+    /** Publicaciones del cierre con ese archivo */
+    done: number
+    /** Publicaciones de un carril en vivo con ese archivo */
+    live: number
+    pending: number | null
+    has_template: boolean | null
+}
+
+/** Un formato de toda la sección. */
+export interface ISectionFormatCoverage {
+    done: number
+    live: number
+    /** Lo que falta, sin lo apagado a propósito; null sin snapshot */
+    pending: number | null
+    /** Lo que falta de subsecciones apagadas a propósito: no cuenta como faltante */
+    paused_pending: number
+    /** Lo que falta y NO tiene plantilla del mes: generar no lo produciría */
+    missing_template_pending: number
+    templates_ready: number
+    templates_total: number
+}
+
+export interface IPostPause {
+    section_key: string
+    /** null = toda la sección */
+    sub_section: string | null
+    reason: string
+    by: string | null
+    at: string
 }
 
 export interface ISectionCoverage {
@@ -43,6 +81,11 @@ export interface ISectionCoverage {
     with_image: number
     with_video: number
     notified: number
+    /** Publicaciones de un carril en vivo en el periodo (Círculo Rosa, Estrellas, Nuevos Inicios, Cuadro de Honor) */
+    live_posts?: number
+    /** Motivo si toda la sección está apagada a propósito */
+    paused?: string | null
+    formats?: Partial<Record<PostArtifact, ISectionFormatCoverage>>
     subsections: ICoverageSubsection[]
 }
 
@@ -114,6 +157,8 @@ export interface IPostRenderRun {
     started_at: string
     finished_at: string | null
     error_summary: string | null
+    /** Último avance: una corrida «en curso» que no se mueve en horas está atorada */
+    updated_at?: string | null
 }
 
 /* ─── Payload del endpoint de publicación (ya existe en la API) ─── */

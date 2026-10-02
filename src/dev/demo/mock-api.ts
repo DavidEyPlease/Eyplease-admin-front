@@ -201,19 +201,73 @@ const financeBalance = () => {
     return { year: now.getFullYear(), year_income: sum('income'), year_expense: sum('expense'), year_balance: sum('balance'), months }
 }
 
-/* Publicaciones: cobertura por sección y por clienta, y las últimas corridas */
-const coverageSection = (section_key: string, name: string, cadence: 'daily' | 'monthly', scheduled_at: string | null, expected: number, posts: number, artifacts: Array<'image' | 'video'> = ['image', 'video']) => ({
-    section_key, name, newsletter: 'unit_newsletter', cadence, scheduled_at, artifacts, last_activity_at: iso(200), expected, pending: Math.max(expected - posts, 0),
-    posts, with_image: posts, with_video: artifacts.includes('video') ? Math.max(posts - 3, 0) : 0, notified: posts, subsections: [],
+/* Publicaciones: cobertura por sección y por clienta, y las últimas corridas. Las cifras son las del
+   2-oct-2026 por la mañana (cierre de septiembre), para recorrer cada motivo de «qué falta». */
+type DemoArtifact = 'image' | 'image_square' | 'video'
+const fmt = (done: number, live: number, pending: number | null, missing = 0, tpl: [number, number] = [1, 1], pausedPending = 0) => ({
+    done, live, pending, paused_pending: pausedPending, missing_template_pending: missing, templates_ready: tpl[0], templates_total: tpl[1],
 })
+const sub = (item_key: string, name: string, formats: Partial<Record<DemoArtifact, { done: number, live: number, pending: number | null, has_template: boolean | null }>>, extra: Record<string, unknown> = {}) => ({
+    item_key, name, expected: null, pending: null, posts: 0, with_image: 0, with_video: 0, is_live: false, paused: null, formats, ...extra,
+})
+const sf = (done: number, pending: number | null, has_template: boolean | null = true, live = 0) => ({ done, live, pending, has_template })
+const coverageSection = (section_key: string, name: string, newsletter: 'unit_newsletter' | 'national_newsletter', cadence: 'daily' | 'monthly', scheduled_at: string | null,
+    formats: Partial<Record<DemoArtifact, ReturnType<typeof fmt>>>, subsections: unknown[] = [], extra: Record<string, unknown> = {}) => {
+    const image = formats.image ?? fmt(0, 0, null)
+    const video = formats.video
+    return {
+        section_key, name, newsletter, cadence, scheduled_at, artifacts: Object.keys(formats), last_activity_at: iso(200), expected: null, pending: null,
+        posts: image.done + image.live, with_image: image.done + image.live, with_video: video ? video.done + video.live : 0, notified: image.done,
+        live_posts: image.live, paused: null, formats, subsections, ...extra,
+    }
+}
+const HONOR_PAUSE = 'Lo cubre el Cuadro de Honor en vivo (cierre), que ya salió completo'
+const QUINTA_PAUSE = '5ª Herramienta apagada desde el 21-sep: falta confirmar la regla con Mary Kay'
 const coverageSections = [
-    coverageSection('birthdays', 'Cumpleaños', 'daily', '06:30', 212, 212), coverageSection('early', 'Ordenantes del mes', 'daily', '07:00', 340, 340, ['image']),
-    coverageSection('pink_circle', 'Círculo Rosa', 'monthly', null, 98, 91), coverageSection('honor_roll', 'Cuadro de Honor', 'monthly', null, 98, 98),
-    coverageSection('diq', "DIQ's", 'monthly', null, 40, 0), coverageSection('sales_cut', 'Corte de ventas', 'monthly', null, 98, 0),
+    coverageSection('honor_roll', 'Cuadro de Honor', 'unit_newsletter', 'monthly', null,
+        { image: fmt(0, 467, 0, 0, [0, 0], 344), image_square: fmt(0, 467, null, 0, [0, 0]), video: fmt(0, 467, 0, 0, [0, 0], 344) },
+        [...['consolidated|Top 3', 'queen|1er lugar', 'first-princess|2º lugar', 'second-princess|3er lugar'].map(entry => {
+            const [key, name] = entry.split('|')
+            return sub(key, name, { image: sf(0, 86, false), video: sf(0, 86, false) }, { paused: HONOR_PAUSE })
+        }), ...['live-consolidated|Top 3 · en vivo', 'live-queen|1er lugar · en vivo', 'live-first-princess|2º lugar · en vivo', 'live-second-princess|3er lugar · en vivo'].map(entry => {
+            const [key, name] = entry.split('|')
+            return sub(key, name, { image: sf(0, null, null, 117), image_square: sf(0, null, null, 117), video: sf(0, null, null, 117) }, { is_live: true })
+        })]),
+    coverageSection('stars', 'Estrellas', 'unit_newsletter', 'monthly', null,
+        { image: fmt(375, 12, 0, 0, [5, 5]), image_square: fmt(375, 12, 0, 0, [5, 5]), video: fmt(362, 12, 13, 0, [5, 5]) },
+        [['sapphire', 'Zafiro', 239, 13], ['ruby', 'Rubí', 57, 0], ['diamond', 'Diamante', 36, 0], ['emerald', 'Esmeralda', 33, 0], ['pearl', 'Perla', 10, 0]].map(([key, name, total, videoPending]) =>
+            sub(key as string, name as string, { image: sf(total as number, 0), image_square: sf(total as number, 0), video: sf((total as number) - (videoPending as number), videoPending as number) }))),
+    coverageSection('new_beginnings', 'Nuevos Inicios', 'unit_newsletter', 'monthly', null,
+        { image: fmt(407, 78, 0, 0, [3, 3], 76), image_square: fmt(407, 78, 0, 0, [3, 3], 76), video: fmt(0, 78, 407, 0, [3, 3], 76) },
+        [...[['previous-1', '2da Herramienta', 140], ['previous-2', '3era Herramienta', 139], ['previous-3', '4ta Herramienta', 128]].map(([key, name, total]) =>
+            sub(key as string, name as string, { image: sf(total as number, 0), image_square: sf(total as number, 0), video: sf(0, total as number) })),
+        sub('previous-4', '5ta Herramienta', { image: sf(0, 76, false), image_square: sf(0, 76, false), video: sf(0, 76, false) }, { paused: QUINTA_PAUSE }),
+        sub('welcome', 'Bienvenida', { image: sf(0, null, null, 78), image_square: sf(0, null, null, 78), video: sf(0, null, null, 78) }, { is_live: true })]),
+    coverageSection('pink_circle', 'Círculo Rosa', 'unit_newsletter', 'monthly', null,
+        { image: fmt(0, 1852, 220, 220, [0, 5]), image_square: fmt(0, 1852, null, 0, [0, 0]), video: fmt(0, 1348, 328, 328, [0, 5]) },
+        [sub('pink-target', 'Target Rosa', { image: sf(0, 220, false), video: sf(0, 220, false) }), sub('pink-vip', 'Rosa Vip', { image: sf(0, 0, false), video: sf(0, 8, false) }),
+            sub('pink-vip-plus', 'Rosa Vip Plus', { image: sf(0, 0, false), video: sf(0, 12, false) }), sub('pink-gold', 'Rosa Gold', { image: sf(0, 0, false), video: sf(0, 88, false) })]),
+    coverageSection('road_to_success', 'Camino al Éxito', 'unit_newsletter', 'monthly', null,
+        { image: fmt(0, 0, 649, 649, [0, 3]), video: fmt(0, 0, 649, 649, [0, 3]) },
+        [['future-director', 'Futura Directora', 117], ['target-future-director', 'Target Futura Directora', 499], ['target-diqs', "Target DIQ's", 33]].map(([key, name, total]) =>
+            sub(key as string, name as string, { image: sf(0, total as number, false), video: sf(0, total as number, false) }))),
+    coverageSection('diqs', "DIQ's", 'unit_newsletter', 'monthly', null, { image: fmt(0, 0, null, 0, [0, 0]), video: fmt(0, 0, null, 0, [0, 0]) }),
+    coverageSection('honor_roll_national', 'Cuadro de Honor nacional', 'national_newsletter', 'monthly', null,
+        { image: fmt(0, 0, 104, 104, [0, 8]), video: fmt(0, 0, 104, 104, [0, 8]) }),
+    coverageSection('sales_cut', 'Corte de ventas', 'national_newsletter', 'monthly', null,
+        { image: fmt(43, 0, 0), image_square: fmt(43, 0, 0), video: fmt(34, 0, 9) }),
+    coverageSection('national_initiation_cut', 'Corte de iniciación', 'national_newsletter', 'monthly', null,
+        { image: fmt(128, 0, 0), image_square: fmt(128, 0, 0), video: fmt(0, 0, 128) }),
+    coverageSection('target_unit_club', 'Club de unidades', 'national_newsletter', 'monthly', null,
+        { image: fmt(20, 0, 0, 0, [3, 3]), image_square: fmt(20, 0, 0, 0, [3, 3]), video: fmt(0, 0, 20, 0, [3, 3]) }),
+    coverageSection('early', 'Ordenantes del mes', 'unit_newsletter', 'daily', '09:00', { image: fmt(0, 0, null, 0, [1, 1]), image_square: fmt(0, 0, null, 0, [1, 1]) }),
+    coverageSection('birthdays', 'Cumpleaños', 'unit_newsletter', 'daily', '20:00', { image: fmt(49, 0, 30), image_square: fmt(49, 0, 30), video: fmt(49, 0, 30) }),
+    coverageSection('anniversaries', 'Aniversarios', 'unit_newsletter', 'daily', '20:00', { image: fmt(8, 0, 1), image_square: fmt(8, 0, 1), video: fmt(8, 0, 1) }),
+    coverageSection('national_birthdays', 'Cumpleaños nacionales', 'national_newsletter', 'daily', '20:00', { image: fmt(4, 0, 1), image_square: fmt(4, 0, 1), video: fmt(4, 0, 1) }),
 ]
-const postsCoverage = { period: period(1), snapshot_at: iso(300), current_target_period: period(1), sections: coverageSections }
+const postsCoverage = { period: period(0), snapshot_at: iso(8), current_target_period: period(0), sections: coverageSections }
 const clientCoverage = {
-    period: period(1), columns: coverageSections.map(section => ({ section_key: section.section_key, name: section.name, newsletter: 'unit_newsletter', requires_video: section.artifacts.includes('video') })),
+    period: period(1), columns: coverageSections.map(section => ({ section_key: section.section_key, name: section.name, newsletter: section.newsletter, requires_video: section.artifacts.includes('video') })),
     items: ['A', 'B', 'C', 'D', 'E', 'F'].map((letter, index) => {
         const cells = Object.fromEntries(coverageSections.map((section, column) => [section.section_key, section.posts === 0 ? 'empty' : (index + column) % 7 === 0 ? 'partial' : 'full']))
         return { client_id: `c-${index}`, client_name: `Clienta de ejemplo ${letter}`, client_account: `EJ-00${index + 1}`, plan_name: `Plan de ejemplo ${'ABC'[index % 3]}`, cells, gaps: Object.values(cells).filter(state => state !== 'full').length }
@@ -223,14 +277,20 @@ const clientCoverage = {
 /* A su hora de HOY, y sólo lo que ya pasó: la demo tiene que cuadrar con el reloj de quien la mira */
 const at = (h: number, m: number) => { const d = new Date(now); d.setHours(h, m, 0, 0); return d }
 const passed = (h: number, m: number) => at(h, m).getTime() <= now.getTime()
-const postRuns = ([
-    ['early', 'Ordenantes del mes', 'image', 'completed', 340, 0, 9, 0], ['live_stars', 'Estrellas', 'image', 'completed', 4, 0, 9, 30], ['live_stars', 'Estrellas', 'video', 'completed', 4, 0, 9, 31],
-    ['live_welcome', 'Nuevos inicios', 'image', 'completed', 3, 0, 9, 45], ['live_honor_roll', 'Cuadro de Honor', 'image', 'completed', 6, 0, 11, 30],
-    ['live_pink_circle', 'Círculo Rosa', 'image', 'partial', 12, 3, 14, 30], ['birthdays', 'Cumpleaños', 'image', 'completed', 9, 0, 20, 0],
-] as Array<[string, string, string, string, number, number, number, number]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([section_key, section_name, artifact, status, total, failed, h, m], index) => ({
-    id: `run-${index}`, section_key, section_name, sub_section: null, artifact, total_jobs: total, processed_jobs: total, succeeded_jobs: total - failed, failed_jobs: failed,
-    status, trigger_source: 'cron', triggered_by: null, started_at: at(h, m).toISOString(), finished_at: at(h, m + 6).toISOString(), error_summary: failed ? 'Ejemplo: 3 piezas sin plantilla del mes' : null,
-}))
+const postRun = (id: string, section_key: string, section_name: string, sub_section: string | null, artifact: DemoArtifact, total: number, processed: number, status: string, startedAgo: number, progressAgo: number, by: string | null = 'Claude Admin') => ({
+    id, section_key, section_name, sub_section, artifact, total_jobs: total, processed_jobs: processed, succeeded_jobs: processed, failed_jobs: 0, status,
+    trigger_source: by ? 'manual' : 'cron', triggered_by: by, started_at: iso(startedAgo), finished_at: status === 'running' ? null : iso(progressAgo), updated_at: iso(progressAgo), error_summary: null,
+})
+const postRuns = [
+    postRun('r1', 'sales_cut', 'Corte de ventas', null, 'video', 43, 34, 'running', 70, 6),
+    postRun('r2', 'stars', 'Estrellas', 'sapphire', 'video', 13, 0, 'running', 310, 310),
+    postRun('r3', 'new_beginnings', 'Nuevos inicios', 'previous-1', 'video', 140, 0, 'running', 570, 570),
+    postRun('r4', 'new_beginnings', 'Nuevos inicios', 'previous-2', 'video', 139, 0, 'running', 571, 571),
+    postRun('r5', 'national_initiation_cut', 'Corte de iniciación', null, 'image', 128, 128, 'completed', 75, 30),
+    postRun('r6', 'sales_cut', 'Corte de ventas', null, 'image_square', 43, 43, 'completed', 80, 75),
+    postRun('r7', 'new_beginnings', 'Nuevos inicios', 'previous-1', 'image_square', 140, 140, 'completed', 575, 560),
+    postRun('r8', 'honor_roll', 'Cuadro de Honor', 'live-consolidated', 'image', 25, 25, 'completed', 1300, 1290, null),
+]
 
 /* El robot: la descarga de la mañana, la de corazones (deja 2 colgadas) y su reintento */
 const downloadRuns = ([
@@ -823,6 +883,31 @@ export const installMockApi = () => {
         else if (path === '/posts/coverage') response = respond(postsCoverage)
         else if (path === '/posts/coverage/clients') response = respond(clientCoverage)
         else if (path === '/posts/runs') response = respond(postRuns)
+        /* Apagar / encender a propósito: lo pendiente pasa a «apagado» (o vuelve) en la cobertura de ejemplo */
+        else if ((path === '/posts/pauses' || path === '/posts/pauses/resume') && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { section_key: string, sub_section: string | null, reason?: string }
+            const resume = path.endsWith('/resume')
+            const section = coverageSections.find(item => item.section_key === body.section_key) as unknown as {
+                paused: string | null, subsections: Array<{ item_key: string, paused: string | null }>,
+                formats: Record<string, { pending: number | null, paused_pending: number, missing_template_pending: number, paused_missing?: number }>,
+            } | undefined
+            if (section) {
+                const reason = resume ? null : body.reason ?? ''
+                if (body.sub_section) section.subsections.filter(item => item.item_key === body.sub_section).forEach(item => { item.paused = reason })
+                else section.paused = reason
+                Object.values(section.formats).forEach(format => {
+                    if (resume) {
+                        format.pending = (format.pending ?? 0) + format.paused_pending; format.paused_pending = 0
+                        format.missing_template_pending += format.paused_missing ?? 0; format.paused_missing = 0
+                    } else {
+                        format.paused_pending += format.pending ?? 0; format.pending = 0
+                        format.paused_missing = (format.paused_missing ?? 0) + format.missing_template_pending; format.missing_template_pending = 0
+                    }
+                })
+            }
+            await wait(300)
+            response = respond([])
+        }
         else if (path === '/pulse') response = respond(url.searchParams.get('country') === 'COL' ? { ...pulse, pieces: pulse.pieces.slice(0, 1).map(item => ({ ...item, posts: 1, clients: 1 })) } : pulse)
         else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
         /* Bajar ahora (México o Colombia): la corrida entra arriba de la lista, «en cola» */

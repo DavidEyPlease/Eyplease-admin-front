@@ -125,6 +125,42 @@ export const usePublishPosts = (period: string) => {
     return { publish, publishing: requestState.loading }
 }
 
+/**
+ * Apagar a propósito una sección o subsección (sub null = toda la sección), o volver a
+ * encenderla. Es informativo: deja de contar como faltante, no detiene ningún job.
+ */
+export const usePostPauses = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase('posts/coverage')],
+        // El aviso de error lo da cada acción con su propio texto.
+        onError: () => undefined,
+    })
+
+    const pause = async (sectionKey: string, subSection: string | null, reason: string) => {
+        try {
+            await request('POST', API_ROUTES.POSTS.PAUSES, { section_key: sectionKey, sub_section: subSection, reason })
+            toast.success('Apagada a propósito: ya no cuenta como faltante')
+            return true
+        } catch {
+            toast.error('No se pudo apagar')
+            return false
+        }
+    }
+
+    const resume = async (sectionKey: string, subSection: string | null) => {
+        try {
+            await request('POST', API_ROUTES.POSTS.PAUSES_RESUME, { section_key: sectionKey, sub_section: subSection })
+            toast.success('Encendida de nuevo')
+            return true
+        } catch {
+            toast.error('No se pudo encender')
+            return false
+        }
+    }
+
+    return { pause, resume, saving: requestState.loading }
+}
+
 /** Totales del periodo. Todo sale de posts + files salvo `pending`, que viene del snapshot. */
 export const usePeriodTotals = (coverage: IPostsCoverageResponse) =>
     useMemo(() => {
