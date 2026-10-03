@@ -1174,7 +1174,24 @@ export const installMockApi = () => {
             const found = demoClients.find(client => client.id === path.split('/')[2])
             response = respond(found ? { client: found, stats: { tools_download_percentage: 42, total_tools: 120, downloaded_tools: 50, monthly_posts: 64, shared_posts: 19, posts_shared_percentage: 30, month: period(0) } } : null, found ? 200 : 404)
         }
-        else if (/^\/clients\/c-\d+\/network$/.test(path)) response = respond(page([]))
+        else if (/^\/clients\/c-\d+\/network$/.test(path)) {
+            /* Su unidad de EJEMPLO: 30 consultoras y 3 Directoras (una es clienta, para ver la liga a su ficha) */
+            const directors = url.searchParams.get('vendorRole') === 'directors'
+            const text = (url.searchParams.get('search') ?? '').toLowerCase()
+            const pageNumber = Number(url.searchParams.get('page')) || 1
+            const perPage = Number(url.searchParams.get('perPage')) || 15
+            const people = Array.from({ length: directors ? 3 : 30 }, (_, index) => ({
+                id: directors && index === 0 ? 'c-1' : `np-demo-${directors ? 'd' : 'u'}-${index}`,
+                name: `${directors ? 'Directora' : 'Consultora'} de ejemplo ${index + 1}`,
+                account: `${directors ? 'DIR' : 'CON'}${String(100 + index)}`,
+                country: 'MEX', photo: null,
+                rank: directors ? 'Directora' : index % 7 === 0 ? 'Consultora Estrella' : 'Consultora',
+                isClient: directors && index === 0, isClientActive: directors && index === 0, created_at: iso(60 * 24 * (40 + index * 9)),
+            })).filter(person => !text || `${person.name} ${person.account}`.toLowerCase().includes(text))
+            const lastPage = Math.max(1, Math.ceil(people.length / perPage))
+            response = respond({ ...page(people.slice((pageNumber - 1) * perPage, pageNumber * perPage)), current_page: pageNumber, last_page: lastPage, per_page: perPage, total_items: people.length })
+        }
+        else if (/^\/clients\/c-\d+\/clone-reel$/.test(path)) response = respond({ enabled: false, enabled_at: null, enabled_by_env: false, reels_this_month: 0, reels_total: 0 })
         else if (/^\/clients\/c-\d+\/accounts$/.test(path) && method === 'GET') {
             /* La clienta A trae dos cuentas (México y Colombia) para poder ver la tarjeta llena */
             const id = path.split('/')[2]

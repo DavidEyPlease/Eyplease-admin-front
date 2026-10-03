@@ -1,0 +1,112 @@
+import { useCallback, useEffect } from "react";
+
+import PageLoader from "@/components/generics/PageLoader";
+import { API_ROUTES } from "@/constants/api";
+import { IClient, IClientStats } from "@/interfaces/clients";
+import { replaceRecordIdInPath } from "@/utils";
+import { useParams } from "react-router";
+import Network from "./components/Network";
+import Summary from "./components/Summary";
+import LinkedAccounts from "./components/LinkedAccounts";
+import PinkCircleColombia from "./components/PinkCircleColombia";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/uishadcn/ui/tabs";
+import SetPlan from "./components/SetPlan";
+import CloneReelToggle from "./components/CloneReelToggle";
+import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
+import useFetchQuery from "@/hooks/useFetchQuery";
+import { queryKeys } from "@/utils/queryKeys";
+import FadeInGrid from "@/components/generics/FadeInGrid";
+import { ClientStatsSection } from "../components/ClientStatsSection";
+import ClientForm from "../components/Form";
+
+const LegacyClientDetail = () => {
+    const params = useParams<{ id: string }>();
+
+    const { response, loading, setData } = useFetchQuery<{ client: IClient, stats: IClientStats }>(replaceRecordIdInPath(API_ROUTES.CLIENTS.DETAIL, params.id || ''), {
+        customQueryKey: queryKeys.detail('client', params.id || ''),
+    })
+
+    const handleClientUpdate = useCallback((event: BrowserEvent<IClient>) => {
+        if (!response) return;
+        setData({
+            client: event.detail,
+            stats: response.stats
+        })
+    }, [response, setData])
+
+    const client = response?.client;
+    const stats = response?.stats;
+    // Círculo Rosa de Colombia se cuenta aparte (meses con descuento, no corazones): sólo en sus cuentas.
+    const esColombia = ['COL', 'CO'].includes((client?.country || '').toUpperCase());
+
+    useEffect(() => {
+        subscribeEvent('client-updated', handleClientUpdate as EventListener)
+
+        return () => {
+            unsubscribeEvent('client-updated', handleClientUpdate as EventListener)
+        }
+    }, [handleClientUpdate])
+
+    return (
+        <div>
+            {
+                loading ? (
+                    <PageLoader />
+                ) : (
+                    client && (
+                        <FadeInGrid gridClassName="md:grid-cols-1">
+                            <div className="grid md:grid-cols-5 gap-4">
+                                <div className="col-span-2 space-y-4">
+                                    <Summary client={client} />
+                                    <LinkedAccounts clientId={client.id} />
+                                    {stats && <ClientStatsSection stats={stats} />}
+                                </div>
+
+                                <div className="col-span-3">
+                                    <Tabs defaultValue="vendors">
+                                        <TabsList>
+                                            <TabsTrigger value="vendors">Vendedoras (es)</TabsTrigger>
+                                            {esColombia && <TabsTrigger value="pink-circle">Círculo Rosa</TabsTrigger>}
+                                            <TabsTrigger value="edit" disabled={!client}>Editar</TabsTrigger>
+                                            <TabsTrigger value="actions">Acciones</TabsTrigger>
+                                        </TabsList>
+                                        <TabsContent value="vendors">
+                                            <Network clientId={params.id || ''} />
+                                        </TabsContent>
+                                        {esColombia && (
+                                            <TabsContent value="pink-circle">
+                                                <PinkCircleColombia clientId={client.id} />
+                                            </TabsContent>
+                                        )}
+                                        <TabsContent value="edit">
+                                            {client && (
+                                                <ClientForm
+                                                    client={client}
+                                                    onSetClient={(client) => setData({
+                                                        client,
+                                                        stats: response?.stats || null
+                                                    })}
+                                                />
+                                            )}
+                                        </TabsContent>
+                                        <TabsContent value="actions">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <SetPlan
+                                                    activePlanId={client.user?.plan?.id || ''}
+                                                    clientId={client.id}
+                                                />
+                                                <CloneReelToggle clientId={client.id} userId={client.user?.id} />
+                                            </div>
+                                        </TabsContent>
+                                    </Tabs>
+                                </div>
+                            </div>
+                        </FadeInGrid>
+                    )
+                )
+            }
+        </div>
+    )
+}
+
+export default LegacyClientDetail;
