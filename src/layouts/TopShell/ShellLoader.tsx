@@ -14,7 +14,7 @@ const ShellLoader = ({ label }: { label: string }) => (
                 <img src={ISOTIPO} alt="" className="relative w-[46%]" />
             </span>
             <span className="text-[22px] leading-none font-extrabold tracking-tight text-foreground">
-                eyplease<span className="text-[#E5077D] dark:text-[#FF8AC4]">+</span>
+                eyplease<span className="text-[#6C47FF] dark:text-[#2CD4D9]">+</span>
                 <small className="ml-1.5 align-middle text-[10.5px] font-bold tracking-[.16em] text-muted-foreground uppercase">Admin</small>
             </span>
             <span className="shell-loader-bar" aria-hidden><i /></span>

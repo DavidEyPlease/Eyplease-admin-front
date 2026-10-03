@@ -131,7 +131,7 @@ const TopBar = ({ copilot, copilotOpen, onToggleCopilot }: Props) => {
                     <img src={ISOTIPO} alt="" className="relative z-[1] w-[21px]" />
                 </span>
                 <span className="hidden leading-none xl:block">
-                    <b className="block text-[15px] font-extrabold tracking-tight">eyplease<span className="text-[#E5077D]">+</span></b>
+                    <b className="block text-[15px] font-extrabold tracking-tight">eyplease<span className="text-[#6C47FF] dark:text-[#2CD4D9]">+</span></b>
                     <small className="text-[9.5px] font-extrabold tracking-[.16em] text-muted-foreground uppercase">Admin</small>
                 </span>
             </Link>

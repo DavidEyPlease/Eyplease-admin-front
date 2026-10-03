@@ -51,7 +51,7 @@ const AuthStage = ({ children }: { children: React.ReactNode }) => (
                 <span className="shell-mark grid size-11 place-items-center rounded-[14px] border border-white/30 bg-white/15 backdrop-blur-sm">
                     <img src={ISOTIPO} alt="" className="relative z-[1] w-6" />
                 </span>
-                <span className="text-[19px] leading-none font-extrabold tracking-tight text-white">eyplease<span className="text-[#FF8AC4]">+</span> <small className="ml-1 align-middle text-[11px] font-bold tracking-[.14em] text-white/60 uppercase">Admin</small></span>
+                <span className="text-[19px] leading-none font-extrabold tracking-tight text-white">eyplease<span className="text-[#2CD4D9]">+</span> <small className="ml-1 align-middle text-[11px] font-bold tracking-[.14em] text-white/60 uppercase">Admin</small></span>
             </div>
             <h1 className="auth-rise mt-10 text-[clamp(30px,3.2vw,44px)] leading-[1.05] font-extrabold tracking-tight text-white" style={{ '--i': 0 } as React.CSSProperties}>
                 La operación, <span className="text-[#9FF3F5]">de un vistazo.</span>
