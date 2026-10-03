@@ -24,6 +24,8 @@ import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useF
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
 import { cn } from "@/lib/utils"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
+import useCountryStore from "@/store/country"
+import { moneyIn } from "@/constants/countries"
 
 
 const DEFAULT_STATUS: CollectionStatus = "collectable"
@@ -103,7 +105,7 @@ const buildRow = (client: FinanceClient): CollectionRow => {
 const collectablePeriods = (row: CollectionRow) => [...row.overduePeriods, ...row.pendingPeriods].sort()
 
 const promoDiscountLabel = (promotion: FinanceClientPromotion) =>
-    promotion.discount_type === "percent" ? `${promotion.discount}%` : formatMoney(promotion.discount)
+    promotion.discount_type === "percent" ? `${promotion.discount}%` : money(promotion.discount)
 
 /** Stripe vs. manual billing chip. */
 const BillingTypeChip = ({ type }: { type: "stripe" | "manual" }) =>
@@ -181,18 +183,18 @@ const PeriodChips = ({ row, year }: { row: CollectionRow; year: number }) => {
 
 /** The amount that matters most for the row: overdue first, then upcoming, then under review. */
 const RowAmount = ({ row }: { row: CollectionRow }) => {
-    if (row.overdueAmount > 0) return <span className="font-semibold text-rose-600 dark:text-rose-400">{formatMoney(row.overdueAmount)}</span>
+    if (row.overdueAmount > 0) return <span className="font-semibold text-rose-600 dark:text-rose-400">{money(row.overdueAmount)}</span>
     if (row.pendingAmount > 0) {
         return (
             <span className="font-semibold text-foreground">
-                {formatMoney(row.pendingAmount)} <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">por vencer</span>
+                {money(row.pendingAmount)} <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">por vencer</span>
             </span>
         )
     }
     if (row.reviewAmount > 0) {
         return (
             <span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">
-                {formatMoney(row.reviewAmount)} <span className="text-[11px] font-medium">en revisión</span>
+                {money(row.reviewAmount)} <span className="text-[11px] font-medium">en revisión</span>
             </span>
         )
     }
@@ -200,7 +202,12 @@ const RowAmount = ({ row }: { row: CollectionRow }) => {
 }
 
 /** Las cifras de titular van sin centavos; las de cada fila, exactas */
-const whole = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
+/* Lo que se ve es de UN país (el selector de arriba) y va en su moneda: en Colombia, pesos colombianos */
+const inColombia = () => useCountryStore.getState().country === "COL"
+const money = (n: number | null | undefined) => inColombia()
+    ? (Number.isFinite(n) ? `${moneyIn(n as number, "COP")} COP` : "—")
+    : formatMoney(n)
+const whole = (n: number) => inColombia() ? `${moneyIn(n, "COP")} COP` : `$${Math.round(n).toLocaleString("es-MX")}`
 
 const chip = (active: boolean) => cn("inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[12.5px] font-semibold transition-colors", active ? "border-transparent bg-foreground text-background" : "border-border bg-card/60 text-muted-foreground hover:border-[#6C47FF]/40 hover:text-foreground")
 
@@ -335,7 +342,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         const amount = Number(abono[period])
         if (!amount || amount <= 0) return
         await markPayment({ account, period, amount, source: "manual", paid_at: paidAtOn(paidOn) })
-        toast.success(`Abono de ${formatMoney(amount)} registrado en ${periodLabelIn(period, year)}`)
+        toast.success(`Abono de ${money(amount)} registrado en ${periodLabelIn(period, year)}`)
         setAbono((prev) => ({ ...prev, [period]: "" }))
     }
 
@@ -488,13 +495,13 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                         <tr className="border-t border-border bg-foreground/[.03] text-sm">
                                             <td className="px-5 py-3 text-muted-foreground" colSpan={newShell ? 4 : 6}>
                                                 <span className="font-medium">{totalItems} {totalItems === 1 ? "cliente" : "clientes"}</span>
-                                                <span className="text-muted-foreground"> · retrasado </span><span className="font-semibold text-rose-600 dark:text-rose-400">{formatMoney(totalOverdue)}</span>
-                                                <span className="text-muted-foreground"> · por vencer </span><span className="font-semibold text-foreground">{formatMoney(totalPending)}</span>
+                                                <span className="text-muted-foreground"> · retrasado </span><span className="font-semibold text-rose-600 dark:text-rose-400">{money(totalOverdue)}</span>
+                                                <span className="text-muted-foreground"> · por vencer </span><span className="font-semibold text-foreground">{money(totalPending)}</span>
                                                 {totalInReview > 0 && (
-                                                    <><span className="text-muted-foreground"> · en revisión </span><span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">{formatMoney(totalInReview)}</span></>
+                                                    <><span className="text-muted-foreground"> · en revisión </span><span className="font-semibold text-[#5B47E0] dark:text-[#A99BFF]">{money(totalInReview)}</span></>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-3 text-right font-bold text-foreground">{formatMoney(totalOverdue + totalPending)}</td>
+                                            <td className="px-5 py-3 text-right font-bold text-foreground">{money(totalOverdue + totalPending)}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -565,7 +572,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 <div className="rounded-xl bg-foreground/[.03] p-3">
                                     <div className="mb-2 flex items-center justify-between">
                                         <span className="text-sm font-medium text-foreground">{manageRow.overdueAmount > 0 ? "Cobrar adeudo" : "Cobrar"}</span>
-                                        <span className={`text-sm font-bold ${manageRow.overdueAmount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{formatMoney(manageAmount)}</span>
+                                        <span className={`text-sm font-bold ${manageRow.overdueAmount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{money(manageAmount)}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
@@ -619,7 +626,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <div key={p} className="rounded-xl border border-[#5B47E0]/20 bg-[#5B47E0]/[.06] px-3 py-2.5">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-medium text-foreground">{periodLabelIn(p, year)}</span>
-                                                    <span className="text-sm font-semibold text-foreground">{formatMoney(periodRemaining(pay, manageRow.client.fixedPayment ?? 0))}</span>
+                                                    <span className="text-sm font-semibold text-foreground">{money(periodRemaining(pay, manageRow.client.fixedPayment ?? 0))}</span>
                                                 </div>
                                                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                                     {pay?.receiptUrl && (
@@ -661,9 +668,9 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                                         {upcoming && <MonthChip tone="amber">por vencer</MonthChip>}
                                                     </span>
                                                     <div className="text-right">
-                                                        <span className={`text-sm font-semibold ${upcoming ? "text-foreground" : "text-rose-600 dark:text-rose-400"}`}>{formatMoney(remaining)}</span>
+                                                        <span className={`text-sm font-semibold ${upcoming ? "text-foreground" : "text-rose-600 dark:text-rose-400"}`}>{money(remaining)}</span>
                                                         <span className="text-xs text-muted-foreground"> restante</span>
-                                                        {paidSoFar > 0 && <div className="text-[11px] text-sky-600 dark:text-sky-400">Abonado {formatMoney(paidSoFar)}</div>}
+                                                        {paidSoFar > 0 && <div className="text-[11px] text-sky-600 dark:text-sky-400">Abonado {money(paidSoFar)}</div>}
                                                     </div>
                                                 </div>
                                                 <div className="mt-2 flex items-center gap-2">
@@ -696,7 +703,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                     {manageRow.client.nextChargeDate && (
                                         <p className="mt-0.5 text-xs text-emerald-600/80">
                                             Próximo cobro {formatDueDate(manageRow.client.nextChargeDate)}
-                                            {manageRow.client.nextChargeAmount != null && ` · ${formatMoney(manageRow.client.nextChargeAmount)}`}
+                                            {manageRow.client.nextChargeAmount != null && ` · ${money(manageRow.client.nextChargeAmount)}`}
                                             {manageRow.client.billingType === "stripe" && " · se cobra automáticamente a su tarjeta"}
                                         </p>
                                     )}

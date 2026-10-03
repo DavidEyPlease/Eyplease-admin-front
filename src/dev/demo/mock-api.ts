@@ -575,12 +575,14 @@ const STATUS_GROUP: Record<string, string[]> = { overdue: ['overdue', 'partial']
 const forCollectionYear = (payments: Record<string, DemoPayment>, year: number) =>
     Object.fromEntries(Object.entries(payments).filter(([p, payment]) => p.startsWith(`${year}-`) || (p < `${year}-01` && payment.status !== 'paid')))
 const remainingOf = (payment: DemoPayment) => payment.status === 'paid' ? 0 : Math.max(0, payment.amount - (payment.paid ?? 0))
-const financeClients = (status: string, inactive = false, year = now.getFullYear()) => {
+const financeClients = (status: string, inactive = false, year = now.getFullYear(), country: string | null = null) => {
     const wanted = STATUS_GROUP[status] ?? STATUS_GROUP.collectable
     const ledger = inactive ? financeInactiveLedger : financeLedger
     const matching = Object.entries(ledger)
         .map(([account, payments]) => [account, forCollectionYear(payments, year)] as const)
         .filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status)))
+        /* Un país a la vez, como la API (`?country=`) */
+        .filter(([account]) => !country || (demoClients.find(item => item.account === account)?.country ?? 'MEX') === country)
     const items = matching.map(([account, payments], index) => {
         const client = demoClients.find(item => item.account === account)
         const balance = Object.values(payments).reduce((sum, payment) => sum + remainingOf(payment), 0)
@@ -1272,7 +1274,7 @@ export const installMockApi = () => {
         else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }
         /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
         else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
-        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined))
+        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined, url.searchParams.get('country')))
         /* Registrar un pago como la API: «pagado» liquida con su fecha, un monto solo es abono, y
            deshacer un pagado lo deja debiéndose entero */
         else if (path === '/finance/payments' && method === 'POST') {

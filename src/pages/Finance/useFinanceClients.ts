@@ -8,6 +8,7 @@ import { CollectionStatus, FinanceClient, FinanceClientPromotion, MonthlyPayment
 import { queryKeys } from "@/utils/queryKeys"
 import { replaceRecordIdInPath } from "@/utils"
 import { PAYMENTS_ENTITY } from "./useFinancePayments"
+import useCountryStore from "@/store/country"
 
 const CLIENTS_ENTITY = "finance-clients"
 
@@ -121,6 +122,8 @@ export interface UseFinanceClientsPageParams {
  * deactivated ones with debt (`inactive`).
  */
 export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus = DEFAULT_COLLECTION_STATUS, inactive = false }: UseFinanceClientsPageParams) => {
+    /* Sólo las del país que se mira arriba: cada país cobra en su moneda y los totales no se pueden mezclar */
+    const country = useCountryStore(state => state.country)
     const { response, loading, isRefetching, error, fetchRetry } = useFetchQuery<PaginatedClients>(
         API_ROUTES.FINANCE.CLIENTS,
         {
@@ -133,8 +136,9 @@ export const useFinanceClientsPage = ({ year, page, search = "", perPage = 15, b
                 payment_day: paymentDay,
                 collection_status: collectionStatus,
                 inactive: inactive ? 1 : undefined,
+                country,
             },
-            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus, inactive }),
+            customQueryKey: queryKeys.list(CLIENTS_ENTITY, { year, page, perPage, search, billingType, overdueMonthsMin, overdueMonthsMax, minOverdue, paymentDay, collectionStatus, inactive, country }),
         }
     )
 
