@@ -1,6 +1,8 @@
 /* eslint-disable react-refresh/only-export-components -- es un punto de entrada, no un módulo que se recargue en caliente */
 // SÓLO DEV (no entra en el build): el panel entero sin sesión ni contraseñas, con datos de EJEMPLO.
 //   http://localhost:5195/demo.html            …&ir=/clients  (página en la que abre)   …&nuevo=0|1  (marco)
+//   …&hoy=2026-10-28  (la demo cree que es ese día)
+import './fake-today'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, useLocation } from 'react-router'
 

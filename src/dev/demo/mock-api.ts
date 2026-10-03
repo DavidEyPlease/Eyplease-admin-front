@@ -14,25 +14,31 @@ const iso = (minutesAgo = 0) => new Date(now.getTime() - minutesAgo * 60000).toI
 const period = (back = 0) => { const d = new Date(now.getFullYear(), now.getMonth() - back, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}` }
 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
 
-/* El cierre de mes de EJEMPLO: cuatro que llegan debiendo el mes y una que se salva por su promesa de pago */
+/* El cierre de mes de EJEMPLO: quien ya pasó su día de pago va tarde y el resto sigue en tiempo (a principios de mes,
+   casi todas); una se salva por su promesa de pago y una paga en pesos colombianos */
 const demoMonthClose = { enabled: false }
 const monthClosePreview = () => {
     const closing = period(0)
     const next = (() => { const d = new Date(now.getFullYear(), now.getMonth() + 1, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}` })()
-    const row = (n: number, name: string, total: number, days: number, nextAmount: number, extra: Record<string, unknown> = {}) => ({
-        user_id: `u-mc-${n}`, account: `EJ-01${n}`, name, email: `ejemplo${n}@ejemplo.com`,
-        owed: [{ period: closing, amount: total, status: 'overdue' }], total, currency: 'MXN', days_late: days,
-        next_period: next, next_amount: nextAmount, ...extra,
+    const row = (n: number, name: string, total: number, payDay: number, nextAmount: number, extra: Record<string, unknown> = {}) => ({
+        user_id: `u-mc-${n}`, account: `EJ-0${String(n).padStart(2, '0')}`, name, email: `ejemplo${n}@ejemplo.com`,
+        owed: [{ period: closing, amount: total, status: now.getDate() > payDay ? 'overdue' : 'pending' }], total, currency: 'MXN',
+        days_late: Math.max(0, now.getDate() - payDay), next_period: next, next_amount: nextAmount, ...extra,
     })
     return {
         period: closing, next_period: next, enabled: demoMonthClose.enabled,
         pause: [
-            row(1, 'Clienta de ejemplo Uno', 349, 24, 349),
-            row(2, 'Clienta de ejemplo Dos', 377, 21, 659, { owed: [{ period: closing, amount: 377, status: 'partial' }] }),
-            row(3, 'Clienta de ejemplo Tres', 969, 24, 969),
+            row(1, 'Clienta de ejemplo Uno', 349, 1, 349),
+            row(2, 'Clienta de ejemplo Dos', 377, 2, 659, { owed: [{ period: closing, amount: 377, status: 'partial' }] }),
+            row(3, 'Clienta de ejemplo Tres', 969, 5, 969),
             row(4, 'Clienta de ejemplo Cuatro', 349, 10, 349, { email: null }),
+            row(6, 'Clienta de ejemplo Seis', 99, 15, 99),
+            row(7, 'Clienta de ejemplo Siete', 659, 15, 659),
+            row(8, 'Clienta de ejemplo Ocho', 349, 20, 349),
+            row(9, 'Clienta de ejemplo Nueve', 179900, 20, 179900, { currency: 'COP' }),
+            row(10, 'Clienta de ejemplo Diez', 349, 25, 349, { days_late: null }),
         ],
-        spared: [row(5, 'Clienta de ejemplo Cinco', 659, 24, 659, { reason: 'promesa de pago hasta el 5 de octubre' })],
+        spared: [row(5, 'Clienta de ejemplo Cinco', 659, 1, 659, { reason: 'promesa de pago hasta el 5 de octubre' })],
     }
 }
 const monthCloseMail = (row: { name: string, total: number, next_amount: number }) => `<!doctype html><html lang="es"><body style="margin:0;padding:32px;background:#f4f4f5;font-family:Arial,sans-serif"><div style="max-width:560px;margin:auto;background:#fff;border-radius:12px;padding:40px"><h1 style="font-size:22px;color:#18181b">¡Hola, ${row.name.split(' ')[0]}!</h1><p style="color:#52525b;font-size:15px;line-height:1.6">Correo de EJEMPLO (el real lo arma la API): su cuenta quedó en pausa. Para volver: $${row.total} pendientes + $${row.next_amount} del mes en curso.</p></div></body></html>`
