@@ -47,6 +47,7 @@ export const API_ROUTES = {
         SET_STATUS: '/clients/{id}/change-status',
         DEBT: '/clients/{id}/debt',
         CLONE_REEL: '/clients/{id}/clone-reel',
+        INSIGHTS: '/clients/{id}/insights',
     },
     PLANS: {
         LIST: '/plans',

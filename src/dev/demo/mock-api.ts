@@ -1191,6 +1191,33 @@ export const installMockApi = () => {
             const lastPage = Math.max(1, Math.ceil(people.length / perPage))
             response = respond({ ...page(people.slice((pageNumber - 1) * perPage, pageNumber * perPage)), current_page: pageNumber, last_page: lastPage, per_page: perPage, total_items: people.length })
         }
+        else if (/^\/clients\/c-\d+\/insights$/.test(path)) {
+            /* Indicadores y uso de EJEMPLO (la forma de ClientInsightsService); la F, dada de baja, sin movimiento */
+            const gone = path.split('/')[2] === 'c-5'
+            const months = Array.from({ length: 6 }, (_, index) => period(5 - index))
+            response = respond({
+                month: period(0),
+                indicators: { month: period(0), unit_size: 215, leaders: { count: 4, period: prev, people: [] }, ordered: { count: gone ? null : 38, total: 215, source: gone ? null : 'sales' }, with_hearts: { count: 28 }, near_gift: { count: 2 } },
+                production: months.map((month, index) => ({ month, current: index === 5, loaded: !gone || index < 3, unit_points: !gone || index < 3 ? [42501, 48499, 61942, 62665, 58896, 21340][index] : null, own_points: !gone || index < 3 ? [5012, 3004, 10012, 2560, 3732, 1180][index] : null, ordered: !gone || index < 3 ? [46, 47, 58, 71, 67, 38][index] : null })),
+                activity: gone ? { last_active_at: iso(60 * 24 * 95), last_sign_in_at: iso(60 * 24 * 95), has_app: false, devices: [] } : { last_active_at: iso(95), last_sign_in_at: iso(60 * 9), has_app: true, devices: [{ platform: 'android', model: 'SM-S948B', since: iso(60 * 24 * 44) }] },
+                usage_days: 30,
+                usage: {
+                    areas: gone ? [] : [
+                        { key: 'notifications', label: 'Avisos leídos', total: 85 },
+                        { key: 'posts', label: 'Publicaciones compartidas', total: 22 },
+                        { key: 'assistant', label: 'Mensajes al Asistente', total: 9, app: 7, web: 2 },
+                        { key: 'library', label: 'Biblioteca', total: 3, shared: 2, saved: 1 },
+                        { key: 'trainings', label: 'Entrenamientos bajados', total: 2 },
+                        { key: 'requests', label: 'Pedidos de diseño', total: 1, via_assistant: 1 },
+                        { key: 'challenges', label: 'Retos creados', total: 1 },
+                        { key: 'events', label: 'Eventos e invitaciones', total: 0 },
+                    ],
+                    posts_by_section: gone ? [] : [{ key: 'birthdays', label: 'Cumpleaños', total: 8 }, { key: 'new_beginnings', label: 'Nuevos inicios', total: 6 }, { key: 'stars', label: 'Estrellas', total: 5 }, { key: 'pink_circle', label: 'Circulo rosa', total: 2 }, { key: 'honor_roll', label: 'Cuadro de Honor', total: 1 }],
+                    library_by_section: gone ? [] : [{ key: 'proposals', label: 'Propuestas', total: 1 }, { key: 'products', label: 'Productos', total: 1 }],
+                },
+                trend: months.map((month, index) => ({ month, posts_shared: gone ? 0 : [0, 0, 3, 8, 22, 4][index], assistant_messages: gone ? 0 : [0, 0, 0, 2, 11, 3][index] })),
+            })
+        }
         else if (/^\/clients\/c-\d+\/clone-reel$/.test(path)) response = respond({ enabled: false, enabled_at: null, enabled_by_env: false, reels_this_month: 0, reels_total: 0 })
         else if (/^\/clients\/c-\d+\/accounts$/.test(path) && method === 'GET') {
             /* La clienta A trae dos cuentas (México y Colombia) para poder ver la tarjeta llena */

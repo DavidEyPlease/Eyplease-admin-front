@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { BookOpenIcon, FileChartColumnIcon, ImagesIcon, StarIcon, WalletIcon } from "lucide-react";
+import { ActivityIcon, FileChartColumnIcon, ImagesIcon, StarIcon, WalletIcon } from "lucide-react";
 
 import { API_ROUTES } from "@/constants/api";
 import { Country, moneyIn } from "@/constants/countries";
@@ -11,6 +11,7 @@ import { ClientStatus } from "@/pages/Reports/useReports";
 import { periodLabel } from "@/utils/finance";
 import { queryKeys } from "@/utils/queryKeys";
 import useClientDebt from "../../List/useClientDebt";
+import { ago, appDevices, ClientInsights } from "./useClientInsights";
 
 type Tone = 'ok' | 'warn' | 'bad' | 'plain'
 
@@ -53,14 +54,16 @@ interface Props {
     country: Country
     /** Mientras llegan sus puntos (vienen del padrón, no de la ficha) */
     pointsLoading: boolean
+    insights?: ClientInsights
+    insightsLoading: boolean
 }
 
 /**
  * Cómo va este mes, en cinco cifras: si está al corriente, sus puntos, si ya tiene sus reportes,
- * cuánto de lo que le publicamos compartió y cuánto ha bajado de la biblioteca. Cada cifra sale de
- * lo que ya decide el servidor (cobranza, matriz de reportes, estadísticas de la ficha).
+ * cuánto de lo que le publicamos compartió y cuándo usó la plataforma por última vez. Cada cifra
+ * sale de lo que ya decide el servidor (cobranza, matriz de reportes, estadísticas e insights).
  */
-const MonthPulse = ({ client, stats, country, pointsLoading }: Props) => {
+const MonthPulse = ({ client, stats, country, pointsLoading, insights, insightsLoading }: Props) => {
     const active = client.user?.active !== false
     const { debt, loading: debtLoading, failed: debtFailed } = useClientDebt(client.id)
 
@@ -118,12 +121,14 @@ const MonthPulse = ({ client, stats, country, pointsLoading }: Props) => {
                 bar={stats?.posts_shared_percentage}
             />
             <Tile
-                icon={<BookOpenIcon className="size-3.5" />}
-                label="Biblioteca"
-                loading={!stats}
-                value={stats ? `${stats.tools_download_percentage}%` : '—'}
-                sub={stats ? `Bajó ${stats.downloaded_tools} de ${stats.total_tools} piezas` : undefined}
-                bar={stats?.tools_download_percentage}
+                icon={<ActivityIcon className="size-3.5" />}
+                label="Última actividad"
+                loading={insightsLoading}
+                value={(() => {
+                    const when = ago(insights?.activity.last_active_at ?? insights?.activity.last_sign_in_at)
+                    return when ? when.charAt(0).toUpperCase() + when.slice(1) : 'Sin registro'
+                })()}
+                sub={insights ? (appDevices(insights.activity.devices) ? `Tiene ${appDevices(insights.activity.devices)}` : 'Sin la app: sólo web') : undefined}
             />
         </div>
     )

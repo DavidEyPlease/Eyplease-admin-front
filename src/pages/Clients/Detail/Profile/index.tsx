@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { HeartIcon, LayersIcon, PencilIcon, UsersRoundIcon } from "lucide-react";
+import { ChartColumnIcon, HeartIcon, LayersIcon, PencilIcon } from "lucide-react";
 
 import { API_ROUTES } from "@/constants/api";
 import useFetchQuery from "@/hooks/useFetchQuery";
@@ -20,13 +20,14 @@ import PinkCircleColombia from "../components/PinkCircleColombia";
 import AccountFacts from "./AccountFacts";
 import CloneReel from "./CloneReel";
 import Hero from "./Hero";
+import Insights from "./Insights";
 import MonthPulse from "./MonthPulse";
 import PlanPicker from "./PlanPicker";
-import Unit from "./Unit";
+import useClientInsights from "./useClientInsights";
 import { countryOf } from "./utils";
 import "@/pages/Hoy/hoy.css";
 
-type Tab = 'unit' | 'pink' | 'edit' | 'plan'
+type Tab = 'insights' | 'pink' | 'edit' | 'plan'
 
 const Skeleton = () => (
     <div className="grid min-w-0 grid-cols-1 gap-4" aria-busy>
@@ -47,7 +48,7 @@ const Skeleton = () => (
 const ClientProfile = () => {
     const params = useParams<{ id: string }>()
     const id = params.id || ''
-    const [tab, setTab] = useState<Tab>('unit')
+    const [tab, setTab] = useState<Tab>('insights')
     const [changingStatus, setChangingStatus] = useState(false)
     const [paying, setPaying] = useState(false)
 
@@ -66,6 +67,7 @@ const ClientProfile = () => {
         staleTime: 60_000,
     })
     const listRow = row.response?.items?.find(item => item.id === id)
+    const insights = useClientInsights(id)
 
     const client = useMemo<IClientListItem | null>(() => detail ? {
         current_month_points: 0,
@@ -93,7 +95,7 @@ const ClientProfile = () => {
 
     const isColombia = country === 'COL'
     const tabs: Array<{ value: Tab, label: string, icon: ReactNode }> = [
-        { value: 'unit', label: 'Su unidad', icon: <UsersRoundIcon className="size-4" /> },
+        { value: 'insights', label: 'Indicadores y uso', icon: <ChartColumnIcon className="size-4" /> },
         ...(isColombia ? [{ value: 'pink' as Tab, label: 'Círculo Rosa', icon: <HeartIcon className="size-4" /> }] : []),
         { value: 'plan', label: 'Plan y ajustes', icon: <LayersIcon className="size-4" /> },
         { value: 'edit', label: 'Editar datos', icon: <PencilIcon className="size-4" /> },
@@ -108,7 +110,7 @@ const ClientProfile = () => {
                 onChangeStatus={() => setChangingStatus(true)}
             />
 
-            <MonthPulse client={client} stats={stats} country={country} pointsLoading={row.loading && !row.response} />
+            <MonthPulse client={client} stats={stats} country={country} pointsLoading={row.loading && !row.response} insights={insights.response} insightsLoading={insights.loading && !insights.response} />
 
             <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="grid min-w-0 grid-cols-1 gap-4">
@@ -134,7 +136,7 @@ const ClientProfile = () => {
                         ))}
                     </nav>
 
-                    {tab === 'unit' && <Unit clientId={client.id} />}
+                                        {tab === 'insights' && <Insights data={insights.response} loading={insights.loading} failed={!!insights.error} country={country} />}
                     {tab === 'pink' && isColombia && <PinkCircleColombia clientId={client.id} />}
                     {tab === 'plan' && (
                         <div className="grid min-w-0 grid-cols-1 gap-4">
