@@ -33,6 +33,9 @@
    --popover-foreground: oklch(0.141 0.005 285.823);
    --primary: oklch(0.4463 0.2077 283.36);
    --primary-foreground: oklch(0.969 0.016 293.756);
+   /* El violeta cuando es TINTA (`text-primary`). En claro es el mismo primario; en oscuro se aclara,
+      porque el primario de relleno casi no se distingue sobre una ficha oscura (1.8:1). */
+   --primary-ink: var(--primary);
    --secondary: oklch(0.967 0.001 286.375);
    --secondary-foreground: oklch(0.21 0.006 285.885);
    --muted: oklch(0.967 0.001 286.375);
@@ -97,6 +100,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  /* Sólo para el color de texto: `bg-primary`, `border-primary` y demás siguen con `--primary` */
+  --text-color-primary: var(--primary-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -131,6 +136,7 @@
    --popover-foreground: oklch(0.985 0 0);
    --primary: oklch(0.4021 0.1748 280.21);
    --primary-foreground: oklch(0.969 0.016 293.756);
+   --primary-ink: #A99BFF;
    --secondary: oklch(0.274 0.006 286.033);
    --secondary-foreground: oklch(0.985 0 0);
    --muted: oklch(0.274 0.006 286.033);
