@@ -1,6 +1,6 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ChartColumnIcon, HeartIcon, LayersIcon, PencilIcon } from "lucide-react";
+import { ChartColumnIcon, HeartIcon, LayersIcon } from "lucide-react";
 
 import { API_ROUTES } from "@/constants/api";
 import useFetchQuery from "@/hooks/useFetchQuery";
@@ -11,7 +11,6 @@ import { replaceRecordIdInPath } from "@/utils";
 import { BrowserEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events";
 import { queryKeys } from "@/utils/queryKeys";
 import PaymentLinkDialog from "@/components/generics/PaymentLinkDialog";
-import ClientForm from "../../components/Form";
 import { titleCase } from "../../List/names";
 import StatusDialog from "../../List/StatusDialog";
 import { statusTarget } from "../../List/statusTarget";
@@ -27,7 +26,7 @@ import useClientInsights from "./useClientInsights";
 import { countryOf } from "./utils";
 import "@/pages/Hoy/hoy.css";
 
-type Tab = 'insights' | 'pink' | 'edit' | 'plan'
+type Tab = 'insights' | 'pink' | 'plan'
 
 const Skeleton = () => (
     <div className="grid min-w-0 grid-cols-1 gap-4" aria-busy>
@@ -51,6 +50,8 @@ const ClientProfile = () => {
     const [tab, setTab] = useState<Tab>('insights')
     const [changingStatus, setChangingStatus] = useState(false)
     const [paying, setPaying] = useState(false)
+    const [editing, setEditing] = useState(false)
+    const factsRef = useRef<HTMLElement>(null)
 
     const { response, loading, setData, fetchRetry } = useFetchQuery<{ client: IClient, stats: IClientStats }>(replaceRecordIdInPath(API_ROUTES.CLIENTS.DETAIL, id), {
         customQueryKey: queryKeys.detail('client', id),
@@ -98,14 +99,13 @@ const ClientProfile = () => {
         { value: 'insights', label: 'Indicadores y uso', icon: <ChartColumnIcon className="size-4" /> },
         ...(isColombia ? [{ value: 'pink' as Tab, label: 'Círculo Rosa', icon: <HeartIcon className="size-4" /> }] : []),
         { value: 'plan', label: 'Plan y ajustes', icon: <LayersIcon className="size-4" /> },
-        { value: 'edit', label: 'Editar datos', icon: <PencilIcon className="size-4" /> },
     ]
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-4">
             <Hero
                 client={client}
-                onEdit={() => setTab('edit')}
+                onEdit={() => { setEditing(true); factsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
                 onPaymentLink={() => setPaying(true)}
                 onChangeStatus={() => setChangingStatus(true)}
             />
@@ -114,7 +114,7 @@ const ClientProfile = () => {
 
             <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="grid min-w-0 grid-cols-1 gap-4">
-                    <AccountFacts client={client} />
+                    <AccountFacts ref={factsRef} client={client} editing={editing} onEditingChange={setEditing} />
                     <LinkedAccounts clientId={client.id} />
                 </aside>
 
@@ -136,16 +136,13 @@ const ClientProfile = () => {
                         ))}
                     </nav>
 
-                                        {tab === 'insights' && <Insights data={insights.response} loading={insights.loading} failed={!!insights.error} country={country} />}
+                    {tab === 'insights' && <Insights data={insights.response} loading={insights.loading} failed={!!insights.error} country={country} />}
                     {tab === 'pink' && isColombia && <PinkCircleColombia clientId={client.id} />}
                     {tab === 'plan' && (
                         <div className="grid min-w-0 grid-cols-1 gap-4">
                             <PlanPicker key={client.user?.plan?.id ?? 'none'} clientId={client.id} activePlanId={client.user?.plan?.id ?? null} />
                             <CloneReel clientId={client.id} userId={client.user?.id} />
                         </div>
-                    )}
-                    {tab === 'edit' && (
-                        <ClientForm client={client} onSetClient={updated => setData({ client: updated, stats: response!.stats })} />
                     )}
                 </div>
             </div>

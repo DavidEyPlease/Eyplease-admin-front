@@ -73,6 +73,13 @@ export interface IClientUpdate {
     platform_guest_account?: string | null
     external_company_pw?: string | null
     phone?: string | null
+    name?: string
+    email?: string
+    /** Su número de cuenta de Mary Kay: es también su usuario en Eyplease+ */
+    username?: string
+    country_code?: string
+    /** Vacío = no se toca (ClientsService::update en la API) */
+    mk_password?: string
 }
 
 export type ClientFilterKeys = keyof IClientFilters

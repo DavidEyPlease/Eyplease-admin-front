@@ -1169,6 +1169,26 @@ export const installMockApi = () => {
             /* Dada de baja: al reactivarla se le crea el mes en curso (como la API desde el cierre de mes) */
             response = respond({ total: periods.reduce((sum, item) => sum + item.remaining, 0), currency: 'MXN', periods, days_overdue: gone ? 85 : late ? 12 : 0, account_blocked: gone, on_reactivation: gone ? { period: period(0), amount: 349 } : null })
         }
+        else if (/^\/clients\/c-\d+$/.test(path) && method === 'PUT') {
+            /* Editar sus datos desde la ficha (lo mismo que ClientsService::update): sólo cambia lo que llega.
+               La foto y el logo de la demo no se guardan en ningún lado: se pinta un cuadro de color para ver el cambio */
+            const client = demoClients.find(item => item.id === path.split('/')[2])
+            const body = JSON.parse(String(init?.body ?? '{}')) as Record<string, string>
+            const swatch = (text: string, color: string) => ({ url: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${color}"/><text x="50" y="58" font-family="Arial" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">${text}</text></svg>`)}`, uri: 'demo', has_photo: true })
+            if (client) {
+                if (body.name) { client.name = body.name; client.user.name = body.name }
+                if (body.email) client.user.email = body.email
+                if (body.phone) client.user.phone = body.phone
+                if (body.country_code) { client.country = body.country_code; client.user.country = body.country_code }
+                if (body.username) { client.account = body.username; client.user.username = body.username }
+                if (body.platform_guest_account) client.platform_guest_account = body.platform_guest_account
+                if (body.mk_password) client.external_company_pw = body.mk_password
+                if (body.photo) (client as Record<string, unknown>).photo = swatch('FOTO', '#6C47FF')
+                if (body.logo) (client as Record<string, unknown>).logotype = swatch('LOGO', '#2CD4D9')
+            }
+            await wait(400)
+            response = respond(client ?? null, client ? 200 : 404)
+        }
         else if (/^\/clients\/c-\d+$/.test(path) && method === 'GET') {
             /* La ficha espera `{ client, stats }`, no la clienta suelta */
             const found = demoClients.find(client => client.id === path.split('/')[2])

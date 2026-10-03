@@ -29,6 +29,8 @@ const Hero = ({ client, onEdit, onPaymentLink, onChangeStatus }: Props) => {
     /* La liga con tarjeta sólo se ha probado en pesos mexicanos; y a quien paga domiciliada el cargo le llega solo */
     const canSendLink = currency === 'MXN' && !client.card_subscription
     const name = titleCase(client.name)
+    /* Sin foto, la API manda un avatar genérico: `has_photo` dice si es la suya */
+    const photoUrl = (client.photo as { has_photo?: boolean } | null)?.has_photo === false ? null : client.photo?.url
 
     const copyUserId = async () => {
         if (!client.user?.id) return
@@ -45,8 +47,8 @@ const Hero = ({ client, onEdit, onPaymentLink, onChangeStatus }: Props) => {
             </Link>
 
             <div className="relative mt-3 flex flex-wrap items-center gap-x-5 gap-y-4">
-                {client.photo?.url
-                    ? <img src={client.photo.url} alt="" className="size-14 shrink-0 self-start rounded-[18px] object-cover shadow-[0_14px_30px_-16px_rgba(78,49,192,.7)] sm:size-[76px] sm:self-center sm:rounded-[22px]" />
+                {photoUrl
+                    ? <img src={photoUrl} alt="" className="size-14 shrink-0 self-start rounded-[18px] object-cover shadow-[0_14px_30px_-16px_rgba(78,49,192,.7)] sm:size-[76px] sm:self-center sm:rounded-[22px]" />
                     : <span className="shell-grad grid size-14 shrink-0 place-items-center self-start rounded-[18px] text-[19px] font-extrabold text-white sm:size-[76px] sm:self-center sm:rounded-[22px] sm:text-[24px]">{initials(client.name)}</span>}
 
                 <div className="min-w-0 flex-1">
