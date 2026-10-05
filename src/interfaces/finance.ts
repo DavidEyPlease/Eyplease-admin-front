@@ -34,10 +34,16 @@ export interface FinanceClient {
     userId?: string
     name: string
     plan: string | null
+    /** Plan gratis: no se le cobra. */
+    planFree?: boolean
     /** App status: 'active' | 'inactive'. */
     appStatus: string | null
     /** Day of the month the payment is due (1-31). */
     paymentDay: number | null
+    /** Día en que se dio de alta ('YYYY-MM-DD', hora de México). */
+    registeredAt?: string | null
+    /** Día en que termina (o terminó) su prueba gratis ('YYYY-MM-DD'); los días de prueba no se cobran. */
+    trialEndsAt?: string | null
     /** Debt (>0) or credit (<0) in MXN. */
     balance: number
     /** Fixed monthly payment = the client's plan price (plans.price). */
@@ -61,9 +67,11 @@ export interface FinanceClient {
 export type PaymentSource = "manual" | "client" | "whatsapp_bot" | "stripe" | "import" | "system"
 
 /** Estado de cobro que filtra la lista de Cobranza (la API conoce la composición de cada uno). */
-export type CollectionStatus = "collectable" | "overdue" | "pending" | "in_review" | "paid"
+export type CollectionStatus = "all" | "collectable" | "overdue" | "pending" | "in_review" | "paid"
 
 export const COLLECTION_STATUS_LABELS: Record<CollectionStatus, string> = {
+    /* Todas las cuentas activas, deban o no: también las de plan gratis y las altas nuevas */
+    all: "Todas",
     collectable: "Por cobrar",
     overdue: "En retraso",
     pending: "Por vencer",

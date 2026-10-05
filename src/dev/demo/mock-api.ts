@@ -576,20 +576,54 @@ const financeInactiveLedger: Record<string, Record<string, DemoPayment>> = {
 /* Promesas de pago por cuenta ('YYYY-MM-DD'): una en pie y, al guardarlas, las que se pongan */
 const ymdAhead = (days: number) => { const d = new Date(now.getTime() + days * 86400000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
 const financePromises: Record<string, string> = { 'EJ-008': ymdAhead(10) }
+/* Cuentas sin día de pago: no tienen ningún mes en su libro, así que sólo salen en «Todas». Una se registró sola
+   (sigue en su prueba gratis), a otra la dio de alta el equipo y la tercera está en el plan gratis. */
+const financeNewAccounts = [
+    { account: 'EJ-N01', name: 'CLIENTA NUEVA DE EJEMPLO (EN PRUEBA)', plan: 'Plan de ejemplo consultora', price: 99, free: false, registered_at: ymdAhead(0), trial_ends_at: ymdAhead(14) as string | null },
+    { account: 'EJ-N02', name: 'CLIENTA NUEVA DE EJEMPLO (SIN PRUEBA)', plan: 'Plan de ejemplo A', price: 349, free: false, registered_at: ymdAhead(-20), trial_ends_at: null as string | null },
+    { account: 'EJ-N03', name: 'CONSULTORA DE EJEMPLO (PLAN GRATIS)', plan: 'Plan gratis de ejemplo', price: 0, free: true, registered_at: ymdAhead(-6), trial_ends_at: null as string | null },
+]
+const financePaymentDays: Record<string, number> = {}
+/* Como la API: del mes en curso en adelante, el primer cobro que no cae dentro de la prueba gratis */
+const firstChargeOn = (day: number, trialEndsAt: string | null) => {
+    let year = now.getFullYear(), month = now.getMonth() + 1
+    for (;;) {
+        const date = `${year}-${pad(month)}-${pad(Math.min(day, new Date(year, month, 0).getDate()))}`
+        if (!trialEndsAt || date >= trialEndsAt) return date
+        month += 1
+        if (month > 12) { month = 1; year += 1 }
+    }
+}
+const newAccountItem = (account: string) => {
+    const fresh = financeNewAccounts.find(item => item.account === account)
+    if (!fresh) return null
+    const day = financePaymentDays[account] ?? null
+    const payments = financeLedger[account] ?? {}
+    const charge = day ? firstChargeOn(day, fresh.trial_ends_at) : null
+    const paidFirst = charge ? payments[charge.slice(0, 7)]?.status === 'paid' : false
+    return { id: account, user_id: `u-${account}`, name: fresh.name, plan: fresh.plan, plan_free: fresh.free, fixed_payment: fresh.price, billing_type: 'manual', app_status: 'active', payment_day: day, registered_at: fresh.registered_at, trial_ends_at: fresh.trial_ends_at, phone: null, balance: Object.values(payments).reduce((sum, payment) => sum + (payment.status === 'paid' ? 0 : payment.amount - (payment.paid ?? 0)), 0), promotion: null, next_charge_date: paidFirst ? null : charge, next_charge_amount: charge ? fresh.price : null, promised_until: null, payments }
+}
 const STATUS_GROUP: Record<string, string[]> = { overdue: ['overdue', 'partial'], in_review: ['in_review'], pending: ['pending'], paid: ['paid'], collectable: ['overdue', 'partial', 'pending', 'in_review'] }
 /* Como la API (Payment::forCollectionYear): los periodos del año y lo que quedó SIN PAGAR de años anteriores */
 const forCollectionYear = (payments: Record<string, DemoPayment>, year: number) =>
     Object.fromEntries(Object.entries(payments).filter(([p, payment]) => p.startsWith(`${year}-`) || (p < `${year}-01` && payment.status !== 'paid')))
 const remainingOf = (payment: DemoPayment) => payment.status === 'paid' ? 0 : Math.max(0, payment.amount - (payment.paid ?? 0))
-const financeClients = (status: string, inactive = false, year = now.getFullYear(), country: string | null = null) => {
+const financeClients = (status: string, inactive = false, year = now.getFullYear(), country: string | null = null, search = '') => {
+    /* «Todas» (sólo las activas): cada cuenta, tenga o no un mes en su libro */
+    const everyone = status === 'all' && !inactive
     const wanted = STATUS_GROUP[status] ?? STATUS_GROUP.collectable
-    const ledger = inactive ? financeInactiveLedger : financeLedger
+    const ledger: Record<string, Record<string, DemoPayment>> = inactive ? financeInactiveLedger
+        : everyone ? { ...financeLedger, ...Object.fromEntries(financeNewAccounts.filter(item => !financeLedger[item.account]).map(item => [item.account, {}])) }
+        : financeLedger
     const matching = Object.entries(ledger)
         .map(([account, payments]) => [account, forCollectionYear(payments, year)] as const)
-        .filter(([, payments]) => Object.values(payments).some(payment => wanted.includes(payment.status)))
+        .filter(([, payments]) => everyone || Object.values(payments).some(payment => wanted.includes(payment.status)))
         /* Un país a la vez, como la API (`?country=`) */
         .filter(([account]) => !country || (demoClients.find(item => item.account === account)?.country ?? 'MEX') === country)
+        .filter(([account]) => !search || `${demoClients.find(item => item.account === account)?.name ?? financeNewAccounts.find(item => item.account === account)?.name ?? ''} ${account}`.toLowerCase().includes(search.toLowerCase()))
     const items = matching.map(([account, payments], index) => {
+        const fresh = newAccountItem(account)
+        if (fresh) return { ...fresh, payments }
         const client = demoClients.find(item => item.account === account)
         const balance = Object.values(payments).reduce((sum, payment) => sum + remainingOf(payment), 0)
         const paymentDay = Math.min(28, today + 1 + index * 2)
@@ -1280,13 +1314,26 @@ export const installMockApi = () => {
         else if (path === '/finance/card-issues/scan') { await wait(900); response = respond({ checked: 11, open: cardIssues.length, errors: 0, issues: cardIssues }) }
         /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
         else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
-        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined, url.searchParams.get('country')))
+        else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined, url.searchParams.get('country'), url.searchParams.get('search') ?? ''))
+        /* Día de pago, como la API: entra al calendario y, si el primer cobro cae en el mes en curso, se le crea ya */
+        else if (/^\/finance\/clients\/[^/]+\/payment-day$/.test(path) && method === 'PUT') {
+            const account = decodeURIComponent(path.split('/')[3])
+            const day = Number((JSON.parse(String(init?.body ?? '{}')) as { payment_day: number }).payment_day)
+            const fresh = financeNewAccounts.find(item => item.account === account)
+            financePaymentDays[account] = day
+            if (fresh) {
+                const charge = firstChargeOn(day, fresh.trial_ends_at)
+                if (charge.slice(0, 7) === cur) (financeLedger[account] ??= {})[cur] ??= { amount: fresh.price, paid: 0, status: charge < ymdAhead(0) ? 'overdue' : 'pending' }
+            }
+            await wait(300)
+            response = respond(newAccountItem(account) ?? financeClients('collectable').items.find(item => item.id === account) ?? null)
+        }
         /* Registrar un pago como la API: «pagado» liquida con su fecha, un monto solo es abono, y
            deshacer un pagado lo deja debiéndose entero */
         else if (path === '/finance/payments' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { account: string, period: string, status?: string, amount?: number, paid_at?: string }
             const ledger = financeLedger[body.account] ? financeLedger : financeInactiveLedger
-            const row = ((ledger[body.account] ??= {})[body.period] ??= { amount: 349, paid: 0, status: 'pending' })
+            const row = ((ledger[body.account] ??= {})[body.period] ??= { amount: financeNewAccounts.find(item => item.account === body.account)?.price ?? 349, paid: 0, status: 'pending' })
             if (body.status === 'paid') { row.paid = row.amount; row.status = 'paid'; row.paid_at = body.paid_at ?? new Date().toISOString() }
             else if (body.status) { if (row.status === 'paid') { row.paid = 0; row.paid_at = null } row.status = body.status }
             else if (body.amount) { row.paid = (row.paid ?? 0) + body.amount; row.status = row.paid >= row.amount ? 'paid' : 'partial'; row.paid_at = body.paid_at ?? null }
@@ -1311,7 +1358,7 @@ export const installMockApi = () => {
         else if (/^\/finance\/clients\/[^/]+$/.test(path)) {
             const account = decodeURIComponent(path.split('/')[3])
             const year = Number(url.searchParams.get('year')) || undefined
-            response = respond(financeClients('collectable', false, year).items.find(item => item.id === account) ?? financeClients('paid', false, year).items.find(item => item.id === account) ?? financeClients('collectable', true, year).items.find(item => item.id === account) ?? null)
+            response = respond(newAccountItem(account) ?? financeClients('collectable', false, year).items.find(item => item.id === account) ?? financeClients('paid', false, year).items.find(item => item.id === account) ?? financeClients('collectable', true, year).items.find(item => item.id === account) ?? null)
         }
         else if (path === '/reports/clients-status') response = respond(url.searchParams.get('country') === 'COL' ? colombiaClientsStatus : clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)

@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+import { toast } from "sonner"
 
 import { API_ROUTES } from "@/constants/api"
 import { PaginationResponse } from "@/interfaces/common"
@@ -29,10 +30,13 @@ interface ApiFinanceClient {
     user_id?: string
     name: string
     plan: string | null
+    plan_free?: boolean
     fixed_payment: number | null
     billing_type: "stripe" | "manual"
     app_status: string | null
     payment_day: number | null
+    registered_at?: string | null
+    trial_ends_at?: string | null
     phone: string | null
     balance: number
     promotion: FinanceClientPromotion | null
@@ -53,10 +57,13 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     userId: c.user_id,
     name: c.name,
     plan: c.plan ?? null,
+    planFree: c.plan_free ?? false,
     fixedPayment: c.fixed_payment ?? null,
     billingType: c.billing_type ?? "manual",
     appStatus: c.app_status ?? null,
     paymentDay: c.payment_day ?? null,
+    registeredAt: c.registered_at ?? null,
+    trialEndsAt: c.trial_ends_at ?? null,
     phone: c.phone ?? null,
     balance: c.balance ?? 0,
     promotion: c.promotion ?? null,
@@ -205,6 +212,28 @@ export const usePaymentPromise = () => {
         )
 
     return { setPromise, saving: requestState.loading }
+}
+
+/**
+ * Día de pago de una clienta que paga por transferencia. Devuelve su ficha ya actualizada (con su
+ * próximo cobro) y refresca la lista de cobranza.
+ */
+export const usePaymentDay = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY)],
+        onError: (error) => { toast.error(error.message || "No se pudo guardar el día de pago") },
+    })
+
+    const setPaymentDay = async (account: string, paymentDay: number) => {
+        const response = await request<{ payment_day: number }, ApiFinanceClient>(
+            "PUT",
+            replaceRecordIdInPath(API_ROUTES.FINANCE.CLIENT_PAYMENT_DAY, account),
+            { payment_day: paymentDay },
+        )
+        return response?.data ? mapClient(response.data) : null
+    }
+
+    return { setPaymentDay, saving: requestState.loading }
 }
 
 export interface ReviewReceiptInput {

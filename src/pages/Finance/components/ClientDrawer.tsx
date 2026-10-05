@@ -9,6 +9,7 @@ import { PaymentStatus } from "@/interfaces/finance"
 import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodLabelIn, periodPaid, periodYear, periodsForYear, promiseState } from "@/utils/finance"
 import { MarkPaymentInput, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
 import { StatusPill } from "./ui"
+import PaymentDayDialog from "./PaymentDayDialog"
 
 // "En revisión" only displays: it is set by the client's receipt upload and
 // resolved from Cobranza (Validar / Rechazar), never picked by hand.
@@ -49,6 +50,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
     /* El día en que entró el dinero: decide en qué mes cuenta el ingreso. Por defecto hoy; si
        el pago fue otro día (un depósito del 30 que se marca el 2), se cambia aquí antes de marcar. */
     const [paidOn, setPaidOn] = useState<Date>(() => new Date())
+    const [editingDay, setEditingDay] = useState(false)
 
     const onStatusChange = (period: string, status: string) => {
         if (!status || !client) return
@@ -100,7 +102,15 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                             </span>
                         </Row>
                         <Row label="Pago fijo">{formatMoney(client.fixedPayment)}</Row>
-                        <Row label="Día de pago">{client.paymentDay ?? "—"}</Row>
+                        <Row label="Día de pago">
+                            <span className="inline-flex items-center gap-2">
+                                {client.paymentDay ?? (client.billingType === "manual" ? <span className="text-amber-600 dark:text-amber-400">Sin día: no se le cobra</span> : "—")}
+                                {/* A una domiciliada no se le pone: su día es el de su suscripción en Stripe */}
+                                {client.billingType === "manual" && (
+                                    <button type="button" onClick={() => setEditingDay(true)} className="text-xs font-bold text-primary hover:underline">{client.paymentDay ? "Cambiar" : "Poner"}</button>
+                                )}
+                            </span>
+                        </Row>
                         <Row label="Próximo cobro">
                             <span className="inline-flex items-center gap-1.5 text-[#5B47E0] dark:text-[#A99BFF]">
                                 <CalendarClockIcon className="h-4 w-4" /> {formatDueDate(client.nextChargeDate)}
@@ -213,6 +223,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                     </section>
                 </div>
             )}
+            <PaymentDayDialog client={editingDay ? client : null} year={year} onClose={() => setEditingDay(false)} />
         </SideModal>
     )
 }

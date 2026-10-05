@@ -22,13 +22,16 @@ import { formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabelIn, peri
 import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service"
 import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
+import PaymentDayDialog, { trialRunning } from "./PaymentDayDialog"
 import { cn } from "@/lib/utils"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 import useCountryStore from "@/store/country"
 import { moneyIn } from "@/constants/countries"
 
 
-const DEFAULT_STATUS: CollectionStatus = "collectable"
+/* Abre en «Todas»: cada cuenta activa con su día de pago, deba o no (también las de plan gratis y las altas
+   nuevas, para darles seguimiento). «Por cobrar» y los demás estados quedan a un toque. */
+const DEFAULT_STATUS: CollectionStatus = "all"
 
 const BILLING_ALL = "all"
 const BILLING_OPTIONS = [
@@ -48,12 +51,18 @@ const OVERDUE_MONTHS_OPTIONS = [
 
 /** Empty-state copy per selected state (with no other filter active). */
 const EMPTY_COPY: Record<CollectionStatus, string> = {
+    all: "No hay cuentas activas.",
     collectable: "Nadie tiene pagos por cobrar. 🎉",
     overdue: "Sin clientes en retraso. 🎉",
     pending: "Sin pagos por vencer.",
     in_review: "Sin comprobantes por revisar.",
     paid: "Sin pagos registrados este año.",
 }
+
+/** Paga por transferencia y nadie le ha puesto día de pago: el sistema no le cobra (así nace toda alta nueva). */
+const hasNoDay = (client: FinanceClient) => client.billingType === "manual" && !client.paymentDay
+/** Además su plan es de paga: hay que ponerle día para que entre a la cobranza. */
+const needsDay = (client: FinanceClient) => hasNoDay(client) && !client.planFree && (client.fixedPayment ?? 0) > 0
 
 /** Month chip tone per payment status — same palette as StatusPill. */
 const CHIP_TONE_BY_STATUS: Partial<Record<Exclude<PaymentStatus, null>, ChipTone>> = {
@@ -163,6 +172,22 @@ const ChargeDay = ({ client, compact = false }: { client: FinanceClient; compact
     )
 }
 
+/** Sin día de pago: en vez del día, por qué no se le cobra (plan gratis, sigue en su prueba, o desde cuándo es cuenta). */
+const NoDayCell = ({ client, compact = false }: { client: FinanceClient; compact?: boolean }) => {
+    const label = needsDay(client) ? "Sin día de pago" : client.planFree ? "Plan gratis" : "Sin cobro"
+    const tone = needsDay(client) ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+    const detail = trialRunning(client)
+        ? `prueba gratis hasta el ${formatDueDate(client.trialEndsAt)}`
+        : client.registeredAt ? `alta ${formatDueDate(client.registeredAt)}` : "no se le cobra"
+    if (compact) return <p className={cn("text-xs", tone)}>{label} · {detail}</p>
+    return (
+        <div className="flex flex-col leading-tight">
+            <span className={cn("font-medium", tone)}>{label}</span>
+            <span className="text-xs text-muted-foreground">{detail}</span>
+        </div>
+    )
+}
+
 /** One chip per period, toned by its status; falls back to the balance or "Al día". A month of another year carries its year. */
 const PeriodChips = ({ row, year }: { row: CollectionRow; year: number }) => {
     const periods = [...row.overduePeriods, ...row.pendingPeriods, ...row.reviewPeriods].sort()
@@ -244,7 +269,8 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
         year,
         page,
         search,
-        collectionStatus: status,
+        /* Las bajas se listan por lo que deben: «Todas» sólo vale para las activas */
+        collectionStatus: inactive && status === "all" ? "collectable" : status,
         billingType: billing === BILLING_ALL ? undefined : (billing as "stripe" | "manual"),
         overdueMonthsMin: monthsRange.min,
         overdueMonthsMax: monthsRange.max,
@@ -256,6 +282,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const { reviewReceipt, reviewing } = useReviewReceipt()
 
     const [manageId, setManageId] = useState<string | null>(null)
+    /* A quién se le está poniendo día de pago. Una cuenta con plan de paga y sin día abre esto y no
+       «Gestionar»: todavía no tiene ningún mes que cobrarle. */
+    const [dayFor, setDayFor] = useState<FinanceClient | null>(null)
+    const openRow = (row: CollectionRow) => needsDay(row.client) ? setDayFor(row.client) : setManageId(row.client.id)
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
     const [cardLinkFor, setCardLinkFor] = useState<{ account: string, name: string } | null>(null)
     const [showTransfer, setShowTransfer] = useState(false)
@@ -300,6 +330,19 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     const emptyCopy = otherFiltersActive
         ? "Sin resultados con estos filtros."
         : inactive ? "Ninguna cuenta desactivada se fue debiendo." : EMPTY_COPY[status]
+    /* Quien busca a alguien dentro de un estado («Por cobrar», «En retraso»…) y no lo encuentra: puede que
+       no deba nada o que sea cuenta nueva. En «Todas» sale siempre. */
+    const lookInAll = () => { setStatus("all"); setFiltersVersion((v) => v + 1); setPage(1) }
+    const emptyState = (
+        <>
+            {emptyCopy}
+            {search && status !== "all" && !inactive && (
+                <span className="mt-2 block text-[12.5px]">
+                    ¿No aparece? <button type="button" onClick={lookInAll} className="font-bold text-primary hover:underline">Buscarla en «Todas»</button>
+                </span>
+            )}
+        </>
+    )
 
     const manageRow = rows.find((r) => r.client.id === manageId)
     const manageCollectable = manageRow ? collectablePeriods(manageRow) : []
@@ -467,7 +510,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </thead>
                                 <tbody>
                                     {rows.length ? rows.map((row) => (
-                                        <tr key={row.client.id} onClick={() => setManageId(row.client.id)} className="cursor-pointer border-b border-border transition hover:bg-foreground/[.04]">
+                                        <tr key={row.client.id} onClick={() => openRow(row)} className="cursor-pointer border-b border-border transition hover:bg-foreground/[.04]">
                                             <td className="px-5 py-3.5 font-medium text-foreground">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span>{row.client.name}</span>
@@ -478,16 +521,16 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             </td>
                                             {!newShell && <td className="px-5 py-3.5 text-muted-foreground">{row.client.id}</td>}
                                             {!newShell && <td className="px-5 py-3.5 text-muted-foreground">{row.client.plan ?? "—"}</td>}
-                                            <td className="px-5 py-3.5 text-muted-foreground"><ChargeDay client={row.client} /></td>
+                                            <td className="px-5 py-3.5 text-muted-foreground">{hasNoDay(row.client) ? <NoDayCell client={row.client} /> : <ChargeDay client={row.client} />}</td>
                                             <td className="px-5 py-3.5"><PromoBadge promotion={row.client.promotion} /></td>
                                             <td className="px-5 py-3.5">
-                                                <div className="flex flex-wrap gap-1"><PeriodChips row={row} year={year} /></div>
+                                                <div className="flex flex-wrap gap-1">{hasNoDay(row.client) && !Object.keys(row.client.payments).length ? <span className="text-xs text-muted-foreground/60">—</span> : <PeriodChips row={row} year={year} />}</div>
                                             </td>
                                             <td className="px-5 py-3.5 text-right"><RowAmount row={row} /></td>
-                                            <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium text-[#5B47E0] dark:text-[#A99BFF]">Gestionar</span></td>
+                                            <td className="px-5 py-3.5 text-right"><span className="text-xs font-medium whitespace-nowrap text-[#5B47E0] dark:text-[#A99BFF]">{needsDay(row.client) ? "Poner día de pago" : "Gestionar"}</span></td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={newShell ? 6 : 8} className="py-16 text-center text-muted-foreground">{emptyCopy}</td></tr>
+                                        <tr><td colSpan={newShell ? 6 : 8} className="py-16 text-center text-muted-foreground">{emptyState}</td></tr>
                                     )}
                                 </tbody>
                                 {rows.length > 0 && (
@@ -513,7 +556,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     {/* Mobile: cards */}
                     <div className="grid grid-cols-1 gap-3 md:hidden">
                         {rows.length ? rows.map((row) => (
-                            <button key={row.client.id} onClick={() => setManageId(row.client.id)} className="w-full text-left">
+                            <button key={row.client.id} onClick={() => openRow(row)} className="w-full text-left">
                                 <Panel className="flex items-center gap-3 p-4">
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
@@ -521,10 +564,10 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                             <BillingTypeChip type={row.client.billingType} />
                                         </div>
                                         <p className="text-xs text-muted-foreground">{row.client.id} · {row.client.plan ?? "—"}</p>
-                                        <ChargeDay client={row.client} compact />
+                                        {hasNoDay(row.client) ? <NoDayCell client={row.client} compact /> : <ChargeDay client={row.client} compact />}
                                         {row.client.promisedUntil && <div className="mt-1"><PromiseChip client={row.client} /></div>}
                                         {row.client.promotion && <div className="mt-1"><PromoBadge promotion={row.client.promotion} /></div>}
-                                        <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} year={year} /></div>
+                                        {!(hasNoDay(row.client) && !Object.keys(row.client.payments).length) && <div className="mt-1.5 flex flex-wrap gap-1"><PeriodChips row={row} year={year} /></div>}
                                     </div>
                                     <div className="shrink-0 text-right">
                                         <RowAmount row={row} />
@@ -533,7 +576,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                                 </Panel>
                             </button>
                         )) : (
-                            <Panel className="p-10 text-center text-muted-foreground">{emptyCopy}</Panel>
+                            <Panel className="p-10 text-center text-muted-foreground">{emptyState}</Panel>
                         )}
                     </div>
 
@@ -544,6 +587,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
             )}
 
             <PaymentLinkDialog account={cardLinkFor?.account ?? null} name={cardLinkFor?.name ?? ""} onClose={() => setCardLinkFor(null)} />
+            <PaymentDayDialog client={dayFor} year={year} onClose={() => setDayFor(null)} />
 
             {/* Payment management modal */}
             <Dialog open={!!manageId} onOpenChange={(o) => !o && closeManage()}>
@@ -699,7 +743,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                             {/* Up to date: the next open month can be paid ahead (manual clients only) */}
                             {manageIsUpToDate && (
                                 <div className="rounded-xl bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-400">
-                                    <p className="font-medium">Este cliente está al día.</p>
+                                    <p className="font-medium">{manageRow.client.planFree ? "Plan gratis: no se le cobra." : "Este cliente está al día."}</p>
                                     {manageRow.client.nextChargeDate && (
                                         <p className="mt-0.5 text-xs text-emerald-600/80">
                                             Próximo cobro {formatDueDate(manageRow.client.nextChargeDate)}
