@@ -8,6 +8,7 @@ import UploadToastProgress from "@/components/generics/UploadToastProgress";
 import { HeaderActionsProvider } from "@/providers/HeaderActionsProvider";
 import TopShell from "./TopShell";
 import { isNewShell } from "./TopShell/useNewShell";
+import useNewVersion from "@/hooks/useNewVersion";
 
 const MainLayout = () => {
     const navigate = useNavigate();
@@ -18,6 +19,9 @@ const MainLayout = () => {
     if (!token) {
         navigate(APP_ROUTES.AUTH.SIGN_IN);
     }
+
+    /* Avisa si se publicó una versión nueva mientras esta pestaña seguía abierta */
+    useNewVersion()
 
     const [animationKey, setAnimationKey] = useState(0)
 
