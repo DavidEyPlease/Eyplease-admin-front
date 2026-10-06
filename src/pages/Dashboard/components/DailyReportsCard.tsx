@@ -1,3 +1,4 @@
+import { dailyDone, dailyEmptyLabel, dailyReceived } from "@/utils/dailyReports"
 import { Link } from "react-router"
 import { ArrowRightIcon, CircleCheckIcon, DownloadCloudIcon } from "lucide-react"
 
@@ -22,7 +23,7 @@ const DailyReportsCard = () => {
     if (loading && !dailyReports.length) return null
     if (!dailyReports.length) return null
 
-    const completos = dailyReports.filter((r) => r.usual > 0 && r.loaded >= r.usual).length
+    const completos = dailyReports.filter((r) => r.usual > 0 && dailyDone(r)).length
     const rechazadas = dailyReports.reduce((total, r) => total + r.rejected, 0)
     const todoBien = completos === dailyReports.length && !rechazadas
 
@@ -50,8 +51,8 @@ const DailyReportsCard = () => {
 
             <ul className="mt-3 grid gap-1.5 sm:grid-cols-3">
                 {dailyReports.map((r) => {
-                    const completo = r.usual > 0 && r.loaded >= r.usual
-                    const pct = r.usual > 0 ? Math.min(100, Math.round((r.loaded / r.usual) * 100)) : 0
+                    const completo = r.usual > 0 && dailyDone(r)
+                    const pct = r.usual > 0 ? Math.min(100, Math.round((dailyReceived(r) / r.usual) * 100)) : 0
 
                     return (
                         <li key={r.section_key} className="grid gap-1 rounded-lg bg-muted/40 px-2.5 py-2">
@@ -68,6 +69,9 @@ const DailyReportsCard = () => {
                                     {r.loaded}
                                     {r.usual > 0 && (
                                         <span className="font-normal text-muted-foreground"> / {r.usual}</span>
+                                    )}
+                                    {dailyEmptyLabel(r) && (
+                                        <span className="font-normal text-muted-foreground"> · {dailyEmptyLabel(r)}</span>
                                     )}
                                 </span>
                             </div>

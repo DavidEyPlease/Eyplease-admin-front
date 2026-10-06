@@ -2,12 +2,13 @@ import { Link } from 'react-router'
 
 import { APP_ROUTES } from '@/constants/app'
 import { cn } from '@/lib/utils'
+import { dailyDone, dailyEmptyLabel, dailyReceived } from '@/utils/dailyReports'
 import { DailyReport } from '../usePulse'
 import { clock, isToday } from '../lib'
 
 /** Los reportes que el robot baja cada día: cuántas clientas ya lo tienen contra cuántas deben tenerlo. */
 const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
-    const complete = reports.filter(report => report.loaded >= report.usual).length
+    const complete = reports.filter(dailyDone).length
     const allDone = reports.length > 0 && complete === reports.length
 
     return (
@@ -19,8 +20,8 @@ const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
 
             <div className="mt-2 divide-y divide-border">
                 {reports.map(report => {
-                    const done = report.loaded >= report.usual
-                    const pct = report.usual ? Math.min(100, (report.loaded / report.usual) * 100) : 0
+                    const done = dailyDone(report)
+                    const pct = report.usual ? Math.min(100, (dailyReceived(report) / report.usual) * 100) : 0
                     return (
                         <div key={report.section_key} className="flex items-end gap-3 py-3">
                             <span className="min-w-0 flex-1">
@@ -28,6 +29,7 @@ const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
                                 <span className={cn('pulse-bar mt-2 block', !done && 'warn')}><i style={{ width: `${pct}%` }} /></span>
                                 <small className="mt-1.5 block text-[11px] text-muted-foreground">
                                     {report.last_at ? `${done ? 'Cargadas' : 'Última carga'} · ${isToday(report.last_at) ? clock(report.last_at) : 'ayer o antes'}` : 'Todavía no baja hoy'}
+                                    {dailyEmptyLabel(report) ? ` · ${dailyEmptyLabel(report)}` : ''}
                                     {report.rejected > 0 ? ` · ${report.rejected} rechazados` : ''}
                                 </small>
                             </span>

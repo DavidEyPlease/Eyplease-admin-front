@@ -2,6 +2,7 @@ import { toast } from "sonner"
 import { CloudDownloadIcon, SlidersHorizontalIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { dailyDone, dailyEmptyLabel, dailyMissing } from "@/utils/dailyReports"
 import { useDailyReports, useDispatchDownloadRun, useDownloadRuns, type DownloadRun } from "../useReports"
 import { DEFAULT_COUNTRY, type ReportsCountry } from "../reports.constants"
 import RobotCountryNotice from "./RobotCountryNotice"
@@ -42,7 +43,7 @@ const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenO
 
     const list = Array.isArray(reports) ? reports : []
     const rejected = list.reduce((sum, report) => sum + (report.rejected ?? 0), 0)
-    const missing = list.reduce((sum, report) => sum + Math.max(report.usual - report.loaded, 0), 0)
+    const missing = list.reduce((sum, report) => sum + dailyMissing(report), 0)
 
     const downloadMissing = () => {
         toast("¿Bajar ahora lo que falta de los reportes diarios?", {
@@ -74,12 +75,12 @@ const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenO
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {list.map(report => {
-                    const done = report.loaded >= report.usual
+                    const done = dailyDone(report)
                     return (
                         <div key={report.section_key} className="shell-glass rounded-[20px] p-4">
                             <small className="block truncate text-[10.5px] font-bold tracking-[.08em] text-muted-foreground uppercase">{report.name}</small>
                             <b className={cn("mt-2 block text-[28px] leading-none font-extrabold tracking-[-.03em] tabular-nums", !done && "text-amber-500")}>{report.loaded}<span className="text-[15px] font-bold text-muted-foreground"> / {report.usual}</span></b>
-                            <p className="mt-1.5 text-[11.5px] text-muted-foreground">{report.last_at ? `${whenOf(report.last_at)} · ` : ""}{done ? "completo" : `faltan ${report.usual - report.loaded}`}</p>
+                            <p className="mt-1.5 text-[11.5px] text-muted-foreground">{report.last_at ? `${whenOf(report.last_at)} · ` : ""}{done ? (dailyEmptyLabel(report) ?? "completo") : `faltan ${dailyMissing(report)}`}</p>
                         </div>
                     )
                 })}

@@ -12,6 +12,8 @@ import { DownloadRun } from '@/pages/Reports/useReports'
 import useCountryStore from '@/store/country'
 import { clock, isToday, lanesFromDaily } from './lib'
 
+import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
+
 const REFRESH_MS = 2 * 60_000
 
 export interface DailyReport {
@@ -19,6 +21,8 @@ export interface DailyReport {
     name: string
     usual: number
     loaded: number
+    /** Bajaron hoy pero vinieron vacíos (en Tempraneras: la unidad aún no tiene órdenes). No faltan. */
+    empty?: number
     rejected: number
     date: string
     last_at: string | null
@@ -188,7 +192,7 @@ const usePulse = () => {
 
         /* Reportes ya cargados hoy */
         dailyReports.filter(report => isToday(report.last_at)).forEach(report => {
-            const complete = report.loaded >= report.usual
+            const complete = dailyDone(report)
             out.push({
                 id: `report-${report.section_key}`,
                 at: report.last_at as string,
@@ -196,8 +200,8 @@ const usePulse = () => {
                 group: 'reports',
                 tag: 'Reportes',
                 tone: complete ? 'ok' : 'warn',
-                title: `${report.name}: ${report.loaded} de ${report.usual} cargadas`,
-                text: [complete ? 'El import cerró completo.' : `Faltan ${report.usual - report.loaded}.`, report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.'].join(' '),
+                title: `${report.name}: ${dailyHeadline(report)}`,
+                text: [complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}.`, report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.'].join(' '),
                 actions: complete ? undefined : [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
             })
         })

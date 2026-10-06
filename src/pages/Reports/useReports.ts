@@ -83,6 +83,8 @@ export interface DailyReport extends EarlyDaily {
     name: string
     /** Clientas con derecho a ese reporte según su plan: a las que el robot entra. */
     usual: number
+    /** Bajaron hoy pero vinieron vacíos (en Tempraneras: la unidad aún no tiene órdenes). No faltan. */
+    empty?: number
 }
 
 /**

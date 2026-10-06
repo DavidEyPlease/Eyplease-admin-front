@@ -1,3 +1,4 @@
+import { dailyDone, dailyEmptyLabel } from "@/utils/dailyReports"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -146,11 +147,11 @@ const SummaryTab = ({ period, country }: { period: string; country: ReportsCount
                                         <div>
                                             {/* Verde sólo si cubrió lo de siempre. En ámbar cuando se quedó
                                                 corta o no cargó nada: es justo lo que hay que mirar. */}
-                                            <div className={`text-xl font-bold tracking-tight ${r.usual > 0 && r.loaded >= r.usual ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`}>
+                                            <div className={`text-xl font-bold tracking-tight ${r.usual > 0 && dailyDone(r) ? "text-emerald-600 dark:text-emerald-400" : "text-amber-500"}`}>
                                                 {r.loaded}
                                                 {r.usual > 0 && <span className="text-sm font-medium text-muted-foreground/60"> / {r.usual}</span>}
                                             </div>
-                                            <div className="mt-0.5 text-[11px] text-muted-foreground">Cargadas</div>
+                                            <div className="mt-0.5 text-[11px] text-muted-foreground">Cargadas{dailyEmptyLabel(r) ? ` · ${dailyEmptyLabel(r)}` : ""}</div>
                                         </div>
                                         <div>
                                             <div className={`text-xl font-bold tracking-tight ${r.rejected ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground/60"}`}>{r.rejected}</div>

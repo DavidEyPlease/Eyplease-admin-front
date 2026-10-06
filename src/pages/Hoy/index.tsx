@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import Spinner from '@/components/common/Spinner'
 import { countryInfo } from '@/constants/countries'
 import { cn } from '@/lib/utils'
+import { dailyDone } from '@/utils/dailyReports'
 import MoneyCard from './components/MoneyCard'
 import PulseFeed from './components/PulseFeed'
 import RailExtras from './components/RailExtras'
@@ -39,7 +40,7 @@ const HoyPage = () => {
     const attention = events.filter(event => event.tone === 'warn').length
     const verdict = urgent > 0 ? `${urgent} ${urgent === 1 ? 'cosa urgente' : 'cosas urgentes'}.` : attention > 0 ? `${attention} por atender.` : 'Todo al día.'
 
-    const reportsDone = dailyReports.filter(report => report.loaded >= report.usual).length
+    const reportsDone = dailyReports.filter(dailyDone).length
     /* El robot sólo entra al portal de México: en otro país no visita a nadie */
     const robotAccounts = machinery ? dailyReports.reduce((max, report) => Math.max(max, report.usual), 0) : 0
     const runEvents = today.filter(event => event.group === 'live' || event.group === 'publishing')
