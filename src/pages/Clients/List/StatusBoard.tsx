@@ -31,26 +31,70 @@ const lastSeen = (value: Date | string | null) => {
 
 type Quick = 'all' | 'overdue' | 'no_password' | 'reports' | 'inactive'
 
-const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChangeStatus: (row: BoardClient) => void, onPaymentLink: (row: BoardClient) => void }) => {
-    const navigate = useNavigate()
-    const { client, payment, reports } = row
-    const active = client.user?.active !== false
+type RowProps = { row: BoardClient, onChangeStatus: (row: BoardClient) => void, onPaymentLink: (row: BoardClient) => void }
+
+/** Lo que la fila (escritorio) y la tarjeta (teléfono) enseñan de una clienta: una sola cuenta para las dos */
+const viewOf = ({ client, payment, reports }: BoardClient) => {
     const plan = client.user?.plan
     /* El plan ya llega con el precio y la moneda de SU país (Colombia en pesos colombianos). La tarjeta
        sólo se ha probado en pesos mexicanos: a quien se cobra en otra moneda no se le ofrece liga */
     const currency = plan?.currency ?? 'MXN'
-    const cardPayable = currency === 'MXN'
-    const pay = PAYMENT[payment]
-    const reportsDone = !!reports && reports.loaded >= reports.entitled
+    return {
+        active: client.user?.active !== false,
+        plan,
+        currency,
+        cardPayable: currency === 'MXN',
+        pay: PAYMENT[payment],
+        reportsDone: !!reports && reports.loaded >= reports.entitled,
+        price: plan ? `${moneyIn(Number(plan.price), currency)}${currency !== 'MXN' ? ` ${currency}` : ''}/mes` : '',
+    }
+}
+
+const Avatar = ({ client }: { client: BoardClient['client'] }) => client.photo?.url
+    ? <img src={client.photo.url} alt="" loading="lazy" className="size-10 shrink-0 rounded-[13px] object-cover" />
+    : <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-primary/10 text-[12px] font-extrabold text-primary">{initials(client.name)}</span>
+
+/** El menú de los tres puntos. `size` es el del botón: en teléfono va más grande, para el dedo */
+const RowMenu = ({ row, onChangeStatus, onPaymentLink, size = 'size-8' }: RowProps & { size?: string }) => {
+    const { client } = row
+    const { active, cardPayable } = viewOf(row)
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger aria-label={`Más acciones para ${titleCase(client.name)}`} className={cn('inline-grid cursor-pointer place-items-center rounded-xl align-middle text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground data-[state=open]:bg-foreground/5', size)}>
+                <MoreHorizontalIcon className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={6} className="w-60 rounded-2xl p-1.5">
+                {/* Quien paga domiciliada no necesita liga: el cargo le llega solo */}
+                {!client.card_subscription && cardPayable && <>
+                    <DropdownMenuItem onSelect={() => onPaymentLink(row)} className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold">
+                        <CreditCardIcon className="size-4" /> Liga de pago con tarjeta
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                </>}
+                <DropdownMenuItem
+                    onSelect={() => onChangeStatus(row)}
+                    className={cn('cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold', active && 'text-destructive focus:text-destructive')}
+                >
+                    {active ? <PowerOffIcon className="size-4" /> : <PowerIcon className="size-4" />}
+                    {active ? 'Desactivar clienta' : 'Activar clienta'}
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
+const Row = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
+    const navigate = useNavigate()
+    const { client, reports } = row
+    const { active, plan, pay, reportsDone, price } = viewOf(row)
     const open = () => navigate(replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, client.id))
 
     return (
         <tr onClick={open} className={cn('cursor-pointer transition-colors hover:bg-foreground/[.035]', !active && 'opacity-60')}>
             <td className="py-3 pr-3 pl-5">
                 <div className="flex items-center gap-3">
-                    {client.photo?.url
-                        ? <img src={client.photo.url} alt="" loading="lazy" className="size-10 shrink-0 rounded-[13px] object-cover" />
-                        : <span className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-primary/10 text-[12px] font-extrabold text-primary">{initials(client.name)}</span>}
+                    <Avatar client={client} />
                     <span className="min-w-0">
                         <b className="block truncate text-[13.5px] font-bold">{titleCase(client.name)}</b>
                         <small className="block truncate text-[11.5px] text-muted-foreground">{client.account}{client.rank ? ` · ${client.rank}` : ''}</small>
@@ -58,7 +102,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
                 </div>
             </td>
             <td className="px-3 py-3 whitespace-nowrap">
-                {plan ? <><span className="pulse-tag plain">{plan.name}</span> <small className="ml-1 text-[11.5px] text-muted-foreground">{moneyIn(Number(plan.price), currency)}{currency !== 'MXN' && ` ${currency}`}/mes</small></> : <span className="text-[12px] text-muted-foreground">Sin plan</span>}
+                {plan ? <><span className="pulse-tag plain">{plan.name}</span> <small className="ml-1 text-[11.5px] text-muted-foreground">{price}</small></> : <span className="text-[12px] text-muted-foreground">Sin plan</span>}
                 {client.promotion && <small className="mt-1 block text-[11px] text-emerald-600 dark:text-emerald-400">{client.promotion.name ?? 'Con promoción'}</small>}
             </td>
             <td className="px-3 py-3 whitespace-nowrap">{active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}</td>
@@ -76,29 +120,46 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: { row: BoardClient, onChang
                 React suben por el árbol de componentes, y sin esto elegir «Desactivar» abría su ficha */}
             <td className="py-3 pr-4 pl-3 text-right whitespace-nowrap" onClick={event => event.stopPropagation()}>
                 <button type="button" onClick={open} className="h-8 cursor-pointer rounded-xl px-3 text-[12.5px] font-bold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground">Abrir</button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger aria-label={`Más acciones para ${titleCase(client.name)}`} className="ml-0.5 inline-grid size-8 cursor-pointer place-items-center rounded-xl align-middle text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground data-[state=open]:bg-foreground/5">
-                        <MoreHorizontalIcon className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" sideOffset={6} className="w-60 rounded-2xl p-1.5">
-                        {/* Quien paga domiciliada no necesita liga: el cargo le llega solo */}
-                        {!client.card_subscription && cardPayable && <>
-                            <DropdownMenuItem onSelect={() => onPaymentLink(row)} className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold">
-                                <CreditCardIcon className="size-4" /> Liga de pago con tarjeta
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                        </>}
-                        <DropdownMenuItem
-                            onSelect={() => onChangeStatus(row)}
-                            className={cn('cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold', active && 'text-destructive focus:text-destructive')}
-                        >
-                            {active ? <PowerOffIcon className="size-4" /> : <PowerIcon className="size-4" />}
-                            {active ? 'Desactivar clienta' : 'Activar clienta'}
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <span className="ml-0.5"><RowMenu row={row} onChangeStatus={onChangeStatus} onPaymentLink={onPaymentLink} /></span>
             </td>
         </tr>
+    )
+}
+
+/**
+ * La misma clienta en teléfono. Siete columnas no caben en 390 px (la tabla se deslizaba de lado y
+ * el nombre se perdía de vista): aquí va todo su estado en tres renglones, se abre tocando la
+ * tarjeta y el menú queda a la derecha, con un botón del tamaño del dedo.
+ */
+const Card = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
+    const navigate = useNavigate()
+    const { client, reports } = row
+    const { active, plan, pay, reportsDone, price } = viewOf(row)
+    const open = () => navigate(replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, client.id))
+
+    return (
+        <article onClick={open} className={cn('flex cursor-pointer items-start gap-3 py-3.5 pr-2 pl-4 transition-colors active:bg-foreground/[.035]', !active && 'opacity-60')}>
+            <Avatar client={client} />
+            <div className="min-w-0 flex-1">
+                <b className="block truncate text-[14px] font-bold">{titleCase(client.name)}</b>
+                <small className="block truncate text-[11.5px] text-muted-foreground">{client.account}{client.rank ? ` · ${client.rank}` : ''}</small>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}
+                    {plan ? <span className="pulse-tag plain">{plan.name} · {price}</span> : <span className="pulse-tag plain">Sin plan</span>}
+                    {reports && <span className={cn('pulse-tag', reportsDone ? 'ok' : 'warn')}>Reportes {reports.loaded} de {reports.entitled}</span>}
+                    {!row.hasPortalPassword && <span className="pulse-tag warn">Sin contraseña del portal</span>}
+                </div>
+                <small className="mt-1.5 block text-[11.5px] text-muted-foreground">
+                    <b className="font-bold text-foreground tabular-nums">{Number(client.current_month_points ?? 0).toLocaleString('es-MX')}</b> puntos este mes
+                    {row.hasPortalPassword && ` · ${lastSeen(client.last_sign_in_at)}`}
+                    {client.promotion && <span className="text-emerald-600 dark:text-emerald-400"> · {client.promotion.name ?? 'Con promoción'}</span>}
+                </small>
+            </div>
+            {/* Como en la fila: lo que pase en el menú no debe abrir la ficha */}
+            <div className="shrink-0" onClick={event => event.stopPropagation()}>
+                <RowMenu row={row} onChangeStatus={onChangeStatus} onPaymentLink={onPaymentLink} size="size-10" />
+            </div>
+        </article>
     )
 }
 
@@ -166,7 +227,11 @@ const StatusBoard = () => {
             </div>
 
             <section className="shell-glass overflow-hidden rounded-3xl">
-                <div className="overflow-x-auto">
+                {/* Teléfono: tarjetas. De tableta para arriba, la tabla de siempre */}
+                <div className="divide-y divide-border md:hidden">
+                    {shown.map(row => <Card key={row.client.id} row={row} onChangeStatus={setChanging} onPaymentLink={setPaying} />)}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[880px] text-left">
                         <thead>
                             <tr className="border-b border-border text-[10.5px] font-bold tracking-[.08em] text-muted-foreground uppercase">

@@ -62,6 +62,19 @@ const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenO
         })
     }
 
+    /* Lo que enseñan de una corrida la fila (escritorio) y la tarjeta (teléfono) */
+    const runView = (run: (typeof runs)[number]) => {
+        const retry = !!run.clients?.length
+        const names = (run.sections ?? []).map(section => SECTION_NAME[section] ?? section).join(" + ") || run.process
+        return {
+            when: whenOf(run.queued_at ?? run.finished_at),
+            title: `${retry ? "Reintento · " : ""}${names}`,
+            accounts: retry ? (run.clients!.length <= 3 ? run.clients!.join(", ") : `${run.clients!.length} cuentas`) : "todas las clientas",
+            result: resultOf(run),
+            detail: run.error ?? (run.result ? [run.result.failed ? `${run.result.failed} sin bajar` : "", run.result.skipped ? `${run.result.skipped} ya estaban` : ""].filter(Boolean).join(" · ") || "sin pendientes" : ""),
+        }
+    }
+
     return (
         <div className="grid min-w-0 grid-cols-1 gap-5">
             {robot ? <div className="flex flex-wrap items-center justify-end gap-2">
@@ -96,7 +109,24 @@ const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenO
                     <h2 className="text-[15px] font-extrabold tracking-tight">Corridas del robot</h2>
                     <span className="text-[11.5px] text-muted-foreground">las últimas 20</span>
                 </div>
-                <div className="overflow-x-auto">
+                {/* Teléfono: cada corrida en dos renglones (cinco columnas no caben en 390 px) */}
+                <div className="divide-y divide-border md:hidden">
+                    {runs.map(run => {
+                        const view = runView(run)
+                        return (
+                            <article key={run.run_id} className="px-5 py-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <b className="min-w-0 text-[13.5px] leading-snug font-bold">{view.title}</b>
+                                    <span className={cn("pulse-tag shrink-0", view.result.tone)}>{view.result.label}</span>
+                                </div>
+                                <small className="mt-1 block text-[11.5px] leading-relaxed text-muted-foreground">
+                                    <span className="font-semibold tabular-nums">{view.when}</span> · {view.accounts}{run.reset ? " · re-descarga forzada" : ""}{view.detail ? ` · ${view.detail}` : ""}
+                                </small>
+                            </article>
+                        )
+                    })}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[620px] text-left text-[13px]">
                         <thead>
                             <tr className="border-b border-border text-[10.5px] font-bold tracking-[.08em] text-muted-foreground uppercase">
@@ -105,16 +135,14 @@ const TodayTab = ({ country, onOpenOptions }: { country: ReportsCountry, onOpenO
                         </thead>
                         <tbody className="divide-y divide-border">
                             {runs.map(run => {
-                                const result = resultOf(run)
-                                const retry = !!run.clients?.length
-                                const names = (run.sections ?? []).map(section => SECTION_NAME[section] ?? section).join(" + ") || run.process
+                                const view = runView(run)
                                 return (
                                     <tr key={run.run_id} className="transition-colors hover:bg-foreground/[.03]">
-                                        <td className="px-5 py-3 font-semibold whitespace-nowrap text-muted-foreground tabular-nums">{whenOf(run.queued_at ?? run.finished_at)}</td>
-                                        <td className="px-3 py-3"><b className="font-bold">{retry ? "Reintento · " : ""}{names}</b>{run.reset && <span className="ml-2 text-[11px] text-muted-foreground">re-descarga forzada</span>}</td>
-                                        <td className="px-3 py-3 text-muted-foreground">{retry ? (run.clients!.length <= 3 ? run.clients!.join(", ") : `${run.clients!.length} cuentas`) : "todas las clientas"}</td>
-                                        <td className="px-3 py-3"><span className={cn("pulse-tag", result.tone)}>{result.label}</span></td>
-                                        <td className="px-5 py-3 text-[12px] text-muted-foreground">{run.error ?? (run.result ? [run.result.failed ? `${run.result.failed} sin bajar` : "", run.result.skipped ? `${run.result.skipped} ya estaban` : ""].filter(Boolean).join(" · ") || "sin pendientes" : "")}</td>
+                                        <td className="px-5 py-3 font-semibold whitespace-nowrap text-muted-foreground tabular-nums">{view.when}</td>
+                                        <td className="px-3 py-3"><b className="font-bold">{view.title}</b>{run.reset && <span className="ml-2 text-[11px] text-muted-foreground">re-descarga forzada</span>}</td>
+                                        <td className="px-3 py-3 text-muted-foreground">{view.accounts}</td>
+                                        <td className="px-3 py-3"><span className={cn("pulse-tag", view.result.tone)}>{view.result.label}</span></td>
+                                        <td className="px-5 py-3 text-[12px] text-muted-foreground">{view.detail}</td>
                                     </tr>
                                 )
                             })}
