@@ -9,7 +9,8 @@
     <!-- `viewport-fit=cover`: instalado como app, el panel llega hasta abajo y la barra del menú respeta la zona del gesto de inicio -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- El panel instalado como app en el teléfono (Android: «Instalar app»; iPhone: Compartir → «Agregar a inicio») -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- `.json` y no `.webmanifest`: el servidor no conoce esa extensión y lo entregaba sin tipo de contenido -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#F3F2FA" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0B0A1A" media="(prefers-color-scheme: dark)" />
     <meta name="mobile-web-app-capable" content="yes" />
