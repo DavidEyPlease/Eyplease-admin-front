@@ -17,8 +17,10 @@ self.addEventListener('push', event => {
         body: notice.body || data.body || '',
         icon: '/pwa-192.png',
         badge: '/pwa-192.png',
-        // El mismo asunto no se apila: el aviso nuevo reemplaza al anterior
+        // El mismo asunto no se apila: el aviso nuevo reemplaza al anterior…
         tag: data.tag || undefined,
+        // …y vuelve a sonar: otro mensaje de la misma conversación de WhatsApp también avisa
+        renotify: !!data.tag,
         data: { link },
     }))
 })
