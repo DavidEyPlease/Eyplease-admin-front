@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router"
 import { ArrowLeftIcon } from "lucide-react"
 
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback"
@@ -26,7 +27,14 @@ const WhatsAppInboxPage = () => {
     const [mode, setMode] = useState<WaInboxMode>("all")
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
-    const [selectedWaId, setSelectedWaId] = useState<string | null>(null)
+    /* Un aviso (la campana, o el del teléfono) trae en `?wa=` de quién es: se abre ese chat */
+    const [params] = useSearchParams()
+    const linkedWaId = params.get("wa")
+    const [selectedWaId, setSelectedWaId] = useState<string | null>(linkedWaId)
+
+    useEffect(() => {
+        if (linkedWaId) setSelectedWaId(linkedWaId)
+    }, [linkedWaId])
 
     // Sin debounce cada tecla dispara una consulta a la base del bot.
     const debouncedSearch = useDebouncedCallback((value: string) => setSearch(value), 350)
@@ -38,13 +46,14 @@ const WhatsAppInboxPage = () => {
 
     const conversations = useMemo(() => list?.items ?? [], [list])
 
-    // Al cambiar de filtro, el chat abierto puede quedar fuera de la lista.
+    // Al cambiar de filtro, el chat abierto puede quedar fuera de la lista. El que llegó por un
+    // aviso se queda abierto: puede no venir en la página de la lista que está cargada.
     useEffect(() => {
-        if (!selectedWaId || !conversations.length) return
+        if (!selectedWaId || selectedWaId === linkedWaId || !conversations.length) return
         if (!conversations.some((c) => c.wa_id === selectedWaId)) {
             setSelectedWaId(null)
         }
-    }, [conversations, selectedWaId])
+    }, [conversations, selectedWaId, linkedWaId])
 
     const handleSearchChange = (value: string) => {
         setSearchInput(value)
