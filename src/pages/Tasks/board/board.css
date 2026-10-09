@@ -42,3 +42,14 @@
 .mesa-tile.on { outline-color: #6C47FF; box-shadow: 0 10px 24px -16px rgba(108, 71, 255, .8); }
 
 @media (prefers-reduced-motion: reduce) { .mesa-card { animation: none; } }
+
+/* —— Teléfono —— Una etapa por pantalla, con la siguiente asomando: se pasa de una a otra deslizando y
+   cada una se detiene en su sitio. La columna crece con sus tarjetas (la página es la que baja): un
+   scroll dentro de otro, con el pulgar, no se deja agarrar. Las columnas las declara el componente en
+   línea, por eso el `!important`. */
+@media (max-width: 767.98px) {
+    .mesa { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 86%; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .mesa-col { scroll-snap-align: start; max-height: none; min-height: 200px; }
+    .mesa-col__body { overflow-y: visible; }
+}
+
