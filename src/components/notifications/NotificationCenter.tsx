@@ -59,21 +59,20 @@ const NotificationCenter = () => {
     const total = data?.unread_total ?? 0
     const items = useMemo(() => data?.items ?? [], [data])
 
+    /* Cada aviso abre lo suyo —el chat, la ficha de cobro de esa clienta, el pedido— y no sólo su
+       pantalla: antes mandaba a la lista y había que buscarlo. Sin el dato, se queda en la pantalla. */
     const go = (item: NotificationItem) => {
         setOpen(false)
-        if (item.channel === "whatsapp") {
-            navigate(`${APP_ROUTES.WHATSAPP.INBOX}?wa=${encodeURIComponent(item.ref ?? "")}`)
-            return
-        }
-        if (item.channel === "delivery_failures") {
-            navigate(APP_ROUTES.WHATSAPP.INBOX)
+        const ref = item.ref ? encodeURIComponent(item.ref) : ""
+        if (item.channel === "whatsapp" || item.channel === "delivery_failures") {
+            navigate(ref ? `${APP_ROUTES.WHATSAPP.INBOX}?wa=${ref}` : APP_ROUTES.WHATSAPP.INBOX)
             return
         }
         if (item.channel === "card_failures") {
-            navigate(APP_ROUTES.FINANCES.DASHBOARD)
+            navigate(ref ? `${APP_ROUTES.FINANCES.DASHBOARD}?cliente=${ref}` : APP_ROUTES.FINANCES.DASHBOARD)
             return
         }
-        navigate(APP_ROUTES.TASKS.LIST)
+        navigate(ref ? `${APP_ROUTES.TASKS.LIST}?pedido=${ref}` : APP_ROUTES.TASKS.LIST)
     }
 
     return (

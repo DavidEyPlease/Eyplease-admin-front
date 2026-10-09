@@ -16,7 +16,7 @@ export interface NotificationItem {
     at: string | null
     /** Cuántos mensajes trae ese aviso (WhatsApp agrupa por conversación). */
     count: number
-    /** wa_id o id de tarea, para abrir el destino. */
+    /** wa_id, id de tarea o cuenta de la clienta, para abrir el destino. */
     ref: string | null
 }
 

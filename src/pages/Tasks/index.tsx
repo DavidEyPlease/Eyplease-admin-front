@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { PlusIcon } from 'lucide-react'
 
+import { API_ROUTES } from '@/constants/api'
 import { formatDate } from '@/utils/dates'
 import { publishEvent } from '@/utils/events'
-import { ITask } from '@/interfaces/tasks'
+import { queryKeys } from '@/utils/queryKeys'
+import { ITask, ITaskDetail } from '@/interfaces/tasks'
 import { RoleKeys } from '@/interfaces/common'
 import useAuth from '@/hooks/useAuth'
+import useFetchQuery from '@/hooks/useFetchQuery'
 import useTasks from './useTasks'
 import { useHeaderActions } from '@/providers/HeaderActionsProvider'
 
@@ -46,6 +50,26 @@ const TasksPage = () => {
         setData,
         ...tasksData
     } = useTasks()
+
+    /* Un aviso (la campana o el del teléfono) trae en `?pedido=` cuál es: se abre su ficha. El de la lista
+       trae quién lo pidió; si no está en el mes que se mira, se pide aparte. Ya abierto, el dato sale de la
+       dirección: cerrar la ficha o recargar no lo vuelve a abrir. */
+    const [params, setParams] = useSearchParams()
+    const linkedId = params.get('pedido')
+    const { response: linkedDetail } = useFetchQuery<ITaskDetail>(API_ROUTES.TASKS.DETAIL.replace('{id}', linkedId ?? ''), {
+        customQueryKey: queryKeys.detail('task', linkedId ?? ''),
+        enabled: Boolean(linkedId),
+    })
+    const linkedTask = linkedId ? tasks.find(task => task.id === linkedId) ?? (linkedDetail?.id === linkedId ? linkedDetail : undefined) : undefined
+
+    useEffect(() => {
+        if (!linkedTask) return
+        setSelectedTask(linkedTask)
+        setParams(current => {
+            current.delete('pedido')
+            return current
+        }, { replace: true })
+    }, [linkedTask, setSelectedTask, setParams])
 
     /* La dirección ve cada pedido en su fecha de inicio; quien diseña, en su entrega (lo mismo que pide la API) */
     const isDirector = user?.role?.role_key === RoleKeys.SUPER_ADMIN

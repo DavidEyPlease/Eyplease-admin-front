@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router"
 
 import Dropdown from "@/components/common/Inputs/Dropdown"
 import { MONTH_LABELS, financeYears } from "@/utils/finance"
@@ -51,6 +52,20 @@ const YEAR_OPTIONS = financeYears().map((y) => ({ label: String(y), value: Strin
 const FinancePage = () => {
     const [tab, setTab] = useState<TabKey>(NEW_SHELL ? "mes" : "resumen")
     const [detailId, setDetailId] = useState<string | null>(null)
+
+    /* Un aviso de cobro con tarjeta (la campana o el del teléfono) trae en `?cliente=` de quién es: se abre
+       su ficha. Ya abierta, el dato sale de la dirección: cerrarla o recargar no la vuelve a abrir. */
+    const [params, setParams] = useSearchParams()
+    const linkedClient = params.get("cliente")
+
+    useEffect(() => {
+        if (!linkedClient) return
+        setDetailId(linkedClient)
+        setParams((current) => {
+            current.delete("cliente")
+            return current
+        }, { replace: true })
+    }, [linkedClient, setParams])
     /* Abre en el mes y el AÑO en curso (antes el año iba fijo en 2026: en enero de 2027 habría
        abierto «enero 2026»). Lo que quedó sin pagar de años anteriores lo trae la API junto. */
     const [period, setPeriod] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }))
