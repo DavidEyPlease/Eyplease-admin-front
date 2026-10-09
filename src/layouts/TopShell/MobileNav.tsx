@@ -12,6 +12,7 @@ import useAuthStore from '@/store/auth'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/uishadcn/ui/sheet'
 import { ADMIN_COPY, adminLabelOf } from './menuCopy'
 import { DIRECT_FIRST, DIRECT_LAST, GROUPED, GROUPS } from './menuGroups'
+import PushRow from './PushRow'
 
 /* Lo que se abre con el pulgar varias veces al día, en este orden; lo demás vive en «Más».
    Si el rol no trae alguna, entra la siguiente de la lista: siempre cuatro, o las que haya. */
@@ -112,6 +113,7 @@ const MobileNav = () => {
                             <span className="text-[13px] font-bold">País que estás viendo</span>
                             <CountrySwitch />
                         </div>
+                        <PushRow />
 
                         {sections.map(section => (
                             <section key={section.label} className="mt-2">

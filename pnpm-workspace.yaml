@@ -1,4 +1,6 @@
 allowBuilds:
+  '@firebase/util': false
   '@swc/core': true
   canvas: true
   esbuild: true
+  protobufjs: false

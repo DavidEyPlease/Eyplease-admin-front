@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 
 import useAuth from '@/hooks/useAuth'
+import { syncPushToken } from '@/lib/push'
 import CopilotDock from './copilot/CopilotDock'
 import { canUseCopilot } from './copilot/keys'
 import LogoutDialog from './LogoutDialog'
@@ -43,6 +44,11 @@ const TopShell = () => {
             /* Sin almacenamiento el panel no recuerda su estado; nada más */
         }
     }, [dockOpen])
+
+    /* Con el permiso de avisos ya dado, el token de este navegador se renueva en silencio al entrar */
+    useEffect(() => {
+        if (user?.id) syncPushToken(user.id).catch(() => { /* sin avisos el panel funciona igual */ })
+    }, [user?.id])
 
     return (
         <div className="relative min-h-screen w-full bg-[#F3F2FA] dark:bg-[#0B0A1A]">
