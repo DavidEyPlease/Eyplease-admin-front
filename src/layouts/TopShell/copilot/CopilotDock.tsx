@@ -64,7 +64,7 @@ const CopilotDock = ({ open, onOpenChange }: Props) => {
                 type="button"
                 aria-label="Abrir el Copiloto"
                 onClick={() => onOpenChange(true)}
-                className="fixed right-6 bottom-6 z-40 cursor-pointer rounded-full border-[3px] border-background transition-transform duration-300 hover:scale-105"
+                className="fixed right-6 bottom-6 z-40 hidden cursor-pointer rounded-full border-[3px] border-background transition-transform duration-300 hover:scale-105 lg:block"
             >
                 <Orb className="size-[58px]" />
             </button>

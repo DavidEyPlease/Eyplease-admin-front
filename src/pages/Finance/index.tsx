@@ -99,7 +99,8 @@ const FinancePage = () => {
                 const group = GROUPS.find((g) => g.tabs.some((t) => t.key === tab)) ?? GROUPS[0]
                 return (
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
-                        <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
+                        {/* En teléfono las cuatro pestañas no caben: se deslizan dentro de su caja, sin ensanchar la página */}
+                        <div className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-border bg-card/70 p-1 backdrop-blur [scrollbar-width:none]">
                             {GROUPS.map((g) => (
                                 <button key={g.label} onClick={() => setTab(g.tabs[0].key)} className={pill(g === group)} style={g === group ? gradient : undefined}>{g.label}</button>
                             ))}

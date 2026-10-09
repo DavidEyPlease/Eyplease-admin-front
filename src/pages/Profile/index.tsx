@@ -20,15 +20,15 @@ const ProfilePage = () => {
     const { user } = useAuth()
 
     return (
-        <div className="grid space-y-5">
+        <div className="grid grid-cols-1 space-y-5">
             <Card>
                 <CardHeader className="bg-gradient-to-tr from-[#231f56] via-[#3d0a6e] to-[#f0047f] h-40" />
                 <CardContent>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                         {user && <ProfilePhoto user={user} />}
-                        <div className="flex items-center justify-between flex-1 pt-2">
-                            <div className="flex flex-col justify-end space-y-1">
-                                <p className="text-2xl">{user?.name}</p>
+                        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-3 pt-2 sm:flex-1">
+                            <div className="flex min-w-0 flex-col justify-end space-y-1">
+                                <p className="text-2xl break-words">{user?.name}</p>
                             </div>
                             <Button
                                 text='Editar perfil'

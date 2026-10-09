@@ -52,14 +52,15 @@ const HoyPage = () => {
 
     return (
         <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[290px_minmax(0,1fr)]">
-            {/* Fija y con su propio scroll: se lee sin tener que bajar todo el feed */}
-            <aside className="pulse-rail grid gap-3.5 xl:sticky xl:top-[90px] xl:max-h-[calc(100vh-106px)] xl:overflow-y-auto xl:pr-0.5">
+            {/* Fija y con su propio scroll: se lee sin tener que bajar todo el feed. En teléfono va DESPUÉS
+                del titular: ahí lo primero es si hay algo por atender */}
+            <aside className="pulse-rail order-2 grid gap-3.5 xl:order-none xl:sticky xl:top-[90px] xl:max-h-[calc(100vh-106px)] xl:overflow-y-auto xl:pr-0.5">
                 <ReportsCard reports={dailyReports} />
                 <ScheduleCard lanes={schedule} daily={overview.publishing.daily} ranKeys={ranKeys} partial={scheduleIsPartial} />
                 <RailExtras liveNews={liveNews} monthly={overview.publishing.monthly} clients={overview.clients} />
             </aside>
 
-            <div className="mx-auto grid w-full max-w-[780px] min-w-0 gap-[18px]">
+            <div className="order-1 mx-auto grid w-full max-w-[780px] min-w-0 gap-[18px] xl:order-none">
                 <header className="pulse-rise">
                     <div className="text-[11px] font-extrabold tracking-[.14em] text-primary uppercase">{countryInfo(country).label} · {longToday()} · {clock(new Date())}</div>
                     <h1 className="shell-title mt-1.5 text-[30px] leading-[1.08] font-extrabold tracking-[-.035em]">

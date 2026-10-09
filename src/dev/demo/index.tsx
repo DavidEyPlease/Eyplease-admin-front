@@ -31,13 +31,19 @@ const DemoBadge = () => {
     const { pathname } = useLocation()
     const onAuth = pathname.startsWith('/auth')
     return (
-        <div style={{ position: 'fixed', bottom: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 2147483647, display: 'flex', gap: 10, alignItems: 'center', padding: '7px 14px', borderRadius: 999, background: '#FDE68A', color: '#1A1830', font: '800 12px Inter, Arial', boxShadow: '0 10px 26px -10px rgba(10,5,60,.55)' }}>
+        <div className="demo-badge" style={{ position: 'fixed', bottom: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 2147483647, display: 'flex', gap: 10, alignItems: 'center', padding: '7px 14px', borderRadius: 999, background: '#FDE68A', color: '#1A1830', font: '800 12px Inter, Arial', boxShadow: '0 10px 26px -10px rgba(10,5,60,.55)' }}>
             DEMO DEL PANEL · gente y cifras de EJEMPLO
             {onAuth && <a href="/demo.html" style={{ color: '#4E31C0' }}>Volver a la demo</a>}
             {onAuth && <a href="/auth/sign-in" style={{ color: '#4E31C0' }}>Ir al panel real</a>}
         </div>
     )
 }
+
+// En teléfono el letrero y el botón de las herramientas de desarrollo taparían la barra del menú: el
+// letrero sube y el botón se esconde
+document.head.appendChild(Object.assign(document.createElement('style'), {
+    textContent: '@media (max-width: 767.98px) { .demo-badge { bottom: auto !important; top: 26px; max-width: 132px; padding: 3px 8px !important; font-size: 9px !important; line-height: 1.15; text-align: center; opacity: .92; } .tsqd-parent-container { display: none !important; } }',
+}))
 
 // El panel se importa DESPUÉS de instalar la API de mentira: al montar ya pide /me
 import('../../App').then(({ default: App }) => {

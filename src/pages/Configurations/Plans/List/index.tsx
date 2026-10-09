@@ -18,7 +18,7 @@ const PlansPage = () => {
     })
 
     return (
-        <div className="grid pt-2 gap-y-2">
+        <div className="grid grid-cols-1 pt-2 gap-y-2">
             <PageHead eyebrow="Configuración" title={<>Planes y <em>precios</em></>} sub="Qué trae cada plan y cuánto cuesta. Cambiar un plan cambia lo que ven sus clientas." />
             {
                 isLoading ? (

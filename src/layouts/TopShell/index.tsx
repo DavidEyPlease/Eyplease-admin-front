@@ -5,6 +5,7 @@ import useAuth from '@/hooks/useAuth'
 import CopilotDock from './copilot/CopilotDock'
 import { canUseCopilot } from './copilot/keys'
 import LogoutDialog from './LogoutDialog'
+import MobileNav from './MobileNav'
 import TopBar from './TopBar'
 import './shell.css'
 
@@ -50,7 +51,8 @@ const TopShell = () => {
             <div className="relative z-[1]">
                 <TopBar copilot={copilot} copilotOpen={dockOpen} onToggleCopilot={() => setDockOpen(open => !open)} />
 
-                <div className="mx-auto mt-[18px] mb-16 flex w-[min(1560px,calc(100%-28px))] items-start gap-[18px]">
+                {/* En teléfono la página termina arriba de la barra de abajo (`MobileNav`), no detrás */}
+                <div className="shell-body mx-auto mt-[18px] mb-16 flex w-[min(1560px,calc(100%-28px))] items-start gap-[18px]">
                     <main className="min-w-0 flex-1">
                         <div key={location.pathname} className="shell-page flex flex-col gap-4">
                             <Outlet />
@@ -61,6 +63,7 @@ const TopShell = () => {
                 </div>
             </div>
 
+            <MobileNav />
             <LogoutDialog />
         </div>
     )

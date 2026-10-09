@@ -1,0 +1,33 @@
+{
+  "name": "Eyplease+ Admin",
+  "short_name": "Eyplease Admin",
+  "description": "El panel de Eyplease+: la torre de control, los pedidos, WhatsApp y la cobranza.",
+  "lang": "es-MX",
+  "id": "/",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0A1A",
+  "theme_color": "#4E31C0",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -9,3 +9,8 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </BrowserRouter>,
 )
+
+// Sólo en el sitio publicado: en desarrollo un service worker estorba (se queda con la pestaña)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { /* sin él el panel funciona igual */ }) })
+}

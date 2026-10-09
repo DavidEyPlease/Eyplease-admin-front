@@ -142,3 +142,11 @@
     .auth-rise { opacity: 1; transform: none; animation: none !important; }
     .auth-ring { stroke-dashoffset: 62; animation: none !important; }
 }
+
+/* —— Teléfono —— La barra de abajo flota sobre la zona del gesto de inicio, y la página deja su hueco */
+.shell-mobile-nav { bottom: max(12px, env(safe-area-inset-bottom)); box-shadow: 0 14px 34px -14px rgba(27, 20, 80, .45); }
+.dark .shell-mobile-nav { box-shadow: 0 14px 34px -12px rgba(0, 0, 0, .8); }
+.shell-mobile-sheet { background: color-mix(in oklab, var(--background) 96%, transparent); backdrop-filter: blur(18px); }
+@media (max-width: 767.98px) {
+    .shell-body { margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}

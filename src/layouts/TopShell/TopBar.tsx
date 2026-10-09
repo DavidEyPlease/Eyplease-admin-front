@@ -21,27 +21,10 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/uishadcn/ui/dropdown-menu'
 import { ADMIN_COPY, adminLabelOf } from './menuCopy'
+import { DIRECT_FIRST, DIRECT_LAST, GROUPED, GROUPS } from './menuGroups'
 import CommandBar from './CommandBar'
 import { requestLogout } from './logoutBridge'
 import { setNewShell } from './useNewShell'
-
-/**
- * Cómo se reparte el menú de siempre en la barra. NO inventa entradas: agrupa las que ya trae
- * `sidebarMenu`, que llega filtrado por los permisos del rol. Un grupo al que el rol le deja una
- * sola entrada se pinta como enlace directo; uno vacío no se pinta. Las entradas que en el menú
- * lateral tenían submenú (WhatsApp, Plantillas, Configuraciones) abren aquí sus hijas.
- */
-const DIRECT_FIRST: PermissionKeys[] = [PermissionKeys.DASHBOARD]
-const GROUPS: Array<{ label: string, keys: PermissionKeys[] }> = [
-    { label: 'Clientas', keys: [PermissionKeys.CLIENTS, PermissionKeys.WHATSAPP, PermissionKeys.SALES] },
-    /* Las que todavía no son clientas: de dónde llegan y a quién escribirle antes de que pasen a Ventas */
-    { label: 'Crecimiento', keys: [PermissionKeys.GROWTH_PROSPECTS, PermissionKeys.GROWTH_FUNNEL, PermissionKeys.GROWTH_SOCIAL] },
-    /* Pedidos de diseño es operación (el trabajo que hay que sacar), no un dato de la clienta */
-    { label: 'Operación', keys: [PermissionKeys.TASKS, PermissionKeys.CHALLENGES, PermissionKeys.PUBLISH_POSTS, PermissionKeys.REPORTS_MONITOR] },
-    { label: 'Contenido', keys: [PermissionKeys.TEMPLATES, PermissionKeys.TRAININGS] },
-]
-const DIRECT_LAST: PermissionKeys[] = [PermissionKeys.FINANCES]
-const GROUPED = new Set<PermissionKeys>([...DIRECT_FIRST, ...GROUPS.flatMap(group => group.keys), ...DIRECT_LAST])
 
 const NAV_BUTTON = 'relative flex h-[38px] cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[13.5px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground data-[state=open]:bg-foreground/5 data-[state=open]:text-foreground'
 const ROW = 'shell-drop-row cursor-pointer gap-3 rounded-[14px] px-2.5 py-2.5'
