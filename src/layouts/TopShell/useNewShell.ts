@@ -19,7 +19,18 @@ export const isNewShell = (): boolean => {
         /* Navegación privada o almacenamiento bloqueado: vale el valor por defecto */
     }
 
-    return import.meta.env.DEV
+    /* Instalado como app en el teléfono siempre sale el marco nuevo: es el único que trae menú de
+       teléfono, y en iPhone la app instalada no comparte lo guardado en Safari, así que ahí nunca
+       habría «elección» que recordar. (El manifest también abre con `?nuevo=1`.) */
+    return import.meta.env.DEV || installedAsApp()
+}
+
+const installedAsApp = () => {
+    try {
+        return window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+    } catch {
+        return false
+    }
 }
 
 export const setNewShell = (on: boolean) => {

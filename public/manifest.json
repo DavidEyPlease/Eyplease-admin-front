@@ -4,7 +4,7 @@
   "description": "El panel de Eyplease+: la torre de control, los pedidos, WhatsApp y la cobranza.",
   "lang": "es-MX",
   "id": "/",
-  "start_url": "/dashboard",
+  "start_url": "/dashboard?nuevo=1",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
