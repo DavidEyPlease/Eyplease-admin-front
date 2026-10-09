@@ -354,3 +354,22 @@
     transform: translateY(0);
   }
 }
+
+/* En teléfono (o con pantalla táctil) un control chico conserva su tamaño pero se deja tocar en 40 px a la
+   redonda: el dedo no atina a un interruptor de 18 px ni al circulito de 24 de «quién lo hace». */
+@layer components {
+  @media (pointer: coarse), (max-width: 767.98px) {
+    .tap-area {
+      position: relative;
+    }
+    .tap-area::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 40px);
+      height: max(100%, 40px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}

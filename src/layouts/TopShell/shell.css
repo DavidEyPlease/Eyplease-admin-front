@@ -150,3 +150,20 @@
 @media (max-width: 767.98px) {
     .shell-body { margin-bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
+
+/* El Copiloto debajo de 1024 px: sin columna donde acoplarlo, es una hoja a pantalla completa, opaca (el
+   vidrio dejaba ver la página de atrás moviéndose) y con sus márgenes de la zona segura del teléfono. Va al
+   final del archivo para ganarle a `.shell-glass` y a las medidas de escritorio de su caja. */
+@media (max-width: 1023.98px) {
+    .shell-copilot-sheet { position: fixed; inset: 0; z-index: 60; }
+    .shell-copilot-sheet > .shell-glass {
+        position: relative; top: auto; height: 100dvh; border: 0; border-radius: 0; box-shadow: none;
+        -webkit-backdrop-filter: none; backdrop-filter: none; background: #F3F2FA;
+        padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+    }
+    .dark .shell-copilot-sheet > .shell-glass { background: #0B0A1A; }
+    /* La barra de abajo vive fuera de la capa de la página y quedaría ENCIMA de la hoja, tapando la caja
+       para escribir: mientras el Copiloto está abierto no se pinta. */
+    body:has(.shell-copilot-sheet) .shell-mobile-nav { display: none; }
+}
+

@@ -38,6 +38,8 @@
 /* El dato de contacto se copia de un clic */
 .vta-copy { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; border-radius: 8px; padding: 1px 5px; margin-left: -5px; font-size: 11.5px; color: var(--muted-foreground); cursor: pointer; transition: background-color .18s, color .18s; }
 .vta-copy:hover { background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--foreground); }
+/* En teléfono van uno sobre otro a 19 px: aquí no sirve agrandar sólo la zona del dedo (se encimarían), crecen de verdad */
+@media (pointer: coarse), (max-width: 767.98px) { .vta-copy { min-height: 34px; } }
 
 /* Las tres listas, en la columna de la izquierda */
 .vta-pick { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; width: 100%; border-radius: 15px; padding: 9px 11px; text-align: left; cursor: pointer; transition: background-color .2s; }

@@ -73,7 +73,7 @@ const ReportsPage = () => {
                 </div>
             </div>
 
-            <div className="-mx-1 overflow-x-auto px-1">
+            <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
                 <div className="inline-flex w-max gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur">
                     {TABS.map((t) => {
                         const active = tab === t.key

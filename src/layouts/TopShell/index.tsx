@@ -18,7 +18,9 @@ const DOCK_KEY = 'eyplease-admin:copilot-dock'
  */
 const readDock = () => {
     try {
-        return localStorage.getItem(DOCK_KEY) === 'open'
+        /* Debajo de 1024 px abierto es una hoja a pantalla completa: ahí arranca siempre plegado, o
+           el panel abriría tapado por el Copiloto */
+        return localStorage.getItem(DOCK_KEY) === 'open' && window.matchMedia('(min-width: 1024px)').matches
     } catch {
         return false
     }

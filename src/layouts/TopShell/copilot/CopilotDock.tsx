@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeftIcon, HistoryIcon, PlusIcon, XIcon } from 'lucide-react'
 
 import useAuth from '@/hooks/useAuth'
@@ -35,6 +35,10 @@ interface Props {
  *
  * El hilo vive aquí, por encima de las páginas: cambiar de sección no pierde la conversación.
  * Plegado se queda como la burbuja que brilla, igual que en la web de clientas.
+ *
+ * Debajo de 1024 px no hay columna donde acoplarlo: se abre como una hoja a pantalla completa
+ * (`.shell-copilot-sheet` en shell.css) desde su botón de la barra de arriba, y la burbuja no se
+ * pinta —taparía el botón de enviar de WhatsApp y el menú de las tarjetas—.
  */
 const CopilotDock = ({ open, onOpenChange }: Props) => {
     const { user } = useAuth()
@@ -58,6 +62,14 @@ const CopilotDock = ({ open, onOpenChange }: Props) => {
         send(text)
     })
 
+    /* En teléfono la hoja tapa toda la pantalla: la página de atrás no debe moverse con el dedo */
+    useEffect(() => {
+        if (!open || window.matchMedia('(min-width: 1024px)').matches) return
+        const previous = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = previous }
+    }, [open])
+
     if (!open) {
         return (
             <button
@@ -72,7 +84,7 @@ const CopilotDock = ({ open, onOpenChange }: Props) => {
     }
 
     return (
-        <aside className="hidden w-[360px] shrink-0 self-stretch lg:block">
+        <aside className="shell-copilot-sheet lg:w-[360px] lg:shrink-0 lg:self-stretch">
             {/* `self-stretch` + sticky: la columna mide todo el alto de la página y el panel viaja por
                 ella, así acompaña al hacer scroll en vez de irse con el contenido. */}
             <div className="shell-glass sticky top-[90px] flex h-[calc(100vh-110px)] flex-col overflow-hidden rounded-3xl">
@@ -85,7 +97,7 @@ const CopilotDock = ({ open, onOpenChange }: Props) => {
                             <span className="truncate">Conectado a producción · sólo lectura</span>
                         </small>
                     </div>
-                    <button type="button" title="Plegar" onClick={() => onOpenChange(false)} className="grid size-9 cursor-pointer place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground">
+                    <button type="button" title="Plegar" onClick={() => onOpenChange(false)} className="tap-area grid size-9 cursor-pointer place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground">
                         <XIcon className="size-[18px]" />
                     </button>
                 </div>

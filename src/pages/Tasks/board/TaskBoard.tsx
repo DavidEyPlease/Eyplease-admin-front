@@ -72,7 +72,7 @@ const Card = ({ task, busy, canAssign, compact, dragging, onOpen, onAssign, onDr
 
                 {canAssign && !finished ? (
                     <DropdownMenu>
-                        <DropdownMenuTrigger onClick={event => event.stopPropagation()} className="cursor-pointer rounded-full outline-none transition-transform hover:scale-110" aria-label={task.assigned_to ? `Lo hace ${task.assigned_to.name}. Cambiar` : 'Asignar'}>
+                        <DropdownMenuTrigger onClick={event => event.stopPropagation()} className="tap-area cursor-pointer rounded-full outline-none transition-transform hover:scale-110" aria-label={task.assigned_to ? `Lo hace ${task.assigned_to.name}. Cambiar` : 'Asignar'}>
                             <Face user={task.assigned_to} size={compact ? 20 : 24} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-56 rounded-2xl p-1.5" onClick={event => event.stopPropagation()}>

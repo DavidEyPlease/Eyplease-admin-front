@@ -148,7 +148,7 @@ const TopBar = ({ copilot, copilotOpen, onToggleCopilot }: Props) => {
                         title={copilotOpen ? 'Plegar el Copiloto' : 'Abrir el Copiloto'}
                         aria-pressed={copilotOpen}
                         onClick={onToggleCopilot}
-                        className={cn('hidden h-[38px] cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[12.5px] font-bold transition-colors lg:flex', copilotOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground')}
+                        className={cn('flex h-[38px] cursor-pointer items-center gap-1.5 rounded-xl px-3 text-[12.5px] font-bold transition-colors', copilotOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground')}
                     >
                         <SparklesIcon className="size-4" /> <span className="hidden 2xl:inline">Copiloto</span>
                     </button>

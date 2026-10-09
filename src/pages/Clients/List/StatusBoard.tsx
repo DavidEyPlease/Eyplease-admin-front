@@ -138,27 +138,30 @@ const Card = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
     const open = () => navigate(replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, client.id))
 
     return (
-        <article onClick={open} className={cn('flex cursor-pointer items-start gap-3 py-3.5 pr-2 pl-4 transition-colors active:bg-foreground/[.035]', !active && 'opacity-60')}>
-            <Avatar client={client} />
-            <div className="min-w-0 flex-1">
-                <b className="block truncate text-[14px] font-bold">{titleCase(client.name)}</b>
-                <small className="block truncate text-[11.5px] text-muted-foreground">{client.account}{client.rank ? ` · ${client.rank}` : ''}</small>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    {active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}
-                    {plan ? <span className="pulse-tag plain">{plan.name} · {price}</span> : <span className="pulse-tag plain">Sin plan</span>}
-                    {reports && <span className={cn('pulse-tag', reportsDone ? 'ok' : 'warn')}>Reportes {reports.loaded} de {reports.entitled}</span>}
-                    {!row.hasPortalPassword && <span className="pulse-tag warn">Sin contraseña del portal</span>}
+        <article onClick={open} className={cn('cursor-pointer py-3.5 pr-2 pl-4 transition-colors active:bg-foreground/[.035]', !active && 'opacity-60')}>
+            <div className="flex items-center gap-3">
+                <Avatar client={client} />
+                <div className="min-w-0 flex-1">
+                    <b className="block truncate text-[14px] font-bold">{titleCase(client.name)}</b>
+                    <small className="block truncate text-[11.5px] text-muted-foreground">{client.account}{client.rank ? ` · ${client.rank}` : ''}</small>
                 </div>
-                <small className="mt-1.5 block text-[11.5px] text-muted-foreground">
-                    <b className="font-bold text-foreground tabular-nums">{Number(client.current_month_points ?? 0).toLocaleString('es-MX')}</b> puntos este mes
-                    {row.hasPortalPassword && ` · ${lastSeen(client.last_sign_in_at)}`}
-                    {client.promotion && <span className="text-emerald-600 dark:text-emerald-400"> · {client.promotion.name ?? 'Con promoción'}</span>}
-                </small>
+                {/* Como en la fila: lo que pase en el menú no debe abrir la ficha */}
+                <div className="shrink-0" onClick={event => event.stopPropagation()}>
+                    <RowMenu row={row} onChangeStatus={onChangeStatus} onPaymentLink={onPaymentLink} size="size-10" />
+                </div>
             </div>
-            {/* Como en la fila: lo que pase en el menú no debe abrir la ficha */}
-            <div className="shrink-0" onClick={event => event.stopPropagation()}>
-                <RowMenu row={row} onChangeStatus={onChangeStatus} onPaymentLink={onPaymentLink} size="size-10" />
+            {/* Las etiquetas van a todo lo ancho de la tarjeta, no en la columna del nombre: ahí cabía una por renglón */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pr-2">
+                {active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}
+                {plan ? <span className="pulse-tag plain">{plan.name} · {price}</span> : <span className="pulse-tag plain">Sin plan</span>}
+                {reports && <span className={cn('pulse-tag', reportsDone ? 'ok' : 'warn')}>Reportes {reports.loaded} de {reports.entitled}</span>}
+                {!row.hasPortalPassword && <span className="pulse-tag warn">Sin contraseña del portal</span>}
             </div>
+            <small className="mt-1.5 block pr-2 text-[11.5px] text-muted-foreground">
+                <b className="font-bold text-foreground tabular-nums">{Number(client.current_month_points ?? 0).toLocaleString('es-MX')}</b> puntos este mes
+                {row.hasPortalPassword && ` · ${lastSeen(client.last_sign_in_at)}`}
+                {client.promotion && <span className="text-emerald-600 dark:text-emerald-400"> · {client.promotion.name ?? 'Con promoción'}</span>}
+            </small>
         </article>
     )
 }
@@ -217,7 +220,8 @@ const StatusBoard = () => {
                 <span className="text-[12px] font-semibold text-muted-foreground tabular-nums">{shown.length} de {rows.length}</span>
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            {/* En teléfono los filtros van en un renglón que se desliza: envueltos ocupaban media pantalla antes de la primera clienta */}
+            <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible">
                 <button type="button" className={chip(plan === 'all' && quick === 'all')} onClick={() => { setPlan('all'); setQuick('all') }}>Todas <b className="text-[11px] font-extrabold opacity-70">{rows.length}</b></button>
                 {plans.map(([name, count]) => <button key={name} type="button" className={chip(plan === name)} onClick={() => setPlan(plan === name ? 'all' : name)}>{name} <b className="text-[11px] font-extrabold opacity-70">{count}</b></button>)}
                 <span className="mx-1 hidden h-8 w-px bg-border sm:block" />
