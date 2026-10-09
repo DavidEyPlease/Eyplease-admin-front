@@ -3,6 +3,7 @@ import { BellOffIcon, BellRingIcon, CheckIcon } from 'lucide-react'
 
 import useAuth from '@/hooks/useAuth'
 import { enablePush, pushState, PushState } from '@/lib/push'
+import HttpService from '@/services/http'
 
 const COPY: Record<Exclude<PushState, 'unsupported'>, { title: string, text: string }> = {
     default: { title: 'Recibe los avisos en este teléfono', text: 'Solicitudes nuevas, correcciones y fallas, aunque el panel esté cerrado.' },
@@ -20,6 +21,7 @@ const PushRow = () => {
     const [state, setState] = useState<PushState>(pushState)
     const [busy, setBusy] = useState(false)
     const [failed, setFailed] = useState(false)
+    const [test, setTest] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
     if (state === 'unsupported' || !user) return null
 
@@ -37,7 +39,23 @@ const PushRow = () => {
         }
     }
 
+    /* El aviso de prueba sale de la API hacia este usuario: si llega, los de verdad también */
+    const sendTest = async () => {
+        setTest('sending')
+        try {
+            await HttpService.post('/users/devices/test', {})
+            setTest('sent')
+        } catch {
+            setTest('error')
+        }
+    }
+
     const copy = COPY[state]
+    const note = failed
+        ? 'Quedó el permiso, pero no se pudo registrar el teléfono; se reintenta solo al volver a abrir el panel.'
+        : test === 'sent' ? 'Aviso de prueba enviado: debe llegar en unos segundos.'
+        : test === 'error' ? 'No se pudo mandar la prueba. Cierra y vuelve a abrir el panel, y prueba otra vez.'
+        : copy.text
     const Icon = state === 'granted' ? BellRingIcon : state === 'default' ? BellRingIcon : BellOffIcon
 
     return (
@@ -45,14 +63,19 @@ const PushRow = () => {
             <span className="shell-drop-icon grid size-[42px] shrink-0 place-items-center rounded-[14px] text-primary"><Icon className="size-5" /></span>
             <span className="min-w-0 flex-1">
                 <b className="block text-[14px] leading-snug font-bold">{copy.title}</b>
-                <small className="block text-[12px] leading-snug text-muted-foreground">{failed ? 'Quedó el permiso, pero no se pudo registrar el teléfono; se reintenta solo al volver a abrir el panel.' : copy.text}</small>
+                <small className="block text-[12px] leading-snug text-muted-foreground">{note}</small>
             </span>
             {state === 'default' && (
                 <button type="button" onClick={enable} disabled={busy} className="h-9 shrink-0 cursor-pointer rounded-xl bg-primary px-3.5 text-[12.5px] font-bold text-primary-foreground transition-opacity disabled:opacity-60">
                     {busy ? 'Activando…' : 'Activar'}
                 </button>
             )}
-            {state === 'granted' && <CheckIcon className="size-5 shrink-0 text-emerald-500" />}
+            {state === 'granted' && !failed && (
+                <button type="button" onClick={sendTest} disabled={test === 'sending'} className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border px-3 text-[12.5px] font-bold transition-opacity disabled:opacity-60">
+                    {test === 'sent' ? <CheckIcon className="size-4 text-emerald-500" /> : null}
+                    {test === 'sending' ? 'Enviando…' : 'Probar'}
+                </button>
+            )}
         </div>
     )
 }
