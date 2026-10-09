@@ -58,6 +58,8 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
     const late = month?.overdue_total ?? 0
     /* `pending_total` es TODO lo que falta del mes (incluye lo vencido): lo que aún no vence es la resta */
     const upcoming = Math.max((month?.pending_total ?? 0) - late, 0)
+    /* De eso, lo de las domiciliadas a las que Stripe aún no les cobra: no salen en Cobranza porque todavía no tienen cuota */
+    const onCard = month?.card_pending_count ?? 0
     const expected = collected + upcoming + late
     const pct = (value: number) => expected > 0 ? (value / expected) * 100 : 0
 
@@ -110,7 +112,7 @@ const MonthTab = ({ period, onOpenClient, onGoTo }: Props) => {
 
                 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-[12.5px] text-muted-foreground">
                     <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-emerald-500" />Cobrado <b className="text-foreground tabular-nums">{whole(collected)}</b></span>
-                    <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-foreground/30" />Por cobrar, sin vencer <b className="text-foreground tabular-nums">{whole(upcoming)}</b></span>
+                    <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-foreground/30" />Por cobrar, sin vencer <b className="text-foreground tabular-nums">{whole(upcoming)}</b>{onCard > 0 ? ` · ${whole(month?.card_pending_total ?? 0)} de ${onCard} con tarjeta` : ""}</span>
                     <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-rose-500" />Vencido <b className="text-rose-600 tabular-nums dark:text-rose-400">{whole(late)}</b>{month ? ` · ${month.overdue_clients} clientas` : ""}</span>
                     {summary && <span className="ml-auto">Ticket promedio <b className="text-foreground tabular-nums">{whole(month?.avg_ticket ?? 0)}</b> · {summary.active_clients} activas</span>}
                 </div>

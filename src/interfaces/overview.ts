@@ -11,6 +11,9 @@ export interface OverviewRevenuePeriod {
     in_review_count: number
     pending_count: number
     total_count: number
+    /** Domiciliadas a las que Stripe aún no les cobra el mes: ya van dentro de `outstanding` (con un API viejo no vienen). */
+    card_pending_count?: number
+    card_pending_total?: number
 }
 
 /**

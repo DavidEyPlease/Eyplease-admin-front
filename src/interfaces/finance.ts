@@ -218,7 +218,11 @@ export interface SummaryMonth {
     month: number
     income: number
     overdue_total: number
+    /** Todo lo que falta por entrar del mes: cuotas sin pagar (vencidas incluidas) más las de tarjeta sin cobrar. */
     pending_total: number
+    /** Domiciliadas a las que Stripe aún no les cobra el mes: ya van dentro de `pending_total` (con un API viejo no vienen). */
+    card_pending_total?: number
+    card_pending_count?: number
     overdue_clients: number
     avg_ticket: number
     total_clients: number

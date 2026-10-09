@@ -125,6 +125,7 @@ const me = {
 
 const revenue = (back: number, collected: number, outstanding: number) => ({
     period: period(back), collected, outstanding, paid_count: 61, overdue_count: back ? 0 : 4, in_review_count: back ? 0 : 3, pending_count: back ? 0 : 12, total_count: 80,
+    card_pending_count: back ? 0 : 5, card_pending_total: back ? 0 : 2900,
 })
 
 /* Las diarias que la API vigila de verdad (PostCoverageService::DAILY_SCHEDULE) */
@@ -154,7 +155,7 @@ const colombiaOverview = {
     ...overview,
     country: 'COL',
     revenue: {
-        current: { ...revenue(0, 0, 179900), currency: 'COP' },
+        current: { ...revenue(0, 0, 179900), currency: 'COP', card_pending_count: 0, card_pending_total: 0 },
         previous: { ...revenue(1, 179900, 0), currency: 'COP' },
     },
     publishing: { ...overview.publishing, monthly: { covered: 2, total: 11, missing: [] } },
@@ -193,7 +194,8 @@ const colombiaDailyReports = dailyReports.filter(report => report.section_key ==
 const monthsSoFar = Array.from({ length: now.getMonth() + 1 }, (_, index) => index + 1)
 const incomeOf = (month: number) => month === now.getMonth() + 1 ? 48210 : 52000 + ((month * 7919) % 9000)
 const summaryMonth = (month: number) => ({
-    month, income: incomeOf(month), overdue_total: month === now.getMonth() + 1 ? 5480 : 0, pending_total: month === now.getMonth() + 1 ? 8900 : 0,
+    month, income: incomeOf(month), overdue_total: month === now.getMonth() + 1 ? 5480 : 0, pending_total: month === now.getMonth() + 1 ? 14380 : 0,
+    card_pending_total: month === now.getMonth() + 1 ? 2900 : 0, card_pending_count: month === now.getMonth() + 1 ? 5 : 0,
     overdue_clients: month === now.getMonth() + 1 ? 4 : 0, avg_ticket: 790, total_clients: 80,
 })
 const financeSummary = (month: number) => ({

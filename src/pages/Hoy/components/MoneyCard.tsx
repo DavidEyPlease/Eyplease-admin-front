@@ -58,6 +58,8 @@ const MoneyCard = ({ revenue }: { revenue: AdminOverview['revenue'] }) => {
             <div className="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] text-muted-foreground">
                 <span><b className="text-foreground">{current.paid_count}</b> al corriente</span>
                 <span><b className="text-amber-600 dark:text-amber-400">{current.pending_count}</b> por vencer</span>
+                {/* Las domiciliadas no tienen cuota hasta que Stripe les cobra: van aparte para que la cuenta cuadre con «faltan» */}
+                {(current.card_pending_count ?? 0) > 0 && <span><b className="text-amber-600 dark:text-amber-400">{current.card_pending_count}</b> con tarjeta por cobrar</span>}
                 <span><b className="text-rose-600 dark:text-rose-400">{current.overdue_count}</b> vencidas</span>
                 {current.in_review_count > 0 && <span><b className="text-primary">{current.in_review_count}</b> por validar</span>}
                 <span>faltan <b className="text-foreground">{money(current.outstanding)}</b></span>

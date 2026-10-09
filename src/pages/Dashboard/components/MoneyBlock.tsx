@@ -50,6 +50,7 @@ const MoneyBlock = ({ current, previous }: Props) => {
                 <p className="mt-1.5 text-xs text-muted-foreground">
                     <strong className="text-foreground">{current.overdue_count}</strong> vencidos
                     {current.pending_count > 0 && <> · {current.pending_count} por vencer</>}
+                    {(current.card_pending_count ?? 0) > 0 && <> · {current.card_pending_count} con tarjeta por cobrar</>}
                     {current.in_review_count > 0 && <> · {current.in_review_count} por validar</>}
                 </p>
             </div>
