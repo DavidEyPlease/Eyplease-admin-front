@@ -166,23 +166,34 @@ const usePulse = () => {
             }))
         }
 
+        /* Una descarga con cuentas sin bajar deja de ser aviso cuando sus reportes del día ya están
+           completos: el reintento las recuperó y no queda nada por hacer. El 8-oct-2026 la torre decía
+           «1 por atender» todo el día por una cuenta que el reintento ya había bajado. */
+        const reportOf = new Map(dailyReports.map(report => [report.section_key, report]))
+        const recovered = (sections: string[]) => {
+            const tracked = sections.flatMap(section => reportOf.get(section) ?? [])
+            return tracked.length > 0 && tracked.every(dailyDone)
+        }
+
         /* Corridas del robot de hoy (sólo entra al portal de México) */
         ;(machinery && Array.isArray(robotRuns.response) ? robotRuns.response : []).filter(run => isToday(run.queued_at ?? run.finished_at)).forEach(run => {
             const names = (run.sections ?? []).map(section => ROBOT_SECTION[section] ?? section).join(' + ') || 'reportes'
             const result = run.result
             const done = run.status !== 'queued' && run.status !== 'running'
             const retry = !!run.clients?.length
+            const missed = result?.failed ?? 0
+            const back = missed > 0 && recovered(run.sections ?? [])
             out.push({
                 id: `robot-${run.run_id}`,
                 at: run.finished_at ?? run.queued_at ?? new Date().toISOString(),
                 time: clock(run.finished_at ?? run.queued_at),
                 group: 'reports',
                 tag: 'Robot',
-                tone: !done ? 'plain' : run.status === 'failed' || run.status === 'rejected' ? 'bad' : result && result.failed > 0 ? 'warn' : 'ok',
+                tone: !done ? 'plain' : run.status === 'failed' || run.status === 'rejected' ? 'bad' : missed > 0 && !back ? 'warn' : 'ok',
                 title: !done ? `${retry ? 'Reintento' : 'Descarga'} de ${names}: en curso` : result ? `${retry ? 'Reintento' : 'Descarga'} de ${names}: ${result.uploaded} de ${result.total} archivos` : `${retry ? 'Reintento' : 'Descarga'} de ${names}`,
                 text: [
                     retry ? `Sólo ${plural(run.clients!.length, 'cuenta', 'cuentas')}, una por una.` : 'Una entrada al portal por clienta.',
-                    result && result.failed > 0 ? `${plural(result.failed, 'cuenta quedó', 'cuentas quedaron')} sin bajar; entran al reintento.` : '',
+                    missed > 0 ? `${plural(missed, 'cuenta quedó', 'cuentas quedaron')} sin bajar${back ? ` y el reintento ya ${missed === 1 ? 'la' : 'las'} recuperó: el reporte está completo.` : '; entran al reintento.'}` : '',
                     result && result.skipped > 0 ? `${result.skipped} ya estaban.` : '',
                     run.error ?? '',
                 ].filter(Boolean).join(' '),
