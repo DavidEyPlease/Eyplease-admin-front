@@ -47,13 +47,25 @@ jobs:
           VITE_CDN_URL: ${{ secrets.VITE_CDN_URL }}
         run: pnpm run build
 
+      # Copia directa por ssh, con el rsync que ya trae el runner. Antes iba con burnett01/rsync-deployments, que en
+      # CADA corrida construye una imagen desde Docker Hub: el 9-oct-2026 Docker Hub contestó «429 Too Many Requests»
+      # y el despliegue falló ocho veces seguidas con el código bien. Hace lo mismo que hacía esa acción: la llave va
+      # al agente de ssh (no toca el disco) y se copian los mismos archivos, con las mismas exclusiones.
       - name: Deploy to VPS via rsync
-        uses: burnett01/rsync-deployments@6.0.0
-        with:
-          switches: -avzr --exclude='.htaccess' --exclude='.env' --exclude='.well-known'
-          path: dist/
-          remote_path: ${{ secrets.VPS_DEPLOY_PATH }}
-          remote_host: ${{ secrets.VPS_HOST }}
-          remote_user: ${{ secrets.VPS_USER }}
-          remote_key: ${{ secrets.VPS_SSH_KEY }}
-          remote_port: 22022
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        run: |
+          # Sin destino, rsync copiaría a la carpeta de inicio del usuario: mejor no copiar nada
+          if [ -z "${VPS_DEPLOY_PATH// /}" ] || [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ]; then
+            echo "Falta el destino del despliegue (VPS_DEPLOY_PATH, VPS_HOST o VPS_USER)."
+            exit 1
+          fi
+          eval "$(ssh-agent -s)" > /dev/null
+          trap 'ssh-agent -k > /dev/null' EXIT
+          ssh-add - <<< "$VPS_SSH_KEY"
+          rsync -avzr --exclude='.htaccess' --exclude='.env' --exclude='.well-known' \
+            -e 'ssh -o StrictHostKeyChecking=no -p 22022' \
+            dist/ "$VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH"
