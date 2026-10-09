@@ -102,7 +102,7 @@ const ConversationList = ({
                                         <span className="min-w-0 flex-1">
                                             <span className="flex items-baseline justify-between gap-2">
                                                 <span className="truncate text-sm font-semibold text-foreground">{name}</span>
-                                                <span className="shrink-0 text-[11px] text-muted-foreground">{relativeTime(conv.updated_at)}</span>
+                                                <span className="shrink-0 text-[11px] text-muted-foreground">{relativeTime(conv.last_at ?? conv.updated_at)}</span>
                                             </span>
                                             <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                                                 {conv.last_message || "Sin mensajes"}

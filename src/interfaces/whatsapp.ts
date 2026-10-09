@@ -55,7 +55,10 @@ export interface WaConversationSummary {
     account: string | null
     network_person_id: string | null
     created_at: string
+    /** Ojo: el bot NO la mueve con cada mensaje. Para «última actividad» usar `last_at`. */
     updated_at: string
+    /** Hora del último mensaje del hilo (de cualquiera de los dos lados). Sólo viene en el listado. */
+    last_at?: string | null
 }
 
 /** Detalle: incluye el hilo. */
