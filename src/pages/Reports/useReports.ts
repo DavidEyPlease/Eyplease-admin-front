@@ -206,6 +206,8 @@ export interface DownloadRunResult {
     uploaded: number
     failed: number
     skipped: number
+    /** Qué cuenta no bajó y de qué reporte. Las corridas viejas no lo traen. */
+    failures?: Array<{ account: string, reportKey?: string, error?: string }>
 }
 
 export interface DownloadRun {

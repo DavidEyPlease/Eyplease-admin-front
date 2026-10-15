@@ -317,8 +317,11 @@ const postRuns = [
 /* El robot: la descarga de la mañana, la de corazones (deja 2 colgadas) y su reintento */
 const downloadRuns = ([
     ['dr-1', ['early'], null, 29, 29, 0, 6, 0], ['dr-2', ['pink_circle_hearts', 'pink_circle_vip_plus'], null, 196, 194, 2, 11, 30], ['dr-3', ['pink_circle_hearts'], ['EJ-001', 'EJ-002'], 2, 2, 0, 12, 30],
-] as Array<[string, string[], string[] | null, number, number, number, number, number]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([run_id, sections, clients, total, uploaded, failed, h, m]) => ({
-    run_id, process: 'daily', sections, clients, reset: false, status: 'completed', result: { total, uploaded, failed, skipped: 0 }, error: null, queued_at: at(h, m).toISOString(), finished_at: at(h, m + 4).toISOString(),
+    /* Cumpleaños de una cuenta: el de las 9:25 falla y el de las 12:01 la baja (ya no es aviso); el de las 10:10 nadie lo repitió (sí) */
+    ['dr-4', ['birthdays'], ['EJ-003'], 1, 0, 1, 9, 25, ['EJ-003']], ['dr-5', ['birthdays'], ['EJ-004'], 1, 0, 1, 10, 10, ['EJ-004']], ['dr-6', ['birthdays'], ['EJ-003'], 1, 1, 0, 12, 1],
+] as Array<[string, string[], string[] | null, number, number, number, number, number, string[]?]>).filter(([, , , , , , h, m]) => passed(h, m)).map(([run_id, sections, clients, total, uploaded, failed, h, m, missed]) => ({
+    run_id, process: 'daily', sections, clients, reset: false, status: 'completed', error: null, queued_at: at(h, m).toISOString(), finished_at: at(h, m + 4).toISOString(),
+    result: { total, uploaded, failed, skipped: 0, ...(missed ? { failures: missed.map(account => ({ account, reportKey: sections[0], error: 'locator.waitFor: Timeout 45000ms exceeded.' })) } : {}) },
 })).reverse()
 
 /* Una pieza de mentira: un mosaico con su rótulo, sin imágenes de nadie */

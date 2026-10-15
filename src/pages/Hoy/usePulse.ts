@@ -49,9 +49,36 @@ export interface PulseEvent {
 }
 
 const ARTIFACT: Record<string, string> = { image: 'imagen', video: 'video', image_square: 'cuadrada' }
-const ROBOT_SECTION: Record<string, string> = { early: 'Ventas Mensuales Personales', pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus' }
+const ROBOT_SECTION: Record<string, string> = { early: 'Ventas Mensuales Personales', pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus', initiators_live: 'Iniciadoras al día', birthdays: 'Cumpleaños', anniversaries: 'Aniversarios' }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+/** Las cuentas (con su reporte, si se sabe) que una corrida no bajó. Sin el detalle sólo se sabe cuando fallaron todas las que pidió. */
+const missedAccounts = (run: DownloadRun): Array<{ account: string, section: string | null }> | null => {
+    const failures = run.result?.failures
+    if (failures?.length) return failures.map(failure => ({ account: failure.account, section: failure.reportKey ?? null }))
+    if (run.clients?.length && (run.result?.failed ?? 0) >= run.clients.length) return run.clients.map(account => ({ account, section: null }))
+    return null
+}
+
+/* Una cuenta sin bajar deja de ser aviso si OTRA corrida posterior del mismo día la pidió y la bajó. El 15-oct-2026 los
+   cumpleaños de Triny (R03303) fallaron a las 9:25 por tiempo, bajaron a las 12:01 y la torre siguió con «1 por atender»
+   todo el día: cumpleaños no es reporte diario y `recovered` sólo mira esos. */
+const fetchedLater = (run: DownloadRun, runs: DownloadRun[]) => {
+    const missed = missedAccounts(run)
+    if (!missed?.length) return false
+    const since = new Date(run.finished_at ?? run.queued_at ?? 0).getTime()
+    return missed.every(({ account, section }) => runs.some(other => {
+        if (other.run_id === run.run_id || other.status !== 'completed' || !other.finished_at) return false
+        if (new Date(other.finished_at).getTime() <= since) return false
+        const sections = other.sections ?? []
+        if (section ? !sections.includes(section) : !(run.sections ?? []).every(key => sections.includes(key))) return false
+        if (other.clients?.length && !other.clients.includes(account)) return false
+        if ((other.result?.failed ?? 0) === 0) return true
+        const stillMissing = missedAccounts(other)
+        return !!stillMissing && !stillMissing.some(item => item.account === account && (!section || !item.section || item.section === section))
+    }))
+}
 
 const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseEvent => {
     const today = isToday(task.created_at)
@@ -176,13 +203,15 @@ const usePulse = () => {
         }
 
         /* Corridas del robot de hoy (sólo entra al portal de México) */
-        ;(machinery && Array.isArray(robotRuns.response) ? robotRuns.response : []).filter(run => isToday(run.queued_at ?? run.finished_at)).forEach(run => {
+        const todayRobotRuns = (machinery && Array.isArray(robotRuns.response) ? robotRuns.response : []).filter(run => isToday(run.queued_at ?? run.finished_at))
+        todayRobotRuns.forEach(run => {
             const names = (run.sections ?? []).map(section => ROBOT_SECTION[section] ?? section).join(' + ') || 'reportes'
             const result = run.result
             const done = run.status !== 'queued' && run.status !== 'running'
             const retry = !!run.clients?.length
             const missed = result?.failed ?? 0
-            const back = missed > 0 && recovered(run.sections ?? [])
+            const later = missed > 0 && fetchedLater(run, todayRobotRuns)
+            const back = missed > 0 && (later || recovered(run.sections ?? []))
             out.push({
                 id: `robot-${run.run_id}`,
                 at: run.finished_at ?? run.queued_at ?? new Date().toISOString(),
@@ -193,7 +222,7 @@ const usePulse = () => {
                 title: !done ? `${retry ? 'Reintento' : 'Descarga'} de ${names}: en curso` : result ? `${retry ? 'Reintento' : 'Descarga'} de ${names}: ${result.uploaded} de ${result.total} archivos` : `${retry ? 'Reintento' : 'Descarga'} de ${names}`,
                 text: [
                     retry ? `Sólo ${plural(run.clients!.length, 'cuenta', 'cuentas')}, una por una.` : 'Una entrada al portal por clienta.',
-                    missed > 0 ? `${plural(missed, 'cuenta quedó', 'cuentas quedaron')} sin bajar${back ? ` y el reintento ya ${missed === 1 ? 'la' : 'las'} recuperó: el reporte está completo.` : '; entran al reintento.'}` : '',
+                    missed > 0 ? `${plural(missed, 'cuenta quedó', 'cuentas quedaron')} sin bajar${later ? ` y una corrida posterior ya ${missed === 1 ? 'la' : 'las'} bajó.` : back ? ` y el reintento ya ${missed === 1 ? 'la' : 'las'} recuperó: el reporte está completo.` : '; entran al reintento.'}` : '',
                     result && result.skipped > 0 ? `${result.skipped} ya estaban.` : '',
                     run.error ?? '',
                 ].filter(Boolean).join(' '),
