@@ -212,7 +212,7 @@ export interface DownloadRunResult {
 
 export interface DownloadRun {
     run_id: string
-    process: "monthly" | "daily" | "bulletins"
+    process: "monthly" | "daily" | "bulletins" | "orders"
     sections: string[] | null
     clients: string[] | null
     reset: boolean

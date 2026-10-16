@@ -9,7 +9,7 @@ import RobotCountryNotice from "./RobotCountryNotice"
 
 /** Los tres reportes que el robot baja a diario; es lo que relanza «Descargar lo que falta». */
 const DAILY_SECTIONS = ["early", "pink_circle_hearts", "pink_circle_vip_plus"]
-const SECTION_NAME: Record<string, string> = { early: "Ventas Mensuales Personales", pink_circle_hearts: "Corazones de Círculo Rosa", pink_circle_vip_plus: "Círculo Rosa VIP Plus" }
+const SECTION_NAME: Record<string, string> = { early: "Ventas Mensuales Personales", pink_circle_hearts: "Corazones de Círculo Rosa", pink_circle_vip_plus: "Círculo Rosa VIP Plus", consultant_orders: "Órdenes de consultoras" }
 
 const pad = (n: number) => String(n).padStart(2, "0")
 const sameDay = (iso: string | null) => !!iso && new Date(iso).toDateString() === new Date().toDateString()

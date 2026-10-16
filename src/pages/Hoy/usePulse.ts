@@ -49,7 +49,7 @@ export interface PulseEvent {
 }
 
 const ARTIFACT: Record<string, string> = { image: 'imagen', video: 'video', image_square: 'cuadrada' }
-const ROBOT_SECTION: Record<string, string> = { early: 'Ventas Mensuales Personales', pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus', initiators_live: 'Iniciadoras al día', birthdays: 'Cumpleaños', anniversaries: 'Aniversarios' }
+const ROBOT_SECTION: Record<string, string> = { early: 'Ventas Mensuales Personales', pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus', initiators_live: 'Iniciadoras al día', birthdays: 'Cumpleaños', anniversaries: 'Aniversarios', consultant_orders: 'Órdenes de consultoras' }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
