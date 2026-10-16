@@ -603,7 +603,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     {manageRow ? (
                         <div className="space-y-4">
                             {/* Una baja que dijo que sí a volver: el regreso con promoción, antes que cobrarle lo de antes */}
-                            {manageRow.client.appStatus === "inactive" && manageRow.client.billingType === "manual" && (
+                            {manageRow.client.appStatus === "inactive" && !manageRow.client.cardCharging && (
                                 <button
                                     type="button"
                                     onClick={() => { const client = manageRow.client; closeManage(); setWinBackFor(client) }}

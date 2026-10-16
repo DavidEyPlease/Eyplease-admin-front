@@ -53,6 +53,8 @@ export interface FinanceClient {
     fixedPayment: number | null
     /** 'stripe' = has a stripe_id (Cashier); 'manual' = billed by the dues job. */
     billingType: "stripe" | "manual"
+    /** Domiciliada cuya tarjeta Stripe SIGUE cobrando. Falso si es por fecha o si su suscripción ya murió («unpaid»). */
+    cardCharging?: boolean
     /** Phone for WhatsApp. */
     phone?: string | null
     /** Applied promotion snapshot, or null when the client has none. */

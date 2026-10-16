@@ -56,7 +56,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
     const [editingDay, setEditingDay] = useState(false)
     const [winningBack, setWinningBack] = useState(false)
     /* Una baja que paga por transferencia puede volver con la promoción de regreso (la domiciliada se hace en Stripe) */
-    const canWinBack = !!client && client.appStatus === "inactive" && client.billingType === "manual"
+    const canWinBack = !!client && client.appStatus === "inactive" && !client.cardCharging
 
     const onStatusChange = (period: string, status: string) => {
         if (!status || !client) return

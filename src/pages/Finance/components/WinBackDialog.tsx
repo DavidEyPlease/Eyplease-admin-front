@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CalendarClockIcon, GiftIcon, HandHeartIcon, SparklesIcon } from "lucide-react"
+import { CalendarClockIcon, CreditCardIcon, GiftIcon, HandHeartIcon, SparklesIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -24,7 +24,8 @@ const FREE_MONTHS = [1, 2, 3]
 /**
  * Regreso con promoción (reconquista): una baja vuelve con N meses gratis, en un solo paso. Lo que debía de antes
  * se condona (queda «Condonado» en su historial), su día de pago pasa a ser hoy, se le pone la promoción «Regreso ·
- * N mes(es) gratis» del catálogo, el plan con el que vuelve, y se reactiva. Todo lo calcula la API: aquí sólo se
+ * N mes(es) gratis» del catálogo, el plan con el que vuelve, y se reactiva. Una domiciliada cuya tarjeta ya no
+ * cobraba en Stripe pasa además a cobro por fecha. Todo lo calcula la API: aquí sólo se
  * enseña la vista previa y se confirma.
  */
 const WinBackDialog = ({ client, onClose }: { client: FinanceClient | null; onClose: () => void }) => {
@@ -130,6 +131,12 @@ const WinBackDialog = ({ client, onClose }: { client: FinanceClient | null; onCl
                                     <CalendarClockIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                     <span>Su día de pago pasa a ser el <b className="text-foreground">{preview.payment_day}</b>. Primer cobro: <b className="text-foreground">{formatDueDate(preview.first_charge.date)}</b> por <b className="text-foreground">{formatMoney(preview.first_charge.amount)}</b>, sin que nadie tenga que acordarse.</span>
                                 </p>
+                                {preview.card_to_manual && (
+                                    <p className="flex items-start gap-2">
+                                        <CreditCardIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                        <span>Era domiciliada, pero su tarjeta ya no cobraba en Stripe{preview.card_to_manual.status ? ` (${preview.card_to_manual.status})` : ""}. Pasa a <b className="text-foreground">cobro por fecha</b>; cancela su suscripción vieja en Stripe.</span>
+                                    </p>
+                                )}
                                 {input.waive_previous && preview.waived_total > 0 && (
                                     <p className="flex items-start gap-2">
                                         <HandHeartIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />

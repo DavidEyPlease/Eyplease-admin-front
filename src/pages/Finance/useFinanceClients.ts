@@ -34,6 +34,7 @@ interface ApiFinanceClient {
     plan_free?: boolean
     fixed_payment: number | null
     billing_type: "stripe" | "manual"
+    card_charging?: boolean
     app_status: string | null
     payment_day: number | null
     registered_at?: string | null
@@ -61,6 +62,7 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     planFree: c.plan_free ?? false,
     fixedPayment: c.fixed_payment ?? null,
     billingType: c.billing_type ?? "manual",
+    cardCharging: c.card_charging ?? c.billing_type === "stripe",
     appStatus: c.app_status ?? null,
     paymentDay: c.payment_day ?? null,
     registeredAt: c.registered_at ?? null,
@@ -282,6 +284,8 @@ export interface WinBackSummary {
     waive_previous: boolean
     waived: Array<{ period: string, amount: number, remaining: number, status: PaymentStatus }>
     waived_total: number
+    /** Era domiciliada con la tarjeta muerta: al regresar pasa a cobro por fecha. */
+    card_to_manual?: { customer: string; status: string | null } | null
     applied?: boolean
     promotion?: { id: string, name: string }
     current_month?: { period: string, amount: number, status: PaymentStatus, note: string | null } | null
