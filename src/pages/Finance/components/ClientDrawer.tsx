@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CalendarClockIcon, FileTextIcon, HandshakeIcon, PhoneIcon } from "lucide-react"
+import { CalendarClockIcon, FileTextIcon, GiftIcon, HandshakeIcon, PhoneIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import SideModal from "@/components/common/SideModal"
@@ -10,6 +10,7 @@ import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, pai
 import { MarkPaymentInput, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
 import { StatusPill } from "./ui"
 import PaymentDayDialog from "./PaymentDayDialog"
+import WinBackDialog from "./WinBackDialog"
 
 // "En revisión" only displays: it is set by the client's receipt upload and
 // resolved from Cobranza (Validar / Rechazar), never picked by hand.
@@ -21,6 +22,8 @@ const STATUS_OPTIONS: { value: Exclude<PaymentStatus, null>; label: string; disa
     { value: "partial", label: "Parcial", disabled: true },
     { value: "pending", label: "Pendiente" },
     { value: "in_review", label: "En revisión", disabled: true },
+    // Sólo lo pone el regreso con promoción (deja quién y cuándo); aquí se ve pero no se elige.
+    { value: "waived", label: "Condonado", disabled: true },
 ]
 const APP_STATUS_LABELS: Record<string, string> = { active: "Activo", inactive: "Inactivo" }
 
@@ -51,6 +54,9 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
        el pago fue otro día (un depósito del 30 que se marca el 2), se cambia aquí antes de marcar. */
     const [paidOn, setPaidOn] = useState<Date>(() => new Date())
     const [editingDay, setEditingDay] = useState(false)
+    const [winningBack, setWinningBack] = useState(false)
+    /* Una baja que paga por transferencia puede volver con la promoción de regreso (la domiciliada se hace en Stripe) */
+    const canWinBack = !!client && client.appStatus === "inactive" && client.billingType === "manual"
 
     const onStatusChange = (period: string, status: string) => {
         if (!status || !client) return
@@ -136,6 +142,19 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                         </Row>
                     </section>
 
+                    {canWinBack && (
+                        <section className="-mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-[#5B47E0]/25 bg-[#5B47E0]/[.06] px-3 py-3">
+                            <GiftIcon className="h-5 w-5 shrink-0 text-[#5B47E0] dark:text-[#A99BFF]" />
+                            <div className="min-w-0 flex-1 text-xs text-muted-foreground">
+                                <b className="block text-sm text-foreground">¿Dijo que sí a volver?</b>
+                                Se reactiva con su mes gratis, en un solo paso: plan, promoción, día de pago y lo que debía de antes.
+                            </div>
+                            <button type="button" onClick={() => setWinningBack(true)} className="rounded-lg bg-[#5B47E0] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-8px_rgba(91,71,224,0.7)] active:scale-[0.98]">
+                                Regreso con promoción
+                            </button>
+                        </section>
+                    )}
+
                     {promiseState(client.promisedUntil) === "active" && (
                         <p className="-mt-3 flex items-start gap-2 rounded-xl bg-[#5B47E0]/[.06] px-3 py-2 text-xs text-muted-foreground">
                             <HandshakeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5B47E0] dark:text-[#A99BFF]" />
@@ -192,6 +211,9 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                         {p?.status === "paid" && p.paidAt && (
                                             <span className="shrink-0 text-[11px] text-muted-foreground" title="Fecha del pago">{formatPaidAt(p.paidAt)}</span>
                                         )}
+                                        {p?.note && (p.status === "waived" || (p.status === "paid" && Number(p.amount ?? 0) === 0)) && (
+                                            <span className="max-w-[45%] truncate text-[11px] text-muted-foreground" title={p.note}>{p.note}</span>
+                                        )}
                                         {p?.status === "partial" && (
                                             <span className="shrink-0 text-[11px] text-sky-600 dark:text-sky-400" title="Lo abonado del mes">abonó {formatMoney(periodPaid(p))}</span>
                                         )}
@@ -224,6 +246,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                 </div>
             )}
             <PaymentDayDialog client={editingDay ? client : null} year={year} onClose={() => setEditingDay(false)} />
+            <WinBackDialog client={winningBack ? client : null} onClose={() => setWinningBack(false)} />
         </SideModal>
     )
 }

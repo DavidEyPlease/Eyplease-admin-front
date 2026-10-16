@@ -2,7 +2,8 @@
 
 import { DiscountType } from "./promotion"
 
-export type PaymentStatus = "paid" | "in_review" | "partial" | "overdue" | "pending" | null
+/** waived = Condonado: se le perdonó (p. ej. al regresar con la promoción de regreso); no es deuda ni ingreso. */
+export type PaymentStatus = "paid" | "in_review" | "partial" | "overdue" | "pending" | "waived" | null
 
 export interface MonthlyPayment {
     /** Monto esperado del periodo (precio del paquete / cuota). */
@@ -16,6 +17,8 @@ export interface MonthlyPayment {
     receiptUrl?: string | null
     referenceNumber?: string | null
     receiptUploadedAt?: string | null
+    /** El porqué de un mes condonado o sin cargo («Condonado al regresar…», «Sin cargo: Regreso · 1 mes gratis»). */
+    note?: string | null
 }
 
 /** Per-client applied promotion snapshot (kept in snake_case from the API). */
@@ -165,6 +168,7 @@ export const PAYMENT_STATUS_LABELS: Record<Exclude<PaymentStatus, null>, string>
     partial: "Parcial",
     overdue: "Vencido",
     pending: "Pendiente",
+    waived: "Condonado",
 }
 
 export const PAYMENT_SOURCE_LABELS: Record<PaymentSource, string> = {

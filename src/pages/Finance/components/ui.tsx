@@ -92,6 +92,7 @@ const STATUS_PILL_LABELS: Record<string, string> = {
     partial: "Parcial",
     overdue: "Retraso",
     pending: "Pendiente",
+    waived: "Condonado",
 }
 
 const STATUS_PILL_TONE: Record<string, string> = {
@@ -100,6 +101,7 @@ const STATUS_PILL_TONE: Record<string, string> = {
     partial: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
     overdue: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
     pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    waived: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
 }
 
 export const StatusPill = ({ status }: { status: string | null | undefined }) => {

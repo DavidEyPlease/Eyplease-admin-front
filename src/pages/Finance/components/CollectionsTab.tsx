@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { BanknoteIcon, CalendarIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, FileTextIcon, HandshakeIcon, SearchIcon, SlidersHorizontalIcon, UserXIcon, XIcon } from "lucide-react"
+import { BanknoteIcon, CalendarIcon, CheckIcon, ChevronRightIcon, CopyIcon, CreditCardIcon, FileTextIcon, GiftIcon, HandshakeIcon, SearchIcon, SlidersHorizontalIcon, UserXIcon, XIcon } from "lucide-react"
 import dayjs from "dayjs"
 import { toast } from "sonner"
 
@@ -23,6 +23,7 @@ import FinanceService, { PaymentMethodsConfig } from "@/services/finance.service
 import { useFinanceClientsPage, useMarkPayment, useReviewReceipt } from "../useFinanceClients"
 import { BtnGhost, BtnPrimary, ChipTone, MonthChip, Panel } from "./ui"
 import PaymentDayDialog, { trialRunning } from "./PaymentDayDialog"
+import WinBackDialog from "./WinBackDialog"
 import { cn } from "@/lib/utils"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
 import useCountryStore from "@/store/country"
@@ -285,6 +286,8 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
     /* A quién se le está poniendo día de pago. Una cuenta con plan de paga y sin día abre esto y no
        «Gestionar»: todavía no tiene ningún mes que cobrarle. */
     const [dayFor, setDayFor] = useState<FinanceClient | null>(null)
+    /* Regreso con promoción: una baja que dijo que sí a volver (reconquista) */
+    const [winBackFor, setWinBackFor] = useState<FinanceClient | null>(null)
     const openRow = (row: CollectionRow) => needsDay(row.client) ? setDayFor(row.client) : setManageId(row.client.id)
     const [methods, setMethods] = useState<PaymentMethodsConfig | null>(null)
     const [cardLinkFor, setCardLinkFor] = useState<{ account: string, name: string } | null>(null)
@@ -588,6 +591,7 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
 
             <PaymentLinkDialog account={cardLinkFor?.account ?? null} name={cardLinkFor?.name ?? ""} onClose={() => setCardLinkFor(null)} />
             <PaymentDayDialog client={dayFor} year={year} onClose={() => setDayFor(null)} />
+            <WinBackDialog client={winBackFor} onClose={() => setWinBackFor(null)} />
 
             {/* Payment management modal */}
             <Dialog open={!!manageId} onOpenChange={(o) => !o && closeManage()}>
@@ -598,6 +602,21 @@ const CollectionsTab = ({ year, onOpenDetail }: { year: number; onOpenDetail: (i
                     </DialogHeader>
                     {manageRow ? (
                         <div className="space-y-4">
+                            {/* Una baja que dijo que sí a volver: el regreso con promoción, antes que cobrarle lo de antes */}
+                            {manageRow.client.appStatus === "inactive" && manageRow.client.billingType === "manual" && (
+                                <button
+                                    type="button"
+                                    onClick={() => { const client = manageRow.client; closeManage(); setWinBackFor(client) }}
+                                    className="flex w-full items-center gap-3 rounded-xl border border-[#5B47E0]/25 bg-[#5B47E0]/[.06] px-3 py-3 text-left transition hover:bg-[#5B47E0]/[.1]"
+                                >
+                                    <GiftIcon className="h-5 w-5 shrink-0 text-[#5B47E0] dark:text-[#A99BFF]" />
+                                    <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+                                        <b className="block text-sm text-foreground">¿Dijo que sí a volver? Regreso con promoción</b>
+                                        Se reactiva con su mes gratis: plan, promoción, día de pago y lo de antes condonado, en un paso.
+                                    </span>
+                                    <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                </button>
+                            )}
                             {/* El día en que entró el dinero: vale para Pagado, Transferencia, Abono y Adelanto */}
                             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border px-3 py-2">
                                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />

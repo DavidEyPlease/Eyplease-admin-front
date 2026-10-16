@@ -1360,6 +1360,29 @@ export const installMockApi = () => {
             await wait(350)
             response = respond(true)
         }
+        // Regreso con promoción (EJEMPLO): vista previa y aplicar, con las mismas cuentas que la API
+        else if (/^\/finance\/clients\/[^/]+\/win-back$/.test(path)) {
+            const account = decodeURIComponent(path.split('/')[3])
+            const params = method === 'POST' ? JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown> : Object.fromEntries(url.searchParams)
+            const plan = plans.find(item => item.id === params.plan_id) ?? plans[0]
+            const months = Number(params.free_months ?? 1)
+            const waive = !['0', 'false', false, 0].includes(params.waive_previous as never)
+            const ledger = financeInactiveLedger[account] ?? {}
+            const current = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`
+            const owed = Object.entries(ledger).filter(([p, payment]) => p < current && !['paid', 'waived'].includes(payment.status))
+            const until = new Date(now.getFullYear(), now.getMonth() + months, 0)
+            const first = new Date(now.getFullYear(), now.getMonth() + months, Math.min(now.getDate(), new Date(now.getFullYear(), now.getMonth() + months + 1, 0).getDate()))
+            const summary = {
+                account, name: 'CLIENTA DE EJEMPLO (BAJA)', plan_before: 'Plan de ejemplo A', plan: { id: plan.id, name: plan.name, price: plan.price }, free_months: months,
+                free_until: `${until.getFullYear()}-${pad(until.getMonth() + 1)}-${pad(until.getDate())}`, payment_day: now.getDate(),
+                first_charge: { date: `${first.getFullYear()}-${pad(first.getMonth() + 1)}-${pad(first.getDate())}`, amount: plan.price },
+                waive_previous: waive, waived: owed.map(([p, payment]) => ({ period: p, amount: payment.amount, remaining: Math.max(0, payment.amount - (payment.paid ?? 0)), status: payment.status })),
+                waived_total: waive ? owed.reduce((sum, [, payment]) => sum + Math.max(0, payment.amount - (payment.paid ?? 0)), 0) : 0,
+            }
+            if (method === 'POST' && waive) owed.forEach(([, payment]) => { (payment as { status: string }).status = 'waived'; (payment as { note?: string }).note = 'Condonado al regresar con «Regreso · 1 mes gratis» (ejemplo)' })
+            await wait(method === 'POST' ? 400 : 150)
+            response = respond(method === 'POST' ? { ...summary, applied: true, promotion: { id: 'promo-regreso', name: months === 1 ? 'Regreso · 1 mes gratis' : `Regreso · ${months} meses gratis` }, current_month: { period: current, amount: 0, status: 'paid', note: 'Sin cargo: Regreso · 1 mes gratis' } } : summary)
+        }
         else if (/^\/finance\/clients\/[^/]+$/.test(path)) {
             const account = decodeURIComponent(path.split('/')[3])
             const year = Number(url.searchParams.get('year')) || undefined

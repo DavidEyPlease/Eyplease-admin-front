@@ -23,6 +23,7 @@ interface ApiPayment {
     receipt_url?: string | null
     reference_number?: string | null
     receipt_uploaded_at?: string | null
+    note?: string | null
 }
 
 interface ApiFinanceClient {
@@ -79,6 +80,7 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
             receiptUrl: p.receipt_url ?? null,
             referenceNumber: p.reference_number ?? null,
             receiptUploadedAt: p.receipt_uploaded_at ?? null,
+            note: p.note ?? null,
         }
         return acc
     }, {}),
@@ -256,4 +258,66 @@ export const useReviewReceipt = () => {
         request<ReviewReceiptInput, unknown>("POST", API_ROUTES.FINANCE.PAYMENTS.REVIEW, input)
 
     return { reviewReceipt, reviewing: requestState.loading }
+}
+
+/* ── Regreso con promoción (reconquista) ───────────────────────────────────────────────────────── */
+
+export interface WinBackInput {
+    plan_id?: string | null
+    free_months: number
+    waive_previous: boolean
+}
+
+/** Lo que pasaría (GET) o lo que pasó (POST) al regresar con la promoción. */
+export interface WinBackSummary {
+    account: string
+    name: string
+    plan_before: string | null
+    plan: { id: string, name: string, price: number }
+    free_months: number
+    /** Último día del último mes gratis (YYYY-MM-DD). */
+    free_until: string
+    payment_day: number
+    first_charge: { date: string, amount: number }
+    waive_previous: boolean
+    waived: Array<{ period: string, amount: number, remaining: number, status: PaymentStatus }>
+    waived_total: number
+    applied?: boolean
+    promotion?: { id: string, name: string }
+    current_month?: { period: string, amount: number, status: PaymentStatus, note: string | null } | null
+}
+
+/** Vista previa del regreso: no cambia nada. Se vuelve a pedir al cambiar plan, meses o la casilla. */
+export const useWinBackPreview = (account: string | null, input: WinBackInput) => {
+    const queryParams = useMemo(() => ({
+        plan_id: input.plan_id ?? undefined,
+        free_months: input.free_months,
+        waive_previous: input.waive_previous ? 1 : 0,
+    }), [input.plan_id, input.free_months, input.waive_previous])
+
+    return useFetchQuery<WinBackSummary>(replaceRecordIdInPath(API_ROUTES.FINANCE.CLIENT_WIN_BACK, account ?? ""), {
+        queryParams,
+        customQueryKey: queryKeys.list(`${CLIENTS_ENTITY}-win-back`, { account, ...queryParams }),
+        enabled: !!account,
+        staleTime: 0,
+    })
+}
+
+/** Aplica el regreso: condona, pone la promoción y el día de pago, cambia el plan y la reactiva. */
+export const useWinBack = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY), queryKeys.listBase(PAYMENTS_ENTITY)],
+        onError: (error) => { toast.error(error.message || "No se pudo reactivar") },
+    })
+
+    const winBack = async (account: string, input: WinBackInput) => {
+        const response = await request<WinBackInput, WinBackSummary>(
+            "POST",
+            replaceRecordIdInPath(API_ROUTES.FINANCE.CLIENT_WIN_BACK, account),
+            input,
+        )
+        return response?.data ?? null
+    }
+
+    return { winBack, saving: requestState.loading }
 }
