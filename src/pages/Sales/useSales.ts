@@ -166,6 +166,13 @@ const prospectRow = (item: DirectorProspect): SalesRow => {
 
 const STAGE_ORDER: Record<SalesStage, number> = { waiting: 0, closing: 1, warm: 2, done: 3 }
 
+/* Estas tres listas de la API llegan con el paginador de Laravel tal cual ({ data, total }), no con el
+   formato del resto del panel ({ items, total_items }). Se leen las dos formas: sin esto la pantalla
+   decía «Nadie en la fila» aunque había pedidos de regalo y de cambio de plan esperando. */
+type AnyPage<T> = { items?: T[], data?: T[], total_items?: number, total?: number } | null | undefined
+const itemsOf = <T,>(page: AnyPage<T>): T[] => page?.items ?? page?.data ?? []
+const totalOf = (page: AnyPage<unknown>): number => page?.total_items ?? page?.total ?? 0
+
 const useSalesQuery = <T,>(kind: SalesKind, url: string, days: number | undefined, perPage: number) => {
     const queryParams = useMemo(() => ({ perPage, ...(days ? { days } : {}) }), [perPage, days])
 
@@ -189,9 +196,9 @@ export const useSalesQueue = () => {
 
     const rows = useMemo(() => {
         const all = [
-            ...(gifts.response?.items ?? []).map(giftRow),
-            ...(interests.response?.items ?? []).map(interestRow),
-            ...(prospects.response?.items ?? []).map(prospectRow),
+            ...itemsOf<PlanGift>(gifts.response as AnyPage<PlanGift>).map(giftRow),
+            ...itemsOf<PlanInterest>(interests.response as AnyPage<PlanInterest>).map(interestRow),
+            ...itemsOf<DirectorProspect>(prospects.response as AnyPage<DirectorProspect>).map(prospectRow),
         ]
         /* Primero lo que espera respuesta y, dentro, quien lleva más tiempo esperando: lo tibio y lo
            cerrado se leen al revés, lo más nuevo arriba. */
@@ -204,7 +211,7 @@ export const useSalesQueue = () => {
     }, [gifts.response, interests.response, prospects.response])
 
     /* Lo que la API dice que hay en total, aunque no lo hayamos traído */
-    const total = (gifts.response?.total_items ?? 0) + (interests.response?.total_items ?? 0) + (prospects.response?.total_items ?? 0)
+    const total = totalOf(gifts.response as AnyPage<unknown>) + totalOf(interests.response as AnyPage<unknown>) + totalOf(prospects.response as AnyPage<unknown>)
 
     return {
         rows,
