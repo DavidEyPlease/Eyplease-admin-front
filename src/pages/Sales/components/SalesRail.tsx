@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { money } from '@/pages/Hoy/lib'
 
 import { SalesKind } from '../useSales'
+import ReferralTools from './ReferralTools'
 
 export interface Tally {
     /** Lo que espera respuesta más lo que falta cerrar: el trabajo de hoy */
@@ -28,6 +29,7 @@ const PICKS: Array<{ key: SalesFilter, label: string, sub: (tally: Tally) => str
     { key: 'interest', label: 'Quieren subir de plan', sub: tally => tally.warm ? mirando(tally.warm) : 'lo pidieron desde la app' },
     { key: 'prospect', label: 'Directoras invitadas', sub: tally => tally.closing ? `${tally.closing} ya ${tally.closing === 1 ? 'entró' : 'entraron'}, falta el premio` : 'las invitó su consultora' },
     { key: 'deal', label: 'Tratos en curso', sub: tally => tally.deals ? `+${money(tally.dealsMonthly)} al mes cuando paguen completo` : 'mes gratis y pruebas de plan' },
+    { key: 'referral', label: 'Recomendaciones', sub: tally => tally.deals ? `${tally.deals} con premio corriendo` : 'una Directora invita a otra' },
 ]
 
 /**
@@ -52,7 +54,7 @@ const SalesRail = ({ tally, filter, onFilter }: { tally: Record<SalesFilter, Tal
                             <b className="block truncate text-[12.5px] font-bold">{pick.label}</b>
                             <small className="truncate">{pick.sub(tally[pick.key])}</small>
                         </span>
-                        <b className="text-[17px] leading-none font-extrabold tabular-nums">{pick.key === 'deal' ? tally.deal.deals : tally[pick.key].pending}</b>
+                        <b className="text-[17px] leading-none font-extrabold tabular-nums">{pick.key === 'deal' ? tally.deal.deals : pick.key === 'referral' ? tally.referral.pending + tally.referral.deals + tally.referral.warm : tally[pick.key].pending}</b>
                     </button>
                 ))}
             </div>
@@ -86,7 +88,9 @@ const SalesRail = ({ tally, filter, onFilter }: { tally: Record<SalesFilter, Tal
             </section>
         )}
 
-        <section className="shell-glass pulse-rise rounded-3xl p-[18px]" style={{ '--i': 4 } as React.CSSProperties}>
+        <ReferralTools />
+
+        <section className="shell-glass pulse-rise rounded-3xl p-[18px]" style={{ '--i': 5 } as React.CSSProperties}>
             <h2 className="text-[14.5px] font-extrabold tracking-tight">Cómo se cierra</h2>
             <ul className="mt-2 grid gap-2 text-[11.5px] leading-snug text-muted-foreground">
                 <li>La app no cobra ni dice cómo pagar: todo esto se cierra por WhatsApp o transferencia, aquí afuera.</li>

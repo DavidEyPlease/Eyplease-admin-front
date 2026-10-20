@@ -6,14 +6,14 @@ import useFetchQuery from '@/hooks/useFetchQuery'
 import useRequestQuery from '@/hooks/useRequestQuery'
 import { API_ROUTES } from '@/constants/api'
 import { PaginationResponse } from '@/interfaces/common'
-import { DirectorProspect, PlanGift, PlanInterest, SalesDeal, SalesDealMonth, SalesPlan } from '@/interfaces/sales'
+import { DirectorProspect, PlanGift, PlanInterest, Referral, SalesDeal, SalesDealMonth, SalesPlan } from '@/interfaces/sales'
 import { money, monthName } from '@/pages/Hoy/lib'
 import { titleCase } from '@/pages/Clients/List/names'
 import { queryKeys } from '@/utils/queryKeys'
 
 import { agoText, dealMessage, featureText, firstName, giftMessage, interestMessage, prospectConsultantMessage, prospectDirectorMessage, signalsText, waLink, waitDays } from './sales.utils'
 
-export type SalesKind = 'gift' | 'interest' | 'prospect' | 'deal'
+export type SalesKind = 'gift' | 'interest' | 'prospect' | 'deal' | 'referral'
 
 /**
  * Dónde va cada quien en la fila: esperando respuesta, ya contactada pero sin cerrar, un trato en curso (aceptó y está
@@ -56,6 +56,7 @@ export type SalesRow =
     | (RowBase & { kind: 'interest', interest: PlanInterest })
     | (RowBase & { kind: 'prospect', prospect: DirectorProspect })
     | (RowBase & { kind: 'deal', deal: SalesDeal })
+    | (RowBase & { kind: 'referral', referral: Referral })
 
 const priceOf = (plan: SalesPlan | null | undefined) => Number(plan?.price ?? 0) || 0
 
@@ -234,6 +235,60 @@ const dealRow = (deal: SalesDeal): SalesRow => {
     }
 }
 
+/**
+ * Una recomendación, según dónde va: anotada (tibia), ya entró y falta que pague (por cerrar: es una venta), pagó y el
+ * premio no se pudo dar solo (te espera), premio corriendo (trato en curso: pregúntale si se queda) o terminada.
+ */
+const referralRow = (item: Referral): SalesRow => {
+    const newName = personName(item.referred?.name ?? item.referred_name ?? 'Directora recomendada')
+    const rewardOn = Boolean(item.reward_applied_at && !item.reward_reverted_at)
+    const stage: SalesStage = item.reward_reverted_at || item.reward_kept_at
+        ? 'done'
+        : rewardOn ? 'deal'
+            : item.first_paid_at ? 'waiting'
+                : item.joined_at ? 'closing' : 'warm'
+    const toNew = waLink(item.referred?.phone ?? item.referred_phone, `Hola ${firstName(newName)} 💜 `)
+    const toReferrer = waLink(item.referrer?.phone, `Hola ${firstName(item.referrer?.network_person?.name ?? item.referrer?.name)} 💜 `)
+    const until = item.reward_until ? dayText(item.reward_until) : ''
+
+    return {
+        key: `referral:${item.id}`,
+        id: item.id,
+        kind: 'referral',
+        referral: item,
+        stage,
+        since: item.first_paid_at ?? item.joined_at ?? item.registered_at,
+        who: {
+            name: personName(item.referrer?.network_person?.name ?? item.referrer?.name),
+            account: item.referrer?.network_person?.consultant_code ?? item.referrer?.username ?? null,
+            phone: item.referrer?.phone ?? null,
+            email: item.referrer?.email ?? null,
+            plan: item.referrer?.plan?.name ?? null,
+        },
+        asks: item.reward_kept_at
+            ? { pre: 'Recomendó a', strong: newName, post: `y se quedó con el ${item.reward_plan?.name ?? 'plan del premio'}` }
+            : rewardOn
+                ? { pre: 'Tiene de premio el', strong: item.reward_plan?.name ?? 'plan siguiente', post: `por recomendar a ${newName}` }
+                : { pre: 'Recomendó a', strong: newName, post: item.joined_at ? '' : '· todavía no entra' },
+        note: [
+            item.source === 'link' ? 'Entró con su liga' : `La anotó ${item.created_by?.name ? personName(item.created_by.name) : 'el equipo'}`,
+            item.referred?.username ? `cuenta ${item.referred.username}` : item.referred_email ?? '',
+            item.joined_at && !item.first_paid_at ? 'falta que pague su primer mes: ahí se gana el premio' : '',
+            item.reward_note ?? '',
+        ].filter(Boolean).join(' · '),
+        monthly: 0,
+        steps: ['Recomendada', 'Entró', 'Pagó', 'Premio'],
+        step: rewardOn || stage === 'done' ? 4 : item.first_paid_at ? 3 : item.joined_at ? 2 : 1,
+        wa: [
+            ...(toReferrer ? [{ label: 'WhatsApp a quien recomendó', href: toReferrer }] : []),
+            ...(toNew && !item.first_paid_at ? [{ label: 'A la nueva', href: toNew }] : []),
+        ],
+        tag: rewardOn && !item.reward_kept_at
+            ? { text: `Premio hasta el ${until}`, tone: 'plain' }
+            : stage === 'waiting' ? { text: 'Premio por dar', tone: 'bad' } : undefined,
+    }
+}
+
 /* ── Las tres listas, en una sola fila de trabajo ───────────────────────────────────────────── */
 
 const STAGE_ORDER: Record<SalesStage, number> = { waiting: 0, closing: 1, deal: 2, warm: 3, done: 4 }
@@ -266,6 +321,7 @@ export const useSalesQueue = () => {
     const interests = useSalesQuery<PlanInterest>('interest', API_ROUTES.SALES.PLAN_INTERESTS, 60, perPage)
     const prospects = useSalesQuery<DirectorProspect>('prospect', API_ROUTES.SALES.DIRECTOR_PROSPECTS, undefined, perPage)
     const deals = useSalesQuery<SalesDeal>('deal', API_ROUTES.SALES.DEALS, 60, perPage)
+    const referrals = useSalesQuery<Referral>('referral', API_ROUTES.SALES.REFERRALS, undefined, perPage)
 
     const rows = useMemo(() => {
         const all = [
@@ -273,6 +329,7 @@ export const useSalesQueue = () => {
             ...itemsOf<PlanInterest>(interests.response as AnyPage<PlanInterest>).map(interestRow),
             ...itemsOf<DirectorProspect>(prospects.response as AnyPage<DirectorProspect>).map(prospectRow),
             ...itemsOf<SalesDeal>(deals.response as AnyPage<SalesDeal>).map(dealRow),
+            ...itemsOf<Referral>(referrals.response as AnyPage<Referral>).map(referralRow),
         ]
         /* Primero lo que espera respuesta y, dentro, quien lleva más tiempo esperando: lo tibio y lo
            cerrado se leen al revés, lo más nuevo arriba. */
@@ -286,19 +343,19 @@ export const useSalesQueue = () => {
             }
             return a.stage === 'waiting' || a.stage === 'closing' ? wait : -wait
         })
-    }, [gifts.response, interests.response, prospects.response, deals.response])
+    }, [gifts.response, interests.response, prospects.response, deals.response, referrals.response])
 
     /* Lo que la API dice que hay en total, aunque no lo hayamos traído */
     const total = totalOf(gifts.response as AnyPage<unknown>) + totalOf(interests.response as AnyPage<unknown>)
-        + totalOf(prospects.response as AnyPage<unknown>) + totalOf(deals.response as AnyPage<unknown>)
+        + totalOf(prospects.response as AnyPage<unknown>) + totalOf(deals.response as AnyPage<unknown>) + totalOf(referrals.response as AnyPage<unknown>)
 
     return {
         rows,
         total,
         missing: Math.max(0, total - rows.length),
         loadMore: () => setPerPage(value => value + 200),
-        loading: gifts.loading || interests.loading || prospects.loading || deals.loading,
-        loadingMore: gifts.isRefetching || interests.isRefetching || prospects.isRefetching || deals.isRefetching,
+        loading: gifts.loading || interests.loading || prospects.loading || deals.loading || referrals.loading,
+        loadingMore: gifts.isRefetching || interests.isRefetching || prospects.isRefetching || deals.isRefetching || referrals.isRefetching,
     }
 }
 
@@ -315,10 +372,10 @@ export const useSalesActions = () => {
     const { request } = useRequestQuery({ onError: showServerError })
     const [busy, setBusy] = useState<string | null>(null)
 
-    const run = async (kind: SalesKind, id: string, url: string, body: Record<string, boolean>) => {
+    const run = async (kind: SalesKind, id: string, url: string, body: Record<string, boolean>, method: 'PATCH' | 'POST' = 'PATCH') => {
         setBusy(id)
         try {
-            await request('PATCH', url.replace('{id}', id), body)
+            await request(method, url.replace('{id}', id), body)
             await queryClient.invalidateQueries({ queryKey: queryKeys.listBase(`sales/${kind}`) })
         } finally {
             setBusy(null)
@@ -369,10 +426,24 @@ export const useSalesActions = () => {
         )
     }
 
-    return { busy, setGiftContacted, setGiftFulfilled, setInterestContacted, setGiftDismissed, setInterestDismissed }
+    /* Recomendaciones: dar el premio cuando no se pudo solo, y si se queda con el plan del premio */
+    const giveReward = async (row: SalesRow & { kind: 'referral' }) => {
+        await run('referral', row.id, API_ROUTES.SALES.REFERRAL_REWARD, {}, 'POST')
+        toast.success(`Premio revisado para ${firstName(row.who.name)}: si no se pudo dar solo, la razón queda en la tarjeta`)
+    }
+
+    const setReferralKeep = async (row: SalesRow & { kind: 'referral' }, keep: boolean) => {
+        await run('referral', row.id, API_ROUTES.SALES.REFERRAL_KEEP, { keep })
+        undoable(
+            keep ? `${firstName(row.who.name)} se queda con el plan: al terminar su mes paga el completo` : `${firstName(row.who.name)} regresa a su plan al terminar el premio`,
+            () => setReferralKeep(row, !keep),
+        )
+    }
+
+    return { busy, setGiftContacted, setGiftFulfilled, setInterestContacted, setGiftDismissed, setInterestDismissed, giveReward, setReferralKeep }
 }
 
 /** Lo que la pantalla le pasa a cada fila para que pueda marcar sin volver a montar la mutación. */
 export type SalesActions = ReturnType<typeof useSalesActions>
 
-export type { DirectorProspect, PlanGift, PlanInterest, SalesDeal }
+export type { DirectorProspect, PlanGift, PlanInterest, Referral, SalesDeal }

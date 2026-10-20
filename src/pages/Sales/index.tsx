@@ -52,6 +52,7 @@ const SalesPage = () => {
         interest: tallyOf(rows.filter(row => row.kind === 'interest')),
         prospect: tallyOf(rows.filter(row => row.kind === 'prospect')),
         deal: tallyOf(rows.filter(row => row.kind === 'deal')),
+        referral: tallyOf(rows.filter(row => row.kind === 'referral')),
     }), [rows])
 
     const shown = useMemo(() => rows.filter(row => {

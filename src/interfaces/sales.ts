@@ -112,3 +112,38 @@ export interface SalesDeal {
     /** Lo que entra de más al mes cuando termina la promoción */
     monthly: number
 }
+
+/**
+ * «Invite a una Directora» (`GET /referrals`): una Directora recomendada por una clienta. Sólo cuenta si quedó
+ * registrada antes de que la nueva entrara (su liga o anotada por el equipo). El premio: un mes del plan siguiente
+ * pagando lo de su plan, en cuanto la recomendada paga su primer mes; luego regresa sola a su plan salvo que se quede.
+ */
+export interface Referral {
+    id: string
+    source: 'link' | 'team'
+    referred_name: string | null
+    referred_email: string | null
+    referred_phone: string | null
+    registered_at: string
+    joined_at: string | null
+    first_paid_at: string | null
+    first_paid_period: string | null
+    reward_applied_at: string | null
+    reward_until: string | null
+    reward_kept_at: string | null
+    reward_reverted_at: string | null
+    reward_note: string | null
+    referrer: SalesUser & { plan?: { id: string, name: string, price?: number | null } | null } | null
+    referred: { id: string, name: string, username: string | null, phone: string | null, email: string | null, active: boolean, plan?: { id: string, name: string } | null } | null
+    previous_plan: { id: string, name: string } | null
+    reward_plan: { id: string, name: string } | null
+    created_by: { id: string, name: string } | null
+}
+
+/** `GET /referrals/link/{cuenta}`: la liga de una clienta para recomendar. */
+export interface ReferralLink {
+    account: string
+    name: string
+    code: string
+    link: string
+}

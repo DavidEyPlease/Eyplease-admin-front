@@ -195,6 +195,10 @@ export const API_ROUTES = {
         PLAN_GIFT_DISMISSED: '/plan-gifts/{id}/dismissed',
         DIRECTOR_PROSPECTS: '/director-prospects',
         DEALS: '/sales/deals',
+        REFERRALS: '/referrals',
+        REFERRAL_LINK: '/referrals/link/{account}',
+        REFERRAL_REWARD: '/referrals/{id}/reward',
+        REFERRAL_KEEP: '/referrals/{id}/keep',
     },
     GROWTH: {
         FUNNEL: '/growth/funnel',

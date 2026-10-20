@@ -9,6 +9,9 @@
 .vta-row[data-kind="interest"] { --edge: linear-gradient(180deg, #2CD4D9, #6C47FF); }
 .vta-row[data-kind="prospect"] { --edge: linear-gradient(180deg, #E5077D, #6C47FF); }
 .vta-row[data-kind="deal"] { --edge: linear-gradient(180deg, #10B981, #2CD4D9); }
+.vta-row[data-kind="referral"] { --edge: linear-gradient(180deg, #F59E0B, #6C47FF); }
+.vta-field { width: 100%; height: 34px; border-radius: 11px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 70%, transparent); padding: 0 11px; font-size: 12.5px; color: var(--foreground); }
+.vta-field:focus { outline: none; border-color: color-mix(in oklab, #6C47FF 55%, transparent); box-shadow: 0 0 0 3px rgba(108, 71, 255, .15); }
 .vta-row.is-done { opacity: .72; }
 .vta-row.is-done:hover { opacity: 1; }
 

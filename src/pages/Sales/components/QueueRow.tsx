@@ -1,4 +1,4 @@
-import { ArchiveIcon, CheckIcon, GiftIcon, HandshakeIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
+import { ArchiveIcon, CheckIcon, GiftIcon, HandshakeIcon, HeartHandshakeIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
@@ -14,6 +14,7 @@ const KIND: Record<SalesRow['kind'], { icon: typeof GiftIcon, label: string }> =
     interest: { icon: TrendingUpIcon, label: 'Quiere subir' },
     prospect: { icon: UserPlusIcon, label: 'Directora invitada' },
     deal: { icon: HandshakeIcon, label: 'Trato' },
+    referral: { icon: HeartHandshakeIcon, label: 'Recomendación' },
 }
 
 const DEAL_LABEL: Record<string, string> = { win_back: 'Regresó', plan_trial: 'Subió de plan', promotion: 'Promoción' }
@@ -156,6 +157,23 @@ const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actio
                     {row.kind === 'interest' && row.stage !== 'done' && (
                         <button type="button" disabled={working} title="No es venta: sacarla de la fila (no se borra)" className="vta-btn ghost" onClick={() => actions.setInterestDismissed(row, true)}>
                             <ArchiveIcon className="size-3.5" /> Quitar
+                        </button>
+                    )}
+
+                    {/* Recomendaciones: el premio se da solo al primer pago; si no se pudo, se da aquí. «Se queda» = no regresa */}
+                    {row.kind === 'referral' && row.stage === 'waiting' && (
+                        <button type="button" disabled={working} className="vta-btn" onClick={() => actions.giveReward(row)}>
+                            <GiftIcon className="size-3.5" /> Dar premio
+                        </button>
+                    )}
+                    {row.kind === 'referral' && row.stage === 'deal' && (
+                        <button type="button" disabled={working} title="No regresa a su plan: al terminar el mes paga el completo" className="vta-btn" onClick={() => actions.setReferralKeep(row, true)}>
+                            <CheckIcon className="size-3.5" /> Se queda con el plan
+                        </button>
+                    )}
+                    {row.kind === 'referral' && row.referral.reward_kept_at && !row.referral.reward_reverted_at && (
+                        <button type="button" disabled={working} title="Que regrese a su plan al terminar el premio" className="vta-btn ghost" onClick={() => actions.setReferralKeep(row, false)}>
+                            <RotateCcwIcon className="size-3.5" /> Mejor regresa
                         </button>
                     )}
 
