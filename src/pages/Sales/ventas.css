@@ -8,6 +8,7 @@
 .vta-row[data-kind="gift"] { --edge: linear-gradient(180deg, #6C47FF, #4E31C0); }
 .vta-row[data-kind="interest"] { --edge: linear-gradient(180deg, #2CD4D9, #6C47FF); }
 .vta-row[data-kind="prospect"] { --edge: linear-gradient(180deg, #E5077D, #6C47FF); }
+.vta-row[data-kind="deal"] { --edge: linear-gradient(180deg, #10B981, #2CD4D9); }
 .vta-row.is-done { opacity: .72; }
 .vta-row.is-done:hover { opacity: 1; }
 

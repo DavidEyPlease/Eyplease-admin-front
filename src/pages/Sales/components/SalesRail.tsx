@@ -13,6 +13,9 @@ export interface Tally {
     done: number
     /** Lo que entraría al mes si se cierra lo pendiente */
     monthly: number
+    /** Tratos en curso (aceptaron; falta su primer pago completo) y lo que suman al mes cuando paguen completo */
+    deals: number
+    dealsMonthly: number
 }
 
 export type SalesFilter = 'all' | SalesKind
@@ -24,6 +27,7 @@ const PICKS: Array<{ key: SalesFilter, label: string, sub: (tally: Tally) => str
     { key: 'gift', label: 'Regalos y paquetes', sub: tally => tally.closing ? `${tally.closing} por activar` : 'de Directoras a su unidad' },
     { key: 'interest', label: 'Quieren subir de plan', sub: tally => tally.warm ? mirando(tally.warm) : 'lo pidieron desde la app' },
     { key: 'prospect', label: 'Directoras invitadas', sub: tally => tally.closing ? `${tally.closing} ya ${tally.closing === 1 ? 'entró' : 'entraron'}, falta el premio` : 'las invitó su consultora' },
+    { key: 'deal', label: 'Tratos en curso', sub: tally => tally.deals ? `+${money(tally.dealsMonthly)} al mes cuando paguen completo` : 'mes gratis y pruebas de plan' },
 ]
 
 /**
@@ -48,7 +52,7 @@ const SalesRail = ({ tally, filter, onFilter }: { tally: Record<SalesFilter, Tal
                             <b className="block truncate text-[12.5px] font-bold">{pick.label}</b>
                             <small className="truncate">{pick.sub(tally[pick.key])}</small>
                         </span>
-                        <b className="text-[17px] leading-none font-extrabold tabular-nums">{tally[pick.key].pending}</b>
+                        <b className="text-[17px] leading-none font-extrabold tabular-nums">{pick.key === 'deal' ? tally.deal.deals : tally[pick.key].pending}</b>
                     </button>
                 ))}
             </div>
@@ -72,12 +76,24 @@ const SalesRail = ({ tally, filter, onFilter }: { tally: Record<SalesFilter, Tal
             </section>
         )}
 
-        <section className="shell-glass pulse-rise rounded-3xl p-[18px]" style={{ '--i': 3 } as React.CSSProperties}>
+        {tally.all.deals > 0 && (
+            <section className="shell-glass pulse-rise rounded-3xl p-[18px]" style={{ '--i': 3 } as React.CSSProperties}>
+                <h2 className="text-[14.5px] font-extrabold tracking-tight">Tratos en curso</h2>
+                <b className="mt-2 block text-[30px] leading-none font-extrabold tracking-[-.03em] text-emerald-600 tabular-nums dark:text-emerald-400">+{money(tally.all.dealsMonthly)}</b>
+                <small className="mt-1 block text-[11.5px] text-muted-foreground">
+                    al mes cuando {tally.all.deals === 1 ? 'pague' : `las ${tally.all.deals} paguen`} su primer mes completo
+                </small>
+            </section>
+        )}
+
+        <section className="shell-glass pulse-rise rounded-3xl p-[18px]" style={{ '--i': 4 } as React.CSSProperties}>
             <h2 className="text-[14.5px] font-extrabold tracking-tight">Cómo se cierra</h2>
             <ul className="mt-2 grid gap-2 text-[11.5px] leading-snug text-muted-foreground">
                 <li>La app no cobra ni dice cómo pagar: todo esto se cierra por WhatsApp o transferencia, aquí afuera.</li>
                 <li>Marca <b className="font-bold text-foreground">Ya la contacté</b> en cuanto le escribas, y <b className="font-bold text-foreground">Ya quedó activado</b> cuando el plan ya esté puesto en su cuenta.</li>
                 <li>El premio de la Directora invitada se da solo si entra con <b className="font-bold text-foreground">ese</b> correo; si entra con otro, hay que dárselo a mano.</li>
+                <li>Si un pedido no era venta, <b className="font-bold text-foreground">Quitar</b> lo saca de la fila sin borrarlo.</li>
+                <li>Los tratos salen solos de Finanzas (regreso con mes gratis, prueba de plan) y se quedan aquí hasta que pagan su primer mes completo.</li>
             </ul>
         </section>
     </>)

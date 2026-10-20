@@ -1,6 +1,6 @@
 /** Ventas: lo que hace falta para hablarle a quien está esperando — la liga, el mensaje y desde cuándo. */
 
-import { DirectorProspect, PlanGift, PlanInterest } from '@/interfaces/sales'
+import { DirectorProspect, PlanGift, PlanInterest, SalesDeal } from '@/interfaces/sales'
 import { titleCase } from '@/pages/Clients/List/names'
 
 /** Liga de WhatsApp con el mensaje listo. Los teléfonos se guardan a 10 dígitos: sin lada se asume México. */
@@ -83,3 +83,7 @@ export const prospectDirectorMessage = (item: DirectorProspect) =>
 
 export const prospectConsultantMessage = (item: DirectorProspect) =>
     `Hola ${firstName(item.invited_by?.name)} 💜 Vimos que invitaste a tu Directora ${firstName(item.director_name)} a Eyplease+. ¿Te ayudamos a que entre? Recuerda que al hacerlo te regalamos ${item.reward_months} meses.`
+
+/** Al trato no se le vende nada: se le saluda (y se le recuerda su pago si hace falta) desde su propio WhatsApp. */
+export const dealMessage = (deal: SalesDeal) =>
+    `Hola ${firstName(deal.user.network_person?.name ?? deal.user.name)} 💜 `

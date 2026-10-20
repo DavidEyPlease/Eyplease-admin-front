@@ -6,6 +6,8 @@ export interface SalesUser {
     email: string | null
     phone: string | null
     username: string | null
+    /** El plan que tiene hoy: si ya es el que pedía, ya subió */
+    plan_id?: string | null
     network_person?: { id: string, name: string, consultant_code: string | null } | null
     plan?: { id: string, name: string } | null
 }
@@ -62,4 +64,51 @@ export interface DirectorProspect {
     created_at: string
     invited_by: { id: string, name: string, username: string | null, phone: string | null } | null
     joined_user: { id: string, name: string, username: string | null } | null
+}
+
+export type SalesDealKind = 'win_back' | 'plan_trial' | 'promotion'
+
+/** Un mes del trato: lo que se le cobra (o se le cobraría) y si ya lo pagó. */
+export interface SalesDealMonth {
+    /** YYYY-MM */
+    period: string
+    amount: number
+    /** paid · pending · overdue · waived… (null = todavía no se le genera ese mes) */
+    status: string | null
+    paid_at: string | null
+}
+
+/**
+ * Un trato que el equipo cerró por fuera de la app (`GET /sales/deals`): el regreso con meses gratis o la prueba de un
+ * plan más alto. Sale de su perfil de cobro y se queda «en curso» hasta que paga su primer mes completo.
+ */
+export interface SalesDeal {
+    id: string
+    kind: SalesDealKind
+    /** deal = en curso · done = ya pagó su primer mes completo · lost = se volvió a dar de baja */
+    stage: 'deal' | 'done' | 'lost'
+    started_at: string | null
+    user: {
+        id: string
+        name: string
+        username: string | null
+        phone: string | null
+        email: string | null
+        active: boolean
+        network_person: { name: string, consultant_code: string | null } | null
+    }
+    plan: { name: string, price: number } | null
+    /** En la prueba de plan: el plan del que viene */
+    previous_plan: string | null
+    promotion: string
+    /** YYYY-MM-DD: hasta cuándo le dura la promoción */
+    promo_until: string | null
+    payment_day: number | null
+    /** El mes en curso y los dos siguientes */
+    months: SalesDealMonth[]
+    /** El primer mes que ya paga completo */
+    first_full: SalesDealMonth
+    next_due: (SalesDealMonth & { due_on: string }) | null
+    /** Lo que entra de más al mes cuando termina la promoción */
+    monthly: number
 }

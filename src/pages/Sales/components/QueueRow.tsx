@@ -1,4 +1,4 @@
-import { CheckIcon, GiftIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
+import { ArchiveIcon, CheckIcon, GiftIcon, HandshakeIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
@@ -13,7 +13,10 @@ const KIND: Record<SalesRow['kind'], { icon: typeof GiftIcon, label: string }> =
     gift: { icon: GiftIcon, label: 'Regalo' },
     interest: { icon: TrendingUpIcon, label: 'Quiere subir' },
     prospect: { icon: UserPlusIcon, label: 'Directora invitada' },
+    deal: { icon: HandshakeIcon, label: 'Trato' },
 }
+
+const DEAL_LABEL: Record<string, string> = { win_back: 'Regresó', plan_trial: 'Subió de plan', promotion: 'Promoción' }
 
 /** Teléfono y correo: un clic y ya están en el portapapeles, sin abrir la ficha. */
 const Copy = ({ icon: Icon, value }: { icon: typeof PhoneIcon, value: string | null }) => !value ? null : (
@@ -57,7 +60,9 @@ const Steps = ({ steps, step }: { steps: string[], step: number }) => (
 const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actions: SalesActions }) => {
     const kind = KIND[row.kind]
     const Icon = row.kind === 'gift' && row.gift.kind === 'unit_package' ? PackageIcon : kind.icon
-    const label = row.kind === 'gift' && row.gift.kind === 'unit_package' ? 'Paquete de unidad' : kind.label
+    const label = row.kind === 'gift' && row.gift.kind === 'unit_package'
+        ? 'Paquete de unidad'
+        : row.kind === 'deal' ? DEAL_LABEL[row.deal.kind] ?? kind.label : kind.label
     const working = actions.busy === row.id
 
     return (
@@ -81,10 +86,10 @@ const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actio
                     {/* Lo que espera dice cuánto lleva (y se pone rojo); lo tibio, cuándo fue; lo demás,
                         la palabra del paso en el que se quedó */}
                     <span
-                        className={cn('pulse-tag', row.stage === 'waiting' ? waitTone(row.since) : row.stage === 'warm' ? 'plain' : 'ok')}
+                        className={cn('pulse-tag', row.tag ? row.tag.tone : row.stage === 'waiting' ? waitTone(row.since) : row.stage === 'warm' ? 'plain' : 'ok')}
                         title={formatDate(new Date(row.since), { date: 'medium', time: 'short' })}
                     >
-                        {row.stage === 'waiting' ? waitText(row.since) : row.stage === 'warm' ? agoText(row.since) : row.steps[row.step - 1]}
+                        {row.tag ? row.tag.text : row.stage === 'waiting' ? waitText(row.since) : row.stage === 'warm' ? agoText(row.since) : row.steps[row.step - 1]}
                     </span>
                 </div>
             </div>
@@ -139,6 +144,18 @@ const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actio
                     {row.kind === 'interest' && row.interest.contacted_at && (
                         <button type="button" disabled={working} title="Regresarla a la fila" className="vta-btn ghost" onClick={() => actions.setInterestContacted(row, false)}>
                             <RotateCcwIcon className="size-3.5" /> Aún no
+                        </button>
+                    )}
+
+                    {/* No era venta (ya subió, lo tocó por curiosidad): sale de la fila sin borrarse */}
+                    {row.kind === 'gift' && !row.gift.fulfilled_at && (
+                        <button type="button" disabled={working} title="No es venta: sacarlo de la fila (no se borra)" className="vta-btn ghost" onClick={() => actions.setGiftDismissed(row, true)}>
+                            <ArchiveIcon className="size-3.5" /> Quitar
+                        </button>
+                    )}
+                    {row.kind === 'interest' && row.stage !== 'done' && (
+                        <button type="button" disabled={working} title="No es venta: sacarla de la fila (no se borra)" className="vta-btn ghost" onClick={() => actions.setInterestDismissed(row, true)}>
+                            <ArchiveIcon className="size-3.5" /> Quitar
                         </button>
                     )}
 

@@ -188,10 +188,13 @@ export const API_ROUTES = {
     SALES: {
         PLAN_INTERESTS: '/plan-interests',
         PLAN_INTEREST_CONTACTED: '/plan-interests/{id}/contacted',
+        PLAN_INTEREST_DISMISSED: '/plan-interests/{id}/dismissed',
         PLAN_GIFTS: '/plan-gifts',
         PLAN_GIFT_CONTACTED: '/plan-gifts/{id}/contacted',
         PLAN_GIFT_FULFILLED: '/plan-gifts/{id}/fulfilled',
+        PLAN_GIFT_DISMISSED: '/plan-gifts/{id}/dismissed',
         DIRECTOR_PROSPECTS: '/director-prospects',
+        DEALS: '/sales/deals',
     },
     GROWTH: {
         FUNNEL: '/growth/funnel',

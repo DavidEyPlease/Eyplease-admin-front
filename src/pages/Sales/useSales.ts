@@ -6,16 +6,20 @@ import useFetchQuery from '@/hooks/useFetchQuery'
 import useRequestQuery from '@/hooks/useRequestQuery'
 import { API_ROUTES } from '@/constants/api'
 import { PaginationResponse } from '@/interfaces/common'
-import { DirectorProspect, PlanGift, PlanInterest, SalesPlan } from '@/interfaces/sales'
+import { DirectorProspect, PlanGift, PlanInterest, SalesDeal, SalesDealMonth, SalesPlan } from '@/interfaces/sales'
+import { money, monthName } from '@/pages/Hoy/lib'
 import { titleCase } from '@/pages/Clients/List/names'
 import { queryKeys } from '@/utils/queryKeys'
 
-import { agoText, featureText, firstName, giftMessage, interestMessage, prospectConsultantMessage, prospectDirectorMessage, signalsText, waLink, waitDays } from './sales.utils'
+import { agoText, dealMessage, featureText, firstName, giftMessage, interestMessage, prospectConsultantMessage, prospectDirectorMessage, signalsText, waLink, waitDays } from './sales.utils'
 
-export type SalesKind = 'gift' | 'interest' | 'prospect'
+export type SalesKind = 'gift' | 'interest' | 'prospect' | 'deal'
 
-/** Dónde va cada quien en la fila: esperando respuesta, ya contactada pero sin cerrar, tibia, o cerrada. */
-export type SalesStage = 'waiting' | 'closing' | 'warm' | 'done'
+/**
+ * Dónde va cada quien en la fila: esperando respuesta, ya contactada pero sin cerrar, un trato en curso (aceptó y está
+ * en su promoción, falta su primer pago completo), tibia, o cerrada.
+ */
+export type SalesStage = 'waiting' | 'closing' | 'deal' | 'warm' | 'done'
 
 export interface SalesWho {
     name: string
@@ -43,12 +47,15 @@ interface RowBase {
     /** Cuántos de esos pasos ya están dados. */
     step: number
     wa: Array<{ label: string, href: string }>
+    /** La etiqueta de arriba a la derecha, cuando no es la de siempre (cuánto espera / el paso) */
+    tag?: { text: string, tone: 'plain' | 'warn' | 'bad' | 'ok' }
 }
 
 export type SalesRow =
     | (RowBase & { kind: 'gift', gift: PlanGift })
     | (RowBase & { kind: 'interest', interest: PlanInterest })
     | (RowBase & { kind: 'prospect', prospect: DirectorProspect })
+    | (RowBase & { kind: 'deal', deal: SalesDeal })
 
 const priceOf = (plan: SalesPlan | null | undefined) => Number(plan?.price ?? 0) || 0
 
@@ -96,13 +103,15 @@ const interestRow = (item: PlanInterest): SalesRow => {
     const signals = signalsText(item.signals)
     /* El precio del plan que quiere menos el que ya paga: eso es lo que sube de verdad */
     const upgrade = priceOf(item.plan) - priceOf(item.current_plan)
+    /* Si su plan de hoy ya es el que pedía, ya subió: no es trabajo pendiente aunque nadie la marcara */
+    const upgraded = Boolean(item.plan?.id && item.user?.plan_id === item.plan.id)
 
     return {
         key: `interest:${item.id}`,
         id: item.id,
         kind: 'interest',
         interest: item,
-        stage: item.contacted_at ? 'done' : item.requested_at ? 'waiting' : 'warm',
+        stage: item.contacted_at || upgraded ? 'done' : item.requested_at ? 'waiting' : 'warm',
         since: item.requested_at ?? item.updated_at,
         who: {
             name: personName(item.user?.network_person?.name ?? item.user?.name),
@@ -111,13 +120,15 @@ const interestRow = (item: PlanInterest): SalesRow => {
             email: item.user?.email ?? null,
             plan: item.current_plan?.name ?? item.user?.plan?.name ?? null,
         },
-        asks: item.requested_at
-            ? { pre: 'Quiere subir al', strong: plan, post: '' }
-            : { pre: 'Anduvo mirando el', strong: plan, post: '' },
+        asks: upgraded
+            ? { pre: 'Ya subió al', strong: plan, post: '' }
+            : item.requested_at
+                ? { pre: 'Quiere subir al', strong: plan, post: '' }
+                : { pre: 'Anduvo mirando el', strong: plan, post: '' },
         note: [feature && `De qué hablarle: ${feature}`, signals].filter(Boolean).join(' · '),
         monthly: upgrade > 0 ? upgrade : priceOf(item.plan),
-        steps: ['Anduvo mirando', 'Lo pidió', 'Contactada'],
-        step: item.contacted_at ? 3 : item.requested_at ? 2 : 1,
+        steps: ['Anduvo mirando', 'Lo pidió', upgraded ? 'Ya subió' : 'Contactada'],
+        step: item.contacted_at || upgraded ? 3 : item.requested_at ? 2 : 1,
         wa: href ? [{ label: 'WhatsApp', href }] : [],
     }
 }
@@ -162,9 +173,70 @@ const prospectRow = (item: DirectorProspect): SalesRow => {
     }
 }
 
+const DEAL_TEXT: Record<SalesDeal['kind'], { tag: string, steps: string[] }> = {
+    win_back: { tag: 'Regresó', steps: ['Regresó', 'Mes gratis', 'Primer pago'] },
+    plan_trial: { tag: 'Subió de plan', steps: ['Aceptó', 'Mes de prueba', 'Paga completo'] },
+    promotion: { tag: 'Promoción', steps: ['Aceptó', 'Promoción', 'Paga completo'] },
+}
+
+const shortMonth = (period: string) => monthName(period).slice(0, 3)
+
+/** «oct gratis · nov $349 · dic $659» — y si ya lo pagó, lo dice. */
+const monthText = (month: SalesDealMonth) =>
+    `${shortMonth(month.period)} ${month.amount > 0 ? money(month.amount) : 'gratis'}${month.status === 'paid' ? ' (pagado)' : ''}`
+
+/** «8 nov» */
+const dayText = (iso: string) => {
+    const [, m, d] = iso.split('-')
+    return `${Number(d)} ${shortMonth(`2000-${m}`)}`
+}
+
+const dealRow = (deal: SalesDeal): SalesRow => {
+    const text = DEAL_TEXT[deal.kind] ?? DEAL_TEXT.promotion
+    const plan = deal.plan?.name ?? 'su plan'
+    const until = deal.promo_until ? monthName(deal.promo_until.slice(0, 7)) : ''
+    const free = deal.promotion.split('·')[1]?.trim()
+    const href = waLink(deal.user.phone, dealMessage(deal))
+    const promoOn = Boolean(deal.promo_until && deal.promo_until >= new Date().toISOString().slice(0, 10))
+    const lost = deal.stage === 'lost'
+
+    return {
+        key: `deal:${deal.id}`,
+        id: deal.id,
+        kind: 'deal',
+        deal,
+        stage: deal.stage === 'done' ? 'done' : 'deal',
+        since: deal.started_at ?? new Date().toISOString(),
+        who: {
+            name: personName(deal.user.network_person?.name ?? deal.user.name),
+            account: deal.user.network_person?.consultant_code ?? deal.user.username,
+            phone: deal.user.phone,
+            email: deal.user.email,
+            plan,
+        },
+        asks: deal.kind === 'win_back'
+            ? { pre: 'Regresó al', strong: plan, post: free ? `con ${free}` : '' }
+            : deal.kind === 'plan_trial'
+                ? { pre: 'Subió al', strong: plan, post: deal.previous_plan ? `y paga lo del ${deal.previous_plan.replace(/^Plan /, '')}${until ? ` hasta ${until}` : ''}` : '' }
+                : { pre: 'Con la promoción', strong: deal.promotion, post: '' },
+        note: lost ? 'Se volvió a dar de baja antes de pagar su primer mes completo' : deal.months.map(monthText).join(' · '),
+        monthly: deal.monthly,
+        steps: text.steps,
+        step: deal.stage === 'done' ? 3 : promoOn ? 2 : 3,
+        wa: href ? [{ label: 'WhatsApp', href }] : [],
+        tag: lost
+            ? { text: 'Se dio de baja', tone: 'bad' }
+            : deal.stage === 'done'
+                ? { text: `Pagó ${shortMonth(deal.first_full.period)} completo`, tone: 'ok' }
+                : deal.next_due
+                    ? { text: `Paga ${money(deal.next_due.amount)} el ${dayText(deal.next_due.due_on)}`, tone: 'plain' }
+                    : { text: text.tag, tone: 'ok' },
+    }
+}
+
 /* ── Las tres listas, en una sola fila de trabajo ───────────────────────────────────────────── */
 
-const STAGE_ORDER: Record<SalesStage, number> = { waiting: 0, closing: 1, warm: 2, done: 3 }
+const STAGE_ORDER: Record<SalesStage, number> = { waiting: 0, closing: 1, deal: 2, warm: 3, done: 4 }
 
 /* Estas tres listas de la API llegan con el paginador de Laravel tal cual ({ data, total }), no con el
    formato del resto del panel ({ items, total_items }). Se leen las dos formas: sin esto la pantalla
@@ -193,12 +265,14 @@ export const useSalesQueue = () => {
     const gifts = useSalesQuery<PlanGift>('gift', API_ROUTES.SALES.PLAN_GIFTS, 60, perPage)
     const interests = useSalesQuery<PlanInterest>('interest', API_ROUTES.SALES.PLAN_INTERESTS, 60, perPage)
     const prospects = useSalesQuery<DirectorProspect>('prospect', API_ROUTES.SALES.DIRECTOR_PROSPECTS, undefined, perPage)
+    const deals = useSalesQuery<SalesDeal>('deal', API_ROUTES.SALES.DEALS, 60, perPage)
 
     const rows = useMemo(() => {
         const all = [
             ...itemsOf<PlanGift>(gifts.response as AnyPage<PlanGift>).map(giftRow),
             ...itemsOf<PlanInterest>(interests.response as AnyPage<PlanInterest>).map(interestRow),
             ...itemsOf<DirectorProspect>(prospects.response as AnyPage<DirectorProspect>).map(prospectRow),
+            ...itemsOf<SalesDeal>(deals.response as AnyPage<SalesDeal>).map(dealRow),
         ]
         /* Primero lo que espera respuesta y, dentro, quien lleva más tiempo esperando: lo tibio y lo
            cerrado se leen al revés, lo más nuevo arriba. */
@@ -206,20 +280,25 @@ export const useSalesQueue = () => {
             const stage = STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage]
             if (stage) return stage
             const wait = waitDays(b.since) - waitDays(a.since)
+            /* Los tratos, por el que paga primero */
+            if (a.kind === 'deal' && b.kind === 'deal' && a.stage === 'deal') {
+                return (a.deal.next_due?.due_on ?? '9999').localeCompare(b.deal.next_due?.due_on ?? '9999')
+            }
             return a.stage === 'waiting' || a.stage === 'closing' ? wait : -wait
         })
-    }, [gifts.response, interests.response, prospects.response])
+    }, [gifts.response, interests.response, prospects.response, deals.response])
 
     /* Lo que la API dice que hay en total, aunque no lo hayamos traído */
-    const total = totalOf(gifts.response as AnyPage<unknown>) + totalOf(interests.response as AnyPage<unknown>) + totalOf(prospects.response as AnyPage<unknown>)
+    const total = totalOf(gifts.response as AnyPage<unknown>) + totalOf(interests.response as AnyPage<unknown>)
+        + totalOf(prospects.response as AnyPage<unknown>) + totalOf(deals.response as AnyPage<unknown>)
 
     return {
         rows,
         total,
         missing: Math.max(0, total - rows.length),
         loadMore: () => setPerPage(value => value + 200),
-        loading: gifts.loading || interests.loading || prospects.loading,
-        loadingMore: gifts.isRefetching || interests.isRefetching || prospects.isRefetching,
+        loading: gifts.loading || interests.loading || prospects.loading || deals.loading,
+        loadingMore: gifts.isRefetching || interests.isRefetching || prospects.isRefetching || deals.isRefetching,
     }
 }
 
@@ -273,10 +352,27 @@ export const useSalesActions = () => {
         )
     }
 
-    return { busy, setGiftContacted, setGiftFulfilled, setInterestContacted }
+    /* «Quitar»: no era venta (ya subió, lo tocó por curiosidad). No se borra; el Deshacer lo regresa */
+    const setGiftDismissed = async (row: SalesRow & { kind: 'gift' }, dismissed: boolean) => {
+        await run('gift', row.id, API_ROUTES.SALES.PLAN_GIFT_DISMISSED, { dismissed })
+        undoable(
+            dismissed ? `Quitaste a ${firstName(row.who.name)} de la fila` : `${firstName(row.who.name)} vuelve a la fila`,
+            () => setGiftDismissed(row, !dismissed),
+        )
+    }
+
+    const setInterestDismissed = async (row: SalesRow & { kind: 'interest' }, dismissed: boolean) => {
+        await run('interest', row.id, API_ROUTES.SALES.PLAN_INTEREST_DISMISSED, { dismissed })
+        undoable(
+            dismissed ? `Quitaste a ${firstName(row.who.name)} de la fila` : `${firstName(row.who.name)} vuelve a la fila`,
+            () => setInterestDismissed(row, !dismissed),
+        )
+    }
+
+    return { busy, setGiftContacted, setGiftFulfilled, setInterestContacted, setGiftDismissed, setInterestDismissed }
 }
 
 /** Lo que la pantalla le pasa a cada fila para que pueda marcar sin volver a montar la mutación. */
 export type SalesActions = ReturnType<typeof useSalesActions>
 
-export type { DirectorProspect, PlanGift, PlanInterest }
+export type { DirectorProspect, PlanGift, PlanInterest, SalesDeal }

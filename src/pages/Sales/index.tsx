@@ -14,18 +14,22 @@ import './ventas.css'
 const GROUPS: Array<{ stage: SalesStage, title: string, hint: string }> = [
     { stage: 'waiting', title: 'Te esperan', hint: 'Arriba, quien lleva más tiempo esperando respuesta' },
     { stage: 'closing', title: 'Por cerrar', hint: 'Ya las contactaste: falta activar el plan o dar el premio' },
+    { stage: 'deal', title: 'Tratos en curso', hint: 'Regresaron con mes gratis o están probando un plan: cuánto pagan y cuándo' },
     { stage: 'warm', title: 'Andan mirando', hint: 'Tocaron un candado o miraron un plan, pero no lo han pedido' },
     { stage: 'done', title: 'Ya cerradas', hint: 'Los regalos y los planes, de los últimos 60 días' },
 ]
 
 const tallyOf = (rows: SalesRow[]): Tally => {
     const open = rows.filter(row => row.stage === 'waiting' || row.stage === 'closing')
+    const deals = rows.filter(row => row.stage === 'deal')
     return {
         pending: open.length,
         closing: rows.filter(row => row.stage === 'closing').length,
         warm: rows.filter(row => row.stage === 'warm').length,
         done: rows.filter(row => row.stage === 'done').length,
         monthly: open.reduce((sum, row) => sum + row.monthly, 0),
+        deals: deals.length,
+        dealsMonthly: deals.reduce((sum, row) => sum + row.monthly, 0),
     }
 }
 
@@ -47,18 +51,22 @@ const SalesPage = () => {
         gift: tallyOf(rows.filter(row => row.kind === 'gift')),
         interest: tallyOf(rows.filter(row => row.kind === 'interest')),
         prospect: tallyOf(rows.filter(row => row.kind === 'prospect')),
+        deal: tallyOf(rows.filter(row => row.kind === 'deal')),
     }), [rows])
 
     const shown = useMemo(() => rows.filter(row => {
         if (filter !== 'all' && row.kind !== filter) return false
-        if (pendingOnly && row.stage !== 'waiting' && row.stage !== 'closing') return false
+        /* Los tratos en curso también son trabajo: se ven aunque esté en «Sólo pendientes» */
+        if (pendingOnly && row.stage !== 'waiting' && row.stage !== 'closing' && row.stage !== 'deal') return false
         return true
     }), [rows, filter, pendingOnly])
 
     const waiting = tally.all.pending - tally.all.closing
     const verdict = waiting > 0
         ? `${waiting} ${waiting === 1 ? 'te espera' : 'te esperan'}.`
-        : tally.all.closing > 0 ? `${tally.all.closing} por cerrar.` : 'Nadie en la fila.'
+        : tally.all.closing > 0
+            ? `${tally.all.closing} por cerrar.`
+            : tally.all.deals > 0 ? `${tally.all.deals} ${tally.all.deals === 1 ? 'trato' : 'tratos'} en curso.` : 'Nadie en la fila.'
 
     return (
         <div className="grid min-w-0 grid-cols-1 items-start gap-[18px] xl:grid-cols-[290px_minmax(0,1fr)]">
@@ -72,7 +80,7 @@ const SalesPage = () => {
                     <PageHead
                         eyebrow="Clientas · Ventas"
                         title={<>Ventas. <em className={cn(waiting === 0 && tally.all.closing === 0 && '!bg-none !text-emerald-600 dark:!text-emerald-400')}>{verdict}</em></>}
-                        sub="Quién quiere subir de plan, quién quiere regalar Eyplease+ a su unidad y las Directoras que llegan invitadas. La app las anota; el trato se cierra aquí."
+                        sub="Quién quiere subir de plan, quién quiere regalar Eyplease+ a su unidad, las Directoras que llegan invitadas y los tratos que cerramos (regreso con mes gratis, prueba de plan) hasta su primer pago completo."
                     />
                 ) : (
                     <div className="flex items-center gap-2.5">
