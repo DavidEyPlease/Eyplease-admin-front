@@ -42,7 +42,7 @@ const WhatsAppInboxPage = () => {
     const { response: list, loading: listLoading } = useWaConversations(mode, search)
     const { response: conversation, loading: threadLoading } = useWaConversation(selectedWaId)
     const { response: clientCard, loading: cardLoading } = useWaClientCard(selectedWaId)
-    const { sendText, setTakeover, sending } = useWaActions(selectedWaId)
+    const { sendText, sendFile, setTakeover, sending } = useWaActions(selectedWaId)
 
     const conversations = useMemo(() => list?.items ?? [], [list])
 
@@ -78,6 +78,7 @@ const WhatsAppInboxPage = () => {
         loading: threadLoading,
         sending,
         onSend: sendText,
+        onSendFile: sendFile,
         onTakeover: setTakeover,
     }
 

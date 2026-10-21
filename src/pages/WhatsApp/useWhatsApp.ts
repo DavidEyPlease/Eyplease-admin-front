@@ -151,6 +151,17 @@ export function useWaActions(waId: string | null) {
         [run, waId]
     )
 
+    /** Un archivo con su pie opcional. Igual que el texto, tomar el chat es efecto del bot. */
+    const sendFile = useCallback(
+        (file: File, caption: string) => {
+            const body = new FormData()
+            body.append("file", file)
+            if (caption) body.append("caption", caption)
+            return run(`/whatsapp/conversations/${waId}/send-media`, body)
+        },
+        [run, waId]
+    )
+
     const setTakeover = useCallback(
         (active: boolean) => run(`/whatsapp/conversations/${waId}/takeover`, { active }),
         [run, waId]
@@ -161,7 +172,7 @@ export function useWaActions(waId: string | null) {
         [run, waId]
     )
 
-    return { sendText, setTakeover, sendTemplate, sending: busy }
+    return { sendText, sendFile, setTakeover, sendTemplate, sending: busy }
 }
 
 export function useWaTicketActions() {
