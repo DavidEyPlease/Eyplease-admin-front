@@ -72,6 +72,10 @@ const FinancePage = () => {
 
     const showPeriod = tab === "mes" || tab === "resumen" || tab === "gastos" || tab === "balance"
 
+    /* Tocar un mes en las barras de Balance o de Gastos lo vuelve el mes del periodo: así el selector de
+       arriba lo enseña y, al pasar a Gastos, ya está en ese mes. */
+    const selectMonth = (month: number) => setPeriod((p) => ({ ...p, month }))
+
     return (
         <div className="grid min-w-0 grid-cols-1 gap-y-5 sm:gap-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -86,7 +90,9 @@ const FinancePage = () => {
                 {showPeriod && (
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="w-36">
-                            <Dropdown placeholder="Mes" value={String(period.month)} items={MONTH_OPTIONS} onChange={(v) => setPeriod((p) => ({ ...p, month: Number(v) }))} />
+                            {/* `Dropdown` sólo toma el valor al montarse: con la `key` se vuelve a montar cuando el mes
+                                cambia desde fuera (al tocar un mes en las barras) y enseña el mes correcto */}
+                            <Dropdown key={period.month} placeholder="Mes" value={String(period.month)} items={MONTH_OPTIONS} onChange={(v) => setPeriod((p) => ({ ...p, month: Number(v) }))} />
                         </div>
                         <div className="w-28">
                             <Dropdown placeholder="Año" value={String(period.year)} items={YEAR_OPTIONS} onChange={(v) => setPeriod((p) => ({ ...p, year: Number(v) }))} />
@@ -135,8 +141,8 @@ const FinancePage = () => {
             {tab === "resumen" && <SummaryTab period={period} />}
             {tab === "cobranza" && <CollectionsTab year={period.year} onOpenDetail={setDetailId} />}
             {tab === "pagos" && <PaymentsTab year={period.year} />}
-            {tab === "gastos" && <ExpensesTab period={period} />}
-            {tab === "balance" && <BalanceTab period={period} />}
+            {tab === "gastos" && <ExpensesTab period={period} onSelectMonth={selectMonth} />}
+            {tab === "balance" && <BalanceTab period={period} onSelectMonth={selectMonth} onEditExpenses={() => setTab("gastos")} />}
             {tab === "proyeccion" && <ProjectionTab period={period} />}
             {tab === "promociones" && <PromotionsTab />}
             {tab === "metodos-pago" && <PaymentMethodsTab />}

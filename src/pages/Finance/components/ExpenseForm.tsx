@@ -45,6 +45,12 @@ const ExpenseForm = ({ expense, fallbackDate, loading, onSubmit, onCancelEdit }:
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [expense])
 
+    /* Al cambiar de mes (selector o barras) el gasto nuevo se fecha en ese mes; lo ya escrito se queda */
+    useEffect(() => {
+        if (!expense) setValue("date", buildExpenseDefaults(null, fallbackDate).date)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fallbackDate.getTime()])
+
     const submit = handleSubmit(async (values) => {
         await onSubmit(values)
         if (!expense) reset(buildExpenseDefaults(null, fallbackDate))

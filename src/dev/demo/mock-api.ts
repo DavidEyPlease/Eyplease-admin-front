@@ -203,8 +203,25 @@ const financeSummary = (month: number) => ({
     plan_distribution: [{ plan: 'Plan de ejemplo A', count: 41, revenue: 28290 }, { plan: 'Plan de ejemplo B', count: 33, revenue: 32670 }, { plan: 'Plan de ejemplo C', count: 24, revenue: 35760 }],
     month_summary: summaryMonth(month), months: monthsSoFar.map(summaryMonth),
 })
+const expenseOf = (month: number) => 21000 + ((month * 3571) % 6000)
+
+/* Gastos de EJEMPLO por mes, que suman lo mismo que la barra de gasto del Balance de la demo (el último
+   renglón cuadra la diferencia). Conceptos genéricos, no los de la cuenta real. */
+const financeExpenses = () => monthsSoFar.flatMap(month => {
+    const day = (d: number) => `${now.getFullYear()}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const base = [
+        { description: 'Servidor (ejemplo)', amount: 1771.25, category: 'tools', date: day(8) },
+        { description: 'Almacenamiento en la nube (ejemplo)', amount: 1620.17, category: 'tools', date: day(8) },
+        { description: 'Suscripción de IA (ejemplo)', amount: 3618.86, category: 'tools', date: day(24) },
+        { description: 'Generación de imágenes y video (ejemplo)', amount: 2410.82 + month * 37, category: 'tools', date: day(28) },
+    ]
+    const rest = expenseOf(month) - base.reduce((acc, item) => acc + item.amount, 0)
+    return [...base, { description: 'Equipo de diseño (ejemplo)', amount: Math.round(rest * 100) / 100, category: 'team', date: day(15) }]
+        .map((item, index) => ({ id: `exp-${month}-${index}`, ...item }))
+})
+
 const financeBalance = () => {
-    const months = monthsSoFar.map(month => { const income = incomeOf(month); const expense = 21000 + ((month * 3571) % 6000); return { month, income, expense, balance: income - expense } })
+    const months = monthsSoFar.map(month => { const income = incomeOf(month); const expense = expenseOf(month); return { month, income, expense, balance: income - expense } })
     const sum = (key: 'income' | 'expense' | 'balance') => months.reduce((acc, item) => acc + item[key], 0)
     return { year: now.getFullYear(), year_income: sum('income'), year_expense: sum('expense'), year_balance: sum('balance'), months }
 }
@@ -916,7 +933,7 @@ export const installMockApi = () => {
         else if (/^\/copilot\/conversations\/[^/]+$/.test(path) && method === 'DELETE') { delete copilotThreads[path.split('/')[3]]; response = respond(true) }
         else if (path === '/finance/summary') response = respond(financeSummary(Number(url.searchParams.get('month')) || now.getMonth() + 1))
         else if (path === '/finance/balance') response = respond(financeBalance())
-        else if (path === '/finance/expenses') response = respond([])
+        else if (path === '/finance/expenses') response = respond(method === 'GET' ? financeExpenses() : [])
         else if (path === '/promotions' && method === 'GET') response = respond([])
         /* Ojo: son DOS rutas con formas distintas. Ésta la usa «Gestionar» de Cobranza; `/config`, la pestaña Métodos de pago */
         else if (path === '/finance/payment-methods' && method === 'GET') response = respond({ stripe: { enabled: true }, transfer: { enabled: true, accounts: [{ bank: 'Banco de ejemplo', beneficiary: 'Empresa de ejemplo', number: '0000 0000 0000 0000', numberType: 'clabe' }], instructions: 'Instrucciones de EJEMPLO.' } })

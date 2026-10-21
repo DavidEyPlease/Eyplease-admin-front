@@ -19,7 +19,7 @@ const tooltipStyle = {
 const categoryBadgeCls = "inline-flex items-center rounded-full bg-foreground/[.06] px-2 py-0.5 text-xs font-medium text-muted-foreground"
 const rowActionCls = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition"
 
-const ExpensesTab = ({ period }: { period: { year: number; month: number } }) => {
+const ExpensesTab = ({ period, onSelectMonth }: { period: { year: number; month: number }; onSelectMonth?: (month: number) => void }) => {
     const { expenses, loading, createExpense, updateExpense, deleteExpense, mutating } = useExpenses(period.year)
     const monthIndex = period.month - 1
     const monthLabel = MONTH_LABELS[monthIndex] ?? String(period.month)
@@ -92,11 +92,19 @@ const ExpensesTab = ({ period }: { period: { year: number; month: number } }) =>
             <Panel>
                 <div className="px-5 pt-5">
                     <h3 className="text-sm font-semibold text-foreground">Historial mensual {period.year}</h3>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Gasto total por mes. El mes seleccionado está resaltado.</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Gasto total por mes. Toca una barra para ver los gastos de ese mes.</p>
                 </div>
                 <div className="p-4 pt-2">
                     <ResponsiveContainer width="100%" height={220}>
-                        <BarChart data={history}>
+                        {/* El clic es de la gráfica, no de la barra: vale en toda la columna del mes, aunque la barra sea chica o no haya gasto */}
+                        <BarChart
+                            data={history}
+                            className={onSelectMonth ? "cursor-pointer" : undefined}
+                            onClick={(state) => {
+                                const idx = state?.activeTooltipIndex
+                                if (typeof idx === "number" && history[idx]) onSelectMonth?.(history[idx].monthIndex + 1)
+                            }}
+                        >
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis dataKey="label" tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
