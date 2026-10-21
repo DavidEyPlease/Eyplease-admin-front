@@ -94,3 +94,7 @@
     .soc-day-name { display: inline; }
     .soc-add { opacity: 1; }
 }
+
+/* Estado de WhatsApp: la miniatura lleva la marca verde en la esquina */
+.soc-wa { position: relative; display: block; flex: 0 0 auto; }
+.soc-wa > i { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; border-radius: 50%; background: #25D366; box-shadow: 0 0 0 2px var(--card); }

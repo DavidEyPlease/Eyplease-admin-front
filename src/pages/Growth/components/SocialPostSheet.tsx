@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDownIcon, ArrowUpIcon, CheckIcon, ExternalLinkIcon, ImagePlusIcon, Loader2Icon, RotateCcwIcon, SendIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CheckIcon, DownloadIcon, ExternalLinkIcon, ImagePlusIcon, Loader2Icon, RotateCcwIcon, SendIcon, Trash2Icon, XIcon } from 'lucide-react'
 
 import { SocialChannel, SocialFormat, SocialMedia, SocialPost, SocialPostInput } from '@/interfaces/social'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/uishadcn/ui/sheet'
 
-import { CHANNELS, FLOW, FORMATS, STATUS, flowStep, fromLocalInput, missingToApprove, timeText, toLocalInput } from '../social.utils'
-import { SocialActions } from '../useSocial'
+import { CHANNELS, FLOW, FORMATS, STATUS, flowStep, fromLocalInput, missingToApprove, statusLabel, timeText, toLocalInput } from '../social.utils'
+import { SocialActions, downloadMedia } from '../useSocial'
 
 interface Props {
     open: boolean
@@ -38,6 +38,8 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
     const [media, setMedia] = useState<SocialMedia[]>([])
     const [note, setNote] = useState('')
     const [asking, setAsking] = useState(false)
+    const [waViews, setWaViews] = useState('')
+    const [waReplies, setWaReplies] = useState('')
     const fileRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -51,6 +53,8 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
         setMedia(post?.media ?? [])
         setNote('')
         setAsking(false)
+        setWaViews(post?.metrics?.wa?.views != null ? String(post.metrics.wa.views) : '')
+        setWaReplies(post?.metrics?.wa?.replies != null ? String(post.metrics.wa.replies) : '')
     }, [open, post, defaultDate])
 
     const editable = !post || ['idea', 'production', 'review', 'failed'].includes(post.status)
@@ -101,7 +105,7 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
                     <SheetTitle className="pr-8 text-[17px] font-extrabold tracking-tight">{post ? post.title : 'Publicación nueva'}</SheetTitle>
                     <SheetDescription className="text-[12px]">
                         {post
-                            ? <span className={cn('pulse-tag', STATUS[post.status].tone)}>{STATUS[post.status].label}</span>
+                            ? <span className={cn('pulse-tag', STATUS[post.status].tone)}>{statusLabel(post)}</span>
                             : 'Guárdala como idea o, con su pieza, déjala por aprobar.'}
                         {post?.approved_by && post.status === 'scheduled' && <span className="ml-2">Aprobó {post.approved_by.split(' ')[0]}</span>}
                     </SheetDescription>
@@ -143,6 +147,10 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
                                         ? <video src={item.url} className="size-full object-cover" muted playsInline />
                                         : <img src={item.url} alt="" className="size-full object-cover" />}
                                     <span className="absolute top-1.5 left-1.5 grid size-5 place-items-center rounded-full bg-black/60 text-[10px] font-extrabold text-white">{index + 1}</span>
+                                    {/* Bajarla para subirla a mano (el estado de WhatsApp): en el teléfono abre «Compartir» */}
+                                    <button type="button" title="Descargar" className="absolute top-1.5 right-1.5 grid size-7 place-items-center rounded-full bg-black/60 text-white" onClick={() => downloadMedia(item, `${title || 'eyplease'}-${index + 1}`)}>
+                                        <DownloadIcon className="size-3.5" />
+                                    </button>
                                     {editable && (
                                         <div className="absolute inset-x-1.5 bottom-1.5 flex justify-between opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                                             <span className="flex gap-1">
@@ -192,6 +200,9 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
                                     </button>
                                 ))}
                             </div>
+                            {channels.includes('wa') && (
+                                <small className="text-[11px] leading-snug text-muted-foreground">El estado de WhatsApp lo subes tú: a su hora te llega el aviso, lo descargas aquí y lo subes.</small>
+                            )}
                         </div>
                         <label className="grid gap-1.5">
                             <span className={LABEL}>Cuándo</span>
@@ -215,7 +226,19 @@ const SocialPostSheet = ({ open, post, defaultDate, pillars, actions, onClose, o
                         <textarea className={cn(FIELD, 'min-h-[150px] resize-y leading-relaxed')} value={caption} disabled={!editable} onChange={event => setCaption(event.target.value)} placeholder="Lo que dice el post. En Instagram las ligas no se pueden tocar: di «liga en la bio»." />
                     </label>
 
-                    {metrics && (
+                    {post && post.channels.includes('wa') && ['scheduled', 'published'].includes(post.status) && (
+                        <div className="grid gap-1.5">
+                            <span className={LABEL}>Cómo le fue a tu estado</span>
+                            <div className="flex flex-wrap items-end gap-2">
+                                <label className="grid gap-1"><small className="text-[11px] text-muted-foreground">Lo vieron</small><input inputMode="numeric" className={cn(FIELD, 'w-[110px]')} value={waViews} onChange={event => setWaViews(event.target.value.replace(/\D/g, ''))} placeholder="0" /></label>
+                                <label className="grid gap-1"><small className="text-[11px] text-muted-foreground">Te contestaron</small><input inputMode="numeric" className={cn(FIELD, 'w-[110px]')} value={waReplies} onChange={event => setWaReplies(event.target.value.replace(/\D/g, ''))} placeholder="0" /></label>
+                                <button type="button" disabled={working} className="vta-btn" onClick={async () => { const done = await actions.saveWhatsAppMetrics(post, waViews === '' ? null : Number(waViews), waReplies === '' ? null : Number(waReplies)); if (done) onSaved(done) }}>Anotar</button>
+                            </div>
+                            <small className="text-[11px] text-muted-foreground">En WhatsApp: abre tu estado y desliza hacia arriba para ver quién lo vio.</small>
+                        </div>
+                    )}
+
+                    {metrics && (metrics.ig || metrics.fb) && (
                         <div className="grid gap-2">
                             <span className={LABEL}>Cómo le fue {post?.metrics_at && <span className="normal-case tracking-normal">· {timeText(post.metrics_at)}</span>}</span>
                             {(['ig', 'fb'] as SocialChannel[]).filter(channel => metrics[channel]).map(channel => (

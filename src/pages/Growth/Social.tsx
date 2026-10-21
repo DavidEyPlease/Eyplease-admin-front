@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { AlertTriangleIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 
 import { SocialPost } from '@/interfaces/social'
@@ -8,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 import GrowthTabs from './components/GrowthTabs'
 import SocialPostSheet from './components/SocialPostSheet'
-import { STATUS, addDays, channelsText, dayText, formatLabel, missingToApprove, sameDay, timeText, weekStart, ymd } from './social.utils'
+import { STATUS, addDays, channelsText, dayText, formatLabel, missingToApprove, sameDay, statusLabel, timeText, weekStart, ymd } from './social.utils'
 import { useSocialActions, useSocialCalendar } from './useSocial'
 import '@/pages/Hoy/hoy.css'
 import '@/pages/Sales/ventas.css'
@@ -16,12 +17,17 @@ import './growth.css'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-const Thumb = ({ post, className }: { post: Pick<SocialPost, 'media'>, className?: string }) => {
+const Thumb = ({ post, className }: { post: Pick<SocialPost, 'media' | 'channels'>, className?: string }) => {
     const first = post.media[0]
-    if (!first) return <span className={cn('soc-thumb empty', className)} />
-    return first.type === 'video'
-        ? <video src={first.url} muted playsInline className={cn('soc-thumb', className)} />
-        : <img src={first.url} alt="" className={cn('soc-thumb', className)} />
+    const wa = post.channels?.includes('wa')
+    const body = !first
+        ? <span className={cn('soc-thumb empty', className)} />
+        : first.type === 'video'
+            ? <video src={first.url} muted playsInline className={cn('soc-thumb', className)} />
+            : <img src={first.url} alt="" className={cn('soc-thumb', className)} />
+    if (!wa) return body
+    /* El estado de WhatsApp se distingue de un vistazo: la marca verde en la esquina */
+    return <span className="soc-wa">{body}<i title="Estado de WhatsApp" /></span>
 }
 
 /**
@@ -33,8 +39,20 @@ const GrowthSocialPage = () => {
     const { response, loading } = useSocialCalendar(start)
     const actions = useSocialActions()
     const [sheet, setSheet] = useState<{ open: boolean, post: SocialPost | null, date?: string | null }>({ open: false, post: null })
+    const [params, setParams] = useSearchParams()
 
     const items = useMemo(() => response?.items ?? [], [response])
+
+    /* El aviso «Toca tu estado de WhatsApp» abre directo su ficha (?post=id) para descargarlo */
+    const wanted = params.get('post')
+    useEffect(() => {
+        if (!wanted) return
+        const found = items.find(post => post.id === wanted)
+        if (found) {
+            setSheet({ open: true, post: found })
+            setParams(prev => { const next = new URLSearchParams(prev); next.delete('post'); return next }, { replace: true })
+        }
+    }, [wanted, items, setParams])
     const pending = items.filter(post => post.status === 'review')
     const failed = items.filter(post => post.status === 'failed')
     const undated = items.filter(post => !post.scheduled_at)
@@ -53,7 +71,7 @@ const GrowthSocialPage = () => {
                 ? <PageHead
                     eyebrow="Crecimiento · Redes"
                     title={<>Redes. <em className={cn(!pending.length && !failed.length && '!bg-none !text-emerald-600 dark:!text-emerald-400')}>{loading ? '' : verdict}</em></>}
-                    sub="El calendario de Instagram y Facebook. Tú apruebas; lo aprobado se publica solo a su hora."
+                    sub="El calendario de Instagram, Facebook y tu estado de WhatsApp. Tú apruebas; lo de Instagram y Facebook se publica solo a su hora, y tu estado te avisa para que lo subas."
                 >
                     <button type="button" className="vta-btn gro-primary" onClick={() => setSheet({ open: true, post: null })}><PlusIcon className="size-3.5" /> Nueva publicación</button>
                 </PageHead>
@@ -99,7 +117,7 @@ const GrowthSocialPage = () => {
                                     <div className="grid min-w-0 flex-1 content-start gap-1.5 p-3">
                                         <button type="button" onClick={() => openPost(post)} className="truncate text-left text-[14px] font-extrabold">{post.title}</button>
                                         <div className="flex flex-wrap gap-1">
-                                            <span className={cn('pulse-tag', STATUS[post.status].tone)}>{STATUS[post.status].label}</span>
+                                            <span className={cn('pulse-tag', STATUS[post.status].tone)}>{statusLabel(post)}</span>
                                             <span className="pulse-tag">{formatLabel(post.format)}</span>
                                         </div>
                                         <small className="text-[11.5px] text-muted-foreground">{dayText(post.scheduled_at)}{post.scheduled_at && ` · ${timeText(post.scheduled_at)}`} · {channelsText(post.channels)}</small>
@@ -152,7 +170,7 @@ const GrowthSocialPage = () => {
                                         <Thumb post={post} />
                                         <span className="min-w-0">
                                             <b className="block truncate text-[11px]">{post.title}</b>
-                                            <small className="flex items-center gap-1 text-[10.5px] text-muted-foreground"><i className="gro-dot !size-[7px]" style={{ background: STATUS[post.status].dot }} />{timeText(post.scheduled_at)} · {STATUS[post.status].label}</small>
+                                            <small className="flex items-center gap-1 text-[10.5px] text-muted-foreground"><i className="gro-dot !size-[7px]" style={{ background: STATUS[post.status].dot }} />{timeText(post.scheduled_at)} · {statusLabel(post)}</small>
                                         </span>
                                     </button>
                                 ))}
@@ -164,6 +182,7 @@ const GrowthSocialPage = () => {
                     {(['idea', 'production', 'review', 'scheduled', 'published'] as const).map(status => (
                         <span key={status} className="pulse-tag"><i className="gro-dot !size-[7px]" style={{ background: STATUS[status].dot }} />{STATUS[status].label}</span>
                     ))}
+                    <span className="pulse-tag"><i className="gro-dot !size-[7px]" style={{ background: '#25D366' }} />Estado de WhatsApp</span>
                 </div>
                 {undated.length > 0 && (
                     <div className="mt-4 border-t border-border pt-3">

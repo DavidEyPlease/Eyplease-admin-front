@@ -28,7 +28,18 @@ export const formatLabel = (format: SocialFormat) => FORMATS.find(item => item.k
 export const CHANNELS: Array<{ key: SocialChannel, label: string }> = [
     { key: 'ig', label: 'Instagram' },
     { key: 'fb', label: 'Facebook' },
+    { key: 'wa', label: 'Estado de WhatsApp' },
 ]
+
+/** Sólo va al estado de WhatsApp: no la publica el servidor, la sube David (aquí queda el registro y la pieza). */
+export const isWhatsAppOnly = (post: Pick<SocialPost, 'channels'>) => post.channels.length > 0 && post.channels.every(channel => channel === 'wa')
+
+/** El nombre del paso: un estado de WhatsApp no «se publica», lo subes tú. */
+export const statusLabel = (post: Pick<SocialPost, 'channels' | 'status'>) => {
+    if (isWhatsAppOnly(post) && post.status === 'scheduled') return 'Lo subes tú'
+    if (isWhatsAppOnly(post) && post.status === 'published') return 'Listo'
+    return STATUS[post.status].label
+}
 export const channelsText = (channels: SocialChannel[]) =>
     CHANNELS.filter(item => channels.includes(item.key)).map(item => item.label).join(' + ') || 'Sin red'
 
@@ -68,6 +79,6 @@ export const missingToApprove = (post: SocialPost): string[] => [
     !post.media.length && 'la imagen o el video',
     !post.channels.length && 'en qué red sale',
     !post.scheduled_at && 'fecha y hora',
-    post.format !== 'story' && !(post.caption ?? '').trim() && 'el texto',
+    post.format !== 'story' && !isWhatsAppOnly(post) && !(post.caption ?? '').trim() && 'el texto',
     post.format === 'reel' && !post.media.some(item => item.type === 'video') && 'un video (es reel)',
 ].filter((item): item is string => !!item)

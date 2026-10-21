@@ -215,5 +215,6 @@ export const API_ROUTES = {
         UNSCHEDULE: '/social/posts/{id}/unschedule',
         PUBLISH_NOW: '/social/posts/{id}/publish-now',
         MEDIA: '/social/media',
+        WHATSAPP_METRICS: '/social/posts/{id}/whatsapp-metrics',
     },
 }

@@ -2,7 +2,8 @@
 
 export type SocialStatus = 'idea' | 'production' | 'review' | 'scheduled' | 'publishing' | 'published' | 'failed'
 export type SocialFormat = 'post' | 'carousel' | 'story' | 'reel'
-export type SocialChannel = 'ig' | 'fb'
+/** `wa` = el estado de WhatsApp de David: se registra en el calendario, pero lo sube él desde su teléfono. */
+export type SocialChannel = 'ig' | 'fb' | 'wa'
 
 export interface SocialMedia {
     url: string
@@ -17,6 +18,8 @@ export interface SocialChannelMetrics {
     saved?: number | null
     shares?: number | null
     replies?: number | null
+    /** Estado de WhatsApp: los apunta David */
+    views?: number | null
 }
 
 export interface SocialPost {

@@ -94,7 +94,42 @@ export const useSocialActions = () => {
         }
     }
 
-    return { busy, save, approve, requestChange, unschedule, publishNow, remove, upload }
+    /** Lo que vio tu estado de WhatsApp (lo ves en tu teléfono y lo apuntas aquí). */
+    const saveWhatsAppMetrics = async (post: SocialPost, views: number | null, replies: number | null) => {
+        const done = await run<SocialPost>(post.id, () => request<Record<string, number | null>, SocialPost>('PATCH', API_ROUTES.SOCIAL.WHATSAPP_METRICS.replace('{id}', post.id), { views, replies }))
+        if (done) toast.success('Anotado.')
+        return done
+    }
+
+    return { busy, save, approve, requestChange, unschedule, publishNow, remove, upload, saveWhatsAppMetrics }
 }
 
 export type SocialActions = ReturnType<typeof useSocialActions>
+
+/**
+ * Bajar una pieza para subirla a mano (el estado de WhatsApp). En el teléfono abre «Compartir», que deja guardarla en
+ * Fotos o mandarla directo a WhatsApp; en la compu la descarga. El CDN deja leerla (CORS abierto).
+ */
+export const downloadMedia = async (item: SocialMedia, name: string) => {
+    try {
+        const blob = await (await fetch(item.url)).blob()
+        const ext = item.type === 'video' ? 'mp4' : (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')
+        const filename = `${name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'eyplease'}.${ext}`
+        const file = new File([blob], filename, { type: blob.type })
+        const touch = window.matchMedia('(pointer: coarse)').matches
+        if (touch && navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file] })
+            return
+        }
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        setTimeout(() => URL.revokeObjectURL(link.href), 4000)
+    } catch (error) {
+        if ((error as Error)?.name === 'AbortError') return
+        window.open(item.url, '_blank', 'noopener')
+    }
+}

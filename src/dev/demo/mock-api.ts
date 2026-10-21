@@ -85,6 +85,11 @@ const socialPosts: Array<Record<string, unknown>> = [
     { id: 'sp-5', title: '5 cosas que tu unidad agradece', pillar: 'tip', format: 'carousel', channels: ['ig', 'fb'], caption: null, media: [], scheduled_at: socialDay(6, 11), status: 'production', change_note: 'La portada más cálida', approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
     { id: 'sp-6', title: 'Círculo Rosa: el lugar al que llegas', pillar: 'reconocimiento', format: 'post', channels: ['ig', 'fb'], caption: null, media: [], scheduled_at: null, status: 'idea', change_note: null, approved_at: null, approved_by: null, created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
 ]
+// Estados de WhatsApp de David: se registran aquí; él los sube desde su teléfono
+socialPosts.push(
+    { id: 'sp-7', title: 'Estado: Pruébala un mes gratis', pillar: 'app', format: 'story', channels: ['wa'], caption: null, media: [{ url: demoBaseImg, type: 'image' }], scheduled_at: socialDay(-1, 10), status: 'published', change_note: null, approved_at: iso(1500), approved_by: 'Administración Demo', created_by: 'Claude', published_at: iso(1440), results: { wa: { id: null } }, last_error: null, attempts: 1, metrics: { wa: { views: 87, replies: 3 } }, metrics_at: null },
+    { id: 'sp-8', title: 'Estado: Mientras descansas con tu familia', pillar: 'app', format: 'story', channels: ['wa'], caption: null, media: [{ url: demoPieceImg, type: 'image' }], scheduled_at: socialDay(3, 10), status: 'scheduled', change_note: null, approved_at: iso(60), approved_by: 'Administración Demo', created_by: 'Claude', published_at: null, results: null, last_error: null, attempts: 0, metrics: null, metrics_at: null },
+)
 const socialPillars = [['app', 'La app en acción', 5], ['prueba', 'Prueba social', 4], ['dolor', 'Dolor → alivio', 3], ['tip', 'Tip de valor', 3], ['adentro', 'Desde adentro', 2], ['reconocimiento', 'Reconocimiento', 2]] as const
 const socialCalendar = (from: string, to: string) => {
     const inRange = (post: Record<string, unknown>) => !post.scheduled_at ? post.status !== 'published' : String(post.scheduled_at).slice(0, 10) >= from && String(post.scheduled_at).slice(0, 10) <= to
@@ -1031,6 +1036,13 @@ export const installMockApi = () => {
                 await wait(250)
                 response = respond(next)
             }
+        }
+        else if (/^\/social\/posts\/[^/]+\/whatsapp-metrics$/.test(path) && method === 'PATCH') {
+            const post = socialPosts.find(item => item.id === path.split('/')[3])!
+            const body = JSON.parse(String(init?.body ?? '{}')) as { views?: number | null, replies?: number | null }
+            post.metrics = { ...(post.metrics as object ?? {}), wa: { views: body.views ?? null, replies: body.replies ?? null } }
+            await wait(250)
+            response = respond(post)
         }
         else if (/^\/social\/posts\/[^/]+\/(approve|request-change|unschedule|publish-now)$/.test(path) && method === 'POST') {
             const [, , , id, action] = path.split('/')
