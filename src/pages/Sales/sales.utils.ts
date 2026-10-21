@@ -64,26 +64,46 @@ export const waitTone = (iso: string | null | undefined): 'plain' | 'warn' | 'ba
     return days >= 7 ? 'bad' : days >= 2 ? 'warn' : 'plain'
 }
 
-/* ── Los mensajes de WhatsApp ───────────────────────────────────────────────────────────────── */
+/* ── Los mensajes listos para copiar (y para la liga de WhatsApp) ─────────────────────────────── */
+/* En la voz de David con sus clientas: de usted, cálido, sin emojis y con una pregunta que se contesta con un sí
+   (David, 21-oct: «Buenos días, Directora, ¿cómo está? Veo que quiere regalar el plan…, ¿me puede confirmar para que
+   hagamos su activación?»). El saludo va con la hora del día en que se arma la fila. */
+
+/** «Buenos días» hasta mediodía, «Buenas tardes» hasta las 7 de la noche y «Buenas noches» después. */
+export const greeting = (date = new Date()) => {
+    const hour = date.getHours()
+    return hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches'
+}
+
+/** A una Directora: «Buenos días, Directora Gloria, ¿cómo está?» */
+export const helloDirector = (name: string | null | undefined) => {
+    const first = firstName(name)
+    return `${greeting()}, Directora${first ? ` ${first}` : ''}, ¿cómo está?`
+}
+
+/** A una consultora, por su nombre: «Buenos días, Ana, ¿cómo está?» */
+const helloConsultant = (name: string | null | undefined) => {
+    const first = firstName(name)
+    return `${greeting()}${first ? `, ${first}` : ''}, ¿cómo está?`
+}
 
 export const giftMessage = (gift: PlanGift) => {
-    const directora = firstName(gift.user?.network_person?.name ?? gift.user?.name)
+    const hello = helloDirector(gift.user?.network_person?.name ?? gift.user?.name)
+    const plan = gift.plan?.name ?? 'plan'
     return gift.kind === 'gift'
-        ? `Hola ${directora} 💜 Vimos que quieres regalarle Eyplease+ a ${firstName(gift.person?.name)}. Te ayudo a activarlo: `
-        : `Hola ${directora} 💜 Vimos que quieres Eyplease+ para ${gift.quantity} consultoras de tu unidad. Te paso cómo lo activamos: `
+        ? `${hello} Veo que quiere regalarle el ${plan} a ${firstName(gift.person?.name) || 'una consultora de su unidad'}. ¿Me confirma para que hagamos su activación?`
+        : `${hello} Veo que quiere el ${plan} para ${gift.quantity} consultoras de su unidad. ¿Me confirma para que hagamos su activación?`
 }
 
-export const interestMessage = (item: PlanInterest) => {
-    const name = firstName(item.user?.network_person?.name ?? item.user?.name)
-    return `Hola ${name} 💜 Vimos que te interesa el ${item.plan?.name ?? 'siguiente plan'} en Eyplease+. Te cuento qué incluye y cómo lo activamos: `
-}
+export const interestMessage = (item: PlanInterest) =>
+    `${helloDirector(item.user?.network_person?.name ?? item.user?.name)} Veo que le interesa el ${item.plan?.name ?? 'siguiente plan'}. ¿Me confirma para que hagamos su cambio de plan?`
 
 export const prospectDirectorMessage = (item: DirectorProspect) =>
-    `Hola ${firstName(item.director_name)} 💜 ${firstName(item.invited_by?.name)}, de tu unidad, ya usa Eyplease+ y te invitó. Te cuento cómo funciona y cómo crear tu cuenta gratis: `
+    `${helloDirector(item.director_name)} ${firstName(item.invited_by?.name) || 'Una consultora'}, de su unidad, la invitó a Eyplease+. ¿Le gustaría que le enseñe cómo funciona? Puede empezar con un mes gratis.`
 
 export const prospectConsultantMessage = (item: DirectorProspect) =>
-    `Hola ${firstName(item.invited_by?.name)} 💜 Vimos que invitaste a tu Directora ${firstName(item.director_name)} a Eyplease+. ¿Te ayudamos a que entre? Recuerda que al hacerlo te regalamos ${item.reward_months} meses.`
+    `${helloConsultant(item.invited_by?.name)} Vi que invitó a su Directora ${firstName(item.director_name)} a Eyplease+. ¿Le ayudamos a que entre? Cuando ella cree su cuenta con ese correo, usted recibe ${item.reward_months} meses de regalo.`
 
-/** Al trato no se le vende nada: se le saluda (y se le recuerda su pago si hace falta) desde su propio WhatsApp. */
+/** Al trato no se le vende nada: sólo el saludo, para escribirle desde su propio WhatsApp. */
 export const dealMessage = (deal: SalesDeal) =>
-    `Hola ${firstName(deal.user.network_person?.name ?? deal.user.name)} 💜 `
+    helloDirector(deal.user.network_person?.name ?? deal.user.name)

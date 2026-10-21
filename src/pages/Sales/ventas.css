@@ -50,3 +50,6 @@
 .vta-pick:hover { background: color-mix(in oklab, var(--foreground) 5%, transparent); }
 .vta-pick.on { background: color-mix(in oklab, #6C47FF 13%, transparent); }
 .vta-pick small { display: block; font-size: 10.5px; line-height: 1.3; color: var(--muted-foreground); }
+
+/* El mensaje listo para copiar: se lee completo en dos renglones y el resto al pasar el ratón */
+.vta-msg { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; border-radius: 12px; padding: 8px 11px; font-size: 12px; line-height: 1.45; color: color-mix(in oklab, var(--foreground) 82%, transparent); background: color-mix(in oklab, #6C47FF 7%, transparent); border: 1px solid color-mix(in oklab, #6C47FF 16%, transparent); }

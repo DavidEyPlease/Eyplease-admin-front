@@ -1,4 +1,4 @@
-import { ArchiveIcon, CheckIcon, GiftIcon, HandshakeIcon, HeartHandshakeIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
+import { ArchiveIcon, CheckIcon, CopyIcon, GiftIcon, HandshakeIcon, HeartHandshakeIcon, MailIcon, PackageIcon, PhoneIcon, RotateCcwIcon, TrendingUpIcon, UserPlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
@@ -106,6 +106,11 @@ const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actio
 
             {row.note && <p className="mt-1.5 text-[11.5px] leading-snug text-muted-foreground">{row.note}</p>}
 
+            {/* El mensaje listo: se lee aquí y se copia de un clic para pegarlo en su WhatsApp */}
+            {row.message && (
+                <p className="vta-msg mt-2.5" title={row.message}>«{row.message}»</p>
+            )}
+
             <div className="mt-2 flex flex-wrap items-center gap-x-3">
                 <Copy icon={PhoneIcon} value={row.who.phone} />
                 <Copy icon={MailIcon} value={row.who.email} />
@@ -114,6 +119,23 @@ const QueueRow = ({ row, index, actions }: { row: SalesRow, index: number, actio
             <div className="mt-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-border pt-3">
                 <Steps steps={row.steps} step={row.step} />
                 <div className="flex flex-wrap items-center gap-2">
+                    {row.message && (
+                        <button
+                            type="button"
+                            className="vta-btn"
+                            onClick={async () => {
+                                /* El saludo («Buenos días / tardes / noches») sale de la hora en que se armó la fila; la lista se refresca sola */
+                                try {
+                                    await navigator.clipboard.writeText(row.message ?? '')
+                                    toast.success('Mensaje copiado: pégalo en su WhatsApp')
+                                } catch {
+                                    toast.error('No se pudo copiar solo: selecciona el mensaje y cópialo')
+                                }
+                            }}
+                        >
+                            <CopyIcon className="size-3.5" /> Copiar mensaje
+                        </button>
+                    )}
                     {row.wa.map(link => (
                         <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="vta-btn wa">{link.label}</a>
                     ))}

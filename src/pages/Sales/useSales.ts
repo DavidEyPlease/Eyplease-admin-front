@@ -11,7 +11,7 @@ import { money, monthName } from '@/pages/Hoy/lib'
 import { titleCase } from '@/pages/Clients/List/names'
 import { queryKeys } from '@/utils/queryKeys'
 
-import { agoText, dealMessage, featureText, firstName, giftMessage, interestMessage, prospectConsultantMessage, prospectDirectorMessage, signalsText, waLink, waitDays } from './sales.utils'
+import { agoText, dealMessage, featureText, firstName, giftMessage, helloDirector, interestMessage, prospectConsultantMessage, prospectDirectorMessage, signalsText, waLink, waitDays } from './sales.utils'
 
 export type SalesKind = 'gift' | 'interest' | 'prospect' | 'deal' | 'referral'
 
@@ -47,6 +47,8 @@ interface RowBase {
     /** Cuántos de esos pasos ya están dados. */
     step: number
     wa: Array<{ label: string, href: string }>
+    /** El mensaje listo para copiar y pegar en WhatsApp (el mismo que lleva la liga). Sin él no hay botón. */
+    message?: string
     /** La etiqueta de arriba a la derecha, cuando no es la de siempre (cuánto espera / el paso) */
     tag?: { text: string, tone: 'plain' | 'warn' | 'bad' | 'ok' }
 }
@@ -70,7 +72,8 @@ const withCode = (name: string | null | undefined, code: string | null | undefin
 const giftRow = (gift: PlanGift): SalesRow => {
     const plan = gift.plan?.name ?? 'Eyplease+'
     const isGift = gift.kind === 'gift'
-    const href = waLink(gift.user?.phone, giftMessage(gift))
+    const message = giftMessage(gift)
+    const href = waLink(gift.user?.phone, message)
 
     return {
         key: `gift:${gift.id}`,
@@ -94,12 +97,14 @@ const giftRow = (gift: PlanGift): SalesRow => {
         steps: ['Lo pidió', 'Contactada', 'Activado'],
         step: gift.fulfilled_at ? 3 : gift.contacted_at ? 2 : 1,
         wa: href ? [{ label: 'WhatsApp', href }] : [],
+        message,
     }
 }
 
 const interestRow = (item: PlanInterest): SalesRow => {
     const plan = item.plan?.name ?? 'el siguiente plan'
-    const href = waLink(item.user?.phone, interestMessage(item))
+    const message = interestMessage(item)
+    const href = waLink(item.user?.phone, message)
     const feature = featureText(item.last_feature)
     const signals = signalsText(item.signals)
     /* El precio del plan que quiere menos el que ya paga: eso es lo que sube de verdad */
@@ -131,13 +136,15 @@ const interestRow = (item: PlanInterest): SalesRow => {
         steps: ['Anduvo mirando', 'Lo pidió', upgraded ? 'Ya subió' : 'Contactada'],
         step: item.contacted_at || upgraded ? 3 : item.requested_at ? 2 : 1,
         wa: href ? [{ label: 'WhatsApp', href }] : [],
+        message: upgraded ? undefined : message,
     }
 }
 
 const prospectRow = (item: DirectorProspect): SalesRow => {
     const consultora = withCode(item.invited_by?.name, item.invited_by?.username)
     const months = `${item.reward_months} ${item.reward_months === 1 ? 'mes' : 'meses'}`
-    const toDirector = waLink(item.director_phone, prospectDirectorMessage(item))
+    const message = prospectDirectorMessage(item)
+    const toDirector = waLink(item.director_phone, message)
     const toConsultant = waLink(item.invited_by?.phone, prospectConsultantMessage(item))
 
     return {
@@ -171,6 +178,7 @@ const prospectRow = (item: DirectorProspect): SalesRow => {
             ...(toDirector ? [{ label: 'WhatsApp a la Directora', href: toDirector }] : []),
             ...(toConsultant ? [{ label: 'A la consultora', href: toConsultant }] : []),
         ],
+        message: item.rewarded_at ? undefined : message,
     }
 }
 
@@ -247,9 +255,18 @@ const referralRow = (item: Referral): SalesRow => {
         : rewardOn ? 'deal'
             : item.first_paid_at ? 'waiting'
                 : item.joined_at ? 'closing' : 'warm'
-    const toNew = waLink(item.referred?.phone ?? item.referred_phone, `Hola ${firstName(newName)} 💜 `)
-    const toReferrer = waLink(item.referrer?.phone, `Hola ${firstName(item.referrer?.network_person?.name ?? item.referrer?.name)} 💜 `)
     const until = item.reward_until ? dayText(item.reward_until) : ''
+    const referrerName = item.referrer?.network_person?.name ?? item.referrer?.name
+    /* A quién le toca escribir: a la nueva mientras no paga (que entre y que pague); a quien recomendó cuando gana su premio */
+    const toNewText = item.joined_at
+        ? `${helloDirector(newName)} Le doy la bienvenida a Eyplease+. ¿Le ayudo a dejar lista su unidad para este mes?`
+        : `${helloDirector(newName)} ${firstName(referrerName) || 'Una Directora'} me contó que le gustaría conocer Eyplease+. ¿Le enseño cómo funciona? Puede empezar con un mes gratis.`
+    const thanks = `${helloDirector(referrerName)} ¡Gracias por recomendarnos a ${firstName(newName)}!`
+    const toReferrerText = item.reward_applied_at
+        ? `${thanks} Ya tiene de regalo el ${item.reward_plan?.name ?? 'plan siguiente'} hasta el ${until}. Si le gusta, se puede quedar con él.`
+        : `${thanks} Ya le estamos preparando su premio.`
+    const toNew = waLink(item.referred?.phone ?? item.referred_phone, toNewText)
+    const toReferrer = waLink(item.referrer?.phone, toReferrerText)
 
     return {
         key: `referral:${item.id}`,
@@ -283,6 +300,7 @@ const referralRow = (item: Referral): SalesRow => {
             ...(toReferrer ? [{ label: 'WhatsApp a quien recomendó', href: toReferrer }] : []),
             ...(toNew && !item.first_paid_at ? [{ label: 'A la nueva', href: toNew }] : []),
         ],
+        message: stage === 'done' ? undefined : item.first_paid_at ? toReferrerText : toNewText,
         tag: rewardOn && !item.reward_kept_at
             ? { text: `Premio hasta el ${until}`, tone: 'plain' }
             : stage === 'waiting' ? { text: 'Premio por dar', tone: 'bad' } : undefined,
