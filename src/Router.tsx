@@ -37,6 +37,7 @@ import SalesPage from '@/pages/Sales'
 import GrowthFunnelPage from '@/pages/Growth/Funnel'
 import GrowthProspectsPage from '@/pages/Growth/Prospects'
 import GrowthSocialPage from '@/pages/Growth/Social'
+import GrowthWebPage from '@/pages/Growth/Web'
 import ChallengesPage from '@/pages/Challenges'
 import ChallengeDetailPage from '@/pages/Challenges/Detail'
 
@@ -94,6 +95,7 @@ const Router = () => {
                 <Route path={APP_ROUTES.GROWTH.FUNNEL} element={<GrowthFunnelPage />} />
                 <Route path={APP_ROUTES.GROWTH.PROSPECTS} element={<GrowthProspectsPage />} />
                 <Route path={APP_ROUTES.GROWTH.SOCIAL} element={<GrowthSocialPage />} />
+                <Route path={APP_ROUTES.GROWTH.WEB} element={<GrowthWebPage />} />
 
                 <Route path={APP_ROUTES.CHALLENGES.LIST} element={<ChallengesPage />} />
                 <Route path={APP_ROUTES.CHALLENGES.DETAIL} element={<ChallengeDetailPage />} />

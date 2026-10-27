@@ -206,6 +206,7 @@ export const API_ROUTES = {
         CONTACTS: '/growth/contacts',
         CONTACT: '/growth/contacts/{id}',
         TO_SALES: '/growth/prospects/{id}/to-sales',
+        WEB: '/growth/web',
     },
     SOCIAL: {
         POSTS: '/social/posts',

@@ -6,6 +6,7 @@ import demoBaseImg from './retos/base-ejemplo.jpg'
 import demoPieceImg from './retos/pieza-ejemplo.jpg'
 import demoCumpleBaseImg from './plantillas-base/cumple-base.jpg'
 import demoCumplePieceImg from './plantillas-base/cumple-pieza.jpg'
+import growthWeb from './growth-web.json'
 
 const now = new Date()
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -1058,6 +1059,8 @@ export const installMockApi = () => {
         // Crecimiento: el embudo y a quién escribirle (datos de EJEMPLO)
         else if (path === '/growth/funnel') response = respond(growthFunnel(url.searchParams.get('period') ?? 'semana'))
         else if (path === '/growth/prospects') response = respond(growthProspects())
+        // Pestaña «Web»: las visitas reales de octubre reconstruidas de los registros del servidor (sin datos de nadie)
+        else if (path === '/growth/web') response = respond(growthWeb[(url.searchParams.get('period') ?? 'semana') as keyof typeof growthWeb] ?? growthWeb.semana)
         else if (path === '/growth/contacts' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { target: string, action: string }
             const contact = { id: `gc-${Date.now()}`, target: body.target, action: body.action, at: iso(0) }

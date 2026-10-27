@@ -57,6 +57,17 @@
 .gro-insight b { color: var(--foreground); }
 .gro-insight code { font-size: 11.5px; padding: 1px 5px; border-radius: 6px; background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--foreground); }
 
+/* Web: visitas por día, una columna por día con su número arriba */
+.gro-days { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; align-items: end; height: 190px; }
+.gro-days.dense { gap: 2px; height: 160px; }
+.gro-day { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; min-width: 0; text-align: center; }
+.gro-day-num { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; min-height: 15px; }
+.gro-days.dense .gro-day-num { font-size: 0; min-height: 0; }
+.gro-day-col { position: relative; display: flex; align-items: flex-end; border-radius: 8px; background: color-mix(in oklab, var(--foreground) 5%, transparent); overflow: hidden; }
+.gro-day-col i { display: block; width: 100%; border-radius: 8px; background: linear-gradient(0deg, #4E31C0 0%, #6C47FF 55%, #2CD4D9 130%); transform-origin: bottom; animation: gro-rise .8s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 25ms); }
+@keyframes gro-rise { from { transform: scaleY(0); } }
+.gro-day-label { margin-top: 6px; font-size: 10px; line-height: 1.25; font-weight: 700; color: var(--muted-foreground); text-transform: uppercase; }
+
 @media (max-width: 767px) {
     .gro-funnel { grid-template-columns: minmax(0, 1fr); }
     .gro-leak { grid-template-columns: minmax(0, 1fr); gap: 10px; }

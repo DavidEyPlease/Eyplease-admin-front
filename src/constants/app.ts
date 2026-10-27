@@ -70,6 +70,7 @@ export const APP_ROUTES = {
         FUNNEL: '/crecimiento',
         PROSPECTS: '/crecimiento/prospectos',
         SOCIAL: '/crecimiento/redes',
+        WEB: '/crecimiento/web',
     },
     CHALLENGES: {
         LIST: '/retos',

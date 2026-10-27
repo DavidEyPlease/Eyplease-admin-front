@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import useRequestQuery from '@/hooks/useRequestQuery'
 import { API_ROUTES } from '@/constants/api'
-import { GrowthContact, GrowthFunnelResponse, GrowthPeriod, GrowthProspect, GrowthProspectsResponse } from '@/interfaces/growth'
+import { GrowthContact, GrowthFunnelResponse, GrowthPeriod, GrowthProspect, GrowthProspectsResponse, GrowthWebResponse } from '@/interfaces/growth'
 import { firstName } from '@/pages/Sales/sales.utils'
 import { queryKeys } from '@/utils/queryKeys'
 
@@ -16,6 +16,16 @@ export const useGrowthFunnel = (period: GrowthPeriod) => {
     return useFetchQuery<GrowthFunnelResponse>(API_ROUTES.GROWTH.FUNNEL, {
         queryParams,
         customQueryKey: queryKeys.list('growth/funnel', queryParams),
+        staleTime: 60 * 1000,
+    })
+}
+
+/** La pestaña «Web»: visitas de eyplease.com.mx en la ventana contra la anterior. */
+export const useGrowthWeb = (period: GrowthPeriod) => {
+    const queryParams = useMemo(() => ({ period }), [period])
+    return useFetchQuery<GrowthWebResponse>(API_ROUTES.GROWTH.WEB, {
+        queryParams,
+        customQueryKey: queryKeys.list('growth/web', queryParams),
         staleTime: 60 * 1000,
     })
 }

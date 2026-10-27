@@ -72,3 +72,33 @@ export interface GrowthFunnelResponse {
     current: GrowthFunnelCounts & { by_source: GrowthSourceRow[] }
     previous: GrowthFunnelCounts
 }
+
+/** Pestaña «Web»: las visitas de eyplease.com.mx (personas distintas por día) */
+export interface GrowthWebCounts {
+    visits: number
+    phone: number
+    views: number
+    /** Personas que tocaron un botón de WhatsApp */
+    whatsapp: number
+    /** Personas que dejaron sus datos en el chat de la página */
+    chat: number
+    /** Personas que tocaron «Registrarme» */
+    registro: number
+    /** Cuentas que se registraron solas en la ventana (el mismo número del Embudo) */
+    signups: number
+}
+
+export interface GrowthWebResponse {
+    period: GrowthPeriod
+    from: string
+    to: string
+    current: GrowthWebCounts
+    previous: GrowthWebCounts
+    by_day: Array<{ day: string, visits: number, views: number }>
+    by_source: Array<{ source: string, visits: number, phone: number, whatsapp: number }>
+    by_page: Array<{ path: string, views: number, visits: number }>
+    /** Desde cuándo la web avisa sola; antes, lo reconstruido de los registros del servidor */
+    measured_since: string | null
+    rebuilt_since: string | null
+}
+

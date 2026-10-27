@@ -9,6 +9,11 @@ export const SOURCE_LABELS: Record<string, string> = {
     invitacion: 'La invitó una consultora',
     whatsapp: 'WhatsApp',
     directo: 'Directo, sin etiqueta',
+    google: 'Google',
+    buscador: 'Otros buscadores',
+    unidad: 'Liga de una unidad',
+    app: 'Desde la app',
+    tiktok: 'TikTok',
     sin: 'Sin dato (antes del 30 sep)',
 }
 export const sourceLabel = (source: string) =>
