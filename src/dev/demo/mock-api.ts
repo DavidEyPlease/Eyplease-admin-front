@@ -172,8 +172,8 @@ const colombiaOverview = {
 const countryAttention = [{ country: 'MEX', attention: 4 }, { country: 'COL', attention: 1 }]
 
 const notifications = {
-    unread: { whatsapp: 6, service_requests: 3, corrections: 1, delivery_failures: 0, card_failures: 1 }, unread_total: 11,
-    seen_at: { whatsapp: null, service_requests: null, corrections: null, delivery_failures: null, card_failures: null },
+    unread: { whatsapp: 6, service_requests: 3, corrections: 1, delivery_failures: 0, card_failures: 1, assistant_reports: 0, late_designs: 0 }, unread_total: 11,
+    seen_at: { whatsapp: null, service_requests: null, corrections: null, delivery_failures: null, card_failures: null, assistant_reports: null, late_designs: null },
     items: [
         { id: 'n1', channel: 'whatsapp', title: 'Clienta de ejemplo A', detail: '¿Ya quedó mi invitación?', at: iso(12), count: 2, ref: null },
         { id: 'n2', channel: 'service_requests', title: '#581 Invitación · Junta de unidad', detail: 'Sin asignar', at: iso(40), count: 1, ref: 'task-581' },

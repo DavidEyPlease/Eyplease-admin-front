@@ -7,6 +7,10 @@ export type NotificationChannel =
     | "delivery_failures"
     /** Cobros con tarjeta domiciliada que Stripe no pudo hacer (con el porqué). */
     | "card_failures"
+    /** Fallas de la plataforma que una clienta le contó al Asistente (ref = su id: abre su ficha). */
+    | "assistant_reports"
+    /** Pedidos de diseño que pasaron su fecha compromiso sin entrega (ref = el pedido). */
+    | "late_designs"
 
 export interface NotificationItem {
     id: string

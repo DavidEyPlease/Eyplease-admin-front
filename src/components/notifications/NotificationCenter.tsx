@@ -3,7 +3,9 @@ import { useNavigate } from "react-router"
 import {
     BellIcon,
     CheckCheckIcon,
+    ClockAlertIcon,
     CreditCardIcon,
+    LifeBuoyIcon,
     MessageCircleIcon,
     PencilRulerIcon,
     SparklesIcon,
@@ -30,6 +32,8 @@ const CHANNEL = {
     corrections: { label: "Corrección", icon: PencilRulerIcon, tone: "bg-amber-100 dark:bg-amber-400/15 text-amber-800 dark:text-amber-200" },
     delivery_failures: { label: "No entregado", icon: TriangleAlertIcon, tone: "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300" },
     card_failures: { label: "Cobro con tarjeta", icon: CreditCardIcon, tone: "bg-rose-100 dark:bg-rose-400/15 text-rose-700 dark:text-rose-300" },
+    assistant_reports: { label: "Reportó una falla", icon: LifeBuoyIcon, tone: "bg-sky-100 dark:bg-sky-400/15 text-sky-700 dark:text-sky-300" },
+    late_designs: { label: "Diseño atrasado", icon: ClockAlertIcon, tone: "bg-orange-100 dark:bg-orange-400/15 text-orange-800 dark:text-orange-200" },
 } as const satisfies Record<NotificationChannel, { label: string; icon: typeof BellIcon; tone: string }>
 
 /* Un canal que la API estrene antes que el panel no debe tumbar la campana: se pinta genérico. */
@@ -66,6 +70,10 @@ const NotificationCenter = () => {
         const ref = item.ref ? encodeURIComponent(item.ref) : ""
         if (item.channel === "whatsapp" || item.channel === "delivery_failures") {
             navigate(ref ? `${APP_ROUTES.WHATSAPP.INBOX}?wa=${ref}` : APP_ROUTES.WHATSAPP.INBOX)
+            return
+        }
+        if (item.channel === "assistant_reports") {
+            navigate(ref ? APP_ROUTES.CLIENTS.DETAIL.replace(":id", ref) : APP_ROUTES.CLIENTS.LIST)
             return
         }
         if (item.channel === "card_failures") {
