@@ -31,7 +31,7 @@ interface Props {
 /** La base repite nombres ("Cumpleaños" es de unidad y nacional): se distinguen. */
 function nombreSeccion(sectionKey: string | null, name: string | null): string {
     const base = name ?? sectionKey ?? "Sin nombre"
-    return sectionKey?.startsWith("national_") ? `${base} · Nacional` : base
+    return sectionKey?.startsWith("national_") ? `${base} · Área` : base
 }
 
 const DeleteReportDialog = ({ client, period, onClose }: Props) => {

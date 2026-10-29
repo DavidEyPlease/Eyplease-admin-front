@@ -96,7 +96,7 @@ const TemplateDetail = ({ template }: Props) => {
                         <Tabs defaultValue="unity">
                             <TabsList>
                                 <TabsTrigger value="unity">Boletín Unidad</TabsTrigger>
-                                <TabsTrigger value="national">Boletín Nacional</TabsTrigger>
+                                <TabsTrigger value="national">Boletín de Área</TabsTrigger>
                             </TabsList>
                             <TabsContent value="unity">
                                 <TemplateBackgrounds

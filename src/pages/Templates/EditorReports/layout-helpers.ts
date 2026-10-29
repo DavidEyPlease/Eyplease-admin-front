@@ -25,7 +25,7 @@ export const DEFAULT_PHOTO_URL = `${import.meta.env.VITE_CDN_URL}/public/templat
 export const DEFAULT_LOGO_URL = `${import.meta.env.VITE_CDN_URL}/public/templates/posts/placeholder-images/logo-example.png`;
 
 // Spanish display labels for the English group/format values.
-export const GROUP_LABELS: Record<string, string> = { unit: "Unidad", national: "Nacional" };
+export const GROUP_LABELS: Record<string, string> = { unit: "Unidad", national: "Área" };
 export const FORMAT_LABELS: Record<string, string> = { vertical: "Vertical", horizontal: "Horizontal" };
 
 // Static Spanish display names per background asset slug, grouped by template group.

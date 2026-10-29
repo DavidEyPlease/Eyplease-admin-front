@@ -18,7 +18,7 @@ const LEGEND = [
 
 const GROUPS = [
     ["unit", "Unidad", "#5B47E0"],
-    ["national", "Nacional", "#0E9E97"],
+    ["national", "Área", "#0E9E97"],
 ] as const
 
 const MatrixTab = ({ period, country }: { period: string; country: ReportsCountry }) => {

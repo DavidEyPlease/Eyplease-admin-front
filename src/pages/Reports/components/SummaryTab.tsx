@@ -98,7 +98,7 @@ const SummaryTab = ({ period, country }: { period: string; country: ReportsCount
         <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
                 <HeroTile label="Avance del mes" value={kpis ? `${kpis.avance_pct}%` : "—"} sub="Reportes cargados correctamente" />
-                <KpiTile label="Clientes con boletín" value={loading ? "…" : kpis?.entitled_clients ?? "—"} sub="Básico, Ejecutivo, Elite y Nacional" accent="violet" />
+                <KpiTile label="Clientes con boletín" value={loading ? "…" : kpis?.entitled_clients ?? "—"} sub="Básico, Ejecutivo, Elite y Área" accent="violet" />
                 <KpiTile label="Faltantes" value={loading ? "…" : kpis?.missing ?? "—"} sub={`reportes sin cargar en ${periodLabel(period)}`} accent="rose" />
                 <KpiTile label="Rechazados" value={loading ? "…" : kpis?.rejected ?? "—"} sub={`subidas con error en ${periodLabel(period)}`} accent="rose" />
                 <KpiTile label="Sin datos" value={loading ? "…" : kpis?.empty ?? "—"} sub={`cargados sin registros en ${periodLabel(period)}`} accent="sky" />
@@ -116,7 +116,7 @@ const SummaryTab = ({ period, country }: { period: string; country: ReportsCount
                         ) : (
                             <>
                                 {unitSections.length > 0 && <Group title="Unidad" color={UNIT_COLOR} sections={unitSections} onVer={setVerSection} />}
-                                {nationalSections.length > 0 && <Group title="Nacional" color={NATIONAL_COLOR} sections={nationalSections} onVer={setVerSection} />}
+                                {nationalSections.length > 0 && <Group title="Área" color={NATIONAL_COLOR} sections={nationalSections} onVer={setVerSection} />}
                             </>
                         )}
                     </div>

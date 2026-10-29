@@ -60,7 +60,7 @@ export interface SectionInfo {
 const FALLBACK_NAMES: Record<string, string> = {
     'customers-birthdays': 'Cumpleaños de sus clientas',
     honor_roll: 'Cuadro de Honor',
-    honor_roll_national: 'Cuadro de Honor Nacional',
+    honor_roll_national: 'Cuadro de Honor del Área',
     stars: 'Estrellas',
     pink_circle: 'Círculo Rosa',
     new_beginnings: 'Nuevos Inicios',

@@ -4,7 +4,7 @@ import { formatNumber } from '../../page-utils'
 
 const GROUPS: { code: NewsletterCode, label: string }[] = [
     { code: 'unit_newsletter', label: 'Boletín de unidad' },
-    { code: 'national_newsletter', label: 'Boletín nacional' },
+    { code: 'national_newsletter', label: 'Boletín de Área' },
 ]
 
 export const FormatCell = ({ format }: { format?: FormatView }) => {

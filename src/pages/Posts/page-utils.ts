@@ -17,7 +17,7 @@ export const CLIENTS_PER_PAGE = 20
 
 export const NEWSLETTER_LABEL: Record<string, string> = {
     unit_newsletter: 'Unidad',
-    national_newsletter: 'Nacional',
+    national_newsletter: 'Área',
 }
 
 export const formatPeriodLabel = (period: string) => {
