@@ -1,4 +1,5 @@
-import { CalendarClockIcon, MegaphoneIcon, PinIcon, SmartphoneIcon } from "lucide-react";
+import { useEffect } from "react";
+import { CalendarClockIcon, MegaphoneIcon, PinIcon, SmartphoneIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import Modal from "@/components/common/Modal";
@@ -17,6 +18,10 @@ import { Textarea } from "@/uishadcn/ui/textarea";
 import { ClientNotificationForm, ClientNotificationPayload, ClientNotificationSchema, endOfDay, FORM_DEFAULT_VALUES, NoticeKind, toPayload } from "./schema";
 import useCountryStore from "@/store/country";
 import { countryInfo } from "@/constants/countries";
+import useFetchQuery from "@/hooks/useFetchQuery";
+import { IPlan } from "@/interfaces/plans";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/uishadcn/ui/select";
+import { APP_SECTIONS, appLinkKey, appSectionLabel, isAppLink, toAppLink, WEB_LINK } from "./appLinks";
 
 interface SendPushNotificationModalProps {
     open: boolean;
@@ -36,6 +41,9 @@ const KIND_OPTIONS: Array<{ value: NoticeKind, label: string, hint: string, icon
 ];
 
 const OPTION_CARD = "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm font-medium transition-colors hover:bg-accent";
+
+/** "Plan Elite" · "Plan Elite y Plan Nacional" · "Plan Básico, Plan Elite y Plan Nacional" */
+const listText = (names: string[]) => names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
 
 const whenText = (date: Date) => new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(date);
 const dayText = (date: Date) => new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "short" }).format(date);
@@ -59,12 +67,26 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
     const eventAt = form.watch("event_at");
     const pinnedUntil = form.watch("pinned_until");
     const kindOption = KIND_OPTIONS.find((option) => option.value === kind) ?? KIND_OPTIONS[0];
+    const link = form.watch("link");
+    const planKeys = form.watch("plan_keys");
+    const linkIsApp = isAppLink(link);
+
+    /* Los planes, para mandar el aviso sólo a quien tiene (o no tiene) uno: «esto viene en el Plan Elite» */
+    const { response: plans, loading: plansLoading } = useFetchQuery<IPlan[]>(API_ROUTES.PLANS.LIST, { customQueryKey: ["config", "plans", "aviso"], enabled: open });
+    const plansWithKey = (plans ?? []).filter((plan) => !!plan.plan_key);
+    const chosenPlans = plansWithKey.filter((plan) => planKeys.includes(plan.plan_key as string));
+    const plansText = chosenPlans.length ? ` con ${listText(chosenPlans.map((plan) => plan.name))}` : "";
+
+    // Una junta o una actualización llevan liga web (Zoom, la tienda): si venía una pantalla de la app, se limpia
+    useEffect(() => {
+        if (kind !== "info" && isAppLink(form.getValues("link"))) form.setValue("link", "", { shouldValidate: true });
+    }, [kind, form]);
 
     const onSubmit = form.handleSubmit(async (values) => {
         const response = await request<ApiResponse<boolean>, ClientNotificationPayload>(API_ROUTES.CLIENTS_NOTIFICATIONS, toPayload(values, country));
 
         if (response.success) {
-            toast.success(values.pinned ? `Aviso enviado a las clientas de ${countryName} y fijado arriba de Hoy en la app` : `Aviso enviado a las clientas de ${countryName}`);
+            toast.success(values.pinned ? `Aviso enviado a las clientas de ${countryName}${plansText} y fijado arriba de Hoy en la app` : `Aviso enviado a las clientas de ${countryName}${plansText}`);
             form.reset(FORM_DEFAULT_VALUES);
             onOpenChange(false);
         }
@@ -163,10 +185,32 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                             name="link"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{kind === "update" ? "Liga de la tienda" : "Liga (opcional)"}</FormLabel>
-                                    <FormControl>
-                                        <Input type="url" inputMode="url" placeholder={kindOption.linkPlaceholder} {...field} />
-                                    </FormControl>
+                                    <FormLabel>{kind === "update" ? "Liga de la tienda" : kind === "meeting" ? "Liga de Zoom" : "Botón del aviso (opcional)"}</FormLabel>
+                                    {kind === "info" && (
+                                        /* Una pantalla de la app (app://retos) o una página web: la app abre la pantalla adentro, sin navegador */
+                                        <Select value={appLinkKey(field.value) ?? WEB_LINK} onValueChange={(value) => field.onChange(value === WEB_LINK ? "" : toAppLink(value))}>
+                                            <SelectTrigger aria-label="A dónde lleva el botón"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={WEB_LINK}>Una página web (pega la liga abajo)</SelectItem>
+                                                <SelectGroup>
+                                                    <SelectLabel>Abrir una pantalla de la app</SelectLabel>
+                                                    {APP_SECTIONS.map((section) => (
+                                                        <SelectItem key={section.key} value={section.key}>{section.label}</SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                    {linkIsApp ? (
+                                        <FormDescription>
+                                            Abre <b className="font-semibold text-foreground">{appSectionLabel(field.value) ?? field.value}</b> dentro de la app.
+                                            Funciona desde la versión 2.2.0 (41); en las anteriores el botón no abre nada.
+                                        </FormDescription>
+                                    ) : (
+                                        <FormControl>
+                                            <Input type="url" inputMode="url" placeholder={kindOption.linkPlaceholder} {...field} />
+                                        </FormControl>
+                                    )}
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -178,7 +222,7 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                                 <FormItem>
                                     <FormLabel>Texto del botón</FormLabel>
                                     <FormControl>
-                                        <Input placeholder={kindOption.linkLabel} maxLength={60} {...field} />
+                                        <Input placeholder={linkIsApp ? `Ver ${appSectionLabel(link) ?? "en la app"}` : kindOption.linkLabel} maxLength={60} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -248,8 +292,37 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                         )}
                     />
 
+                    <FormField
+                        control={form.control}
+                        name="plan_keys"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="flex items-center gap-1.5"><UsersIcon className="size-4" /> Planes</FormLabel>
+                                <FormDescription>Sin marcar ninguno va a todas. Márcalos para avisar sólo a quien tiene un plan, o a quien no lo tiene y le conviene.</FormDescription>
+                                {plansWithKey.length > 0 && (
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                        {plansWithKey.map((plan) => {
+                                            const key = plan.plan_key as string;
+                                            const checked = field.value.includes(key);
+                                            return (
+                                                <Label key={plan.id} className={cn(OPTION_CARD, "py-2.5", checked && "border-primary bg-primary/5")}>
+                                                    <Checkbox checked={checked} onCheckedChange={(state) => field.onChange(state === true ? [...field.value, key] : field.value.filter((item) => item !== key))} />
+                                                    <span className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: plan.color || "#999" }} />{plan.name}</span>
+                                                </Label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {plansLoading && <p className="text-xs text-muted-foreground">Cargando los planes…</p>}
+                                {!plansLoading && plansWithKey.length === 0 && <p className="text-xs text-muted-foreground">El API todavía no manda la llave de cada plan: el aviso va a todos los planes.</p>}
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
-                        Les llega sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b>, el país que estás viendo arriba.
+                        Les llega sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b> (el país que estás viendo arriba)
+                        {chosenPlans.length ? <> con <b className="font-semibold text-foreground">{listText(chosenPlans.map((plan) => plan.name))}</b></> : ", de todos los planes"}.
                     </p>
 
                     <div className="flex justify-end gap-3 pt-2">

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { APP_LINK_PATTERN, isAppLink } from "./appLinks";
+
 /** Los tres avisos que entiende la app: cada uno se pinta distinto en Hoy. */
 export const NOTICE_KINDS = ["info", "meeting", "update"] as const;
 export type NoticeKind = (typeof NOTICE_KINDS)[number];
@@ -21,9 +23,12 @@ export const ClientNotificationSchema = z.object({
     body: z.string().min(1, { message: "El mensaje es requerido" }).max(500, { message: "El mensaje no puede superar 500 caracteres" }),
     segment: z.enum(["ios", "android", "all"], { message: "Selecciona un segmento" }),
     kind: z.enum(NOTICE_KINDS),
+    /** Web (https://…) o interna (`app://retos`: abre esa pantalla adentro de la app; ver `appLinks.ts`) */
     link: z.string().trim().max(500, { message: "La liga no puede superar 500 caracteres" })
-        .refine((value) => !value || isWebUrl(value), { message: "Pon la liga completa, empezando con https://" }),
+        .refine((value) => !value || isWebUrl(value) || APP_LINK_PATTERN.test(value), { message: "Pon la liga completa, empezando con https://, o elige una pantalla de la app" }),
     link_label: z.string().trim().max(60, { message: "El texto del botón no puede superar 60 caracteres" }),
+    /** Sólo a las clientas de estos planes (`plan_key`); vacío = a todos los planes */
+    plan_keys: z.array(z.string()),
     /** «AAAA-MM-DDTHH:mm» del campo de fecha y hora; vacío si no es junta. */
     event_at: z.string(),
     pinned: z.boolean(),
@@ -35,6 +40,9 @@ export const ClientNotificationSchema = z.object({
     }
     if (values.kind === "update" && !values.link) {
         ctx.addIssue({ code: "custom", path: ["link"], message: "Pon la liga de la tienda para que puedan actualizar" });
+    }
+    if (values.kind !== "info" && values.link && isAppLink(values.link)) {
+        ctx.addIssue({ code: "custom", path: ["link"], message: values.kind === "meeting" ? "La liga de una junta es la de Zoom (https://)" : "La liga de una actualización es la de la tienda (https://)" });
     }
     if (values.link_label && !values.link) {
         ctx.addIssue({ code: "custom", path: ["link"], message: "El botón necesita una liga" });
@@ -53,6 +61,7 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
     kind: "info",
     link: "",
     link_label: "",
+    plan_keys: [],
     event_at: "",
     pinned: false,
     pinned_until: "",
@@ -63,7 +72,7 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
  * lee con Carbon::parse, y una hora sin zona la tomaría como UTC (la junta de las 7 p. m. saldría
  * a la 1 p. m.). El navegador del equipo está en México, así que se convierten desde ahí.
  */
-/** `country`: sólo a las clientas de ese país (el que se mira en el panel); sin él, a todas. */
+/** `country`: sólo a las clientas de ese país (el que se mira en el panel); sin él, a todas. `plan_keys` sólo si se marcó alguno. */
 export const toPayload = (values: ClientNotificationForm, country?: string) => {
     const link = values.link.trim();
     const linkLabel = values.link_label.trim();
@@ -74,6 +83,7 @@ export const toPayload = (values: ClientNotificationForm, country?: string) => {
         body: values.body,
         segment: values.segment,
         kind: values.kind,
+        ...(values.plan_keys.length ? { plan_keys: values.plan_keys } : {}),
         ...(link ? { link, ...(linkLabel ? { link_label: linkLabel } : {}) } : {}),
         ...(values.kind === "meeting" && values.event_at ? { event_at: new Date(values.event_at).toISOString() } : {}),
         ...(values.pinned
