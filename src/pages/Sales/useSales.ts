@@ -262,8 +262,11 @@ const referralRow = (item: Referral): SalesRow => {
         ? `${helloDirector(newName)} Le doy la bienvenida a Eyplease+. ¿Le ayudo a dejar lista su unidad para este mes?`
         : `${helloDirector(newName)} ${firstName(referrerName) || 'Una Directora'} me contó que le gustaría conocer Eyplease+. ¿Le enseño cómo funciona? Puede empezar con un mes gratis.`
     const thanks = `${helloDirector(referrerName)} ¡Gracias por recomendarnos a ${firstName(newName)}!`
+    const descuento = item.reward_discount ? `$${Math.round(Number(item.reward_discount)).toLocaleString('es-MX')}` : null
     const toReferrerText = item.reward_applied_at
-        ? `${thanks} Ya tiene de regalo el ${item.reward_plan?.name ?? 'plan siguiente'} hasta el ${until}. Si le gusta, se puede quedar con él.`
+        ? (descuento
+            ? `${thanks} Ya tiene ${descuento} de descuento en su siguiente pago.`
+            : `${thanks} Ya tiene de regalo el ${item.reward_plan?.name ?? 'plan siguiente'} hasta el ${until}. Si le gusta, se puede quedar con él.`)
         : `${thanks} Ya le estamos preparando su premio.`
     const toNew = waLink(item.referred?.phone ?? item.referred_phone, toNewText)
     const toReferrer = waLink(item.referrer?.phone, toReferrerText)
@@ -285,10 +288,14 @@ const referralRow = (item: Referral): SalesRow => {
         asks: item.reward_kept_at
             ? { pre: 'Recomendó a', strong: newName, post: `y se quedó con el ${item.reward_plan?.name ?? 'plan del premio'}` }
             : rewardOn
-                ? { pre: 'Tiene de premio el', strong: item.reward_plan?.name ?? 'plan siguiente', post: `por recomendar a ${newName}` }
+                ? (descuento
+                    ? { pre: 'Tiene de premio', strong: `${descuento} de descuento`, post: `por invitar a ${newName}` }
+                    : { pre: 'Tiene de premio el', strong: item.reward_plan?.name ?? 'plan siguiente', post: `por recomendar a ${newName}` })
                 : { pre: 'Recomendó a', strong: newName, post: item.joined_at ? '' : '· todavía no entra' },
         note: [
-            item.source === 'link' ? 'Entró con su liga' : `La anotó ${item.created_by?.name ? personName(item.created_by.name) : 'el equipo'}`,
+            item.source === 'link' ? 'Entró con su liga'
+                : item.source === 'area' ? 'La invitó desde «Mis Directoras» (primer mes del Ejecutivo de regalo)'
+                    : `La anotó ${item.created_by?.name ? personName(item.created_by.name) : 'el equipo'}`,
             item.referred?.username ? `cuenta ${item.referred.username}` : item.referred_email ?? '',
             item.joined_at && !item.first_paid_at ? 'falta que pague su primer mes: ahí se gana el premio' : '',
             item.reward_note ?? '',

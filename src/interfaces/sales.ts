@@ -120,7 +120,8 @@ export interface SalesDeal {
  */
 export interface Referral {
     id: string
-    source: 'link' | 'team'
+    /** `area` = la invitó su Nacional desde «Mis Directoras» (29-oct-2026) */
+    source: 'link' | 'team' | 'area'
     referred_name: string | null
     referred_email: string | null
     referred_phone: string | null
@@ -130,6 +131,8 @@ export interface Referral {
     first_paid_period: string | null
     reward_applied_at: string | null
     reward_until: string | null
+    /** El premio de quien no tiene plan siguiente (la Nacional): lo que pagó la nueva, descontado en su siguiente cobro */
+    reward_discount?: string | number | null
     reward_kept_at: string | null
     reward_reverted_at: string | null
     reward_note: string | null
