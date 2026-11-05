@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils'
 import { PulseProblem, PulseResolved } from '../problems'
 
 /**
- * Lo que hay que atender, una tarjeta por CAUSA: qué pasó en palabras, qué hacer y su botón. Lo que hoy falló y ya se
- * arregló solo va plegado debajo, para que se sepa sin que estorbe.
+ * Lo que hay que atender, una tarjeta por CAUSA: qué pasó en palabras, qué hacer y su botón. Lo que hoy falló y ya no
+ * pide nada (se arregló solo, ya entra o no es un reporte) va plegado debajo, para que se sepa sin que estorbe.
  */
 const ProblemList = ({ problems, resolved }: { problems: PulseProblem[], resolved: PulseResolved[] }) => {
     const navigate = useNavigate()
@@ -48,7 +48,7 @@ const ProblemList = ({ problems, resolved }: { problems: PulseProblem[], resolve
                 <details className="group rounded-[18px] px-1 py-1">
                     <summary className="flex cursor-pointer list-none items-center gap-2 text-[12.5px] font-bold text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
                         <CheckCircle2Icon className="size-4 text-emerald-500" aria-hidden />
-                        {resolved.length === 1 ? '1 cosa falló hoy y ya se arregló sola' : `${resolved.length} cosas fallaron hoy y ya se arreglaron solas`}
+                        {resolved.length === 1 ? '1 cosa falló hoy, pero ya no requiere nada' : `${resolved.length} cosas fallaron hoy, pero ya no requieren nada`}
                         <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" aria-hidden />
                     </summary>
                     <ul className="mt-2 grid gap-1.5 pl-6">

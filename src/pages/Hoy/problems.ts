@@ -24,7 +24,7 @@ export interface PulseProblem {
     actions?: Array<{ label: string, to: string }>
 }
 
-/** Lo que falló hoy y ya se arregló solo: se enseña aparte, sin contar como pendiente. */
+/** Lo que falló hoy y ya no pide nada (se arregló solo, ya entra, no es un reporte): aparte, sin contar como pendiente. */
 export interface PulseResolved {
     id: string
     text: string
@@ -97,6 +97,8 @@ const times = (n: number) => n === 1 ? '1 vez' : `${n} veces`
 
 const runTime = (run: DownloadRun) => run.finished_at ?? run.queued_at ?? ''
 const runDone = (run: DownloadRun) => run.status !== 'queued' && run.status !== 'running'
+/** La API da las corridas de la más nueva a la más vieja: «la que sí salió» es la PRIMERA después de la falla. */
+const earliest = (runs: DownloadRun[]) => [...runs].sort((a, b) => runTime(a).localeCompare(runTime(b)))[0] ?? null
 
 const failuresOf = (run: DownloadRun): Failure[] => {
     const listed = (run.result?.failures ?? []) as Failure[]
@@ -114,14 +116,14 @@ const fetchedAfter = (failure: Failure, run: DownloadRun, runs: DownloadRun[]) =
     const key = failure.reportKey ?? ''
     const section = ROBOT_SECTION_OF[key] ?? key
     const account = baseAccount(failure.account)
-    return runs.find(other => {
+    return earliest(runs.filter(other => {
         if (other.run_id === run.run_id || other.status !== 'completed' || !other.finished_at) return false
         if (new Date(other.finished_at).getTime() <= since) return false
         const sections = other.sections ?? []
         if (key ? !sections.includes(section) && !sections.includes(key) : !(run.sections ?? []).every(item => sections.includes(item))) return false
         if (other.clients?.length && !other.clients.some(login => baseAccount(login) === account)) return false
         return !failuresOf(other).some(item => baseAccount(item.account) === account && (!key || !item.reportKey || item.reportKey === key))
-    }) ?? null
+    }))
 }
 
 interface Input {
@@ -156,8 +158,8 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
     /* 1. Corridas que se cayeron enteras (sin resultado). Si después salió otra de lo mismo, ya no es pendiente. */
     done.filter(run => run.status === 'failed' || run.status === 'rejected').forEach(run => {
         const names = listText((run.sections ?? []).map(key => reportName(key, reports))) || 'reportes'
-        const later = done.find(other => other.status === 'completed' && new Date(runTime(other)) > new Date(runTime(run))
-            && (run.sections ?? []).every(key => (other.sections ?? []).includes(key)))
+        const later = earliest(done.filter(other => other.status === 'completed' && new Date(runTime(other)) > new Date(runTime(run))
+            && (run.sections ?? []).every(key => (other.sections ?? []).includes(key))))
         if (later) {
             resolved.push({ id: `run-${run.run_id}`, text: `La descarga de ${names} de ${whenText(run.queued_at ?? runTime(run))} se cayó; la de ${whenText(runTime(later))} sí terminó.` })
             return
@@ -192,6 +194,15 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
                 return
             }
             const cause = causeOf(failure)
+            /* El nivel de carrera no es un reporte: si el portal no lo dice (a algunas Nacionales sólo les llega el código)
+               o tarda, se queda el que ya tenía. Se cuenta, pero no es pendiente. La contraseña sí se queda abajo. */
+            if (key === 'career_levels' && cause !== 'password') {
+                const id = `lvl-${account}`
+                if (!resolved.some(item => item.id === id)) {
+                    resolved.push({ id, text: `${nameOf(account)}: no se pudo leer su nivel de carrera («${firstLine(failure.error) || 'sin detalle'}»); se queda con el que ya tenía.` })
+                }
+                return
+            }
             const id = `${account}|${cause}`
             const item = open.get(id) ?? { account, cause, keys: new Set<string>(), attempts: 0, first: runTime(run), last: runTime(run), error: failure.error }
             item.keys.add(key)
@@ -208,16 +219,38 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
         .filter(run => failuresOf(run).some(failure => baseAccount(failure.account) === account && causeOf(failure) === cause))
         .map(runTime).filter(Boolean).sort()[0] ?? fallback
 
+    /* ¿Una corrida POSTERIOR a la falla volvió a entrar a su InTouch? La pidió y no falló por contraseña (si falló por
+       otra cosa, igual ya pasó del login). El 4-nov David capturó la contraseña nueva de 035197 a las 19:25 y la torre
+       siguió diciendo «ya no funciona» hasta el día siguiente. */
+    const loggedInAfter = (account: string, keys: Set<string>, since: string) => earliest(done.filter(run => {
+        if (run.status !== 'completed' || runTime(run) <= since) return false
+        const own = failuresOf(run).filter(failure => baseAccount(failure.account) === account)
+        if (own.some(failure => causeOf(failure) === 'password')) return false
+        if (run.clients?.length) return run.clients.some(login => baseAccount(login) === account)
+        /* Sin lista de cuentas fue a todas las que tienen ese reporte: cuenta si es de lo que a ella le faltaba */
+        return own.length > 0 || [...keys].some(key => (run.sections ?? []).includes(ROBOT_SECTION_OF[key] ?? key))
+    }))
+
     const CAUSE_SHORT: Record<Cause, string> = { password: 'contraseña', portal: 'el portal no respondió', view: 'vista equivocada', missing: 'su portal no lo tiene', other: 'error del robot' }
 
     open.forEach(item => {
         const names = [...item.keys].map(key => reportName(key, reports))
         const uniqueNames = [...new Set(names)]
         const ficha = people[item.account]?.clientId
+        const loginBack = item.cause === 'password' ? loggedInAfter(item.account, item.keys, item.last) : null
         ;[...item.keys].forEach(key => {
             const section = DAILY_SECTION_OF[key] ?? key
-            explained[section] = [...new Set([...(explained[section] ?? []), `${nameOf(item.account)} (${CAUSE_SHORT[item.cause]})`])]
+            const label = loginBack ? 'contraseña ya corregida' : CAUSE_SHORT[item.cause]
+            explained[section] = [...new Set([...(explained[section] ?? []), `${nameOf(item.account)} (${label})`])]
         })
+
+        if (loginBack) {
+            resolved.push({
+                id: `pw-${item.account}`,
+                text: `${nameOf(item.account)}: su contraseña ya funciona; a ${whenText(runTime(loginBack))} el robot volvió a entrar a su InTouch. Lo que hoy no bajó (${listText(uniqueNames)}) se baja en la siguiente corrida.`,
+            })
+            return
+        }
 
         if (item.cause === 'password') {
             problems.push({
@@ -258,9 +291,11 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
                 ? `${who(item.account)}: su portal no tiene ${listText(uniqueNames)}`
                 : `${who(item.account)}: no bajó ${listText(uniqueNames)}`,
             what: item.cause === 'missing'
-                ? `El robot entró a su InTouch y ese reporte no aparece (${times(item.attempts)}).`
+                ? `El robot entró a su InTouch y el portal no lo trae (${times(item.attempts)}): «${firstLine(item.error) || 'no aparece'}».`
                 : `El robot lo intentó ${times(item.attempts)} y dijo: «${firstLine(item.error) || 'sin detalle'}».`,
-            todo: 'Revisa la corrida en Reportes.',
+            todo: item.cause === 'missing'
+                ? 'Su cuenta entra bien: es el portal el que no trae ese dato. Si no le corresponde, se le deja de pedir.'
+                : 'Revisa la corrida en Reportes.',
             actions: [{ label: 'Ver corridas', to: APP_ROUTES.REPORTS.DASHBOARD }],
         })
     })
