@@ -1,16 +1,21 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 import { API_ROUTES } from '@/constants/api'
 import { APP_ROUTES } from '@/constants/app'
 import { DEFAULT_COUNTRY } from '@/constants/countries'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import { LiveNews } from '@/interfaces/liveNews'
+import { IClient } from '@/interfaces/clients'
+import { ApiResponse } from '@/interfaces/common'
 import { AdminOverview, ServiceRequest } from '@/interfaces/overview'
 import { IPostRenderRun } from '@/interfaces/posts'
 import { AdminPulse, PulseLane, PulsePieces } from '@/interfaces/pulse'
 import { DownloadRun } from '@/pages/Reports/useReports'
+import HttpService from '@/services/http'
 import useCountryStore from '@/store/country'
 import { clock, isToday, lanesFromDaily } from './lib'
+import { baseAccount, diagnoseRobot, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
 
 import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
 
@@ -49,7 +54,7 @@ export interface PulseEvent {
 }
 
 const ARTIFACT: Record<string, string> = { image: 'imagen', video: 'video', image_square: 'cuadrada' }
-const ROBOT_SECTION: Record<string, string> = { early: 'Ventas Mensuales Personales', pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus', initiators_live: 'Iniciadoras al día', birthdays: 'Cumpleaños', anniversaries: 'Aniversarios', consultant_orders: 'Órdenes de consultoras', production_goal: 'Metas del reto de producción' }
+const ROBOT_SECTION: Record<string, string> = { ...REPORT_NAME, early: 'Ventas Mensuales Personales' }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
@@ -90,8 +95,9 @@ const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseE
         group: 'requests',
         tag: kind === 'correction' ? 'Corrección' : 'Solicitud',
         tone: kind === 'correction' ? 'warn' : today ? 'plain' : 'warn',
-        title: kind === 'correction' ? `Pidió corrección ${number}` : `Solicitud de diseño ${number}`,
-        text: [task.title, task.client, task.account].filter(Boolean).join(' · ') + (kind === 'request' ? ' · sin asignar' : ''),
+        /* Quién y qué, no sólo el número: «Mariana Núñez pidió corrección #813» */
+        title: kind === 'correction' ? `${task.client ?? 'Una clienta'} pidió corrección ${number}` : `Solicitud de diseño ${number}${task.client ? ` de ${task.client}` : ''}`,
+        text: [task.title, task.account].filter(Boolean).join(' · ') + (kind === 'request' ? ' · sin asignar' : ''),
         actions: [{ label: kind === 'correction' ? 'Abrir la corrección' : 'Asignar', to: APP_ROUTES.TASKS.DETAIL.replace(':id', task.id) }],
         carried: !today,
     }
@@ -119,6 +125,31 @@ const usePulse = () => {
 
     const data = overview.response
     const dailyReports = useMemo(() => Array.isArray(reports.response) ? reports.response : [], [reports.response])
+    const allRobotRuns = useMemo(() => machinery && Array.isArray(robotRuns.response) ? robotRuns.response : [], [machinery, robotRuns.response])
+
+    /* Quién es cada cuenta que falló hoy: nombre y ficha. Sólo de esas (suelen ser 0 a 3), no de todo el padrón */
+    const failedAccounts = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: {} }).accounts.sort(), [allRobotRuns, dailyReports])
+    const people = useQuery<Record<string, RobotPerson>>({
+        queryKey: ['admin', 'pulse', 'robot-people', failedAccounts],
+        enabled: failedAccounts.length > 0,
+        staleTime: 10 * 60_000,
+        queryFn: async () => {
+            const found: Record<string, RobotPerson> = {}
+            await Promise.all(failedAccounts.map(async account => {
+                try {
+                    const { data: page } = await HttpService.get<ApiResponse<{ items?: IClient[] }>>(`/clients?search=${encodeURIComponent(account)}&perPage=5`)
+                    const client = (page?.items ?? []).find(item => baseAccount(item.account ?? '') === account)
+                    if (client) found[account] = { name: client.name, clientId: client.id }
+                } catch {
+                    /* Sin nombre se dice la cuenta: no rompe la torre */
+                }
+            }))
+            return found
+        },
+    })
+
+    /* La torre por causas: qué pasó con el robot hoy, por clienta y motivo (ver problems.ts) */
+    const robot = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: people.data ?? {} }), [allRobotRuns, dailyReports, people.data])
     const pieces = useMemo<PulsePieces[]>(() => pulse.response?.pieces ?? [], [pulse.response])
 
     const schedule = useMemo<PulseLane[]>(() => {
@@ -241,7 +272,10 @@ const usePulse = () => {
                 tag: 'Reportes',
                 tone: complete ? 'ok' : 'warn',
                 title: `${report.name}: ${dailyHeadline(report)}`,
-                text: [complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}.`, report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.'].join(' '),
+                text: [
+                    complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}${robot.explained[report.section_key]?.length ? `: ${robot.explained[report.section_key].join(', ')}` : ''}.`,
+                    report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.',
+                ].join(' '),
                 actions: complete ? undefined : [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
             })
         })
@@ -268,7 +302,16 @@ const usePulse = () => {
 
         /* Lo de hoy primero y del más reciente al más viejo; lo arrastrado de otros días, al final */
         return out.sort((a, b) => Number(!!a.carried) - Number(!!b.carried) || b.at.localeCompare(a.at))
-    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery])
+    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery, robot.explained])
+
+    /* Lo que hay que atender, por causa: el robot y los reportes ya vienen agrupados por clienta y motivo; lo demás
+       (publicaciones, lo que no salió, pedidos y correcciones) es un hecho por tarjeta */
+    const problems = useMemo<PulseProblem[]>(() => {
+        const others = events
+            .filter(event => event.group !== 'reports' && (event.tone === 'bad' || event.tone === 'warn'))
+            .map(event => ({ id: event.id, tone: event.tone as 'bad' | 'warn', tag: event.tag, title: event.title, what: event.text, actions: event.actions }))
+        return [...robot.problems, ...others].sort((a, b) => Number(a.tone !== 'bad') - Number(b.tone !== 'bad'))
+    }, [events, robot.problems])
 
     return {
         loading: overview.loading && !data,
@@ -283,6 +326,10 @@ const usePulse = () => {
         pieces,
         liveNews: liveNews.response,
         events,
+        /** Lo que hay que atender, una tarjeta por CAUSA (no por corrida) */
+        problems,
+        /** Lo que falló hoy y ya se arregló solo */
+        resolved: robot.resolved,
     }
 }
 

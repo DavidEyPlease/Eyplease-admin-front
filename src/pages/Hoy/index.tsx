@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router'
 
 import Spinner from '@/components/common/Spinner'
 import { countryInfo } from '@/constants/countries'
 import { cn } from '@/lib/utils'
 import { dailyDone } from '@/utils/dailyReports'
 import MoneyCard from './components/MoneyCard'
+import ProblemList from './components/ProblemList'
 import PulseFeed from './components/PulseFeed'
 import RailExtras from './components/RailExtras'
 import ReportsCard from './components/ReportsCard'
@@ -30,18 +30,16 @@ const Kpi = ({ label, value, suffix, sub, index }: { label: string, value: numbe
  * No reutiliza la pantalla del Inicio de siempre (sigue intacta tras el interruptor), sólo sus datos.
  */
 const HoyPage = () => {
-    const navigate = useNavigate()
-    const { loading, country, machinery, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events } = usePulse()
+    const { loading, country, machinery, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events, problems, resolved } = usePulse()
 
     const ranKeys = useMemo(() => new Set(events.filter(event => event.id.startsWith('run-')).map(event => event.id.slice(4).split('|')[0])), [events])
 
     if (loading || !overview) return <div className="flex justify-center py-24"><Spinner /></div>
 
     const today = events.filter(event => !event.carried)
-    const urgent = events.filter(event => event.tone === 'bad').length
-    const attention = events.filter(event => event.tone === 'warn').length
-    /* Lo que cuenta el titular, con nombre: lo urgente primero */
-    const pending = [...events.filter(event => event.tone === 'bad'), ...events.filter(event => event.tone === 'warn')]
+    /* El titular cuenta CAUSAS, no corridas: una contraseña cambiada es 1 cosa aunque haya tumbado 8 descargas */
+    const urgent = problems.filter(problem => problem.tone === 'bad').length
+    const attention = problems.filter(problem => problem.tone === 'warn').length
     const verdict = urgent > 0 ? `${urgent} ${urgent === 1 ? 'cosa urgente' : 'cosas urgentes'}.` : attention > 0 ? `${attention} por atender.` : 'Todo al día.'
 
     const reportsDone = dailyReports.filter(dailyDone).length
@@ -67,23 +65,9 @@ const HoyPage = () => {
                         Torre de control. <em className={cn(urgent > 0 && '!bg-none !text-rose-500')}>{verdict}</em>
                     </h1>
                     <p className="mt-2 max-w-[560px] text-[13.5px] leading-relaxed text-muted-foreground">
-                        Lo que la plataforma hizo hoy, en orden. Cada tarjeta es un hecho, no una métrica: qué corrió, qué salió y qué hubo que rescatar.
+                        Arriba, lo que necesita tu atención: una tarjeta por causa, con qué pasó y qué hacer. Abajo, todo lo que la plataforma hizo hoy, en orden.
                     </p>
-                    {pending.length > 0 && (
-                        <ul className="mt-3 grid gap-2">
-                            {pending.map(event => (
-                                <li key={event.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-snug">
-                                    <span className={cn('pulse-tag', event.tone)}>{event.tag}</span>
-                                    <span className="min-w-0 font-bold">{event.title}</span>
-                                    {event.actions?.[0] && (
-                                        <button type="button" onClick={() => navigate(event.actions![0].to)} className="cursor-pointer font-bold text-primary hover:underline">
-                                            {event.actions[0].label}
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                    <ProblemList problems={problems} resolved={resolved} />
                 </header>
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

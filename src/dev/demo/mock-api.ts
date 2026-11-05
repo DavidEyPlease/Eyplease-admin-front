@@ -347,6 +347,34 @@ const downloadRuns = ([
     result: { total, uploaded, failed, skipped: 0, ...(missed ? { failures: missed.map(account => ({ account, reportKey: sections[0], error: 'locator.waitFor: Timeout 45000ms exceeded.' })) } : {}) },
 })).reverse()
 
+/* `?torre=causas`: el día del 4-nov-2026 (la torre «saturada»). Una contraseña cambiada (EJ-007) tumba 8 descargas, el
+   portal tarda con EJ-003 (el reintento la baja) y con EJ-005 (no la baja), y la primera lectura del nivel de carrera
+   se cae entera y la segunda sale. Lo que se espera ver: 2 tarjetas por causa y 3 cosas «ya se arreglaron solas». */
+const TORRE_CAUSAS = new URLSearchParams(window.location.search).get('torre') === 'causas'
+const pw = (account: string, reportKey: string) => ({ account, reportKey, status: 'failed', category: 'credenciales', error: `Credenciales incorrectas para la cuenta ${account}` })
+const slow = (account: string, reportKey: string) => ({ account, reportKey, status: 'failed', error: "locator.waitFor: Timeout 45000ms exceeded.\nCall log:\n  - waiting for locator('iframe').first().contentFrame()." })
+const yesterdayAt = (h: number, m: number) => { const d = at(h, m); d.setDate(d.getDate() - 1); return d }
+const causasRuns = ([
+    ['c-0', 'orders', ['consultant_orders'], null, yesterdayAt(23, 0), 29, 28, [pw('EJ-007', 'consultant_orders')], 'completed'],
+    ['c-1', 'daily', ['sales'], ['EJ-007'], at(7, 10), 1, 0, [pw('EJ-007', 'daily_sales')], 'completed'],
+    ['c-2', 'daily', ['pink_circle_hearts', 'pink_circle_vip_plus', 'initiators_live'], null, at(8, 30), 233, 229, [slow('EJ-003', 'pink_circle_hearts'), pw('EJ-007', 'pink_circle_hearts'), pw('EJ-007', 'pink_circle_vip_plus'), pw('EJ-007', 'initiators')], 'completed'],
+    ['c-3', 'daily', ['national_sales_live', 'area_recognition_live'], null, at(8, 45), 26, 23, [pw('EJ-007', 'national_monthly_personal_sales'), slow('EJ-005', 'area_recognition_live'), pw('EJ-007', 'area_recognition_live')], 'completed'],
+    ['c-4', 'daily', ['pink_circle_hearts'], ['EJ-003'], at(9, 32), 1, 1, [], 'completed'],
+    ['c-5', 'daily', ['area_recognition_live'], ['EJ-005'], at(9, 52), 1, 0, [slow('EJ-005', 'area_recognition_live')], 'completed'],
+    ['c-6', 'orders', ['career_levels'], null, at(10, 10), 0, 0, [], 'failed'],
+    ['c-7', 'orders', ['career_levels'], null, at(10, 28), 104, 103, [pw('EJ-007', 'career_levels')], 'completed'],
+] as Array<[string, string, string[], string[] | null, Date, number, number, object[], string]>)
+    .filter(([, , , , when]) => when.getTime() <= now.getTime())
+    .map(([run_id, process, sections, clients, when, total, uploaded, failures, status]) => ({
+        run_id, process, sections, clients, reset: false, status, error: status === 'failed' ? 'Request failed with status code 500' : null,
+        queued_at: when.toISOString(), finished_at: new Date(when.getTime() + 15 * 60_000).toISOString(),
+        result: status === 'failed' ? null : { total, uploaded, failed: failures.length, skipped: 0, failures },
+    })).reverse()
+const causasReports = ([
+    ['early', 'Tempraneras', 29, 15, 13], ['pink_circle_hearts', 'Corazones de Círculo Rosa', 102, 101, 0], ['pink_circle_vip_plus', 'Círculo Rosa VIP Plus', 102, 101, 0],
+    ['initiators_live', 'Iniciadoras al día', 29, 28, 0], ['national_sales_live', 'Ventas del Área al día', 13, 12, 0], ['area_recognition_live', 'Producción del Área al día', 12, 11, 0],
+] as Array<[string, string, number, number, number]>).map(([section_key, name, usual, loaded, empty]) => ({ section_key, name, usual, loaded, empty, rejected: 0, date: ymd(), last_at: at(9, 0).toISOString() }))
+
 /* Una pieza de mentira: un mosaico con su rótulo, sin imágenes de nadie */
 const tile = (label: string, a: string, b: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="200" cy="190" r="70" fill="rgba(255,255,255,.22)"/><rect x="90" y="300" width="220" height="18" rx="9" fill="rgba(255,255,255,.55)"/><rect x="130" y="332" width="140" height="12" rx="6" fill="rgba(255,255,255,.35)"/><text x="200" y="440" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="800" fill="rgba(255,255,255,.85)">${label}</text></svg>`)}`
 const tiles = (label: string, n: number, a: string, b: string) => Array.from({ length: n }, (_, index) => tile(`${label} ${index + 1}`, index % 2 ? b : a, index % 2 ? a : b))
@@ -923,7 +951,7 @@ export const installMockApi = () => {
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
         else if (path === '/live-news') response = respond(url.searchParams.get('country') === 'COL' ? { ...liveNews, star_level_up: [], star_close: [], new_beginning: [], totals: { star_level_up: 0, star_close: 0, new_beginning: 0 } } : liveNews)
-        else if (path === '/reports/daily-reports') response = respond(url.searchParams.get('country') === 'COL' ? colombiaDailyReports : dailyReports)
+        else if (path === '/reports/daily-reports') response = respond(url.searchParams.get('country') === 'COL' ? colombiaDailyReports : TORRE_CAUSAS ? causasReports : dailyReports)
         else if (path === '/copilot' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { message: string, conversation_id: string | null }
             const id = body.conversation_id ?? crypto.randomUUID()
@@ -1000,7 +1028,7 @@ export const installMockApi = () => {
             response = respond([])
         }
         else if (path === '/pulse') response = respond(url.searchParams.get('country') === 'COL' ? { ...pulse, pieces: pulse.pieces.slice(0, 1).map(item => ({ ...item, posts: 1, clients: 1 })) } : pulse)
-        else if (path === '/reports/download-runs' && method === 'GET') response = respond(downloadRuns)
+        else if (path === '/reports/download-runs' && method === 'GET') response = respond(TORRE_CAUSAS ? causasRuns : downloadRuns)
         /* Bajar ahora (México o Colombia): la corrida entra arriba de la lista, «en cola» */
         else if (path === '/reports/download-runs' && method === 'POST') {
             const body = JSON.parse(String(init?.body ?? '{}')) as { sections?: string[], reset?: boolean }
