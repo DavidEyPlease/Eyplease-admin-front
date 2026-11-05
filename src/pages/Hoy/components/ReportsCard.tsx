@@ -13,7 +13,7 @@ const whoIsMissing = (report: DailyReport, explained: Explanation[]): Explanatio
     return report.missing.map(item => {
         const account = baseAccount(item.account)
         return explained.find(entry => entry.account === account)
-            ?? { account, name: item.name, label: item.rejected ? 'el import rechazó su archivo' : item.first_time ? 'nunca se le ha bajado' : 'sin motivo registrado' }
+            ?? { account, name: item.name, label: item.rejected ? 'el import rechazó su archivo' : item.first_time ? 'hace días que no se le baja' : 'sin motivo registrado' }
     })
 }
 

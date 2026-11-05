@@ -41,7 +41,7 @@ export interface MissingAccount {
     account: string
     name: string
     rejected?: boolean
-    /** Nunca ha tenido ese reporte: casi siempre, que acaba de entrar a un plan que lo trae */
+    /** No ha tenido ese reporte en los últimos 3 días: casi siempre, que acaba de entrar (o volver) a un plan que lo trae */
     first_time?: boolean
 }
 
@@ -393,14 +393,14 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input):
                 const account = baseAccount(item.account)
                 newlySeen.add(`${account}|${report.section_key}`)
                 explained[report.section_key] = [...(explained[report.section_key] ?? []), { account, name: item.name, label: 'primer día con este reporte' }]
-                resolved.push({ id: `first-${account}-${report.section_key}`, text: `${item.name}: es su primer día con ${report.name} (seguramente acaba de entrar a un plan que lo trae); el robot lo baja desde la siguiente descarga.` })
+                resolved.push({ id: `first-${account}-${report.section_key}`, text: `${item.name}: es su primer día con ${report.name} (seguramente acaba de entrar —o volver— a un plan que lo trae); el robot lo baja desde la siguiente descarga.` })
             })
             const unknown = pendingMissing.filter(item => !firstDay.includes(item))
             if (!unknown.length) return
             const stale = unknown.filter(item => item.first_time)
             const rejected = unknown.filter(item => item.rejected)
             unknown.forEach(item => {
-                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account: baseAccount(item.account), name: item.name, label: item.rejected ? 'el import rechazó su archivo' : item.first_time ? 'nunca se le ha bajado' : 'sin motivo registrado' }]
+                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account: baseAccount(item.account), name: item.name, label: item.rejected ? 'el import rechazó su archivo' : item.first_time ? 'hace días que no se le baja' : 'sin motivo registrado' }]
             })
             problems.push({
                 id: `report-${report.section_key}`,
@@ -410,7 +410,7 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input):
                 what: rejected.length === unknown.length
                     ? `Su archivo sí bajó, pero el import lo rechazó (${listText(unknown.map(item => item.name))}).`
                     : stale.length === unknown.length
-                        ? `Nunca se le ha bajado este reporte y ya no es su primer día (se le ve faltar desde ${dayText(firstSeen[`${baseAccount(stale[0].account)}|${report.section_key}`] ?? today0)}): el robot no la está incluyendo.`
+                        ? `Hace días que no se le baja este reporte y ya no es su primer día (se le ve faltar desde ${dayText(firstSeen[`${baseAccount(stale[0].account)}|${report.section_key}`] ?? today0)}): el robot no la está incluyendo.`
                         : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${listText(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
                 todo: stale.length === unknown.length ? 'Revisa que su plan traiga este reporte y que su contraseña de InTouch esté capturada.' : 'Ábrelo en Reportes para ver qué pasó.',
                 actions: [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
