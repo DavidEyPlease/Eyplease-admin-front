@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { API_ROUTES } from '@/constants/api'
@@ -14,12 +14,33 @@ import { AdminPulse, PulseLane, PulsePieces } from '@/interfaces/pulse'
 import { DownloadRun } from '@/pages/Reports/useReports'
 import HttpService from '@/services/http'
 import useCountryStore from '@/store/country'
-import { clock, isToday, lanesFromDaily } from './lib'
+import { clock, dayKey, isToday, lanesFromDaily } from './lib'
 import { baseAccount, diagnoseRobot, MissingAccount, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
 
 import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
 
 const REFRESH_MS = 2 * 60_000
+
+/* Desde qué día se ve faltar a una cuenta en un reporte que nunca ha tenido (`cuenta|sección` → «YYYY-MM-DD»). Es del
+   navegador de quien mira: el primer día se toma como «acaba de entrar a su plan» y desde el siguiente ya es aviso. */
+const FIRST_SEEN_KEY = 'eyplease-admin:torre-primer-dia'
+const readFirstSeen = (): Record<string, string> => {
+    try {
+        return JSON.parse(localStorage.getItem(FIRST_SEEN_KEY) ?? '{}') ?? {}
+    } catch {
+        return {}
+    }
+}
+const saveFirstSeen = (keys: string[]) => {
+    try {
+        const limit = new Date(); limit.setDate(limit.getDate() - 30)
+        const kept = Object.fromEntries(Object.entries(readFirstSeen()).filter(([, day]) => day >= dayKey(limit)))
+        keys.forEach(key => { kept[key] = kept[key] ?? dayKey(new Date()) })
+        localStorage.setItem(FIRST_SEEN_KEY, JSON.stringify(kept))
+    } catch {
+        /* Sin almacenamiento la torre sigue: sólo no recuerda el primer día */
+    }
+}
 
 export interface DailyReport {
     section_key: string
@@ -151,7 +172,12 @@ const usePulse = () => {
     })
 
     /* La torre por causas: qué pasó con el robot hoy, por clienta y motivo (ver problems.ts) */
-    const robot = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: people.data ?? {} }), [allRobotRuns, dailyReports, people.data])
+    const firstSeen = useMemo(readFirstSeen, [dailyReports])
+    const robot = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: people.data ?? {}, firstSeen }), [allRobotRuns, dailyReports, people.data, firstSeen])
+    /* Lo visto hoy por primera vez se recuerda para mañana */
+    useEffect(() => {
+        if (robot.newlySeen.length) saveFirstSeen(robot.newlySeen)
+    }, [robot.newlySeen])
     const pieces = useMemo<PulsePieces[]>(() => pulse.response?.pieces ?? [], [pulse.response])
 
     const schedule = useMemo<PulseLane[]>(() => {

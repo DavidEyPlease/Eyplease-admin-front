@@ -41,6 +41,8 @@ export interface MissingAccount {
     account: string
     name: string
     rejected?: boolean
+    /** Nunca ha tenido ese reporte: casi siempre, que acaba de entrar a un plan que lo trae */
+    first_time?: boolean
 }
 
 interface DailyReportLike {
@@ -61,7 +63,7 @@ export interface Explanation {
     label: string
 }
 
-type Failure = { account: string, reportKey?: string, error?: string, category?: string }
+type Failure = { account: string, reportKey?: string, error?: string, category?: string, status?: string }
 
 /* El robot nombra cada archivo por su `reportKey`; la sección del robot (`run.sections`) y la del reporte diario de la
    API no siempre se llaman igual (ver `src/daily/daily-section.registry.ts` del robot). */
@@ -108,6 +110,14 @@ const whenText = (iso: string) => {
     return `el ${date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} a las ${clock(iso)}`
 }
 
+/** «ayer» o «el 3 nov», de un día «YYYY-MM-DD» */
+const dayText = (day: string) => {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1)
+    if (day === dayKey(yesterday)) return 'ayer'
+    const [y, m, d] = day.split('-').map(Number)
+    return `el ${new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
+}
+
 const listText = (items: string[]) => items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
 const times = (n: number) => n === 1 ? '1 vez' : `${n} veces`
 
@@ -116,8 +126,12 @@ const runDone = (run: DownloadRun) => run.status !== 'queued' && run.status !== 
 /** La API da las corridas de la más nueva a la más vieja: «la que sí salió» es la PRIMERA después de la falla. */
 const earliest = (runs: DownloadRun[]) => [...runs].sort((a, b) => runTime(a).localeCompare(runTime(b)))[0] ?? null
 
+/* «Sin datos»: el robot entró y el portal no trae registros (el 5-nov, «Cumpleaños del Área» de noviembre aún vacío). No
+   es falla: no hay nada que bajar. El robot lo manda en `failures` con status `skipped`. */
+const isNoData = (failure: Failure) => failure.status === 'skipped' || failure.category === 'sin_datos' || /sin registros|sin datos/i.test(failure.error ?? '')
+
 const failuresOf = (run: DownloadRun): Failure[] => {
-    const listed = (run.result?.failures ?? []) as Failure[]
+    const listed = ((run.result?.failures ?? []) as Failure[]).filter(failure => !isNoData(failure))
     if (listed.length) return listed
     /* Corridas viejas sin detalle: si fallaron todas las que pidió, se sabe quiénes */
     if (run.clients?.length && (run.result?.failed ?? 0) >= run.clients.length) {
@@ -147,6 +161,8 @@ interface Input {
     runs: DownloadRun[]
     reports: DailyReportLike[]
     people: Record<string, RobotPerson>
+    /** Desde qué día («YYYY-MM-DD») se ve faltar a una cuenta que nunca ha tenido ese reporte (`cuenta|sección`) */
+    firstSeen?: Record<string, string>
 }
 
 export interface Diagnosis {
@@ -156,10 +172,12 @@ export interface Diagnosis {
     explained: Record<string, Explanation[]>
     /** Cuentas con fallas de hoy: a éstas se les busca el nombre */
     accounts: string[]
+    /** Cuentas nuevas en un reporte vistas HOY por primera vez (`cuenta|sección`): se guardan para saber mañana */
+    newlySeen: string[]
 }
 
 /** Lee las corridas del robot de hoy y dice qué pasó, por clienta y por motivo. */
-export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
+export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input): Diagnosis => {
     const today = runs.filter(run => isToday(run.queued_at ?? run.finished_at))
     const done = today.filter(runDone)
     const reportOf = new Map(reports.map(report => [report.section_key, report]))
@@ -173,6 +191,8 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
     const resolved: PulseResolved[] = []
     const explained: Record<string, Explanation[]> = {}
     const accounts = new Set<string>()
+    const newlySeen = new Set<string>()
+    const today0 = dayKey(new Date())
 
     /* 1. Corridas que se cayeron enteras (sin resultado). Si después salió otra de lo mismo, ya no es pendiente. */
     done.filter(run => run.status === 'failed' || run.status === 'rejected').forEach(run => {
@@ -194,9 +214,22 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
         })
     })
 
+    /* 1b. Reportes que el portal trae vacíos: se dice, sin contarlo como pendiente */
+    done.filter(run => run.status === 'completed').forEach(run => {
+        ((run.result?.failures ?? []) as Failure[]).filter(isNoData).forEach(failure => {
+            const account = baseAccount(failure.account)
+            const key = failure.reportKey ?? (run.sections ?? [])[0] ?? ''
+            const id = `empty-${account}-${key}`
+            accounts.add(account)
+            if (!resolved.some(item => item.id === id)) {
+                resolved.push({ id, text: `${nameOf(account)}: ${reportName(key, reports)} todavía no trae registros en su portal («${firstLine(failure.error) || 'sin datos'}»); no hay nada que bajar.` })
+            }
+        })
+    })
+
     /* 2. Cuentas que no bajaron: se juntan por clienta y motivo. Lo que una corrida posterior bajó, o lo que ya está
        completo en su reporte del día, se arregló solo. */
-    type Open = { account: string, cause: Cause, keys: Set<string>, attempts: number, first: string, last: string, error?: string }
+    type Open = { account: string, cause: Cause, keys: Set<string>, attempts: number, runs: Set<string>, first: string, last: string, error?: string }
     const open = new Map<string, Open>()
     done.filter(run => run.status === 'completed').forEach(run => {
         failuresOf(run).forEach(failure => {
@@ -226,9 +259,11 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
                 return
             }
             const id = `${account}|${cause}`
-            const item = open.get(id) ?? { account, cause, keys: new Set<string>(), attempts: 0, first: runTime(run), last: runTime(run), error: failure.error }
+            const item = open.get(id) ?? { account, cause, keys: new Set<string>(), attempts: 0, runs: new Set<string>(), first: runTime(run), last: runTime(run), error: failure.error }
             item.keys.add(key)
-            item.attempts += 1
+            /* Intentos = corridas distintas: Corazones y VIP Plus fallados en la misma corrida son UN intento */
+            item.runs.add(run.run_id)
+            item.attempts = item.runs.size
             if (runTime(run) < item.first) item.first = runTime(run)
             if (runTime(run) > item.last) item.last = runTime(run)
             open.set(id, item)
@@ -255,18 +290,29 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
 
     const CAUSE_SHORT: Record<Cause, string> = { password: 'contraseña', portal: 'el portal no respondió', view: 'vista equivocada', missing: 'su portal no lo tiene', other: 'error del robot' }
 
+    /* El portal tardó UNA vez con un reporte del día: todos tienen reintento automático (12:30, 12:50…) y casi siempre las
+       baja. Se dice en una línea; si el reintento vuelve a fallar, ya son 2 intentos y sale arriba con su nombre. El 5-nov
+       a las 11:56 el portal tardó con 9 cuentas y eran 9 tarjetas antes del reintento. */
+    const waiting: Open[] = []
+
     open.forEach(item => {
         const names = [...item.keys].map(key => reportName(key, reports))
         const uniqueNames = [...new Set(names)]
         const ficha = people[item.account]?.clientId
         const loginBack = item.cause === 'password' ? loggedInAfter(item.account, item.keys, item.last) : null
+        const waitsRetry = item.cause === 'portal' && item.attempts === 1 && [...item.keys].every(key => reportOf.has(DAILY_SECTION_OF[key] ?? key))
         ;[...item.keys].forEach(key => {
             const section = DAILY_SECTION_OF[key] ?? key
-            const label = loginBack ? 'contraseña ya corregida, baja en la siguiente corrida' : CAUSE_SHORT[item.cause]
+            const label = loginBack ? 'contraseña ya corregida, baja en la siguiente corrida' : waitsRetry ? 'el portal no respondió; entra al reintento' : CAUSE_SHORT[item.cause]
             if (!(explained[section] ?? []).some(entry => entry.account === item.account)) {
                 explained[section] = [...(explained[section] ?? []), { account: item.account, name: nameOf(item.account), label }]
             }
         })
+
+        if (waitsRetry) {
+            waiting.push(item)
+            return
+        }
 
         if (loginBack) {
             resolved.push({
@@ -324,17 +370,37 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
         })
     })
 
+    if (waiting.length) {
+        const reportsOf = [...new Set(waiting.flatMap(item => [...item.keys].map(key => reportName(key, reports))))]
+        const last = waiting.map(item => item.last).sort().slice(-1)[0]
+        resolved.push({
+            id: 'portal-waiting',
+            text: `El portal de Mary Kay no respondió a ${whenText(last)} con ${waiting.length === 1 ? nameOf(waiting[0].account) : `${waiting.length} cuentas`}${waiting.length > 1 && waiting.length <= 3 ? ` (${listText(waiting.map(item => nameOf(item.account)))})` : ''} en ${listText(reportsOf)}: entran al reintento automático; si vuelven a fallar, salen aquí arriba.`,
+        })
+    }
+
     /* 3. Reportes del día con faltantes que ninguna falla del robot explica (p. ej. el import no corrió) */
     const running = today.filter(run => !runDone(run)).flatMap(run => run.sections ?? []).map(key => DAILY_SECTION_OF[key] ?? key)
     reports.filter(report => isToday(report.last_at) && !dailyDone(report) && !running.includes(report.section_key)).forEach(report => {
         const known = explained[report.section_key] ?? []
         /* Con la lista de la API se dice quién: las que faltan y ninguna falla del robot explica */
         if (report.missing) {
-            const unknown = report.missing.filter(item => !known.some(entry => entry.account === baseAccount(item.account)))
+            const pendingMissing = report.missing.filter(item => !known.some(entry => entry.account === baseAccount(item.account)))
+            /* Su primer día con ese reporte (nunca lo ha tenido y hoy es el primer día que se le ve faltar): entró a un plan
+               que lo trae después de la descarga. Se dice, pero no es pendiente; si mañana sigue igual, sí avisa. */
+            const firstDay = pendingMissing.filter(item => item.first_time && (firstSeen[`${baseAccount(item.account)}|${report.section_key}`] ?? today0) >= today0)
+            firstDay.forEach(item => {
+                const account = baseAccount(item.account)
+                newlySeen.add(`${account}|${report.section_key}`)
+                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account, name: item.name, label: 'primer día con este reporte' }]
+                resolved.push({ id: `first-${account}-${report.section_key}`, text: `${item.name}: es su primer día con ${report.name} (seguramente acaba de entrar a un plan que lo trae); el robot lo baja desde la siguiente descarga.` })
+            })
+            const unknown = pendingMissing.filter(item => !firstDay.includes(item))
             if (!unknown.length) return
+            const stale = unknown.filter(item => item.first_time)
             const rejected = unknown.filter(item => item.rejected)
             unknown.forEach(item => {
-                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account: baseAccount(item.account), name: item.name, label: item.rejected ? 'el import rechazó su archivo' : 'sin motivo registrado' }]
+                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account: baseAccount(item.account), name: item.name, label: item.rejected ? 'el import rechazó su archivo' : item.first_time ? 'nunca se le ha bajado' : 'sin motivo registrado' }]
             })
             problems.push({
                 id: `report-${report.section_key}`,
@@ -343,8 +409,10 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
                 title: `${report.name}: ${unknown.length === 1 ? `le falta a ${unknown[0].name}` : `faltan ${unknown.length} cuentas`}`,
                 what: rejected.length === unknown.length
                     ? `Su archivo sí bajó, pero el import lo rechazó (${listText(unknown.map(item => item.name))}).`
-                    : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${listText(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
-                todo: 'Ábrelo en Reportes para ver qué pasó.',
+                    : stale.length === unknown.length
+                        ? `Nunca se le ha bajado este reporte y ya no es su primer día (se le ve faltar desde ${dayText(firstSeen[`${baseAccount(stale[0].account)}|${report.section_key}`] ?? today0)}): el robot no la está incluyendo.`
+                        : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${listText(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
+                todo: stale.length === unknown.length ? 'Revisa que su plan traiga este reporte y que su contraseña de InTouch esté capturada.' : 'Ábrelo en Reportes para ver qué pasó.',
                 actions: [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
             })
             return
@@ -369,5 +437,6 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
         resolved,
         explained,
         accounts: [...accounts],
+        newlySeen: [...newlySeen].filter(key => !firstSeen[key]),
     }
 }
