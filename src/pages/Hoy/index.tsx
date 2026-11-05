@@ -30,7 +30,7 @@ const Kpi = ({ label, value, suffix, sub, index }: { label: string, value: numbe
  * No reutiliza la pantalla del Inicio de siempre (sigue intacta tras el interruptor), sólo sus datos.
  */
 const HoyPage = () => {
-    const { loading, country, machinery, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events, problems, resolved } = usePulse()
+    const { loading, country, machinery, overview, dailyReports, schedule, scheduleIsPartial, liveNews, events, problems, resolved, explained } = usePulse()
 
     const ranKeys = useMemo(() => new Set(events.filter(event => event.id.startsWith('run-')).map(event => event.id.slice(4).split('|')[0])), [events])
 
@@ -53,7 +53,7 @@ const HoyPage = () => {
             {/* Fija y con su propio scroll: se lee sin tener que bajar todo el feed. En teléfono va DESPUÉS
                 del titular: ahí lo primero es si hay algo por atender */}
             <aside className="pulse-rail order-2 grid gap-3.5 xl:order-none xl:sticky xl:top-[90px] xl:max-h-[calc(100vh-106px)] xl:overflow-y-auto xl:pr-0.5">
-                <ReportsCard reports={dailyReports} />
+                <ReportsCard reports={dailyReports} explained={explained} />
                 <ScheduleCard lanes={schedule} daily={overview.publishing.daily} ranKeys={ranKeys} partial={scheduleIsPartial} />
                 <RailExtras liveNews={liveNews} monthly={overview.publishing.monthly} clients={overview.clients} />
             </aside>

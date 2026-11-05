@@ -5,11 +5,30 @@ import { cn } from '@/lib/utils'
 import { dailyDone, dailyEmptyLabel, dailyReceived } from '@/utils/dailyReports'
 import { DailyReport } from '../usePulse'
 import { clock, isToday } from '../lib'
+import { baseAccount, Explanation } from '../problems'
 
-/** Los reportes que el robot baja cada día: cuántas clientas ya lo tienen contra cuántas deben tenerlo. */
-const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
+/** A quién le falta ese reporte hoy y por qué: de la lista de la API y de lo que dijo el robot. */
+const whoIsMissing = (report: DailyReport, explained: Explanation[]): Explanation[] => {
+    if (!report.missing) return explained
+    return report.missing.map(item => {
+        const account = baseAccount(item.account)
+        return explained.find(entry => entry.account === account)
+            ?? { account, name: item.name, label: item.rejected ? 'el import rechazó su archivo' : 'sin motivo registrado' }
+    })
+}
+
+/**
+ * Los reportes que el robot baja cada día: cuántas clientas ya lo tienen contra cuántas deben tenerlo, y a quién le
+ * falta y por qué. El 4-nov-2026 los seis decían «falta 1» y no se sabía que era la misma clienta en todos.
+ */
+const ReportsCard = ({ reports, explained = {} }: { reports: DailyReport[], explained?: Record<string, Explanation[]> }) => {
     const complete = reports.filter(dailyDone).length
     const allDone = reports.length > 0 && complete === reports.length
+    const pending = reports.filter(report => !dailyDone(report) && isToday(report.last_at))
+    const missingBy = new Map(pending.map(report => [report.section_key, whoIsMissing(report, explained[report.section_key] ?? [])]))
+    /* Si lo que falta en varios reportes es de las mismas 1 o 2 clientas, se dice una vez arriba */
+    const people = [...new Map([...missingBy.values()].flat().map(entry => [entry.account, entry])).values()]
+    const sameFew = pending.length > 1 && people.length > 0 && people.length <= 2 && [...missingBy.values()].every(list => list.length > 0)
 
     return (
         <section className="shell-glass pulse-rise rounded-3xl p-[18px]">
@@ -17,6 +36,12 @@ const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
                 <h2 className="text-[14.5px] font-extrabold tracking-tight">Reportes del día</h2>
                 <span className={cn('pulse-tag', allDone ? 'ok' : 'warn')}>{complete} de {reports.length}</span>
             </div>
+            {sameFew && (
+                <p className="mt-2 rounded-xl bg-foreground/[.04] px-3 py-2 text-[11.5px] leading-snug text-muted-foreground">
+                    Todo lo que falta hoy es de <b className="font-bold text-foreground">{people.map(entry => entry.name).join(' y ')}</b>
+                    {people.length === 1 ? ` (${people[0].label})` : ''}.
+                </p>
+            )}
 
             <div className="mt-2 divide-y divide-border">
                 {reports.map(report => {
@@ -32,6 +57,12 @@ const ReportsCard = ({ reports }: { reports: DailyReport[] }) => {
                                     {dailyEmptyLabel(report) ? ` · ${dailyEmptyLabel(report)}` : ''}
                                     {report.rejected > 0 ? ` · ${report.rejected} rechazados` : ''}
                                 </small>
+                                {!done && !sameFew && !!missingBy.get(report.section_key)?.length && (
+                                    <small className="mt-1 block text-[11px] leading-snug text-muted-foreground">
+                                        Falta: {missingBy.get(report.section_key)!.slice(0, 3).map(entry => `${entry.name} (${entry.label})`).join(', ')}
+                                        {missingBy.get(report.section_key)!.length > 3 ? ` y ${missingBy.get(report.section_key)!.length - 3} más` : ''}
+                                    </small>
+                                )}
                             </span>
                             <span className="pb-4 text-[17px] font-extrabold tracking-tight tabular-nums">{report.loaded}<span className="text-[12px] font-semibold text-muted-foreground"> / {report.usual}</span></span>
                         </div>

@@ -15,7 +15,7 @@ import { DownloadRun } from '@/pages/Reports/useReports'
 import HttpService from '@/services/http'
 import useCountryStore from '@/store/country'
 import { clock, isToday, lanesFromDaily } from './lib'
-import { baseAccount, diagnoseRobot, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
+import { baseAccount, diagnoseRobot, MissingAccount, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
 
 import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
 
@@ -31,6 +31,8 @@ export interface DailyReport {
     rejected: number
     date: string
     last_at: string | null
+    /** Quién falta hoy (la API lo manda sólo para el día de hoy) */
+    missing?: MissingAccount[] | null
 }
 
 export type PulseTone = 'ok' | 'warn' | 'bad' | 'live' | 'plain'
@@ -273,7 +275,7 @@ const usePulse = () => {
                 tone: complete ? 'ok' : 'warn',
                 title: `${report.name}: ${dailyHeadline(report)}`,
                 text: [
-                    complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}${robot.explained[report.section_key]?.length ? `: ${robot.explained[report.section_key].join(', ')}` : ''}.`,
+                    complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}${robot.explained[report.section_key]?.length ? `: ${robot.explained[report.section_key].map(entry => `${entry.name} (${entry.label})`).join(', ')}` : ''}.`,
                     report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.',
                 ].join(' '),
                 actions: complete ? undefined : [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
@@ -330,6 +332,8 @@ const usePulse = () => {
         problems,
         /** Lo que falló hoy y ya se arregló solo */
         resolved: robot.resolved,
+        /** Por reporte del día: a quién le falta y por qué */
+        explained: robot.explained,
     }
 }
 

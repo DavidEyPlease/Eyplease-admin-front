@@ -36,6 +36,13 @@ export interface RobotPerson {
     clientId?: string
 }
 
+/** Una cuenta que hoy no tiene su reporte (lo manda la API; `rejected`: bajó pero el import lo rechazó). */
+export interface MissingAccount {
+    account: string
+    name: string
+    rejected?: boolean
+}
+
 interface DailyReportLike {
     section_key: string
     name: string
@@ -43,6 +50,15 @@ interface DailyReportLike {
     loaded: number
     empty?: number
     last_at: string | null
+    /** Quién falta hoy. Si no viene (API vieja u otro día), la torre sólo cuenta. */
+    missing?: MissingAccount[] | null
+}
+
+/** Por qué le falta a cada quien su reporte del día */
+export interface Explanation {
+    account: string
+    name: string
+    label: string
 }
 
 type Failure = { account: string, reportKey?: string, error?: string, category?: string }
@@ -137,7 +153,7 @@ export interface Diagnosis {
     problems: PulseProblem[]
     resolved: PulseResolved[]
     /** Por sección del reporte diario: quién falta y por qué (para que la tarjeta del reporte lo diga) */
-    explained: Record<string, string[]>
+    explained: Record<string, Explanation[]>
     /** Cuentas con fallas de hoy: a éstas se les busca el nombre */
     accounts: string[]
 }
@@ -147,12 +163,15 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
     const today = runs.filter(run => isToday(run.queued_at ?? run.finished_at))
     const done = today.filter(runDone)
     const reportOf = new Map(reports.map(report => [report.section_key, report]))
-    const nameOf = (account: string) => people[account]?.name ?? `la cuenta ${account}`
-    const who = (account: string) => people[account]?.name ? `${people[account].name} (${account})` : `La cuenta ${account}`
+    /* El nombre: de su ficha o, si no, de la lista de quién falta que manda la API */
+    const missingName = new Map(reports.flatMap(report => report.missing ?? []).map(item => [baseAccount(item.account), item.name]))
+    const personName = (account: string) => people[account]?.name ?? missingName.get(account)
+    const nameOf = (account: string) => personName(account) ?? `la cuenta ${account}`
+    const who = (account: string) => personName(account) ? `${personName(account)} (${account})` : `La cuenta ${account}`
 
     const problems: PulseProblem[] = []
     const resolved: PulseResolved[] = []
-    const explained: Record<string, string[]> = {}
+    const explained: Record<string, Explanation[]> = {}
     const accounts = new Set<string>()
 
     /* 1. Corridas que se cayeron enteras (sin resultado). Si después salió otra de lo mismo, ya no es pendiente. */
@@ -186,6 +205,9 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
             accounts.add(account)
             const later = fetchedAfter(failure, run, done)
             const report = reportOf.get(DAILY_SECTION_OF[key] ?? key)
+            /* Si la API dice quién falta hoy en ese reporte y ella no está, ya lo tiene o ya no se le pide (el 4-nov, Rocío
+               con «Producción del Área», que sólo tienen las Nacionales): no es aviso. */
+            if (!later && report?.missing && !report.missing.some(item => baseAccount(item.account) === account)) return
             if (later || (report && dailyDone(report))) {
                 const id = `ok-${account}-${key}`
                 if (!resolved.some(item => item.id === id)) {
@@ -240,8 +262,10 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
         const loginBack = item.cause === 'password' ? loggedInAfter(item.account, item.keys, item.last) : null
         ;[...item.keys].forEach(key => {
             const section = DAILY_SECTION_OF[key] ?? key
-            const label = loginBack ? 'contraseña ya corregida' : CAUSE_SHORT[item.cause]
-            explained[section] = [...new Set([...(explained[section] ?? []), `${nameOf(item.account)} (${label})`])]
+            const label = loginBack ? 'contraseña ya corregida, baja en la siguiente corrida' : CAUSE_SHORT[item.cause]
+            if (!(explained[section] ?? []).some(entry => entry.account === item.account)) {
+                explained[section] = [...(explained[section] ?? []), { account: item.account, name: nameOf(item.account), label }]
+            }
         })
 
         if (loginBack) {
@@ -303,10 +327,31 @@ export const diagnoseRobot = ({ runs, reports, people }: Input): Diagnosis => {
     /* 3. Reportes del día con faltantes que ninguna falla del robot explica (p. ej. el import no corrió) */
     const running = today.filter(run => !runDone(run)).flatMap(run => run.sections ?? []).map(key => DAILY_SECTION_OF[key] ?? key)
     reports.filter(report => isToday(report.last_at) && !dailyDone(report) && !running.includes(report.section_key)).forEach(report => {
+        const known = explained[report.section_key] ?? []
+        /* Con la lista de la API se dice quién: las que faltan y ninguna falla del robot explica */
+        if (report.missing) {
+            const unknown = report.missing.filter(item => !known.some(entry => entry.account === baseAccount(item.account)))
+            if (!unknown.length) return
+            const rejected = unknown.filter(item => item.rejected)
+            unknown.forEach(item => {
+                explained[report.section_key] = [...(explained[report.section_key] ?? []), { account: baseAccount(item.account), name: item.name, label: item.rejected ? 'el import rechazó su archivo' : 'sin motivo registrado' }]
+            })
+            problems.push({
+                id: `report-${report.section_key}`,
+                tone: 'warn',
+                tag: 'Reportes',
+                title: `${report.name}: ${unknown.length === 1 ? `le falta a ${unknown[0].name}` : `faltan ${unknown.length} cuentas`}`,
+                what: rejected.length === unknown.length
+                    ? `Su archivo sí bajó, pero el import lo rechazó (${listText(unknown.map(item => item.name))}).`
+                    : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${listText(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
+                todo: 'Ábrelo en Reportes para ver qué pasó.',
+                actions: [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
+            })
+            return
+        }
         const missing = dailyMissing(report)
-        const known = explained[report.section_key]?.length ?? 0
-        if (missing <= known) return
-        const rest = missing - known
+        if (missing <= known.length) return
+        const rest = missing - known.length
         problems.push({
             id: `report-${report.section_key}`,
             tone: 'warn',
