@@ -154,6 +154,13 @@ const overview = {
     service_requests: { new: 3, in_review: 5, latest: [request(581, 'Invitación · Junta de unidad', 'Clienta de ejemplo A', 0), request(580, 'Reconocimiento · Reina de ventas', 'Clienta de ejemplo B', 1), request(578, 'Promoción · Skincare', 'Clienta de ejemplo C', 2)] },
     corrections: { count: 1, latest: [request(572, 'Invitación · cambiar la hora', 'Clienta de ejemplo D', 1)] },
     clients: { active: 98, inactive: 7, new_this_month: 4 },
+    whatsapp_tickets: {
+        open: 2,
+        items: [
+            { id: 'demo-t1', wa_id: '5210000000001', client: 'Clienta de ejemplo E', problem: 'No le aparecen las piezas de Círculo Rosa de dos consultoras que entraron esta semana.', severity: 'alta', status: 'abierto', created_at: iso(60 * 24 * 3), days: 3 },
+            { id: 'demo-t2', wa_id: '5210000000002', client: 'Clienta de ejemplo F', problem: 'La app se queda en «Preparando tu día» al abrirla desde el celular.', severity: 'media', status: 'abierto', created_at: iso(45), days: 0 },
+        ],
+    },
 }
 /* Colombia (`?country=COL`): una clienta de ejemplo, su dinero en pesos colombianos y nada pendiente;
    las corridas diarias son las mismas (maquinaria compartida) */

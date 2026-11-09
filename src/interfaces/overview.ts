@@ -88,6 +88,19 @@ export interface OverviewCorrections {
     latest: ServiceRequest[]
 }
 
+/** Un ticket del bot de WhatsApp sin resolver: lo que una clienta reportó y el equipo tiene que arreglar. */
+export interface OverviewWaTicket {
+    id: string
+    wa_id: string
+    client: string | null
+    problem: string
+    severity: 'alta' | 'media' | 'baja' | string
+    status: string
+    created_at: string
+    /** Días desde que se levantó */
+    days: number
+}
+
 export interface AdminOverview {
     period: string
     /** País que se pidió (MEX, COL); nulo = todos. */
@@ -103,5 +116,10 @@ export interface AdminOverview {
         active: number
         inactive: number
         new_this_month: number
+    }
+    /** Tickets de WhatsApp sin resolver (API 3c91ffc). Opcional: con la API vieja no viene. */
+    whatsapp_tickets?: {
+        open: number
+        items: OverviewWaTicket[]
     }
 }

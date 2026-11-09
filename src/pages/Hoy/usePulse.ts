@@ -8,7 +8,7 @@ import useFetchQuery from '@/hooks/useFetchQuery'
 import { LiveNews } from '@/interfaces/liveNews'
 import { IClient } from '@/interfaces/clients'
 import { ApiResponse } from '@/interfaces/common'
-import { AdminOverview, ServiceRequest } from '@/interfaces/overview'
+import { AdminOverview, OverviewWaTicket, ServiceRequest } from '@/interfaces/overview'
 import { IPostRenderRun } from '@/interfaces/posts'
 import { AdminPulse, PulseLane, PulsePieces } from '@/interfaces/pulse'
 import { DownloadRun } from '@/pages/Reports/useReports'
@@ -106,6 +106,30 @@ const fetchedLater = (run: DownloadRun, runs: DownloadRun[]) => {
         const stillMissing = missedAccounts(other)
         return !!stillMissing && !stillMissing.some(item => item.account === account && (!section || !item.section || item.section === section))
     }))
+}
+
+/**
+ * Un ticket del bot de WhatsApp sin resolver. Antes no salían en la torre: el 9-nov-2026 había 7 abiertos, el más viejo
+ * del 21-sep, y 5 ya se habían resuelto en el chat sin marcarse. Uno de hoy es aviso; si ya lleva días, o es de prioridad
+ * alta y no se atendió el mismo día, es urgente.
+ */
+const ticketEvent = (ticket: OverviewWaTicket): PulseEvent => {
+    const today = isToday(ticket.created_at)
+    return {
+        id: `ticket-${ticket.id}`,
+        at: ticket.created_at,
+        time: today ? clock(ticket.created_at) : ticket.days <= 1 ? 'ayer' : `hace ${ticket.days} días`,
+        group: 'requests',
+        tag: 'Ticket de WhatsApp',
+        tone: ticket.days >= 2 || (ticket.severity === 'alta' && !today) ? 'bad' : 'warn',
+        title: `${ticket.client ?? 'Una clienta'} reportó un problema`,
+        text: `${ticket.problem} · Cuando quede, márcalo como resuelto.`,
+        actions: [
+            { label: 'Abrir el chat', to: `${APP_ROUTES.WHATSAPP.INBOX}?wa=${encodeURIComponent(ticket.wa_id)}` },
+            { label: 'Ver tickets', to: APP_ROUTES.WHATSAPP.TICKETS },
+        ],
+        carried: !today,
+    }
 }
 
 const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseEvent => {
@@ -327,6 +351,7 @@ const usePulse = () => {
 
         data?.service_requests.latest.forEach(task => out.push(taskEvent(task, 'request')))
         data?.corrections.latest.forEach(task => out.push(taskEvent(task, 'correction')))
+        data?.whatsapp_tickets?.items.forEach(ticket => out.push(ticketEvent(ticket)))
 
         /* Lo de hoy primero y del más reciente al más viejo; lo arrastrado de otros días, al final */
         return out.sort((a, b) => Number(!!a.carried) - Number(!!b.carried) || b.at.localeCompare(a.at))
