@@ -15,7 +15,7 @@ import { DownloadRun } from '@/pages/Reports/useReports'
 import HttpService from '@/services/http'
 import useCountryStore from '@/store/country'
 import { clock, dayKey, isToday, lanesFromDaily } from './lib'
-import { baseAccount, diagnoseRobot, MissingAccount, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
+import { afterImport, baseAccount, diagnoseRobot, MissingAccount, namesByLabel, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
 
 import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
 
@@ -23,6 +23,14 @@ const REFRESH_MS = 2 * 60_000
 
 /* Desde qué día se ve faltar a una cuenta en un reporte que nunca ha tenido (`cuenta|sección` → «YYYY-MM-DD»). Es del
    navegador de quien mira: el primer día se toma como «acaba de entrar a su plan» y desde el siguiente ya es aviso. */
+/* Qué reportes del día carga cada import del calendario (`/pulse` trae la hora; las secciones van aquí) y la hora de
+   respaldo si el calendario no llega. Ver `routes/console.php` de la API. */
+const IMPORT_LANES: Record<string, { sections: string[], fallback: string }> = {
+    import_early: { sections: ['early'], fallback: '08:00' },
+    import_hearts: { sections: ['pink_circle_hearts', 'pink_circle_vip_plus', 'initiators_live', 'production_goal'], fallback: '13:30' },
+    import_national_live: { sections: ['national_sales_live', 'area_recognition_live'], fallback: '13:40' },
+}
+
 const FIRST_SEEN_KEY = 'eyplease-admin:torre-primer-dia'
 const readFirstSeen = (): Record<string, string> => {
     try {
@@ -197,7 +205,12 @@ const usePulse = () => {
 
     /* La torre por causas: qué pasó con el robot hoy, por clienta y motivo (ver problems.ts) */
     const firstSeen = useMemo(readFirstSeen, [dailyReports])
-    const robot = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: people.data ?? {}, firstSeen }), [allRobotRuns, dailyReports, people.data, firstSeen])
+    /* Hora de carga de cada reporte del día: antes de ella, faltar es lo normal */
+    const importAt = useMemo(() => Object.fromEntries(Object.entries(IMPORT_LANES).flatMap(([key, lane]) => {
+        const time = (pulse.response?.schedule ?? []).find(item => item.key === key)?.time ?? lane.fallback
+        return lane.sections.map(section => [section, time])
+    })), [pulse.response])
+    const robot = useMemo(() => diagnoseRobot({ runs: allRobotRuns, reports: dailyReports, people: people.data ?? {}, firstSeen, importAt }), [allRobotRuns, dailyReports, people.data, firstSeen, importAt])
     /* Lo visto hoy por primera vez se recuerda para mañana */
     useEffect(() => {
         if (robot.newlySeen.length) saveFirstSeen(robot.newlySeen)
@@ -316,19 +329,21 @@ const usePulse = () => {
         /* Reportes ya cargados hoy */
         dailyReports.filter(report => isToday(report.last_at)).forEach(report => {
             const complete = dailyDone(report)
+            /* Antes de su hora de carga, que falten es lo normal: se dice cuándo entra */
+            const early = !complete && !afterImport(importAt, report.section_key)
             out.push({
                 id: `report-${report.section_key}`,
                 at: report.last_at as string,
                 time: clock(report.last_at),
                 group: 'reports',
                 tag: 'Reportes',
-                tone: complete ? 'ok' : 'warn',
+                tone: complete ? 'ok' : early ? 'plain' : 'warn',
                 title: `${report.name}: ${dailyHeadline(report)}`,
-                text: [
-                    complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}${robot.explained[report.section_key]?.length ? `: ${robot.explained[report.section_key].map(entry => `${entry.name} (${entry.label})`).join(', ')}` : ''}.`,
+                text: early ? `Se carga a las ${importAt[report.section_key]}; lo de ahora son cargas sueltas.` : [
+                    complete ? (report.empty ? 'Bajaron todos.' : 'El import cerró completo.') : `Faltan ${dailyMissing(report)}${robot.explained[report.section_key]?.length ? `: ${namesByLabel(robot.explained[report.section_key])}` : ''}.`,
                     report.rejected > 0 ? `${plural(report.rejected, 'archivo rechazado', 'archivos rechazados')}.` : 'Sin rechazos.',
                 ].join(' '),
-                actions: complete ? undefined : [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
+                actions: complete || early ? undefined : [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
             })
         })
 
@@ -355,7 +370,7 @@ const usePulse = () => {
 
         /* Lo de hoy primero y del más reciente al más viejo; lo arrastrado de otros días, al final */
         return out.sort((a, b) => Number(!!a.carried) - Number(!!b.carried) || b.at.localeCompare(a.at))
-    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery, robot.explained])
+    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery, robot.explained, importAt])
 
     /* Lo que hay que atender, por causa: el robot y los reportes ya vienen agrupados por clienta y motivo; lo demás
        (publicaciones, lo que no salió, pedidos y correcciones) es un hecho por tarjeta */
@@ -385,6 +400,8 @@ const usePulse = () => {
         resolved: robot.resolved,
         /** Por reporte del día: a quién le falta y por qué */
         explained: robot.explained,
+        /** Hora de carga de cada reporte del día */
+        importAt,
     }
 }
 

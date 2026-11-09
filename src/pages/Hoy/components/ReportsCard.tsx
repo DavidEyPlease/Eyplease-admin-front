@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { dailyDone, dailyEmptyLabel, dailyReceived } from '@/utils/dailyReports'
 import { DailyReport } from '../usePulse'
 import { clock, isToday } from '../lib'
-import { baseAccount, Explanation } from '../problems'
+import { afterImport, baseAccount, Explanation, namesByLabel } from '../problems'
 
 /** A quién le falta ese reporte hoy y por qué: de la lista de la API y de lo que dijo el robot. */
 const whoIsMissing = (report: DailyReport, explained: Explanation[]): Explanation[] => {
@@ -21,10 +21,11 @@ const whoIsMissing = (report: DailyReport, explained: Explanation[]): Explanatio
  * Los reportes que el robot baja cada día: cuántas clientas ya lo tienen contra cuántas deben tenerlo, y a quién le
  * falta y por qué. El 4-nov-2026 los seis decían «falta 1» y no se sabía que era la misma clienta en todos.
  */
-const ReportsCard = ({ reports, explained = {} }: { reports: DailyReport[], explained?: Record<string, Explanation[]> }) => {
+const ReportsCard = ({ reports, explained = {}, importAt }: { reports: DailyReport[], explained?: Record<string, Explanation[]>, importAt?: Record<string, string> }) => {
     const complete = reports.filter(dailyDone).length
     const allDone = reports.length > 0 && complete === reports.length
-    const pending = reports.filter(report => !dailyDone(report) && isToday(report.last_at))
+    /* Sólo después de su hora de carga: antes, faltar es lo normal (ver afterImport) */
+    const pending = reports.filter(report => !dailyDone(report) && isToday(report.last_at) && afterImport(importAt, report.section_key))
     const missingBy = new Map(pending.map(report => [report.section_key, whoIsMissing(report, explained[report.section_key] ?? [])]))
     /* Si lo que falta en varios reportes es de las mismas 1 o 2 clientas, se dice una vez arriba */
     const people = [...new Map([...missingBy.values()].flat().map(entry => [entry.account, entry])).values()]
@@ -46,21 +47,24 @@ const ReportsCard = ({ reports, explained = {} }: { reports: DailyReport[], expl
             <div className="mt-2 divide-y divide-border">
                 {reports.map(report => {
                     const done = dailyDone(report)
+                    /* Antes de su hora de carga no falta nada: se dice cuándo entra, sin barra de aviso */
+                    const waiting = !done && !afterImport(importAt, report.section_key) && !!importAt?.[report.section_key]
                     const pct = report.usual ? Math.min(100, (dailyReceived(report) / report.usual) * 100) : 0
                     return (
                         <div key={report.section_key} className="flex items-end gap-3 py-3">
                             <span className="min-w-0 flex-1">
                                 <b className="block truncate text-[13px] font-bold">{report.name}</b>
-                                <span className={cn('pulse-bar mt-2 block', !done && 'warn')}><i style={{ width: `${pct}%` }} /></span>
+                                <span className={cn('pulse-bar mt-2 block', !done && !waiting && 'warn')}><i style={{ width: `${pct}%` }} /></span>
                                 <small className="mt-1.5 block text-[11px] text-muted-foreground">
-                                    {report.last_at ? `${done ? 'Cargadas' : 'Última carga'} · ${isToday(report.last_at) ? clock(report.last_at) : 'ayer o antes'}` : 'Todavía no baja hoy'}
+                                    {waiting
+                                        ? `Se carga a las ${importAt![report.section_key]}${report.loaded && isToday(report.last_at) ? ` · ${report.loaded} ya ${report.loaded === 1 ? 'está' : 'están'}` : ''}`
+                                        : report.last_at ? `${done ? 'Cargadas' : 'Última carga'} · ${isToday(report.last_at) ? clock(report.last_at) : 'ayer o antes'}` : 'Todavía no baja hoy'}
                                     {dailyEmptyLabel(report) ? ` · ${dailyEmptyLabel(report)}` : ''}
                                     {report.rejected > 0 ? ` · ${report.rejected} rechazados` : ''}
                                 </small>
                                 {!done && !sameFew && !!missingBy.get(report.section_key)?.length && (
                                     <small className="mt-1 block text-[11px] leading-snug text-muted-foreground">
-                                        Falta: {missingBy.get(report.section_key)!.slice(0, 3).map(entry => `${entry.name} (${entry.label})`).join(', ')}
-                                        {missingBy.get(report.section_key)!.length > 3 ? ` y ${missingBy.get(report.section_key)!.length - 3} más` : ''}
+                                        Falta: {namesByLabel(missingBy.get(report.section_key)!)}
                                     </small>
                                 )}
                             </span>

@@ -118,6 +118,29 @@ const dayText = (day: string) => {
     return `el ${new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
 }
 
+/** «Ana, Bety y Carmen» o, si son muchas, «Ana, Bety, Carmen y 99 más» (el 9-nov salían las 102 de Corazones). */
+export const fewNames = (names: string[], max = 3) =>
+    names.length <= max ? listText(names) : `${names.slice(0, max).join(', ')} y ${names.length - max} más`
+
+/** «Ana, Bety y 99 más (sin motivo registrado) · Patricia (contraseña)»: los nombres juntos por motivo, no uno por uno */
+export const namesByLabel = (entries: Array<{ name: string, label: string }>) => {
+    const groups = new Map<string, string[]>()
+    entries.forEach(entry => groups.set(entry.label, [...(groups.get(entry.label) ?? []), entry.name]))
+    return [...groups.entries()].map(([label, names]) => `${fewNames(names)} (${label})`).join(' · ')
+}
+
+/**
+ * ¿Ya pasó la hora de carga (import) de ese reporte? Antes de ella, faltar es lo normal: el 9-nov a las 10:33 una cuenta
+ * suelta de Corazones cargó a las 9:19 y la torre puso a las otras 102 como faltantes; la descarga es a las 11:30 y el
+ * import a las 13:30. Se dan 15 minutos de margen. Sin hora conocida, cuenta como pasada.
+ */
+export const afterImport = (importAt: Record<string, string> | undefined, section: string, now = new Date()) => {
+    const at = importAt?.[section]
+    if (!at) return true
+    const [h, m] = at.split(':').map(Number)
+    return now.getHours() * 60 + now.getMinutes() >= h * 60 + m + 15
+}
+
 const listText = (items: string[]) => items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
 const times = (n: number) => n === 1 ? '1 vez' : `${n} veces`
 
@@ -163,6 +186,8 @@ interface Input {
     people: Record<string, RobotPerson>
     /** Desde qué día («YYYY-MM-DD») se ve faltar a una cuenta que nunca ha tenido ese reporte (`cuenta|sección`) */
     firstSeen?: Record<string, string>
+    /** Hora de carga de cada reporte del día («HH:MM», del calendario de la torre) */
+    importAt?: Record<string, string>
 }
 
 export interface Diagnosis {
@@ -177,7 +202,7 @@ export interface Diagnosis {
 }
 
 /** Lee las corridas del robot de hoy y dice qué pasó, por clienta y por motivo. */
-export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input): Diagnosis => {
+export const diagnoseRobot = ({ runs, reports, people, firstSeen = {}, importAt }: Input): Diagnosis => {
     const today = runs.filter(run => isToday(run.queued_at ?? run.finished_at))
     const done = today.filter(runDone)
     const reportOf = new Map(reports.map(report => [report.section_key, report]))
@@ -381,7 +406,7 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input):
 
     /* 3. Reportes del día con faltantes que ninguna falla del robot explica (p. ej. el import no corrió) */
     const running = today.filter(run => !runDone(run)).flatMap(run => run.sections ?? []).map(key => DAILY_SECTION_OF[key] ?? key)
-    reports.filter(report => isToday(report.last_at) && !dailyDone(report) && !running.includes(report.section_key)).forEach(report => {
+    reports.filter(report => isToday(report.last_at) && !dailyDone(report) && !running.includes(report.section_key) && afterImport(importAt, report.section_key)).forEach(report => {
         const known = explained[report.section_key] ?? []
         /* Con la lista de la API se dice quién: las que faltan y ninguna falla del robot explica */
         if (report.missing) {
@@ -408,10 +433,10 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {} }: Input):
                 tag: 'Reportes',
                 title: `${report.name}: ${unknown.length === 1 ? `le falta a ${unknown[0].name}` : `faltan ${unknown.length} cuentas`}`,
                 what: rejected.length === unknown.length
-                    ? `Su archivo sí bajó, pero el import lo rechazó (${listText(unknown.map(item => item.name))}).`
+                    ? `Su archivo sí bajó, pero el import lo rechazó (${fewNames(unknown.map(item => item.name))}).`
                     : stale.length === unknown.length
                         ? `Hace días que no se le baja este reporte y ya no es su primer día (se le ve faltar desde ${dayText(firstSeen[`${baseAccount(stale[0].account)}|${report.section_key}`] ?? today0)}): el robot no la está incluyendo.`
-                        : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${listText(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
+                        : `El robot no reportó ninguna falla de ${unknown.length === 1 ? 'ella' : `ellas (${fewNames(unknown.map(item => item.name))})`} hoy: puede que no se le haya pedido o que el archivo no se haya cargado.`,
                 todo: stale.length === unknown.length ? 'Revisa que su plan traiga este reporte y que su contraseña de InTouch esté capturada.' : 'Ábrelo en Reportes para ver qué pasó.',
                 actions: [{ label: 'Ver las que faltan', to: APP_ROUTES.REPORTS.DASHBOARD }],
             })
