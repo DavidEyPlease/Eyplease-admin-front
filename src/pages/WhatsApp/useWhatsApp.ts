@@ -14,6 +14,7 @@ import {
     WaClientCardResponse,
     WaConversation,
     WaConversationSummary,
+    WaInboxGroup,
     WaInboxMode,
     WaStats,
     WaTemplate,
@@ -63,14 +64,15 @@ export function useWaStats() {
     })
 }
 
-export function useWaConversations(mode: WaInboxMode, search: string) {
+/** Al buscar se busca en TODOS los chats: quien busca un nombre no sabe en qué pestaña está. */
+export function useWaConversations(mode: WaInboxMode, search: string, group: WaInboxGroup) {
     const queryParams = useMemo(
         () => ({
             ...(mode === "all" ? {} : { mode }),
-            ...(search ? { search } : {}),
+            ...(search ? { search } : group === "all" ? {} : { group }),
             per_page: 50,
         }),
-        [mode, search]
+        [mode, search, group]
     )
 
     return useFetchQuery<Paginated<WaConversationSummary>>("/whatsapp/conversations", {

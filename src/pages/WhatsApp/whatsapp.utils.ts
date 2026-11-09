@@ -1,5 +1,15 @@
 /** Utilidades de formato del modulo de WhatsApp. */
 
+import { WaConversationSummary } from "@/interfaces/whatsapp"
+
+/**
+ * Si el chat es de una clienta. Manda `is_client`, que calcula la API; el respaldo
+ * repite su regla por si la API todavía no lo trae.
+ */
+export function isClientConversation(conv: Pick<WaConversationSummary, "is_client" | "identity" | "stage">): boolean {
+    return conv.is_client ?? (conv.identity?.isClient === true || conv.stage === "cliente")
+}
+
 /**
  * "hace 5 min", "ayer", "12 sep".
  *

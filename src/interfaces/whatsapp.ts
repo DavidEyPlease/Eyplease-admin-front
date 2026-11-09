@@ -59,6 +59,10 @@ export interface WaConversationSummary {
     updated_at: string
     /** Hora del último mensaje del hilo (de cualquiera de los dos lados). Sólo viene en el listado. */
     last_at?: string | null
+    /** Es clienta de Eyplease+ (si no, es prospecto). Lo calcula la API. */
+    is_client?: boolean
+    /** Llegó por un anuncio de Meta. Sólo viene en el listado. */
+    from_ad?: boolean
 }
 
 /** Detalle: incluye el hilo. */
@@ -143,3 +147,6 @@ export interface WaTemplate {
 }
 
 export type WaInboxMode = 'all' | 'bot' | 'manual'
+
+/** Pestaña de la bandeja: clientas y prospectos van aparte para que los anuncios no tapen a las clientas. */
+export type WaInboxGroup = 'clients' | 'prospects' | 'all'

@@ -717,14 +717,25 @@ const reportSummary = {
 }
 
 /* ── WhatsApp: una bandeja de ejemplo para recorrer la pantalla (nadie real, nada se envía) ─── */
-const waConversation = (n: number, name: string, last: string, minutes: number, manual: boolean, client: boolean, channel = 'whatsapp') => ({
-    wa_id: `52155000000${n}`, channel, stage: client ? 'soporte' : 'prospecto', human_took_over: manual, profile_name: name, display_name: name, last_message: last, notas_count: 0,
+const waConversation = (n: number, name: string, last: string, minutes: number, manual: boolean, client: boolean, channel = 'whatsapp', fromAd = false) => ({
+    wa_id: `5215500000${String(n).padStart(2, '0')}`, channel, stage: client ? 'cliente' : 'explorando', human_took_over: manual, profile_name: name, display_name: name, last_message: last, notas_count: 0,
     identity: client ? { name, consultantCode: `EJ-00${n}`, networkPersonId: `c-${n - 1}`, role: 'Directora', photoUrl: null, active: true, isClient: true, found: true } : { found: false, isClient: false },
-    name: client ? name : null, account: client ? `EJ-00${n}` : null, network_person_id: client ? `c-${n - 1}` : null, created_at: iso(60 * 24 * 12), updated_at: iso(minutes),
+    name, account: client ? `EJ-00${n}` : null, network_person_id: client ? `c-${n - 1}` : null, created_at: iso(60 * 24 * 12), updated_at: iso(minutes),
+    last_at: iso(minutes), is_client: client, from_ad: fromAd,
 })
+/* Como en noviembre: los anuncios llenan la bandeja y las clientas quedan entre ellos */
 const waConversations = [
-    waConversation(1, 'Clienta de ejemplo A', '¿Ya quedó mi invitación?', 12, false, true), waConversation(3, 'Clienta de ejemplo C', 'Ya hice la transferencia, te mando el comprobante', 47, true, true),
-    waConversation(5, 'Clienta de ejemplo E', 'Gracias, quedó hermoso', 180, false, true), waConversation(9, 'Prospecto de ejemplo', '¿Cuánto cuesta el plan para una Directora?', 260, false, false, 'instagram'),
+    waConversation(21, 'Prospecto de anuncio A', 'Bot: ¿Le muestro los planes y para qué sirve cada uno?', 4, false, false, 'whatsapp', true),
+    waConversation(22, 'Prospecto de anuncio B', 'Quiero ver cómo funciona Eyplease+', 9, false, false, 'whatsapp', true),
+    waConversation(1, 'Clienta de ejemplo A', '¿Ya quedó mi invitación?', 12, false, true),
+    waConversation(23, 'Prospecto de anuncio C', 'Bot: Lo pruebas un mes gratis, sin tarjeta. ¿Te mando la liga?', 20, false, false, 'whatsapp', true),
+    waConversation(24, 'Prospecto de anuncio D', 'Bot: Así le llegan, con el nombre y la foto de cada consultora.', 33, false, false, 'whatsapp', true),
+    waConversation(3, 'Clienta de ejemplo C', 'Ya hice la transferencia, te mando el comprobante', 47, true, true),
+    waConversation(25, 'Prospecto de anuncio E', 'Bot: ¿Te mando la liga para empezar?', 70, false, false, 'whatsapp', true),
+    waConversation(26, 'Prospecto de anuncio F', 'Bot: Hola, soy del equipo de Eyplease+.', 95, false, false, 'whatsapp', true),
+    waConversation(5, 'Clienta de ejemplo E', 'Gracias, quedó hermoso', 180, false, true),
+    waConversation(9, 'Prospecto de ejemplo', '¿Cuánto cuesta el plan para una Directora?', 260, false, false, 'instagram'),
+    waConversation(7, 'Clienta de ejemplo G', 'Bot: Listo, ya quedó tu pieza de cumpleaños.', 600, false, true),
 ]
 const waHistory = (name: string) => [
     { role: 'user', content: `Hola, soy ${name}. ¿Ya quedó mi invitación para la junta del sábado?`, at: iso(40) },
@@ -1458,7 +1469,13 @@ export const installMockApi = () => {
         else if (path === '/reports/clients-status') response = respond(url.searchParams.get('country') === 'COL' ? colombiaClientsStatus : clientsStatus)
         else if (path === '/reports/summary') response = respond(reportSummary)
         else if (path === '/whatsapp/stats') response = respond({ conversations: waConversations.length, manual: 1, bot: 3, open_tickets: 2, delivery_failures: 0 })
-        else if (path === '/whatsapp/conversations') response = respond(waPage(waConversations))
+        else if (path === '/whatsapp/conversations') {
+            const group = url.searchParams.get('group'), mode = url.searchParams.get('mode'), term = (url.searchParams.get('search') ?? '').toLowerCase()
+            response = respond(waPage(waConversations.filter(item =>
+                (group !== 'clients' || item.is_client) && (group !== 'prospects' || !item.is_client)
+                && (mode !== 'manual' || item.human_took_over) && (mode !== 'bot' || !item.human_took_over)
+                && (!term || `${item.display_name} ${item.wa_id} ${item.account ?? ''}`.toLowerCase().includes(term)))))
+        }
         else if (/^\/whatsapp\/conversations\/\d+\/client$/.test(path)) {
             const found = waConversations.find(item => item.wa_id === path.split('/')[3])
             response = respond(found?.account ? { identified: true, last_client_message_at: iso(12), client: { id: found.network_person_id, account: found.account, name: found.name, email: 'clienta@ejemplo.com', active: true, photo: null, country_code: 'MX', rank: 'Directora', plan: 'Plan de ejemplo B', payments: { year: now.getFullYear(), status: found.account === 'EJ-003' ? 'retraso' : 'al_corriente', paid_periods: 8, overdue_periods: found.account === 'EJ-003' ? 1 : 0, in_review_periods: 0, pending_periods: 3, last_payment: { period: period(1), status: 'paid', amount: 990, paid_at: iso(60 * 24 * 18) } } } } : { identified: false, client: null, last_client_message_at: iso(260) })

@@ -3,12 +3,26 @@ import { useSearchParams } from "react-router"
 import { ArrowLeftIcon } from "lucide-react"
 
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback"
-import { WaInboxMode } from "@/interfaces/whatsapp"
+import { WaInboxGroup, WaInboxMode } from "@/interfaces/whatsapp"
 
 import ConversationList from "./components/ConversationList"
 import ChatThread from "./components/ChatThread"
 import ClientStrip from "./components/ClientStrip"
 import { useWaActions, useWaClientCard, useWaConversation, useWaConversations } from "./useWhatsApp"
+import { isClientConversation } from "./whatsapp.utils"
+
+/** La pestaña elegida se recuerda en este navegador. */
+const GROUP_KEY = "eyplease-admin:wa-group"
+
+function readGroup(): WaInboxGroup {
+    try {
+        const saved = localStorage.getItem(GROUP_KEY)
+        if (saved === "clients" || saved === "prospects" || saved === "all") return saved
+    } catch {
+        // Sin acceso al almacenamiento (navegación privada): se abre en Clientas.
+    }
+    return "clients"
+}
 
 /**
  * Bandeja de WhatsApp.
@@ -25,6 +39,15 @@ import { useWaActions, useWaClientCard, useWaConversation, useWaConversations } 
  */
 const WhatsAppInboxPage = () => {
     const [mode, setMode] = useState<WaInboxMode>("all")
+    const [group, setGroupState] = useState<WaInboxGroup>(readGroup)
+    const setGroup = (next: WaInboxGroup) => {
+        setGroupState(next)
+        try {
+            localStorage.setItem(GROUP_KEY, next)
+        } catch {
+            // Sólo se pierde el recordatorio de la pestaña.
+        }
+    }
     const [searchInput, setSearchInput] = useState("")
     const [search, setSearch] = useState("")
     /* Un aviso (la campana, o el del teléfono) trae en `?wa=` de quién es: se abre ese chat */
@@ -39,7 +62,7 @@ const WhatsAppInboxPage = () => {
     // Sin debounce cada tecla dispara una consulta a la base del bot.
     const debouncedSearch = useDebouncedCallback((value: string) => setSearch(value), 350)
 
-    const { response: list, loading: listLoading } = useWaConversations(mode, search)
+    const { response: list, loading: listLoading } = useWaConversations(mode, search, group)
     const { response: conversation, loading: threadLoading } = useWaConversation(selectedWaId)
     const { response: clientCard, loading: cardLoading } = useWaClientCard(selectedWaId)
     const { sendText, sendFile, setTakeover, sending } = useWaActions(selectedWaId)
@@ -55,6 +78,18 @@ const WhatsAppInboxPage = () => {
         }
     }, [conversations, selectedWaId, linkedWaId])
 
+    // Un aviso puede abrir el chat de una prospecto estando en Clientas (o al revés): se pasa a su pestaña
+    // una sola vez, al llegar; después la persona puede cambiar de pestaña con el chat abierto.
+    const [routedWaId, setRoutedWaId] = useState<string | null>(null)
+    useEffect(() => {
+        if (!conversation || !linkedWaId || conversation.wa_id !== linkedWaId || routedWaId === linkedWaId) return
+        setRoutedWaId(linkedWaId)
+        if (group === "all") return
+        const own: WaInboxGroup = isClientConversation(conversation) ? "clients" : "prospects"
+        if (own !== group) setGroup(own)
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- sólo al llegar un chat por aviso
+    }, [conversation, linkedWaId, routedWaId])
+
     const handleSearchChange = (value: string) => {
         setSearchInput(value)
         debouncedSearch(value)
@@ -65,9 +100,11 @@ const WhatsAppInboxPage = () => {
     const listProps = {
         conversations,
         loading: listLoading,
+        group,
         mode,
         search: searchInput,
         selectedWaId,
+        onGroupChange: setGroup,
         onModeChange: setMode,
         onSearchChange: handleSearchChange,
         onSelect: setSelectedWaId,
