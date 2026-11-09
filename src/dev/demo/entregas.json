@@ -1,0 +1,1775 @@
+{
+ "period": "2026-11",
+ "closing_of": "2026-10",
+ "today": "2026-11-09",
+ "generated_at": "2026-11-09T15:22:50-06:00",
+ "days": [
+  "2026-11-01",
+  "2026-11-02",
+  "2026-11-03",
+  "2026-11-04",
+  "2026-11-05",
+  "2026-11-06",
+  "2026-11-07",
+  "2026-11-08",
+  "2026-11-09"
+ ],
+ "empty_runs_since": "2026-11-10",
+ "reports": {
+  "total": 108,
+  "ready_on": "2026-11-02",
+  "sections": [
+   {
+    "key": "unity_monthly_personal_sales",
+    "name": "Ventas",
+    "done": 107,
+    "expected": 108
+   },
+   {
+    "key": "initiators",
+    "name": "Iniciación",
+    "done": 107,
+    "expected": 108
+   },
+   {
+    "key": "pink_circle",
+    "name": "Círculo Rosa",
+    "done": 105,
+    "expected": 105
+   },
+   {
+    "key": "group_production",
+    "name": "Producción de grupo",
+    "done": 104,
+    "expected": 105
+   },
+   {
+    "key": "pink_circle_constancy",
+    "name": "Círculo Rosa (Colombia)",
+    "done": 2,
+    "expected": 3
+   }
+  ],
+  "missing": [
+   {
+    "client_id": "u-ent-08-6",
+    "account": "EJ-08",
+    "name": "Clienta de ejemplo Ocho",
+    "reports": [
+     "Producción de grupo"
+    ]
+   },
+   {
+    "client_id": "u-ent-01-8",
+    "account": "EJ-01COL",
+    "name": "Clienta de ejemplo Uno",
+    "reports": [
+     "Ventas",
+     "Iniciación",
+     "Círculo Rosa (Colombia)"
+    ]
+   }
+  ],
+  "status": {
+   "tone": "warn",
+   "label": "Faltan 2"
+  }
+ },
+ "closing": [
+  {
+   "key": "honor_roll",
+   "name": "Cuadro de Honor",
+   "mode": "auto",
+   "when": "Sale sola del 1 al 7, 1:00 pm",
+   "sections": [
+    "honor_roll"
+   ],
+   "pieces": 518,
+   "clients": 107,
+   "by_day": {
+    "2026-11-01": 222,
+    "2026-11-03": 280,
+    "2026-11-05": 12,
+    "2026-11-09": 4
+   },
+   "launches": [
+    {
+     "date": "2026-11-09",
+     "runs": 12,
+     "jobs": 12
+    }
+   ],
+   "active_runs": 0,
+   "pending": 0,
+   "pending_no_design": 0,
+   "pending_paused": 420,
+   "ready_since": null,
+   "snapshot_at": "2026-11-09T21:00:25+00:00",
+   "status": {
+    "code": "done",
+    "tone": "ok",
+    "label": "Salió",
+    "no_design": 0
+   }
+  },
+  {
+   "key": "stars",
+   "name": "Estrellas",
+   "mode": "manual",
+   "when": "Se lanza a mano",
+   "sections": [
+    "stars"
+   ],
+   "pieces": 348,
+   "clients": 89,
+   "by_day": {
+    "2026-11-02": 339,
+    "2026-11-05": 7,
+    "2026-11-09": 2
+   },
+   "launches": [],
+   "active_runs": 0,
+   "pending": 0,
+   "pending_no_design": 0,
+   "pending_paused": 0,
+   "ready_since": "2026-11-02",
+   "snapshot_at": "2026-11-09T21:00:09+00:00",
+   "status": {
+    "code": "done",
+    "tone": "ok",
+    "label": "Salió",
+    "no_design": 0
+   }
+  },
+  {
+   "key": "road_to_success",
+   "name": "Camino al Éxito",
+   "mode": "manual",
+   "when": "Se lanza a mano",
+   "sections": [
+    "road_to_success"
+   ],
+   "pieces": 678,
+   "clients": 98,
+   "by_day": {
+    "2026-11-05": 675,
+    "2026-11-09": 3
+   },
+   "launches": [
+    {
+     "date": "2026-11-05",
+     "runs": 9,
+     "jobs": 2022
+    }
+   ],
+   "active_runs": 0,
+   "pending": 0,
+   "pending_no_design": 0,
+   "pending_paused": 0,
+   "ready_since": "2026-11-02",
+   "snapshot_at": "2026-11-09T21:00:34+00:00",
+   "status": {
+    "code": "done",
+    "tone": "ok",
+    "label": "Salió",
+    "no_design": 0
+   }
+  },
+  {
+   "key": "new_beginnings",
+   "name": "Nuevos Inicios y Herramientas",
+   "mode": "manual",
+   "when": "Se lanza a mano",
+   "sections": [
+    "new_beginnings"
+   ],
+   "pieces": 542,
+   "clients": 50,
+   "by_day": {
+    "2026-11-04": 363,
+    "2026-11-05": 154,
+    "2026-11-09": 25
+   },
+   "launches": [
+    {
+     "date": "2026-11-04",
+     "runs": 14,
+     "jobs": 1091
+    },
+    {
+     "date": "2026-11-05",
+     "runs": 6,
+     "jobs": 54
+    }
+   ],
+   "active_runs": 0,
+   "pending": 13,
+   "pending_no_design": 0,
+   "pending_paused": 151,
+   "ready_since": "2026-11-02",
+   "snapshot_at": "2026-11-09T21:00:21+00:00",
+   "status": {
+    "code": "leftover",
+    "tone": "warn",
+    "label": "Quedan 13 por salir",
+    "no_design": 0,
+    "days": 4
+   }
+  },
+  {
+   "key": "pink_circle",
+   "name": "Círculo Rosa",
+   "mode": "manual",
+   "when": "Se lanza a mano",
+   "sections": [
+    "pink_circle"
+   ],
+   "pieces": 1636,
+   "clients": 105,
+   "by_day": {
+    "2026-11-05": 15,
+    "2026-11-09": 1621
+   },
+   "launches": [
+    {
+     "date": "2026-11-09",
+     "runs": 39,
+     "jobs": 4845
+    }
+   ],
+   "active_runs": 12,
+   "pending": 0,
+   "pending_no_design": 0,
+   "pending_paused": 0,
+   "ready_since": "2026-11-03",
+   "snapshot_at": "2026-11-09T21:12:19+00:00",
+   "status": {
+    "code": "running",
+    "tone": "plain",
+    "label": "Generándose",
+    "no_design": 0
+   }
+  },
+  {
+   "key": "cuts",
+   "name": "Cortes del Área",
+   "mode": "manual",
+   "when": "Se lanza a mano",
+   "sections": [
+    "sales_cut",
+    "national_initiation_cut",
+    "target_unit_club"
+   ],
+   "pieces": 192,
+   "clients": 12,
+   "by_day": {
+    "2026-11-04": 192
+   },
+   "launches": [
+    {
+     "date": "2026-11-04",
+     "runs": 15,
+     "jobs": 576
+    }
+   ],
+   "active_runs": 0,
+   "pending": 0,
+   "pending_no_design": 0,
+   "pending_paused": 0,
+   "ready_since": "2026-11-02",
+   "snapshot_at": "2026-11-09T21:00:54+00:00",
+   "status": {
+    "code": "done",
+    "tone": "ok",
+    "label": "Salió",
+    "no_design": 0
+   }
+  },
+  {
+   "key": "honor_roll_national",
+   "name": "Cuadro de Honor del Área",
+   "mode": "auto",
+   "when": "Sale sola del 1 al 7, 4:15 pm",
+   "sections": [
+    "honor_roll_national"
+   ],
+   "pieces": 0,
+   "clients": 0,
+   "by_day": [],
+   "launches": [],
+   "active_runs": 0,
+   "pending": 0,
+   "pending_no_design": 96,
+   "pending_paused": 0,
+   "ready_since": null,
+   "snapshot_at": "2026-11-09T21:00:56+00:00",
+   "status": {
+    "code": "no_design",
+    "tone": "warn",
+    "label": "Falta el diseño",
+    "no_design": 96
+   }
+  }
+ ],
+ "live": [
+  {
+   "key": "early",
+   "time": "09:00",
+   "name": "Ordenantes",
+   "note": "Quien ordenó",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 734,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-02": {
+     "state": "ran",
+     "pieces": 0,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-03": {
+     "state": "missing",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 30,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 45,
+     "failed": 0,
+     "at": "09:16"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 43,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 42,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 25,
+     "failed": 0,
+     "at": "09:00"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 34,
+     "failed": 0,
+     "at": "09:00"
+    }
+   }
+  },
+  {
+   "key": "live_stars",
+   "time": "09:30",
+   "name": "Estrellas en vivo",
+   "note": "Quien cruzó un nivel",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "ran",
+     "pieces": 12,
+     "failed": 0,
+     "at": "09:30"
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 15,
+     "failed": 0,
+     "at": "09:30"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 30,
+     "failed": 0,
+     "at": "09:33"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 21,
+     "failed": 0,
+     "at": "09:30"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 18,
+     "failed": 0,
+     "at": "09:30"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 9,
+     "failed": 0,
+     "at": "09:30"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 36,
+     "failed": 0,
+     "at": "09:30"
+    }
+   }
+  },
+  {
+   "key": "live_welcome",
+   "time": "09:45",
+   "name": "Bienvenidas",
+   "note": "Quien entró a la unidad",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 36,
+     "failed": 0,
+     "at": "10:01"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 15,
+     "failed": 0,
+     "at": "09:45"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 9,
+     "failed": 0,
+     "at": "09:45"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 9,
+     "failed": 0,
+     "at": "09:45"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 6,
+     "failed": 0,
+     "at": "09:45"
+    }
+   }
+  },
+  {
+   "key": "live_honor_roll",
+   "time": "11:30",
+   "name": "Cuadro de Honor en vivo",
+   "note": "Cuando cambia el podio",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 370,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "ran",
+     "pieces": 60,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 87,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 120,
+     "failed": 0,
+     "at": "11:34"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 126,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 102,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 42,
+     "failed": 0,
+     "at": "11:30"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 117,
+     "failed": 0,
+     "at": "11:30"
+    }
+   }
+  },
+  {
+   "key": "live_honor_roll_cierre",
+   "time": "13:00",
+   "name": "Cuadro de Honor del cierre",
+   "note": "Del 1 al 7",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 26,
+     "failed": 0,
+     "at": "13:00"
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "ran",
+     "pieces": 840,
+     "failed": 0,
+     "at": "13:00"
+    },
+    "2026-11-04": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 36,
+     "failed": 0,
+     "at": "13:00"
+    },
+    "2026-11-06": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-07": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-08": {
+     "state": "off"
+    },
+    "2026-11-09": {
+     "state": "off"
+    }
+   }
+  },
+  {
+   "key": "live_initiators",
+   "time": "14:00",
+   "name": "Nuevo Inicio",
+   "note": "La Iniciadora que sumó",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 3,
+     "failed": 0,
+     "at": "14:00"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 9,
+     "failed": 0,
+     "at": "14:00"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 6,
+     "failed": 0,
+     "at": "14:00"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 9,
+     "failed": 0,
+     "at": "14:00"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 3,
+     "failed": 0,
+     "at": "14:00"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 4,
+     "failed": 0,
+     "at": "14:00"
+    }
+   }
+  },
+  {
+   "key": "live_production_goal",
+   "time": "14:15",
+   "name": "¡Logró su meta!",
+   "note": "Sólo en días de reto",
+   "alert": false,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 270,
+     "failed": 0,
+     "at": "14:15"
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-05": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-06": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-07": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-08": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-09": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    }
+   }
+  },
+  {
+   "key": "live_pink_circle",
+   "time": "14:30",
+   "name": "Círculo Rosa en vivo",
+   "note": "Quien movió corazones",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 1557,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 90,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 63,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 48,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 59,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 30,
+     "failed": 0,
+     "at": "14:30"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 54,
+     "failed": 0,
+     "at": "14:30"
+    }
+   }
+  },
+  {
+   "key": "live_honor_roll_national",
+   "time": "15:15",
+   "name": "Cuadro de Honor del Área",
+   "note": "Cuando cambia el podio",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "ran",
+     "pieces": 168,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 150,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 150,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 120,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 81,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 48,
+     "failed": 0,
+     "at": "15:15"
+    },
+    "2026-11-09": {
+     "state": "ran",
+     "pieces": 52,
+     "failed": 0,
+     "at": "15:15"
+    }
+   }
+  },
+  {
+   "key": "live_honor_roll_national_cierre",
+   "time": "16:15",
+   "name": "CdH del Área · cierre",
+   "note": "Del 1 al 7",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-02": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-03": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-04": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-05": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-06": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-07": {
+     "state": "unknown",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    },
+    "2026-11-08": {
+     "state": "off"
+    },
+    "2026-11-09": {
+     "state": "off"
+    }
+   }
+  },
+  {
+   "key": "birthdays",
+   "time": "20:00",
+   "name": "Cumpleaños y aniversarios",
+   "note": "Los de mañana",
+   "alert": true,
+   "cells": {
+    "2026-11-01": {
+     "state": "ran",
+     "pieces": 0,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-02": {
+     "state": "ran",
+     "pieces": 0,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-03": {
+     "state": "ran",
+     "pieces": 69,
+     "failed": 0,
+     "at": "20:01"
+    },
+    "2026-11-04": {
+     "state": "ran",
+     "pieces": 117,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-05": {
+     "state": "ran",
+     "pieces": 111,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-06": {
+     "state": "ran",
+     "pieces": 93,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-07": {
+     "state": "ran",
+     "pieces": 126,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-08": {
+     "state": "ran",
+     "pieces": 90,
+     "failed": 0,
+     "at": "20:00"
+    },
+    "2026-11-09": {
+     "state": "later",
+     "pieces": 0,
+     "failed": 0,
+     "at": null
+    }
+   }
+  }
+ ],
+ "clients": [
+  {
+   "client_id": "u-ent-01-6",
+   "account": "EJ-01",
+   "name": "Clienta de ejemplo Uno",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-11-07"
+    }
+   ],
+   "since": "2026-11-07",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "27 del cierre · 3 en vivo",
+     "closing": 27,
+     "live": 3
+    },
+    "library": {
+     "state": "missing",
+     "text": "5 de 31 pendientes",
+     "tasks": [
+      758,
+      768,
+      781,
+      824,
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-01-8",
+   "account": "EJ-01COL",
+   "name": "Clienta de ejemplo Uno",
+   "plan": "Plan Elite",
+   "country": "COL",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-11-07"
+    }
+   ],
+   "since": "2026-11-07",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "missing",
+     "text": "Falta Ventas, Iniciación y Círculo Rosa (Colombia)"
+    },
+    "daily": {
+     "state": "na",
+     "text": "Su plan no lleva"
+    },
+    "pieces": {
+     "state": "wait",
+     "text": "0 del cierre · 0 en vivo",
+     "closing": 0,
+     "live": 0
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [
+    "closing"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-02-6",
+   "account": "EJ-02",
+   "name": "Clienta de ejemplo Dos",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "43 del cierre · 6 en vivo",
+     "closing": 43,
+     "live": 6
+    },
+    "library": {
+     "state": "missing",
+     "text": "1 de 31 pendientes",
+     "tasks": [
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-03-6",
+   "account": "EJ-03",
+   "name": "Clienta de ejemplo Tres",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "19 del cierre · 1 en vivo",
+     "closing": 19,
+     "live": 1
+    },
+    "library": {
+     "state": "missing",
+     "text": "1 de 31 pendientes",
+     "tasks": [
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-04-6",
+   "account": "EJ-04",
+   "name": "Clienta de ejemplo Cuatro",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "77 del cierre · 25 en vivo",
+     "closing": 77,
+     "live": 25
+    },
+    "library": {
+     "state": "missing",
+     "text": "4 de 31 pendientes",
+     "tasks": [
+      758,
+      768,
+      781,
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-05-6",
+   "account": "EJ-05",
+   "name": "Clienta de ejemplo Cinco",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "31 del cierre · 5 en vivo",
+     "closing": 31,
+     "live": 5
+    },
+    "library": {
+     "state": "missing",
+     "text": "5 de 31 pendientes",
+     "tasks": [
+      758,
+      768,
+      781,
+      834,
+      843
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-06-6",
+   "account": "EJ-06",
+   "name": "Clienta de ejemplo Seis",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "87 del cierre · 10 en vivo",
+     "closing": 87,
+     "live": 10
+    },
+    "library": {
+     "state": "missing",
+     "text": "4 de 31 pendientes",
+     "tasks": [
+      758,
+      768,
+      781,
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-07-6",
+   "account": "EJ-07",
+   "name": "Clienta de ejemplo Siete",
+   "plan": "Plan Elite",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "promo",
+     "label": "Buen Fin 2026 · Plan Elite a $659",
+     "at": "2026-11-05"
+    }
+   ],
+   "since": "2026-11-05",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "34 del cierre · 3 en vivo",
+     "closing": 34,
+     "live": 3
+    },
+    "library": {
+     "state": "missing",
+     "text": "4 de 31 pendientes",
+     "tasks": [
+      758,
+      768,
+      781,
+      834
+     ]
+    }
+   },
+   "missing": [
+    "library"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-08-6",
+   "account": "EJ-08",
+   "name": "Clienta de ejemplo Ocho",
+   "plan": "Plan Ejecutivo",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "reports",
+     "label": "Sin reportes del cierre",
+     "at": null
+    }
+   ],
+   "since": null,
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "missing",
+     "text": "Falta Producción de grupo"
+    },
+    "daily": {
+     "state": "na",
+     "text": "Su plan no lleva"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "25 del cierre · 1 en vivo",
+     "closing": 25,
+     "live": 1
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [
+    "closing"
+   ],
+   "ok": false
+  },
+  {
+   "client_id": "u-ent-09-6",
+   "account": "EJ-09",
+   "name": "Clienta de ejemplo Nueve",
+   "plan": "Plan Básico",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "back",
+     "label": "Regresó",
+     "at": "2026-11-02"
+    }
+   ],
+   "since": "2026-11-02",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "16 del cierre · 8 en vivo",
+     "closing": 16,
+     "live": 8
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-10-6",
+   "account": "EJ-10",
+   "name": "Clienta de ejemplo Diez",
+   "plan": "Plan Básico",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "back",
+     "label": "Regresó",
+     "at": "2026-11-02"
+    }
+   ],
+   "since": "2026-11-02",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "10 del cierre · 3 en vivo",
+     "closing": 10,
+     "live": 3
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-11-6",
+   "account": "EJ-11",
+   "name": "Clienta de ejemplo Once",
+   "plan": "Plan Ejecutivo",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-11-02"
+    }
+   ],
+   "since": "2026-11-02",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "16 del cierre · 7 en vivo",
+     "closing": 16,
+     "live": 7
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-12-6",
+   "account": "EJ-12",
+   "name": "Clienta de ejemplo Doce",
+   "plan": "Plan Ejecutivo",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-10-30"
+    }
+   ],
+   "since": "2026-10-30",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "20 del cierre · 2 en vivo",
+     "closing": 20,
+     "live": 2
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-13-8",
+   "account": "EJ-13COL",
+   "name": "Clienta de ejemplo Trece",
+   "plan": "Plan Área",
+   "country": "COL",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-10-30"
+    }
+   ],
+   "since": "2026-10-30",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "3 de 3"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "1 de 1"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "4 del cierre · 3 en vivo",
+     "closing": 4,
+     "live": 3
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-14-6",
+   "account": "EJ-14",
+   "name": "Clienta de ejemplo Catorce",
+   "plan": "Plan Ejecutivo",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "back",
+     "label": "Regresó",
+     "at": "2026-10-28"
+    }
+   ],
+   "since": "2026-10-28",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "16 del cierre · 2 en vivo",
+     "closing": 16,
+     "live": 2
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-15-6",
+   "account": "EJ-15",
+   "name": "Clienta de ejemplo Quince",
+   "plan": "Plan Básico",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "back",
+     "label": "Regresó",
+     "at": "2026-10-27"
+    }
+   ],
+   "since": "2026-10-27",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "19 del cierre · 1 en vivo",
+     "closing": 19,
+     "live": 1
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  },
+  {
+   "client_id": "u-ent-16-6",
+   "account": "EJ-16",
+   "name": "Clienta de ejemplo Dieciséis",
+   "plan": "Plan Ejecutivo",
+   "country": "MEX",
+   "reasons": [
+    {
+     "code": "new",
+     "label": "Alta",
+     "at": "2026-10-26"
+    }
+   ],
+   "since": "2026-10-26",
+   "checks": {
+    "robot": {
+     "state": "ok",
+     "text": "Entra bien"
+    },
+    "closing": {
+     "state": "ok",
+     "text": "4 de 4"
+    },
+    "daily": {
+     "state": "ok",
+     "text": "2 de 2"
+    },
+    "pieces": {
+     "state": "ok",
+     "text": "14 del cierre · 3 en vivo",
+     "closing": 14,
+     "live": 3
+    },
+    "library": {
+     "state": "ok",
+     "text": "Completa"
+    }
+   },
+   "missing": [],
+   "ok": true
+  }
+ ],
+ "alerts": [
+  {
+   "id": "closing-new_beginnings-leftover",
+   "tone": "warn",
+   "block": "closing",
+   "title": "Nuevos Inicios y Herramientas del cierre: quedan 13 por salir",
+   "text": "Se lanzó el 5-nov y no salió todo."
+  },
+  {
+   "id": "closing-honor_roll_national-design",
+   "tone": "warn",
+   "block": "closing",
+   "title": "Cuadro de Honor del Área del cierre: falta el diseño",
+   "text": "96 piezas sin plantilla del mes. Si no va este mes, apágala en «Qué falta»."
+  },
+  {
+   "id": "clients-behind",
+   "tone": "warn",
+   "block": "clients",
+   "title": "8 clientas por poner al corriente",
+   "text": "Ejemplo Uno, Ejemplo Dos, Ejemplo Tres y 5 más. Pendiente: reportes del cierre y Biblioteca."
+  }
+ ]
+}

@@ -145,6 +145,9 @@ export const API_ROUTES = {
         /* Apagar / encender a propósito: deja de contar como faltante (no detiene jobs) */
         PAUSES: '/posts/pauses',
         PAUSES_RESUME: '/posts/pauses/resume',
+        /* Entregas del mes: el cierre, los carriles en vivo y las clientas por poner al corriente; y sólo sus avisos (torre) */
+        DELIVERIES: '/posts/deliveries',
+        DELIVERY_ALERTS: '/posts/deliveries/alerts',
     },
     FINANCE: {
         CLIENTS: '/finance/clients',

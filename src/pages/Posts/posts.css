@@ -100,6 +100,51 @@
 .pub-chip.ok { border-color: transparent; background: rgba(16, 185, 129, .12); color: #047857; }
 .dark .pub-chip.ok { color: #34D399; }
 
+/* Entregas del mes: el cierre, los carriles en vivo y las clientas por poner al corriente */
+.ent-ok { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: #047857; background: rgba(16, 185, 129, .12); }
+.dark .ent-ok { color: #34D399; }
+.pub-alert.ent-bad { color: #BE123C; background: rgba(244, 63, 94, .12); }
+.dark .pub-alert.ent-bad { color: #FB7185; }
+.pub-alert b { font-weight: 800; }
+.ent-miss { color: #DB2777; font-weight: 700; }
+.dark .ent-miss { color: #FF7AC0; }
+
+.ent-row { display: grid; grid-template-columns: minmax(170px, 1.3fr) minmax(150px, 1.4fr) minmax(110px, .8fr) minmax(110px, .7fr) 92px; gap: 14px; align-items: center; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+.ent-row:last-child { border-bottom: 0; }
+.ent-row.hd { padding-top: 10px; padding-bottom: 10px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+.ent-row .pub-pill { justify-self: start; }
+
+.ent-strip { display: flex; align-items: flex-end; gap: 3px; height: 40px; min-width: 0; }
+.ent-strip > span { position: relative; display: flex; flex: 1 1 0; min-width: 6px; max-width: 18px; height: 100%; flex-direction: column; justify-content: flex-end; padding-bottom: 13px; }
+.ent-strip i { display: block; width: 100%; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #6C47FF, #2CD4D9); }
+.ent-strip b { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; line-height: 1; color: var(--muted-foreground); opacity: .7; }
+.ent-strip b.on { opacity: 1; font-weight: 800; color: #6C47FF; }
+.dark .ent-strip b.on { color: #B4A3FF; }
+
+.ent-legend { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--muted-foreground); }
+.ent-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.ent-live { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ent-live th { padding: 8px 4px; font-size: 10.5px; font-weight: 800; color: var(--muted-foreground); text-align: center; border-bottom: 1px solid var(--border); }
+.ent-live th:first-child, .ent-live td:first-child { position: sticky; left: 0; z-index: 1; min-width: 190px; padding-left: 18px; text-align: left; background: var(--card); }
+.ent-live td { padding: 7px 4px; text-align: center; border-bottom: 1px solid var(--border); }
+.ent-live tr:last-child td { border-bottom: 0; }
+.ent-live td:first-child b { display: block; font-size: 13px; color: var(--foreground); }
+.ent-live td:first-child small { font-size: 11px; color: var(--muted-foreground); }
+.ent-cell { display: inline-grid; place-items: center; min-width: 30px; height: 24px; padding: 0 5px; border-radius: 8px; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ent-cell.ran { color: #fff; background: linear-gradient(135deg, #6C47FF, #4E31C0); }
+.ent-cell.ran.zero { color: var(--muted-foreground); background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--foreground) 16%, transparent); }
+.ent-cell.missing { color: #E11D48; background: rgba(244, 63, 94, .12); }
+.ent-cell.unknown, .ent-cell.later { color: var(--muted-foreground); background: color-mix(in oklab, var(--foreground) 5%, transparent); }
+.ent-cell.off { background: transparent; }
+.ent-cell.failed { box-shadow: inset 0 0 0 2px #F59E0B; }
+.dark .ent-cell.missing { color: #FB7185; }
+
+.ent-why { display: block; margin-top: 2px; color: #6C47FF !important; font-weight: 600; }
+.dark .ent-why { color: #B4A3FF !important; }
+.pub-chip.ent-off { color: var(--muted-foreground); opacity: .7; }
+.ent-fold { display: block; width: 100%; padding: 12px 18px; font-size: 12.5px; font-weight: 700; text-align: left; color: var(--muted-foreground); }
+.ent-fold:hover { color: var(--foreground); }
+
 /* Esqueleto de carga: un brillo que recorre cada pieza */
 .pub-skel { display: block; background: linear-gradient(90deg, color-mix(in oklab, var(--foreground) 6%, transparent) 0%, color-mix(in oklab, var(--foreground) 13%, transparent) 45%, color-mix(in oklab, var(--foreground) 6%, transparent) 90%); background-size: 220% 100%; animation: pub-shimmer 1.5s ease-in-out infinite; }
 @keyframes pub-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
@@ -115,6 +160,10 @@
 }
 
 @media (max-width: 767px) {
+    .ent-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
+    .ent-row.hd { display: none; }
+    .ent-row .pub-name, .ent-row .ent-strip { grid-column: 1 / -1; }
+    .ent-live th:first-child, .ent-live td:first-child { min-width: 150px; padding-left: 14px; }
     .pub-lanes { grid-template-columns: minmax(0, 1fr); }
     .pub-row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 8px; }
     .pub-row.hd { display: none; }

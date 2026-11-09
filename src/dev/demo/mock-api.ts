@@ -7,6 +7,7 @@ import demoPieceImg from './retos/pieza-ejemplo.jpg'
 import demoCumpleBaseImg from './plantillas-base/cumple-base.jpg'
 import demoCumplePieceImg from './plantillas-base/cumple-pieza.jpg'
 import growthWeb from './growth-web.json'
+import entregas from './entregas.json'
 
 const now = new Date()
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -1019,6 +1020,9 @@ export const installMockApi = () => {
             response = respond({ ...clientCoverage, items, total_items: items.length })
         }
         else if (path === '/posts/runs') response = respond(postRuns)
+        // Entregas del mes: datos reales del 9-nov-2026 con nombres y cuentas cambiados (abrir con `?hoy=2026-11-09`)
+        else if (path === '/posts/deliveries') response = respond(entregas)
+        else if (path === '/posts/deliveries/alerts') response = respond({ generated_at: entregas.generated_at, alerts: entregas.alerts })
         else if (path === '/posts/publish-newsletter' && method === 'POST') { await wait(300); response = respond({ message: 'Encolado (demo)', total_queued: 1, queued: [] }) }
         /* Apagar / encender a propósito: lo pendiente pasa a «apagado» (o vuelve) en la cobertura de ejemplo */
         else if ((path === '/posts/pauses' || path === '/posts/pauses/resume') && method === 'POST') {

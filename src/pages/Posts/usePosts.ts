@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { API_ROUTES } from '@/constants/api'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import useRequestQuery from '@/hooks/useRequestQuery'
+import { DeliveriesResponse } from '@/interfaces/deliveries'
 import {
     IClientCoverageResponse,
     IPostRenderRun,
@@ -12,13 +13,14 @@ import {
     PostArtifact,
 } from '@/interfaces/posts'
 import { queryKeys } from '@/utils/queryKeys'
-import { ACTIVE_RUN_STATUSES, CLIENTS_PER_PAGE, periodToMonthNumber, RUNS_POLL_INTERVAL_MS } from './page-utils'
+import { ACTIVE_RUN_STATUSES, CLIENTS_PER_PAGE, currentPeriod, periodToMonthNumber, RUNS_POLL_INTERVAL_MS } from './page-utils'
 
 const COVERAGE_STALE_TIME_MS = 60_000
 
 const coverageKey = (period: string, newsletter?: string) => queryKeys.list('posts/coverage', { period, newsletter })
 const clientCoverageKey = (params: Record<string, unknown>) => queryKeys.list('posts/coverage/clients', params)
 const RUNS_QUERY_KEY = queryKeys.generic('posts/render-runs')
+const DELIVERIES_QUERY_KEY = queryKeys.generic('posts/deliveries')
 
 const EMPTY_COVERAGE: IPostsCoverageResponse = {
     period: '',
@@ -193,4 +195,46 @@ export const usePostPauses = () => {
     }
 
     return { pause, resume, saving: requestState.loading }
+}
+
+/** Entregas del mes. La API lo guarda 10 min; aquí se pide de nuevo cada 2 mientras la página está abierta. */
+export const useDeliveries = () => {
+    const { response, loading, isRefetching } = useFetchQuery<DeliveriesResponse>(API_ROUTES.POSTS.DELIVERIES, {
+        customQueryKey: DELIVERIES_QUERY_KEY,
+        staleTime: 60_000,
+        refetchInterval: 2 * 60_000,
+    })
+
+    return { deliveries: response, loading: loading && !response, isRefetching }
+}
+
+/**
+ * Lanzar una entrega del cierre: una petición por sección con SUS formatos (los Cortes son tres secciones), siempre
+ * del mes en curso aunque «Qué falta» esté mirando otro.
+ */
+export const useLaunchClosing = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [RUNS_QUERY_KEY, DELIVERIES_QUERY_KEY, queryKeys.listBase('posts/coverage')],
+        onError: () => undefined,
+    })
+
+    const launch = async (sections: { sectionKey: string, artifacts: PostArtifact[] }[]) => {
+        if (!sections.length) return false
+
+        const month = periodToMonthNumber(currentPeriod())
+        const results = await Promise.allSettled(sections.map(section => request('POST', API_ROUTES.POSTS.PUBLISH_NEWSLETTER, {
+            month,
+            artifacts: section.artifacts,
+            section_keys: [section.sectionKey],
+        })))
+        const failed = results.filter(result => result.status === 'rejected').length
+
+        if (failed === sections.length) toast.error('No se pudo lanzar')
+        else if (failed) toast.warning(`${sections.length - failed} secciones lanzadas · ${failed} fallaron`)
+        else toast.success('Lanzada: las piezas empiezan a salir')
+
+        return failed < sections.length
+    }
+
+    return { launch, launching: requestState.loading }
 }

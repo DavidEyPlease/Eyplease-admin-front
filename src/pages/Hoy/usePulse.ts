@@ -8,6 +8,7 @@ import useFetchQuery from '@/hooks/useFetchQuery'
 import { LiveNews } from '@/interfaces/liveNews'
 import { IClient } from '@/interfaces/clients'
 import { ApiResponse } from '@/interfaces/common'
+import { DeliveryAlert, DeliveryAlertsResponse } from '@/interfaces/deliveries'
 import { AdminOverview, OverviewWaTicket, ServiceRequest } from '@/interfaces/overview'
 import { IPostRenderRun } from '@/interfaces/posts'
 import { AdminPulse, PulseLane, PulsePieces } from '@/interfaces/pulse'
@@ -140,6 +141,24 @@ const ticketEvent = (ticket: OverviewWaTicket): PulseEvent => {
     }
 }
 
+/**
+ * Lo de «Entregas del mes» que necesita atención: una entrega del cierre lista y sin lanzar (el Círculo Rosa de octubre
+ * estuvo así seis días y la torre no lo dijo), una sin diseño, un carril en vivo que dejó de correr y las clientas que
+ * siguen sin ponerse al corriente. Lo que va en tiempo no llega aquí: la API sólo manda lo atrasado.
+ */
+const DELIVERY_TAG: Record<DeliveryAlert['block'], string> = { closing: 'Cierre del mes', live: 'En vivo', clients: 'Clientas' }
+const deliveryEvent = (alert: DeliveryAlert, at: string): PulseEvent => ({
+    id: `delivery-${alert.id}`,
+    at,
+    time: clock(at),
+    group: alert.block === 'live' ? 'live' : 'publishing',
+    tag: DELIVERY_TAG[alert.block],
+    tone: alert.tone,
+    title: alert.title,
+    text: alert.text,
+    actions: [{ label: 'Ver en Entregas', to: `${APP_ROUTES.POSTS.DASHBOARD}?tab=entregas` }],
+})
+
 const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseEvent => {
     const today = isToday(task.created_at)
     const number = task.consecutive ? `#${task.consecutive}` : ''
@@ -177,6 +196,8 @@ const usePulse = () => {
     const robotRuns = useFetchQuery<DownloadRun[]>(API_ROUTES.REPORTS.DOWNLOAD_RUNS, { customQueryKey: ['admin', 'pulse', 'robot-runs'], ...opts })
     const liveNews = useFetchQuery<LiveNews>('/live-news', { queryParams: byCountry, customQueryKey: ['admin', 'live-news', country], ...opts })
     const pulse = useFetchQuery<AdminPulse>('/pulse', { queryParams: byCountry, customQueryKey: ['admin', 'pulse', 'today', country], ...opts })
+    /* Entregas del mes: son de todos los países (como las corridas), así que sólo se cuentan en México */
+    const deliveries = useFetchQuery<DeliveryAlertsResponse>(API_ROUTES.POSTS.DELIVERY_ALERTS, { customQueryKey: ['admin', 'pulse', 'deliveries'], enabled: machinery, ...opts })
 
     const data = overview.response
     const dailyReports = useMemo(() => Array.isArray(reports.response) ? reports.response : [], [reports.response])
@@ -364,13 +385,18 @@ const usePulse = () => {
             })
         })
 
+        /* Lo atrasado de Entregas del mes (el cierre, los carriles en vivo y las clientas por poner al corriente) */
+        if (machinery && deliveries.response) {
+            deliveries.response.alerts.forEach(alert => out.push(deliveryEvent(alert, deliveries.response!.generated_at)))
+        }
+
         data?.service_requests.latest.forEach(task => out.push(taskEvent(task, 'request')))
         data?.corrections.latest.forEach(task => out.push(taskEvent(task, 'correction')))
         data?.whatsapp_tickets?.items.forEach(ticket => out.push(ticketEvent(ticket)))
 
         /* Lo de hoy primero y del más reciente al más viejo; lo arrastrado de otros días, al final */
         return out.sort((a, b) => Number(!!a.carried) - Number(!!b.carried) || b.at.localeCompare(a.at))
-    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery, robot.explained, importAt])
+    }, [renderRuns.response, robotRuns.response, dailyReports, data, schedule, pieces, machinery, robot.explained, importAt, deliveries.response])
 
     /* Lo que hay que atender, por causa: el robot y los reportes ya vienen agrupados por clienta y motivo; lo demás
        (publicaciones, lo que no salió, pedidos y correcciones) es un hecho por tarjeta */
