@@ -967,6 +967,11 @@ export const installMockApi = () => {
             Object.assign(window, { __demoLastNotice: typeof init?.body === 'string' ? JSON.parse(init.body) : null })
             response = respond({ message: 'Notificaciones en cola para envio.' })
         }
+        // La imagen del aviso: en la demo se queda en el navegador (una liga blob: a la misma imagen)
+        else if (path === '/notifications/image' && method === 'POST') {
+            const file = init?.body instanceof FormData ? init.body.get('image') : null
+            response = file instanceof File ? respond({ url: URL.createObjectURL(file), path: `public/avisos/demo/${file.name}` }) : respond(null, 422)
+        }
         else if (path === '/notifications/center') response = respond(notifications)
         else if (path === '/notifications/center/seen') response = respond(true)
         else if (path === '/live-news') response = respond(url.searchParams.get('country') === 'COL' ? { ...liveNews, star_level_up: [], star_close: [], new_beginning: [], totals: { star_level_up: 0, star_close: 0, new_beginning: 0 } } : liveNews)

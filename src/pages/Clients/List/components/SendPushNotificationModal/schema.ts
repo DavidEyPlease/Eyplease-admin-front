@@ -17,6 +17,20 @@ const isWebUrl = (value: string) => {
 
 /** El último instante del día elegido, en la hora del navegador (la de México para el equipo). */
 export const endOfDay = (date: string) => new Date(`${date}T23:59:59`);
+/** El primer instante del día elegido (la repetición sale desde la mañana de ese día). */
+export const startOfDay = (date: string) => new Date(`${date}T00:00:00`);
+
+/** Cuentas que NO lo reciben por omisión: la 028616 es la cuenta sin cobro (la mamá de David). */
+export const DEFAULT_EXCLUDED_ACCOUNTS = "028616";
+
+/** «028616, 186234MX» o una por renglón → ["028616", "186234MX"] */
+export const parseAccounts = (text: string) => [...new Set(text.split(/[\s,;]+/).map((item) => item.trim()).filter(Boolean))];
+
+/**
+ * La app de tienda no puede anunciar precios ni cómo pagar (Apple 3.1.1 / 3.1.3, Pagos de Google: causa de baja de la
+ * cuenta de desarrollador). Se avisa en el formulario si el texto lo parece; no bloquea (el aviso también llega a la web).
+ */
+export const looksLikePrice = (text: string) => /\$\s?\d|\bprecio|\bdescuento|\bpaga[rs]?\b|\bcuesta\b|\bofert|\bpromoci[oó]n|%\s?(de\s)?desc/i.test(text);
 
 export const ClientNotificationSchema = z.object({
     title: z.string().min(1, { message: "El título es requerido" }).max(120, { message: "El título no puede superar 120 caracteres" }),
@@ -34,7 +48,27 @@ export const ClientNotificationSchema = z.object({
     pinned: z.boolean(),
     /** «AAAA-MM-DD»; vacío = el API decide (el día de la junta, o 7 días). */
     pinned_until: z.string(),
+    /** La imagen vertical 4:5 ya subida (`url` que regresa `POST notifications/image`); vacío = sin imagen */
+    image_url: z.string(),
+    /** Cuentas que no lo reciben, separadas por coma o espacio */
+    exclude_accounts: z.string().max(4000, { message: "Son demasiadas cuentas" }),
+    /** «AAAA-MM-DDTHH:mm»: sale a esa hora; vacío = ya */
+    send_at: z.string(),
+    /** «AAAA-MM-DD»: la ventana de la app sale una vez más desde ese día; vacío = una sola vez */
+    repeat_at: z.string(),
 }).superRefine((values, ctx) => {
+    if (values.send_at && new Date(values.send_at) < new Date()) {
+        ctx.addIssue({ code: "custom", path: ["send_at"], message: "Esa hora ya pasó" });
+    }
+    if (values.repeat_at && !values.pinned) {
+        ctx.addIssue({ code: "custom", path: ["repeat_at"], message: "Para repetir la ventana, fija el aviso en la app" });
+    }
+    if (values.repeat_at && values.pinned_until && startOfDay(values.repeat_at) > endOfDay(values.pinned_until)) {
+        ctx.addIssue({ code: "custom", path: ["repeat_at"], message: "Debe ser antes de que deje de estar fijo" });
+    }
+    if (values.repeat_at && startOfDay(values.repeat_at) <= (values.send_at ? new Date(values.send_at) : new Date())) {
+        ctx.addIssue({ code: "custom", path: ["repeat_at"], message: "Debe ser después de que salga el aviso" });
+    }
     if (values.kind === "meeting" && !values.event_at) {
         ctx.addIssue({ code: "custom", path: ["event_at"], message: "Pon la fecha y la hora de la junta" });
     }
@@ -65,6 +99,10 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
     event_at: "",
     pinned: false,
     pinned_until: "",
+    image_url: "",
+    exclude_accounts: DEFAULT_EXCLUDED_ACCOUNTS,
+    send_at: "",
+    repeat_at: "",
 };
 
 /**
@@ -76,6 +114,7 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
 export const toPayload = (values: ClientNotificationForm, country?: string) => {
     const link = values.link.trim();
     const linkLabel = values.link_label.trim();
+    const excluded = parseAccounts(values.exclude_accounts);
 
     return {
         ...(country ? { country } : {}),
@@ -90,8 +129,12 @@ export const toPayload = (values: ClientNotificationForm, country?: string) => {
             ? {
                 pinned: true,
                 ...(values.pinned_until ? { pinned_until: endOfDay(values.pinned_until).toISOString() } : {}),
+                ...(values.repeat_at ? { repeat_at: startOfDay(values.repeat_at).toISOString() } : {}),
             }
             : {}),
+        ...(values.image_url ? { image_url: values.image_url } : {}),
+        ...(excluded.length ? { exclude_accounts: excluded } : {}),
+        ...(values.send_at ? { send_at: new Date(values.send_at).toISOString() } : {}),
     };
 };
 

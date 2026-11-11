@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { CalendarClockIcon, MegaphoneIcon, PinIcon, SmartphoneIcon, UsersIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { AlertTriangleIcon, CalendarClockIcon, ImageIcon, MegaphoneIcon, PinIcon, SmartphoneIcon, UserXIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import Modal from "@/components/common/Modal";
@@ -15,7 +15,7 @@ import { Input } from "@/uishadcn/ui/input";
 import { Label } from "@/uishadcn/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/uishadcn/ui/radio-group";
 import { Textarea } from "@/uishadcn/ui/textarea";
-import { ClientNotificationForm, ClientNotificationPayload, ClientNotificationSchema, endOfDay, FORM_DEFAULT_VALUES, NoticeKind, toPayload } from "./schema";
+import { ClientNotificationForm, ClientNotificationPayload, ClientNotificationSchema, endOfDay, FORM_DEFAULT_VALUES, looksLikePrice, NoticeKind, parseAccounts, startOfDay, toPayload } from "./schema";
 import useCountryStore from "@/store/country";
 import { countryInfo } from "@/constants/countries";
 import useFetchQuery from "@/hooks/useFetchQuery";
@@ -58,6 +58,8 @@ const pinnedUntilText = ({ pinned_until, event_at, kind }: Pick<ClientNotificati
 const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationModalProps) => {
     const form = useCustomForm<ClientNotificationForm>(ClientNotificationSchema, FORM_DEFAULT_VALUES);
     const { request, requestState } = useRequest("POST");
+    const { requestFormData, requestState: imageState } = useRequest("POST");
+    const imageInput = useRef<HTMLInputElement>(null);
     /* Una junta de México no les sirve a las de Colombia (ni al revés): el aviso va sólo al país que se mira arriba */
     const country = useCountryStore(state => state.country);
     const countryName = countryInfo(country).label;
@@ -70,6 +72,28 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
     const link = form.watch("link");
     const planKeys = form.watch("plan_keys");
     const linkIsApp = isAppLink(link);
+    const imageUrl = form.watch("image_url");
+    const sendAt = form.watch("send_at");
+    const repeatAt = form.watch("repeat_at");
+    const excluded = parseAccounts(form.watch("exclude_accounts"));
+    const priceWarning = looksLikePrice(`${form.watch("title")} ${form.watch("body")}`);
+
+    /* La imagen se sube en cuanto la eligen; al mandar el aviso sólo viaja su liga */
+    const onPickImage = async (file: File | undefined) => {
+        if (!file) return;
+        if (file.size > 6 * 1024 * 1024) {
+            toast.error("La imagen pesa más de 6 MB");
+            return;
+        }
+        const body = new FormData();
+        body.append("image", file);
+        try {
+            const response = await requestFormData<ApiResponse<{ url: string }>>(API_ROUTES.CLIENTS_NOTIFICATIONS_IMAGE, body);
+            if (response.success && response.data?.url) form.setValue("image_url", response.data.url, { shouldValidate: true });
+        } finally {
+            if (imageInput.current) imageInput.current.value = "";
+        }
+    };
 
     /* Los planes, para mandar el aviso sólo a quien tiene (o no tiene) uno: «esto viene en el Plan Elite» */
     const { response: plans, loading: plansLoading } = useFetchQuery<IPlan[]>(API_ROUTES.PLANS.LIST, { customQueryKey: ["config", "plans", "aviso"], enabled: open });
@@ -86,7 +110,8 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
         const response = await request<ApiResponse<boolean>, ClientNotificationPayload>(API_ROUTES.CLIENTS_NOTIFICATIONS, toPayload(values, country));
 
         if (response.success) {
-            toast.success(values.pinned ? `Aviso enviado a las clientas de ${countryName}${plansText} y fijado arriba de Hoy en la app` : `Aviso enviado a las clientas de ${countryName}${plansText}`);
+            const when = values.send_at ? `programado para el ${whenText(new Date(values.send_at))}` : "enviado";
+            toast.success(values.pinned ? `Aviso ${when} a las clientas de ${countryName}${plansText} y fijado arriba de Hoy en la app` : `Aviso ${when} a las clientas de ${countryName}${plansText}`);
             form.reset(FORM_DEFAULT_VALUES);
             onOpenChange(false);
         }
@@ -157,6 +182,40 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                                 <FormControl>
                                     <Textarea placeholder="Escribe el contenido del aviso" className="min-h-28 resize-none" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Regla de las tiendas: la app no puede anunciar precios ni cómo pagar (causa de baja de la cuenta) */}
+                    {priceWarning && (
+                        <p className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+                            <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" />
+                            <span>Parece que habla de precios o de pagar. En la app de las tiendas <b>no se pueden anunciar precios, descuentos ni cómo pagar</b> (Apple y Google dan de baja la cuenta). Úsalo para novedades, sesiones de Zoom, retos o eventos; la promoción con precio, por WhatsApp o la web.</span>
+                        </p>
+                    )}
+
+                    <FormField
+                        control={form.control}
+                        name="image_url"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="flex items-center gap-1.5"><ImageIcon className="size-4" /> Imagen (opcional)</FormLabel>
+                                <div className="flex items-start gap-4">
+                                    {field.value ? (
+                                        <img src={field.value} alt="Imagen del aviso" className="aspect-[4/5] w-28 shrink-0 rounded-md border object-cover" />
+                                    ) : (
+                                        <div className="grid aspect-[4/5] w-28 shrink-0 place-items-center rounded-md border border-dashed text-xs text-muted-foreground">4 : 5</div>
+                                    )}
+                                    <div className="grid gap-2">
+                                        <input ref={imageInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => onPickImage(event.target.files?.[0])} />
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button text={field.value ? "Cambiar imagen" : "Subir imagen"} variant="outline" rounded loading={imageState.loading} onClick={() => imageInput.current?.click()} />
+                                            {field.value && <Button text="Quitar" variant="ghost" rounded onClick={() => field.onChange("")} />}
+                                        </div>
+                                        <FormDescription>Vertical 4:5 (1080 × 1350), como las piezas de Astra. En la app sale arriba de la ventana emergente y en la tarjeta de Hoy (desde la versión 43; las anteriores enseñan sólo el texto).</FormDescription>
+                                    </div>
+                                </div>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -265,6 +324,27 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                                 )}
                             />
                         )}
+
+                        {pinned && (
+                            <FormField
+                                control={form.control}
+                                name="repeat_at"
+                                render={({ field }) => (
+                                    <FormItem className="mt-4 pl-7">
+                                        <FormLabel>Repetir la ventana (opcional)</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" className="sm:max-w-48 dark:[color-scheme:dark]" {...field} />
+                                        </FormControl>
+                                        <FormDescription>
+                                            {repeatAt
+                                                ? `La ventana sale otra vez desde el ${dayText(startOfDay(repeatAt))} a quien no lo cerró con «Entendido». Nunca más de dos veces.`
+                                                : "La ventana sale una vez al abrir la app. Pon un día (p. ej. los últimos días de la promoción) para enseñarla una vez más."}
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
                     </div>
 
                     <FormField
@@ -320,9 +400,42 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                         )}
                     />
 
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                            control={form.control}
+                            name="send_at"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="flex items-center gap-1.5"><CalendarClockIcon className="size-4" /> Programarlo (opcional)</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" className="dark:[color-scheme:dark]" {...field} />
+                                    </FormControl>
+                                    <FormDescription>{field.value ? "Sale a esa hora (centro de México)." : "Vacío: sale en cuanto lo envías."}</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="exclude_accounts"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="flex items-center gap-1.5"><UserXIcon className="size-4" /> No enviar a estas cuentas</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="028616, 012345" {...field} />
+                                    </FormControl>
+                                    <FormDescription>Separadas por coma. La 028616 va puesta siempre (cuenta sin cobro).</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
                     <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
-                        Les llega sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b> (el país que estás viendo arriba)
-                        {chosenPlans.length ? <> con <b className="font-semibold text-foreground">{listText(chosenPlans.map((plan) => plan.name))}</b></> : ", de todos los planes"}.
+                        {sendAt ? <>El <b className="font-semibold text-foreground">{whenText(new Date(sendAt))}</b> les llega</> : "Les llega"} sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b> (el país que estás viendo arriba)
+                        {chosenPlans.length ? <> con <b className="font-semibold text-foreground">{listText(chosenPlans.map((plan) => plan.name))}</b></> : ", de todos los planes"}
+                        {excluded.length ? <>, menos {excluded.length === 1 ? "la cuenta" : "las cuentas"} <b className="font-semibold text-foreground">{listText(excluded)}</b></> : ""}.
+                        {imageUrl && pinned ? " Con su imagen en la ventana de la app." : ""}
                     </p>
 
                     <div className="flex justify-end gap-3 pt-2">
@@ -334,7 +447,7 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                             onClick={() => handleOpenChange(false)}
                         />
                         <Button
-                            text={pinned ? "Enviar y fijar" : "Enviar aviso"}
+                            text={sendAt ? "Programar aviso" : pinned ? "Enviar y fijar" : "Enviar aviso"}
                             type="submit"
                             color="primary"
                             rounded

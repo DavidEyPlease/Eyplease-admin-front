@@ -30,6 +30,8 @@ export const API_ROUTES = {
     GET_UTIL_DATA: '/util-data',
     NOTIFICATIONS: '/users/notifications',
     CLIENTS_NOTIFICATIONS: '/notifications/clients',
+    /** La imagen del aviso (vertical 4:5): se sube antes de mandarlo; regresa `{ url }` */
+    CLIENTS_NOTIFICATIONS_IMAGE: '/notifications/image',
     CLIENTS: {
         LIST: '/clients',
         CREATE: '/clients',
