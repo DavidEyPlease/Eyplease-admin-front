@@ -68,11 +68,13 @@ type Failure = { account: string, reportKey?: string, error?: string, category?:
 /* El robot nombra cada archivo por su `reportKey`; la sección del robot (`run.sections`) y la del reporte diario de la
    API no siempre se llaman igual (ver `src/daily/daily-section.registry.ts` del robot). */
 const ROBOT_SECTION_OF: Record<string, string> = { daily_sales: 'sales', initiators: 'initiators_live', national_monthly_personal_sales: 'national_sales_live' }
-const DAILY_SECTION_OF: Record<string, string> = { daily_sales: 'early', sales: 'early', initiators: 'initiators_live', national_monthly_personal_sales: 'national_sales_live' }
+const DAILY_SECTION_OF: Record<string, string> = { daily_sales: 'early', sales: 'early', sales_midday: 'early_midday', initiators: 'initiators_live', national_monthly_personal_sales: 'national_sales_live' }
 
 /** Nombre de cada reporte o sección del robot, como lo dice David. */
 export const REPORT_NAME: Record<string, string> = {
     early: 'Tempraneras', sales: 'Tempraneras', daily_sales: 'Tempraneras',
+    /* Las mismas ventas del día de Básico y Ejecutivo: otra tanda, a las 11:30 con los Corazones (desde el 11-nov-2026) */
+    early_midday: 'Tempraneras · Básico y Ejecutivo', sales_midday: 'Tempraneras · Básico y Ejecutivo',
     pink_circle_hearts: 'Corazones de Círculo Rosa', pink_circle_vip_plus: 'Círculo Rosa VIP Plus',
     initiators: 'Iniciadoras al día', initiators_live: 'Iniciadoras al día',
     national_monthly_personal_sales: 'Ventas del Área al día', national_sales_live: 'Ventas del Área al día',
@@ -153,8 +155,27 @@ const earliest = (runs: DownloadRun[]) => [...runs].sort((a, b) => runTime(a).lo
    es falla: no hay nada que bajar. El robot lo manda en `failures` con status `skipped`. */
 const isNoData = (failure: Failure) => failure.status === 'skipped' || failure.category === 'sin_datos' || /sin registros|sin datos/i.test(failure.error ?? '')
 
+/* El robot nombra el archivo de ventas `daily_sales` en sus dos tandas; la de las 11:30 (Básico y Ejecutivo) es su propia
+   sección del robot (`sales_midday`) y su propia fila en la torre (`early_midday`). Una falla de ventas en una corrida de
+   esa tanda se cuenta en la suya: si no, se buscaba en «Tempraneras», donde ellas no están, y se perdía. */
+const laneKey = (run: DownloadRun, failure: Failure): Failure => {
+    const sections = run.sections ?? []
+    return failure.reportKey === 'daily_sales' && sections.includes('sales_midday') && !sections.includes('sales')
+        ? { ...failure, reportKey: 'sales_midday' }
+        : failure
+}
+
+/** La fila de la torre de una sección o un reporte del robot («sales_midday» → «early_midday», «daily_sales» → «early»). */
+export const dailySectionOf = (key: string) => DAILY_SECTION_OF[key] ?? key
+
+/** La sección del robot (`run.sections`) de un reporte que falló en esa corrida («daily_sales» → «sales» o «sales_midday»). */
+export const robotSectionOf = (run: DownloadRun, reportKey: string) => {
+    const key = laneKey(run, { account: '', reportKey }).reportKey ?? reportKey
+    return ROBOT_SECTION_OF[key] ?? key
+}
+
 const failuresOf = (run: DownloadRun): Failure[] => {
-    const listed = ((run.result?.failures ?? []) as Failure[]).filter(failure => !isNoData(failure))
+    const listed = ((run.result?.failures ?? []) as Failure[]).filter(failure => !isNoData(failure)).map(failure => laneKey(run, failure))
     if (listed.length) return listed
     /* Corridas viejas sin detalle: si fallaron todas las que pidió, se sabe quiénes */
     if (run.clients?.length && (run.result?.failed ?? 0) >= run.clients.length) {
@@ -241,7 +262,7 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {}, importAt 
 
     /* 1b. Reportes que el portal trae vacíos: se dice, sin contarlo como pendiente */
     done.filter(run => run.status === 'completed').forEach(run => {
-        ((run.result?.failures ?? []) as Failure[]).filter(isNoData).forEach(failure => {
+        ((run.result?.failures ?? []) as Failure[]).filter(isNoData).map(failure => laneKey(run, failure)).forEach(failure => {
             const account = baseAccount(failure.account)
             const key = failure.reportKey ?? (run.sections ?? [])[0] ?? ''
             const id = `empty-${account}-${key}`

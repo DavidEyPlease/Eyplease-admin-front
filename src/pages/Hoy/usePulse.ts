@@ -16,7 +16,7 @@ import { DownloadRun } from '@/pages/Reports/useReports'
 import HttpService from '@/services/http'
 import useCountryStore from '@/store/country'
 import { clock, dayKey, isToday, lanesFromDaily } from './lib'
-import { afterImport, baseAccount, diagnoseRobot, MissingAccount, namesByLabel, PulseProblem, REPORT_NAME, RobotPerson } from './problems'
+import { afterImport, baseAccount, dailySectionOf, diagnoseRobot, MissingAccount, namesByLabel, PulseProblem, REPORT_NAME, RobotPerson, robotSectionOf } from './problems'
 
 import { dailyDone, dailyHeadline, dailyMissing } from '@/utils/dailyReports'
 
@@ -28,7 +28,8 @@ const REFRESH_MS = 2 * 60_000
    respaldo si el calendario no llega. Ver `routes/console.php` de la API. */
 const IMPORT_LANES: Record<string, { sections: string[], fallback: string }> = {
     import_early: { sections: ['early'], fallback: '08:00' },
-    import_hearts: { sections: ['pink_circle_hearts', 'pink_circle_vip_plus', 'initiators_live', 'production_goal'], fallback: '13:30' },
+    /* Con las ventas del día de Básico y Ejecutivo (`early_midday`), que bajan a las 11:30 y entran con este import */
+    import_hearts: { sections: ['pink_circle_hearts', 'pink_circle_vip_plus', 'initiators_live', 'production_goal', 'early_midday'], fallback: '13:30' },
     import_national_live: { sections: ['national_sales_live', 'area_recognition_live'], fallback: '13:40' },
 }
 
@@ -109,7 +110,7 @@ const fetchedLater = (run: DownloadRun, runs: DownloadRun[]) => {
         if (other.run_id === run.run_id || other.status !== 'completed' || !other.finished_at) return false
         if (new Date(other.finished_at).getTime() <= since) return false
         const sections = other.sections ?? []
-        if (section ? !sections.includes(section) : !(run.sections ?? []).every(key => sections.includes(key))) return false
+        if (section ? !sections.includes(robotSectionOf(run, section)) : !(run.sections ?? []).every(key => sections.includes(key))) return false
         if (other.clients?.length && !other.clients.includes(account)) return false
         if ((other.result?.failed ?? 0) === 0) return true
         const stillMissing = missedAccounts(other)
@@ -315,7 +316,8 @@ const usePulse = () => {
            «1 por atender» todo el día por una cuenta que el reintento ya había bajado. */
         const reportOf = new Map(dailyReports.map(report => [report.section_key, report]))
         const recovered = (sections: string[]) => {
-            const tracked = sections.flatMap(section => reportOf.get(section) ?? [])
+            /* La corrida nombra sus secciones como el robot («sales_midday»); la torre, como la API («early_midday») */
+            const tracked = sections.flatMap(section => reportOf.get(dailySectionOf(section)) ?? [])
             return tracked.length > 0 && tracked.every(dailyDone)
         }
 

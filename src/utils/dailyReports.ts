@@ -21,11 +21,14 @@ export const dailyDone = (report: DailyReportCount) => dailyReceived(report) >= 
 export const dailyMissing = (report: DailyReportCount) => Math.max(report.usual - dailyReceived(report), 0)
 
 /** «2 sin órdenes aún» (Tempraneras) o «2 sin datos»; null si ninguno vino vacío. */
+/* Las ventas del día, en sus dos tandas (Elite y Área a las 6:00; Básico y Ejecutivo a las 11:30) */
+const isSales = (report: DailyReportCount) => report.section_key === "early" || report.section_key === "early_midday"
+
 export const dailyEmptyLabel = (report: DailyReportCount) =>
-    !report.empty ? null : report.section_key === "early" ? `${report.empty} sin órdenes aún` : `${report.empty} sin datos`
+    !report.empty ? null : isSales(report) ? `${report.empty} sin órdenes aún` : `${report.empty} sin datos`
 
 /** «21 con órdenes · 2 sin órdenes aún»; sin vacíos, «21 de 23 cargadas». */
 export const dailyHeadline = (report: DailyReportCount) =>
     report.empty
-        ? `${report.loaded} ${report.section_key === "early" ? "con órdenes" : "con datos"} · ${dailyEmptyLabel(report)}`
+        ? `${report.loaded} ${isSales(report) ? "con órdenes" : "con datos"} · ${dailyEmptyLabel(report)}`
         : `${report.loaded} de ${report.usual} cargadas`

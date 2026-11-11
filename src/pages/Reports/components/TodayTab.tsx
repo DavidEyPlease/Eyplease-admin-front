@@ -7,9 +7,15 @@ import { useDailyReports, useDispatchDownloadRun, useDownloadRuns, type Download
 import { DEFAULT_COUNTRY, type ReportsCountry } from "../reports.constants"
 import RobotCountryNotice from "./RobotCountryNotice"
 
-/** Los tres reportes que el robot baja a diario; es lo que relanza «Descargar lo que falta». */
-const DAILY_SECTIONS = ["early", "pink_circle_hearts", "pink_circle_vip_plus"]
-const SECTION_NAME: Record<string, string> = { early: "Ventas Mensuales Personales", pink_circle_hearts: "Corazones de Círculo Rosa", pink_circle_vip_plus: "Círculo Rosa VIP Plus", consultant_orders: "Órdenes de consultoras" }
+/** Los reportes que el robot baja a diario; es lo que relanza «Descargar lo que falta». Las ventas van en dos tandas:
+    Elite y Área (`early`) y Básico y Ejecutivo (`early_midday`, la del robot `sales_midday`). */
+const DAILY_SECTIONS = ["early", "early_midday", "pink_circle_hearts", "pink_circle_vip_plus"]
+/* Las corridas nombran sus secciones como el robot («sales», «sales_midday»); los reportes, como la API */
+const SECTION_NAME: Record<string, string> = {
+    early: "Ventas Mensuales Personales", sales: "Ventas Mensuales Personales",
+    early_midday: "Ventas del día · Básico y Ejecutivo", sales_midday: "Ventas del día · Básico y Ejecutivo",
+    pink_circle_hearts: "Corazones de Círculo Rosa", pink_circle_vip_plus: "Círculo Rosa VIP Plus", consultant_orders: "Órdenes de consultoras",
+}
 
 const pad = (n: number) => String(n).padStart(2, "0")
 const sameDay = (iso: string | null) => !!iso && new Date(iso).toDateString() === new Date().toDateString()
