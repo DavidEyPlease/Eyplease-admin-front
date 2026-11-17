@@ -85,7 +85,8 @@ export interface DeliveryClient {
 export interface DeliveryAlert {
     id: string
     tone: 'warn' | 'bad'
-    block: 'closing' | 'live' | 'clients'
+    /** `month_prep`: lo que falta para el mes que viene (Preparar el mes), desde el día 20 */
+    block: 'closing' | 'live' | 'clients' | 'month_prep'
     title: string
     text: string
 }

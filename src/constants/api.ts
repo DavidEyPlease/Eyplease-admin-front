@@ -151,6 +151,14 @@ export const API_ROUTES = {
         DELIVERIES: '/posts/deliveries',
         DELIVERY_ALERTS: '/posts/deliveries/alerts',
     },
+    /* Preparar el mes: lo que falta para el mes que viene (casi todo se palomea solo), las marcas a mano y los pendientes propios */
+    MONTH_PREP: {
+        INDEX: '/month-prep',
+        MARKS: '/month-prep/marks',
+        CUSTOM: '/month-prep/custom',
+        CUSTOM_TOGGLE: '/month-prep/custom/toggle',
+        CUSTOM_REMOVE: '/month-prep/custom/remove',
+    },
     FINANCE: {
         CLIENTS: '/finance/clients',
         CLIENT_DETAIL: '/finance/clients/{id}',

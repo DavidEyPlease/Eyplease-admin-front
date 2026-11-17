@@ -8,6 +8,7 @@ import demoCumpleBaseImg from './plantillas-base/cumple-base.jpg'
 import demoCumplePieceImg from './plantillas-base/cumple-pieza.jpg'
 import growthWeb from './growth-web.json'
 import entregas from './entregas.json'
+import monthPrep from './month-prep.json'
 
 const now = new Date()
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -889,6 +890,35 @@ const demoUploads = new Map<string, string>()
 /** Lo que se pidió y a qué se contestó: `window.__demo.calls` dice qué no estaba previsto. */
 export const calls: Array<{ method: string, path: string, mocked: boolean }> = []
 
+/* Próximo mes: la revisión REAL de diciembre hecha el 17-nov-2026 (sólo secciones y conteos, sin clientas). Las marcas
+   a mano y los pendientes propios viven en memoria, con la misma regla que la API (MonthPrepService::withMarks). */
+type DemoPrepItem = Record<string, unknown> & { key: string, state: string, can_mark_done: boolean }
+const prepMarks: Record<string, { state: 'done' | 'skip', note: string | null, by: string, at: string }> = {}
+const prepCustom: Array<{ id: string, title: string, done: boolean, by: string, at: string, done_by: string | null }> = []
+const monthPrepResponse = (period: string) => {
+    const base = JSON.parse(JSON.stringify(monthPrep)) as { groups: Array<{ key: string, title: string, subtitle: string | null, items: DemoPrepItem[] }> } & Record<string, unknown>
+    base.groups.forEach(group => group.items.forEach(item => {
+        const mark = prepMarks[item.key] ?? null
+        item.mark = mark
+        item.auto_state = item.state
+        if (mark?.state === 'skip') item.state = 'skipped'
+        else if (mark?.state === 'done' && item.can_mark_done) item.state = 'ready'
+    }))
+    base.groups.push({
+        key: 'custom', title: 'Tus pendientes', subtitle: 'Lo que el sistema no puede revisar solo. Se palomea a mano.',
+        items: prepCustom.map(item => ({
+            key: `custom:${item.id}`, id: item.id, title: item.title, state: item.done ? 'ready' : 'missing', auto_state: null,
+            detail: item.done && item.done_by ? `Listo · ${item.done_by}` : `Agregado por ${item.by}`, source: 'custom', can_mark_done: true, mark: null, parts: [],
+        })),
+    })
+    const items = base.groups.flatMap(group => group.items)
+    const count = (state: string) => items.filter(item => item.state === state).length
+    return {
+        ...base, period,
+        summary: { total: items.length - count('skipped'), ready: count('ready'), partial: count('partial'), missing: count('missing'), skipped: count('skipped') },
+    }
+}
+
 const respond = (data: unknown, status = 200) => new Response(JSON.stringify({ success: status < 400, data, message: status < 400 ? 'OK' : 'Simulado' }), { status, headers: { 'Content-Type': 'application/json' } })
 const page = <T,>(items: T[]) => ({ items, current_page: 1, last_page: 1, per_page: 15, total_items: items.length, next_cursor: null })
 
@@ -1028,6 +1058,23 @@ export const installMockApi = () => {
         // Entregas del mes: datos reales del 9-nov-2026 con nombres y cuentas cambiados (abrir con `?hoy=2026-11-09`)
         else if (path === '/posts/deliveries') response = respond(entregas)
         else if (path === '/posts/deliveries/alerts') response = respond({ generated_at: entregas.generated_at, alerts: entregas.alerts })
+        else if (path === '/month-prep') { if (url.searchParams.get('fresh')) await wait(1500); response = respond(monthPrepResponse(url.searchParams.get('period') ?? String(monthPrep.period))) }
+        else if (path.startsWith('/month-prep/') && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { period: string, key?: string, state?: 'done' | 'skip' | null, note?: string | null, title?: string, id?: string, done?: boolean }
+            const stamp = { by: 'Equipo de ejemplo', at: new Date().toISOString() }
+            if (path === '/month-prep/marks' && body.key) {
+                if (body.state) prepMarks[body.key] = { state: body.state, note: body.note ?? null, ...stamp }
+                else delete prepMarks[body.key]
+            } else if (path === '/month-prep/custom' && body.title) {
+                prepCustom.push({ id: crypto.randomUUID(), title: body.title, done: false, done_by: null, ...stamp })
+            } else if (path === '/month-prep/custom/toggle') {
+                prepCustom.filter(item => item.id === body.id).forEach(item => { item.done = !!body.done; item.done_by = body.done ? stamp.by : null })
+            } else if (path === '/month-prep/custom/remove') {
+                prepCustom.splice(prepCustom.findIndex(item => item.id === body.id), 1)
+            }
+            await wait(250)
+            response = respond(monthPrepResponse(body.period))
+        }
         else if (path === '/posts/publish-newsletter' && method === 'POST') { await wait(300); response = respond({ message: 'Encolado (demo)', total_queued: 1, queued: [] }) }
         /* Apagar / encender a propósito: lo pendiente pasa a «apagado» (o vuelve) en la cobertura de ejemplo */
         else if ((path === '/posts/pauses' || path === '/posts/pauses/resume') && method === 'POST') {

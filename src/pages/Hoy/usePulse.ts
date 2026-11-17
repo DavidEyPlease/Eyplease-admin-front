@@ -147,7 +147,7 @@ const ticketEvent = (ticket: OverviewWaTicket): PulseEvent => {
  * estuvo así seis días y la torre no lo dijo), una sin diseño, un carril en vivo que dejó de correr y las clientas que
  * siguen sin ponerse al corriente. Lo que va en tiempo no llega aquí: la API sólo manda lo atrasado.
  */
-const DELIVERY_TAG: Record<DeliveryAlert['block'], string> = { closing: 'Cierre del mes', live: 'En vivo', clients: 'Clientas' }
+const DELIVERY_TAG: Record<DeliveryAlert['block'], string> = { closing: 'Cierre del mes', live: 'En vivo', clients: 'Clientas', month_prep: 'Próximo mes' }
 const deliveryEvent = (alert: DeliveryAlert, at: string): PulseEvent => ({
     id: `delivery-${alert.id}`,
     at,
@@ -157,7 +157,10 @@ const deliveryEvent = (alert: DeliveryAlert, at: string): PulseEvent => ({
     tone: alert.tone,
     title: alert.title,
     text: alert.text,
-    actions: [{ label: 'Ver en Entregas', to: `${APP_ROUTES.POSTS.DASHBOARD}?tab=entregas` }],
+    /* Desde el día 20 también llega lo que falta para el mes que viene (Preparar el mes) */
+    actions: alert.block === 'month_prep'
+        ? [{ label: 'Ver qué falta', to: `${APP_ROUTES.POSTS.DASHBOARD}?tab=preparar` }]
+        : [{ label: 'Ver en Entregas', to: `${APP_ROUTES.POSTS.DASHBOARD}?tab=entregas` }],
 })
 
 const taskEvent = (task: ServiceRequest, kind: 'request' | 'correction'): PulseEvent => {

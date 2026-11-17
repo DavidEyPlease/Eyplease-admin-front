@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { CalendarCheckIcon, GridIcon, ListChecksIcon } from 'lucide-react'
+import { CalendarCheckIcon, CalendarClockIcon, GridIcon, ListChecksIcon } from 'lucide-react'
 
 import { PostArtifact } from '@/interfaces/posts'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/uishadcn/ui/tabs'
 import Board from './components/Board'
 import ClientsTab from './components/Clients'
 import Deliveries from './components/Deliveries'
-import { currentPeriod, defaultPeriod } from './page-utils'
+import MonthPrep from './components/MonthPrep'
+import { currentPeriod, defaultPeriod, shiftPeriod } from './page-utils'
+import { useMonthPrep, useMonthPrepActions, useMonthPrepRefresh } from './useMonthPrep'
 import { useClientCoverage, useDeliveries, useLaunchClosing, usePostPauses, usePostRenderRuns, usePostsCoverage, usePublishForClient, usePublishPosts } from './usePosts'
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
@@ -18,12 +20,14 @@ import './posts.css'
 
 const TABS = [
     { value: 'entregas', label: 'Entregas', icon: <CalendarCheckIcon /> },
+    { value: 'preparar', label: 'Próximo mes', icon: <CalendarClockIcon /> },
     { value: 'control', label: 'Qué falta', icon: <ListChecksIcon /> },
     { value: 'coverage', label: 'Por clienta', icon: <GridIcon /> },
 ]
 
 const HEAD: Record<string, { title: React.ReactNode, sub: string }> = {
     entregas: { title: <>Lo que se entrega <em>este mes</em></>, sub: 'El cierre, lo en vivo y las clientas pendientes. Lo atrasado, arriba.' },
+    preparar: { title: <>Lo que falta para <em>el mes que viene</em></>, sub: 'Para adelantarlo: diseños, boletín, Biblioteca y revistas. Se palomea solo en cuanto se sube.' },
     control: { title: <>Qué falta por publicar <em>y por qué</em></>, sub: 'Cada archivo que todavía no sale, según lo que lo detiene: falta arte, está listo para generarse, se está generando o está apagado a propósito.' },
 }
 
@@ -46,6 +50,13 @@ const PostsPage = () => {
     const { deliveries, loading: loadingDeliveries, isRefetching: refetchingDeliveries } = useDeliveries()
     const { launch, launching } = useLaunchClosing()
     const { publishForClient: publishClientNow, publishingClient: publishingClientNow } = usePublishForClient(currentPeriod())
+
+    /* Próximo mes: de entrada el que viene; se puede mirar también el siguiente */
+    const nextPeriod = shiftPeriod(currentPeriod(), 1)
+    const [prepPeriod, setPrepPeriod] = useState(nextPeriod)
+    const { prep, loading: loadingPrep, isRefetching: refetchingPrep, setPrep } = useMonthPrep(prepPeriod, tab === 'preparar')
+    const prepActions = useMonthPrepActions(prepPeriod, setPrep)
+    const { refresh: refreshPrep, refreshing: refreshingPrep } = useMonthPrepRefresh(prepPeriod, setPrep)
 
     const onPublish = (sectionKeys: string[], artifacts: PostArtifact[]) => {
         publish(sectionKeys, artifacts)
@@ -92,6 +103,24 @@ const PostsPage = () => {
                         publishing={launching || publishingClientNow}
                         onLaunch={launch}
                         onPublishClient={publishClientNow}
+                    />
+                </TabsContent>
+
+                <TabsContent value="preparar">
+                    <MonthPrep
+                        data={prep}
+                        loading={loadingPrep}
+                        isRefetching={refetchingPrep}
+                        refreshing={refreshingPrep}
+                        saving={prepActions.saving}
+                        period={prepPeriod}
+                        nextPeriod={nextPeriod}
+                        onPeriodChange={setPrepPeriod}
+                        onRefresh={refreshPrep}
+                        onMark={prepActions.mark}
+                        onAddCustom={prepActions.addCustom}
+                        onToggleCustom={prepActions.toggleCustom}
+                        onRemoveCustom={prepActions.removeCustom}
                     />
                 </TabsContent>
 

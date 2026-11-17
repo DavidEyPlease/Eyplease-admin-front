@@ -1,0 +1,2419 @@
+{
+ "period": "2026-12",
+ "label": "diciembre",
+ "current_label": "noviembre",
+ "days_left": 14,
+ "computed_at": "2026-11-17T15:58:36+00:00",
+ "groups": [
+  {
+   "key": "posts",
+   "title": "Diseños de las piezas",
+   "subtitle": "Se palomean solos en cuanto la plantilla del mes queda activa.",
+   "items": [
+    {
+     "key": "posts:early",
+     "title": "Ordenantes",
+     "detail": "Falta su diseño (vertical y cuadrada)",
+     "when": "Desde el 1 de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "early"
+     ],
+     "parts": [
+      {
+       "key": "early||12|mx",
+       "label": "Diseño",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "off"
+       },
+       "ready": false,
+       "section": "early",
+       "sub_section": null,
+       "order": 90
+      }
+     ]
+    },
+    {
+     "key": "posts:birthdays",
+     "title": "Cumpleaños",
+     "detail": "Faltan 4 de 4 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "birthdays",
+      "national_birthdays",
+      "customers-birthdays"
+     ],
+     "parts": [
+      {
+       "key": "birthdays||12|mx",
+       "label": "De la unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "birthdays",
+       "sub_section": null,
+       "order": 90
+      },
+      {
+       "key": "national_birthdays||12|mx",
+       "label": "Nacional",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "national_birthdays",
+       "sub_section": null,
+       "order": 190
+      },
+      {
+       "key": "national_birthdays||12|area",
+       "label": "Nacional",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "national_birthdays",
+       "sub_section": null,
+       "order": 190
+      },
+      {
+       "key": "customers-birthdays||12|mx",
+       "label": "De sus clientas",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "customers-birthdays",
+       "sub_section": null,
+       "order": 290
+      }
+     ]
+    },
+    {
+     "key": "posts:anniversaries",
+     "title": "Aniversarios",
+     "detail": "Faltan 3 de 3 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "anniversaries",
+      "national_anniversaries"
+     ],
+     "parts": [
+      {
+       "key": "anniversaries||12|mx",
+       "label": "De la unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "anniversaries",
+       "sub_section": null,
+       "order": 390
+      },
+      {
+       "key": "national_anniversaries||12|mx",
+       "label": "Nacional",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "national_anniversaries",
+       "sub_section": null,
+       "order": 490
+      },
+      {
+       "key": "national_anniversaries||12|area",
+       "label": "Nacional",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "national_anniversaries",
+       "sub_section": null,
+       "order": 490
+      }
+     ]
+    },
+    {
+     "key": "posts:new_beginnings",
+     "title": "Nuevos Inicios",
+     "detail": "Faltan 5 de 6 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre (en vivo) y el cierre de noviembre",
+     "state": "partial",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "new_beginnings"
+     ],
+     "parts": [
+      {
+       "key": "new_beginnings|previous-1|11|mx",
+       "label": "2.ª Herramienta",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "new_beginnings",
+       "sub_section": "previous-1",
+       "order": 12
+      },
+      {
+       "key": "new_beginnings|previous-2|11|mx",
+       "label": "3.ª Herramienta",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "new_beginnings",
+       "sub_section": "previous-2",
+       "order": 13
+      },
+      {
+       "key": "new_beginnings|previous-3|11|mx",
+       "label": "4.ª Herramienta",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "new_beginnings",
+       "sub_section": "previous-3",
+       "order": 14
+      },
+      {
+       "key": "new_beginnings|welcome|12|mx",
+       "label": "Bienvenida",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "new_beginnings",
+       "sub_section": "welcome",
+       "order": 10
+      },
+      {
+       "key": "new_beginnings|welcome|11|mx",
+       "label": "Bienvenida de las que iniciaron en noviembre y entran tarde",
+       "closing": false,
+       "moment": "De noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "new_beginnings",
+       "sub_section": "welcome",
+       "order": 10
+      },
+      {
+       "key": "new_beginnings|initiator-start|12|mx",
+       "label": "Felicitación a la Iniciadora",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "new_beginnings",
+       "sub_section": "initiator-start",
+       "order": 11
+      }
+     ]
+    },
+    {
+     "key": "posts:stars",
+     "title": "Estrellas",
+     "detail": "Faltan 9 de 18 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre (en vivo) y el cierre de noviembre",
+     "state": "partial",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "stars"
+     ],
+     "parts": [
+      {
+       "key": "stars|sapphire|11|mx",
+       "label": "Zafiro",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "sapphire",
+       "order": 5
+      },
+      {
+       "key": "stars|sapphire|11|col",
+       "label": "Zafiro",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "sapphire",
+       "order": 5
+      },
+      {
+       "key": "stars|ruby|11|mx",
+       "label": "Rubí",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "ruby",
+       "order": 6
+      },
+      {
+       "key": "stars|ruby|11|col",
+       "label": "Rubí",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "ruby",
+       "order": 6
+      },
+      {
+       "key": "stars|diamond|11|mx",
+       "label": "Diamante",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "diamond",
+       "order": 7
+      },
+      {
+       "key": "stars|diamond|11|col",
+       "label": "Diamante",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "diamond",
+       "order": 7
+      },
+      {
+       "key": "stars|emerald|11|mx",
+       "label": "Esmeralda",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "emerald",
+       "order": 8
+      },
+      {
+       "key": "stars|emerald|11|col",
+       "label": "Esmeralda",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "emerald",
+       "order": 8
+      },
+      {
+       "key": "stars|pearl|11|mx",
+       "label": "Perla",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "stars",
+       "sub_section": "pearl",
+       "order": 9
+      },
+      {
+       "key": "stars|sapphire|12|mx",
+       "label": "Zafiro",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "sapphire",
+       "order": 5
+      },
+      {
+       "key": "stars|sapphire|12|col",
+       "label": "Zafiro",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "sapphire",
+       "order": 5
+      },
+      {
+       "key": "stars|ruby|12|mx",
+       "label": "Rubí",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "ruby",
+       "order": 6
+      },
+      {
+       "key": "stars|ruby|12|col",
+       "label": "Rubí",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "ruby",
+       "order": 6
+      },
+      {
+       "key": "stars|diamond|12|mx",
+       "label": "Diamante",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "diamond",
+       "order": 7
+      },
+      {
+       "key": "stars|diamond|12|col",
+       "label": "Diamante",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "diamond",
+       "order": 7
+      },
+      {
+       "key": "stars|emerald|12|mx",
+       "label": "Esmeralda",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "emerald",
+       "order": 8
+      },
+      {
+       "key": "stars|emerald|12|col",
+       "label": "Esmeralda",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "col",
+       "scope_label": "Colombia",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "emerald",
+       "order": 8
+      },
+      {
+       "key": "stars|pearl|12|mx",
+       "label": "Perla",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "stars",
+       "sub_section": "pearl",
+       "order": 9
+      }
+     ]
+    },
+    {
+     "key": "posts:honor_roll",
+     "title": "Cuadro de Honor",
+     "detail": "Faltan 5 de 9 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre (en vivo) y el cierre de noviembre",
+     "state": "partial",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "honor_roll"
+     ],
+     "parts": [
+      {
+       "key": "honor_roll|live-consolidated|11|mx",
+       "label": "En vivo · Podio",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll",
+       "sub_section": "live-consolidated",
+       "order": 0
+      },
+      {
+       "key": "honor_roll|live-queen|11|mx",
+       "label": "En vivo · Reina",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll",
+       "sub_section": "live-queen",
+       "order": 1
+      },
+      {
+       "key": "honor_roll|live-first-princess|11|mx",
+       "label": "En vivo · 1.ª Princesa",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll",
+       "sub_section": "live-first-princess",
+       "order": 2
+      },
+      {
+       "key": "honor_roll|live-second-princess|11|mx",
+       "label": "En vivo · 2.ª Princesa",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll",
+       "sub_section": "live-second-princess",
+       "order": 3
+      },
+      {
+       "key": "honor_roll|live-consolidated|12|mx",
+       "label": "En vivo · Podio",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll",
+       "sub_section": "live-consolidated",
+       "order": 0
+      },
+      {
+       "key": "honor_roll|live-queen|12|mx",
+       "label": "En vivo · Reina",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll",
+       "sub_section": "live-queen",
+       "order": 1
+      },
+      {
+       "key": "honor_roll|live-first-princess|12|mx",
+       "label": "En vivo · 1.ª Princesa",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll",
+       "sub_section": "live-first-princess",
+       "order": 2
+      },
+      {
+       "key": "honor_roll|live-second-princess|12|mx",
+       "label": "En vivo · 2.ª Princesa",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll",
+       "sub_section": "live-second-princess",
+       "order": 3
+      },
+      {
+       "key": "honor_roll|live-production-goal|12|mx",
+       "label": "¡Logró su meta!",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll",
+       "sub_section": "live-production-goal",
+       "order": 4
+      }
+     ]
+    },
+    {
+     "key": "posts:honor_roll_national",
+     "title": "Cuadro de Honor del Área",
+     "detail": "Faltan 32 de 48 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre (en vivo) y el cierre de noviembre",
+     "state": "partial",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "honor_roll_national"
+     ],
+     "parts": [
+      {
+       "key": "honor_roll_national|live-consolidated-personal-sales|11|mx",
+       "label": "En vivo · Podio · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-personal-sales|11|area",
+       "label": "En vivo · Podio · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|consolidated-personal-sales|11|mx",
+       "label": "Podio · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|consolidated-personal-sales|11|area",
+       "label": "Podio · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|live-queen-personal-sales|11|mx",
+       "label": "En vivo · Reina · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|live-queen-personal-sales|11|area",
+       "label": "En vivo · Reina · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|queen-personal-sales|11|mx",
+       "label": "Reina · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|queen-personal-sales|11|area",
+       "label": "Reina · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-personal-sales|11|mx",
+       "label": "En vivo · 1.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-personal-sales|11|area",
+       "label": "En vivo · 1.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|first-princess-personal-sales|11|mx",
+       "label": "1.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|first-princess-personal-sales|11|area",
+       "label": "1.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-personal-sales|11|mx",
+       "label": "En vivo · 2.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-personal-sales|11|area",
+       "label": "En vivo · 2.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|second-princess-personal-sales|11|mx",
+       "label": "2.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|second-princess-personal-sales|11|area",
+       "label": "2.ª Princesa · Ventas personales",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-unit-production|11|mx",
+       "label": "En vivo · Podio · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-unit-production|11|area",
+       "label": "En vivo · Podio · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|consolidated-unit-production|11|mx",
+       "label": "Podio · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|consolidated-unit-production|11|area",
+       "label": "Podio · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|live-queen-unit-production|11|mx",
+       "label": "En vivo · Reina · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|live-queen-unit-production|11|area",
+       "label": "En vivo · Reina · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|queen-unit-production|11|mx",
+       "label": "Reina · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|queen-unit-production|11|area",
+       "label": "Reina · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-unit-production|11|mx",
+       "label": "En vivo · 1.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-unit-production|11|area",
+       "label": "En vivo · 1.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|first-princess-unit-production|11|mx",
+       "label": "1.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|first-princess-unit-production|11|area",
+       "label": "1.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-unit-production|11|mx",
+       "label": "En vivo · 2.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-unit-production",
+       "order": 53
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-unit-production|11|area",
+       "label": "En vivo · 2.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "ready",
+        "image_square": "ready",
+        "video": "ready"
+       },
+       "ready": true,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-unit-production",
+       "order": 53
+      },
+      {
+       "key": "honor_roll_national|second-princess-unit-production|11|mx",
+       "label": "2.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "second-princess-unit-production",
+       "order": 53
+      },
+      {
+       "key": "honor_roll_national|second-princess-unit-production|11|area",
+       "label": "2.ª Princesa · Producción de unidad",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "second-princess-unit-production",
+       "order": 53
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-personal-sales|12|mx",
+       "label": "En vivo · Podio · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-personal-sales|12|area",
+       "label": "En vivo · Podio · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-personal-sales",
+       "order": 0
+      },
+      {
+       "key": "honor_roll_national|live-queen-personal-sales|12|mx",
+       "label": "En vivo · Reina · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|live-queen-personal-sales|12|area",
+       "label": "En vivo · Reina · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-personal-sales",
+       "order": 1
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-personal-sales|12|mx",
+       "label": "En vivo · 1.ª Princesa · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-personal-sales|12|area",
+       "label": "En vivo · 1.ª Princesa · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-personal-sales",
+       "order": 2
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-personal-sales|12|mx",
+       "label": "En vivo · 2.ª Princesa · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-personal-sales|12|area",
+       "label": "En vivo · 2.ª Princesa · Ventas personales",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-personal-sales",
+       "order": 3
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-unit-production|12|mx",
+       "label": "En vivo · Podio · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|live-consolidated-unit-production|12|area",
+       "label": "En vivo · Podio · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-consolidated-unit-production",
+       "order": 50
+      },
+      {
+       "key": "honor_roll_national|live-queen-unit-production|12|mx",
+       "label": "En vivo · Reina · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|live-queen-unit-production|12|area",
+       "label": "En vivo · Reina · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-queen-unit-production",
+       "order": 51
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-unit-production|12|mx",
+       "label": "En vivo · 1.ª Princesa · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|live-first-princess-unit-production|12|area",
+       "label": "En vivo · 1.ª Princesa · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-first-princess-unit-production",
+       "order": 52
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-unit-production|12|mx",
+       "label": "En vivo · 2.ª Princesa · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-unit-production",
+       "order": 53
+      },
+      {
+       "key": "honor_roll_national|live-second-princess-unit-production|12|area",
+       "label": "En vivo · 2.ª Princesa · Producción de unidad",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "area",
+       "scope_label": "Plan Área",
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "honor_roll_national",
+       "sub_section": "live-second-princess-unit-production",
+       "order": 53
+      }
+     ]
+    },
+    {
+     "key": "posts:pink_circle",
+     "title": "Círculo Rosa",
+     "detail": "Faltan 20 de 20 diseños (vertical, cuadrada y video)",
+     "when": "Desde el 1 de diciembre (en vivo) y el cierre de noviembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "pink_circle"
+     ],
+     "parts": [
+      {
+       "key": "pink_circle|pink|11|mx",
+       "label": "Rosa",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink",
+       "order": 22
+      },
+      {
+       "key": "pink_circle|pink-target|11|mx",
+       "label": "Target Rosa",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-target",
+       "order": 23
+      },
+      {
+       "key": "pink_circle|pink-vip|11|mx",
+       "label": "VIP",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-vip",
+       "order": 24
+      },
+      {
+       "key": "pink_circle|pink-vip-plus|11|mx",
+       "label": "VIP Plus",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-vip-plus",
+       "order": 25
+      },
+      {
+       "key": "pink_circle|pink-gold|11|mx",
+       "label": "Gold",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-gold",
+       "order": 26
+      },
+      {
+       "key": "pink_circle|pink-live-target-a|12|mx",
+       "label": "En vivo · Target Rosa · con producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-target-a",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-target-b|12|mx",
+       "label": "En vivo · Target Rosa · sin producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-target-b",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-a|12|mx",
+       "label": "En vivo · Rosa · con producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-a",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-b|12|mx",
+       "label": "En vivo · Rosa · sin producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-b",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-vip-a|12|mx",
+       "label": "En vivo · VIP · con producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-vip-a",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-vip-b|12|mx",
+       "label": "En vivo · VIP · sin producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-vip-b",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-vip-plus-a|12|mx",
+       "label": "En vivo · VIP Plus · con producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-vip-plus-a",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-vip-plus-b|12|mx",
+       "label": "En vivo · VIP Plus · sin producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-vip-plus-b",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-gold-a|12|mx",
+       "label": "En vivo · Gold · con producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-gold-a",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-gold-b|12|mx",
+       "label": "En vivo · Gold · sin producto",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-gold-b",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-bono|12|mx",
+       "label": "En vivo · Aviso del bono",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-bono",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-regalo|12|mx",
+       "label": "En vivo · Aviso del regalo",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-regalo",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-aniversario|12|mx",
+       "label": "En vivo · Aniversario",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-aniversario",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-entre|12|mx",
+       "label": "En vivo · Entre escalones",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-entre",
+       "order": 90
+      },
+      {
+       "key": "pink_circle|pink-live-recupera|12|mx",
+       "label": "En vivo · Recupera tu Círculo Rosa",
+       "closing": false,
+       "moment": "De diciembre",
+       "month": 12,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "pink_circle",
+       "sub_section": "pink-live-recupera",
+       "order": 90
+      }
+     ]
+    },
+    {
+     "key": "posts:road_to_success",
+     "title": "Camino al Éxito",
+     "detail": "Faltan 3 de 3 diseños (vertical, cuadrada y video)",
+     "when": "Cierre de noviembre: sale los primeros días de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "road_to_success"
+     ],
+     "parts": [
+      {
+       "key": "road_to_success|future-director|11|mx",
+       "label": "Futura Directora",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "road_to_success",
+       "sub_section": "future-director",
+       "order": 16
+      },
+      {
+       "key": "road_to_success|target-future-director|11|mx",
+       "label": "Target Futura Directora",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "road_to_success",
+       "sub_section": "target-future-director",
+       "order": 17
+      },
+      {
+       "key": "road_to_success|target-diqs|11|mx",
+       "label": "Target DIQ",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "road_to_success",
+       "sub_section": "target-diqs",
+       "order": 18
+      }
+     ]
+    },
+    {
+     "key": "posts:sales_cut",
+     "title": "Corte de Ventas",
+     "detail": "Falta su diseño (vertical, cuadrada y video)",
+     "when": "Cierre de noviembre: sale los primeros días de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "sales_cut"
+     ],
+     "parts": [
+      {
+       "key": "sales_cut||11|mx",
+       "label": "Diseño",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "sales_cut",
+       "sub_section": null,
+       "order": 90
+      }
+     ]
+    },
+    {
+     "key": "posts:national_initiation_cut",
+     "title": "Corte de Iniciación",
+     "detail": "Falta su diseño (vertical, cuadrada y video)",
+     "when": "Cierre de noviembre: sale los primeros días de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "national_initiation_cut"
+     ],
+     "parts": [
+      {
+       "key": "national_initiation_cut||11|mx",
+       "label": "Diseño",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "national_initiation_cut",
+       "sub_section": null,
+       "order": 90
+      }
+     ]
+    },
+    {
+     "key": "posts:target_unit_club",
+     "title": "Unit Club",
+     "detail": "Faltan 3 de 3 diseños (vertical, cuadrada y video)",
+     "when": "Cierre de noviembre: sale los primeros días de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": false,
+     "section_keys": [
+      "target_unit_club"
+     ],
+     "parts": [
+      {
+       "key": "target_unit_club|target-450|11|mx",
+       "label": "Target 450",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "target_unit_club",
+       "sub_section": "target-450",
+       "order": 19
+      },
+      {
+       "key": "target_unit_club|target-600|11|mx",
+       "label": "Target 600",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "target_unit_club",
+       "sub_section": "target-600",
+       "order": 20
+      },
+      {
+       "key": "target_unit_club|target-750|11|mx",
+       "label": "Target 750",
+       "closing": true,
+       "moment": "Cierre de noviembre",
+       "month": 11,
+       "scope": "mx",
+       "scope_label": null,
+       "formats": {
+        "image": "missing",
+        "image_square": "missing",
+        "video": "missing"
+       },
+       "ready": false,
+       "section": "target_unit_club",
+       "sub_section": "target-750",
+       "order": 21
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "newsletter",
+   "title": "Boletín",
+   "subtitle": null,
+   "items": [
+    {
+     "key": "newsletter:template",
+     "title": "Plantilla del boletín",
+     "detail": "Sin plantilla de diciembre · la vigente es la Plantilla 10",
+     "when": "Para el boletín de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": true,
+     "parts": []
+    },
+    {
+     "key": "newsletter:dynamic",
+     "title": "Boletín dinámico",
+     "detail": "Que la versión interactiva tenga la piel de la plantilla nueva. Se palomea a mano.",
+     "when": "Para el boletín de diciembre",
+     "state": "missing",
+     "source": "manual",
+     "can_mark_done": true,
+     "parts": []
+    }
+   ]
+  },
+  {
+   "key": "content",
+   "title": "Biblioteca y revistas",
+   "subtitle": null,
+   "items": [
+    {
+     "key": "content:library",
+     "title": "Biblioteca",
+     "detail": "Nada programado · noviembre tuvo 72",
+     "when": "Del 1 de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": true,
+     "parts": []
+    },
+    {
+     "key": "content:enterate",
+     "title": "Entérate Ya",
+     "detail": "Falta Entérate Ya · México y Tu Enfoque · Colombia",
+     "when": "Los primeros días de diciembre",
+     "state": "missing",
+     "source": "auto",
+     "can_mark_done": true,
+     "parts": [
+      {
+       "key": "enterate|mx",
+       "label": "Entérate Ya · México",
+       "ready": false,
+       "scope": "mx"
+      },
+      {
+       "key": "enterate|col",
+       "label": "Tu Enfoque · Colombia",
+       "ready": false,
+       "scope": "col"
+      }
+     ]
+    },
+    {
+     "key": "content:magazines",
+     "title": "Revistas del Asistente",
+     "detail": "Falta Applause, The Look y Enfoque de Colombia. Llega con la revista del mes: pásamela y la cargo.",
+     "when": "Del 1 de diciembre",
+     "state": "partial",
+     "source": "auto",
+     "can_mark_done": true,
+     "parts": [
+      {
+       "key": "magazine|mx_applause",
+       "label": "Applause",
+       "ready": false,
+       "scope": "me"
+      },
+      {
+       "key": "magazine|mx_the_look",
+       "label": "The Look",
+       "ready": false,
+       "scope": "me"
+      },
+      {
+       "key": "magazine|col_applause",
+       "label": "Enfoque de Colombia",
+       "ready": false,
+       "scope": "co"
+      },
+      {
+       "key": "magazine|col_the_look",
+       "label": "The Look de Colombia",
+       "ready": true,
+       "scope": "co"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "current_gaps": [
+  {
+   "title": "Cuadro de Honor",
+   "label": "¡Logró su meta!",
+   "moment": "De noviembre",
+   "scope_label": null,
+   "formats": {
+    "image": "missing",
+    "image_square": "missing",
+    "video": "missing"
+   }
+  },
+  {
+   "title": "Círculo Rosa",
+   "label": "En vivo · Recupera tu Círculo Rosa",
+   "moment": "De noviembre",
+   "scope_label": null,
+   "formats": {
+    "image": "missing",
+    "image_square": "missing",
+    "video": "missing"
+   }
+  }
+ ]
+}
