@@ -344,7 +344,6 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {}, importAt 
     open.forEach(item => {
         const names = [...item.keys].map(key => reportName(key, reports))
         const uniqueNames = [...new Set(names)]
-        const ficha = people[item.account]?.clientId
         const loginBack = item.cause === 'password' ? loggedInAfter(item.account, item.keys, item.last) : null
         const waitsRetry = item.cause === 'portal' && item.attempts === 1 && [...item.keys].every(key => reportOf.has(DAILY_SECTION_OF[key] ?? key))
         ;[...item.keys].forEach(key => {
@@ -368,15 +367,13 @@ export const diagnoseRobot = ({ runs, reports, people, firstSeen = {}, importAt 
             return
         }
 
+        /* Desde el hackeo de Mary Kay (InTouch caído del 15 al 18-nov-2026) la contraseña es OPCIONAL y no se le pide a nadie
+           (David, 19-nov): una que ya no funciona se dice, pero no es pendiente. Si la clienta manda la nueva, se captura
+           en su ficha y en la siguiente corrida `loginBack` la da por arreglada. */
         if (item.cause === 'password') {
-            problems.push({
+            resolved.push({
                 id: `pw-${item.account}`,
-                tone: 'warn',
-                tag: 'Contraseña',
-                title: `${who(item.account)}: su contraseña de Mary Kay ya no funciona`,
-                what: `Desde ${whenText(sinceOf(item.account, 'password', item.first))} el robot no puede entrar a su InTouch («credenciales incorrectas»); casi siempre es que la cambió. Hoy no bajaron: ${listText(uniqueNames)}.`,
-                todo: 'Pídele su contraseña nueva de InTouch y captúrala en su ficha. En la siguiente corrida el robot baja lo que falta.',
-                actions: [{ label: 'Abrir su ficha', to: ficha ? APP_ROUTES.CLIENTS.DETAIL.replace(':id', ficha) : APP_ROUTES.CLIENTS.LIST }],
+                text: `${nameOf(item.account)}: su contraseña de Mary Kay ya no funciona desde ${whenText(sinceOf(item.account, 'password', item.first))} y hoy no bajaron ${listText(uniqueNames)}. No se le pide (es opcional); si la manda, va en su ficha.`,
             })
             return
         }
