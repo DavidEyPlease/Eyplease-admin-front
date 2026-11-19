@@ -407,7 +407,9 @@ const pulse = {
     ],
 }
 
-const plans = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], currency: 'MXN' as string, active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
+const plans: Array<Record<string, unknown> & { id: string, name: string, price: number, currency: string }> = ['A', 'B', 'C'].map((letter, index) => ({ id: `plan-${index}`, name: `Plan de ejemplo ${letter}`, price: [690, 990, 1490][index], currency: 'MXN' as string, active: true, free: false, is_default: index === 0, features: [], accesses: [], color: ['#6C47FF', '#2CD4D9', '#E5077D'][index], clients_count: [41, 33, 24][index], created_at: iso(60 * 24 * 200) }))
+/* Un plan de otra empresa (Zermat), con `company` como lo manda el API; los de arriba no lo traen (= Mary Kay) */
+plans.push({ id: 'plan-zm', plan_key: 'zermat', company: 'zermat', name: 'Plan Zermat de ejemplo', price: 590, currency: 'MXN', active: true, free: false, is_default: false, features: [], accesses: [], color: '#0F9F8F', clients_count: 1, created_at: iso(60 * 24 * 2) })
 
 const demoDesigners = ['Ana Ejemplo', 'Beto Ejemplo', 'Carla Ejemplo'].map((name, index) => ({ id: `d-${index}`, name, email: `d${index}@ejemplo.com`, profile_picture: null, photo: null, username: `DIS${index}`, country: 'MEX', phone: '', active: true, on_notifications: true, on_biometric_auth: false, role: { id: 'r-des', name: 'Diseñador', role_key: 'designer', permissions: [] } }))
 
@@ -575,6 +577,13 @@ demoClients.push({
     /* El plan le llega con el precio de SU país, en pesos colombianos, como lo manda el API */
     user: { ...demoClients[1].user, id: 'u-10', name: 'Clienta de ejemplo en Colombia', username: 'EJ-COL1', country: 'COL', plan: { ...plans[2], price: 278300, currency: 'COP' } },
 })
+
+/* Una líder de ZERMAT (otra empresa): sin portal ni Excel de InTouch; su grupo y sus piezas se cargan a mano */
+demoClients.push({
+    ...demoClients[4], id: 'c-11', name: 'Líder de ejemplo de Zermat', account: 'ZM-00001', external_company_pw: null, rank: 'Perla', mk_status: '', card_subscription: false, promotion: null,
+    company: 'zermat', company_name: 'Zermat',
+    user: { ...demoClients[4].user, id: 'u-11', name: 'Líder de ejemplo de Zermat', username: 'ZM-00001', plan: plans[3] },
+} as typeof demoClients[number])
 
 /* Círculo Rosa de Colombia: consultoras INVENTADAS con sus 13 meses, del en curso al más viejo
    (S = llegó al 30%, . = no llegó, ? = en curso y aún no llega). La captura vive en memoria. */
@@ -1321,7 +1330,10 @@ export const installMockApi = () => {
             const search = (url.searchParams.get('search') ?? '').toLowerCase()
             /* `?country=` como el API: sólo las de ese país; sin él, todas */
             const country = url.searchParams.get('country')
-            response = respond(page(demoClients.filter(client => (!country || client.user.country === country) && (!search || `${client.name} ${client.account}`.toLowerCase().includes(search)))))
+            /* `?company=` como el API: sólo las de esa empresa (sin `company` en la fila = Mary Kay); sin él, todas */
+            const company = url.searchParams.get('company')
+            const companyOfRow = (client: object) => (client as { company?: string }).company ?? 'mary_kay'
+            response = respond(page(demoClients.filter(client => (!country || client.user.country === country) && (!company || companyOfRow(client) === company) && (!search || `${client.name} ${client.account}`.toLowerCase().includes(search)))))
         }
         else if (path === '/clients/metrics') response = respond(url.searchParams.get('country') === 'COL'
             ? { active_clients: 1, inactive: 0, pending_payment: 0, total_upload_reports: 1, upload_percentage: 100, missing_reports: 0 }
@@ -1418,6 +1430,20 @@ export const installMockApi = () => {
                 },
                 trend: months.map((month, index) => ({ month, posts_shared: gone ? 0 : [0, 0, 3, 8, 22, 4][index], assistant_messages: gone ? 0 : [0, 0, 0, 2, 11, 3][index] })),
             })
+        }
+        /* Otra empresa: su grupo (cuenta nuevas y actualizadas al azar, y un ascenso) y una pieza. «X» como persona = error de la API */
+        else if (/^\/clients\/c-\d+\/company-roster$/.test(path) && method === 'POST') {
+            const body = JSON.parse(String(init?.body ?? '{}')) as { people?: Array<{ code: string, name: string }>, deactivate_missing?: boolean }
+            const people = body.people ?? []
+            await wait(600)
+            response = respond({ created: Math.ceil(people.length / 2), updated: Math.floor(people.length / 2), deactivated: body.deactivate_missing ? 2 : 0, rank_ups: people.slice(0, 1).map(person => ({ code: `ZM-${person.code.replace(/^zm-/i, '')}`, name: person.name, from: 'Perla', to: 'Amatista' })) })
+        }
+        else if (/^\/clients\/c-\d+\/company-pieces$/.test(path) && method === 'POST') {
+            const form = init?.body as FormData
+            await wait(600)
+            response = form.get('person_code') === 'X'
+                ? new Response(JSON.stringify({ message: 'La persona ZM-X no está en su grupo: cárguela primero con su grupo.' }), { status: 422, headers: { 'Content-Type': 'application/json' } })
+                : respond({ uri: `zermat/demo/${form.get('section_key')}/${String((form.get('file') as File)?.name ?? 'pieza')}`, person: form.get('person_code') ? `ZM-${form.get('person_code')}` : 'ZM-00001', section: form.get('section_key'), date: form.get('date') })
         }
         else if (/^\/clients\/c-\d+\/clone-reel$/.test(path)) response = respond({ enabled: false, enabled_at: null, enabled_by_env: false, reels_this_month: 0, reels_total: 0 })
         else if (/^\/clients\/c-\d+\/accounts$/.test(path) && method === 'GET') {
