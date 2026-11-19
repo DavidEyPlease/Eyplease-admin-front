@@ -1,5 +1,5 @@
 import useCustomForm from "@/hooks/useCustomForm";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/uishadcn/ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/uishadcn/ui/form"
 import { CreateClientSchema, FORM_DEFAULT_VALUES, FormType } from "./form";
 import { Input } from "@/uishadcn/ui/input";
 import { Separator } from "@/uishadcn/ui/separator";
@@ -13,6 +13,8 @@ import { ApiResponse } from "@/interfaces/common";
 import { toast } from "sonner";
 import { API_ROUTES } from "@/constants/api";
 import useCountryStore from "@/store/country";
+import useAuthStore from "@/store/auth";
+import { accountFor, companyHas, companyInfo, companyOf } from "@/constants/companies";
 
 interface BasicInfoProps {
     client?: IClient;
@@ -34,6 +36,15 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
         } : { ...FORM_DEFAULT_VALUES, country }
     );
 
+    /* La empresa la decide el plan elegido (así la decide también la API): con un plan de Zermat no hay contraseña
+       de portal y el número se guarda con su prefijo */
+    const plans = useAuthStore(state => state.utilData.plans)
+    const company = companyOf(plans.find(plan => plan.id === form.watch('plan_id')))
+    const companyName = companyInfo(company).label
+    const prefix = companyInfo(company).accountPrefix
+    const hasPortal = companyHas(company, 'portal')
+    const typedAccount = form.watch('username')
+
     const { request, requestState } = useRequestQuery({
         onSuccess: (response: ApiResponse<IClient>) => {
             toast.success(`Cliente ${client ? 'actualizado' : 'creado'} exitosamente`);
@@ -48,7 +59,8 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
         await request<FormType, IClient>(
             client ? 'PUT' : 'POST',
             client ? `${API_ROUTES.CLIENTS.CREATE}/${client.id}` : API_ROUTES.CLIENTS.CREATE,
-            values
+            /* La API rechaza la contraseña de Mary Kay con un plan de otra empresa */
+            hasPortal ? values : { ...values, mk_password: null }
         )
     }
 
@@ -87,15 +99,16 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
                         name="username"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Cuenta de Mary Kay (Usuario Eyplease)</FormLabel>
+                                <FormLabel>Cuenta de {companyName} (Usuario Eyplease)</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Ingresa el número de cuenta" {...field} />
                                 </FormControl>
+                                {prefix && <FormDescription>Se guardará como <b className="font-semibold text-foreground">{typedAccount.trim() ? accountFor(company, typedAccount) : `${prefix}<número>`}</b></FormDescription>}
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    <FormField
+                    {hasPortal && <FormField
                         control={form.control}
                         name="mk_password"
                         render={({ field }) => (
@@ -107,7 +120,7 @@ const BasicInfoForm = ({ client, onSuccess }: BasicInfoProps) => {
                                 <FormMessage />
                             </FormItem>
                         )}
-                    />
+                    />}
                 </div>
                 <div className="grid md:grid-cols-4 gap-4">
                     <FormField

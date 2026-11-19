@@ -9,12 +9,14 @@ import { ClientStatus } from '@/pages/Reports/useReports'
 import { queryKeys } from '@/utils/queryKeys'
 import useCountryStore from '@/store/country'
 import { Country } from '@/constants/countries'
+import { Company, companyHas, companyOf } from '@/constants/companies'
+import useCompanyStore from '@/store/company'
 
 /** Todas caben en una sola carga (la cartera son ~100); así buscar, filtrar y ordenar es instantáneo */
 const ALL = 500
 
-/** La llave del padrón en el caché: una por país, para que al cambiar de país no se vea la lista del otro */
-export const boardKey = (country: Country) => queryKeys.list('clients/board', { country })
+/** La llave del padrón en el caché: una por país y empresa, para que al cambiar no se vea la lista de la otra */
+export const boardKey = (country: Country, company: Company) => queryKeys.list('clients/board', { country, company })
 
 export type PaymentState = 'ok' | 'pending' | 'in_review' | 'overdue' | 'unknown'
 
@@ -23,7 +25,9 @@ export interface BoardClient {
     payment: PaymentState
     /** Reportes del mes cargados / a los que su plan le da derecho; null si no aplica */
     reports: { loaded: number, entitled: number } | null
-    hasPortalPassword: boolean
+    /** Su empresa usa portal (Mary Kay) y no tiene la contraseña: sin ella el robot no baja sus reportes. A una de
+        otra empresa nunca le falta, porque no tiene portal. */
+    needsPortalPassword: boolean
 }
 
 interface FinanceIds { items: Array<{ id: string | null }> }
@@ -42,10 +46,11 @@ const useClientsBoard = () => {
     /* Sólo las del país que se mira arriba. La cobranza se cruza por número de cuenta, así que la de
        otro país simplemente no encuentra fila aquí */
     const country = useCountryStore(state => state.country)
+    const company = useCompanyStore(state => state.company)
 
     const clients = useFetchQuery<PaginationResponse<IClientListItem>>(API_ROUTES.CLIENTS.LIST, {
-        queryParams: { page: 1, perPage: ALL, sort_by: 'previous_month_points', sort_order: 'desc', country },
-        customQueryKey: boardKey(country),
+        queryParams: { page: 1, perPage: ALL, sort_by: 'previous_month_points', sort_order: 'desc', country, company },
+        customQueryKey: boardKey(country, company),
         staleTime: 60_000,
     })
 
@@ -81,7 +86,7 @@ const useClientsBoard = () => {
                 /* El orden importa: quien debe, debe, aunque además tenga un pago por vencer */
                 payment: !financeReady ? 'unknown' : late.has(client.account) ? 'overdue' : review.has(client.account) ? 'in_review' : soon.has(client.account) ? 'pending' : 'ok',
                 reports: cells.length ? { loaded: cells.filter(cell => cell === STATUS_LOADED).length, entitled: cells.length } : null,
-                hasPortalPassword: !!client.external_company_pw,
+                needsPortalPassword: companyHas(companyOf(client), 'portal') && !client.external_company_pw,
             }
         })
     }, [clients.response, overdue.response, inReview.response, pending.response, matrix.response])

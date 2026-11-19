@@ -1,3 +1,5 @@
+import { Company } from "@/constants/companies"
+
 /** Entregas del mes (`GET /posts/deliveries`): el cierre, los carriles en vivo y las clientas por poner al corriente. */
 
 export type DeliveryTone = 'ok' | 'plain' | 'warn' | 'bad'
@@ -75,6 +77,8 @@ export interface DeliveryClient {
     name: string
     plan: string
     country: string
+    /** Su empresa. Opcional porque la API todavía no lo manda; sin él es Mary Kay */
+    company?: Company
     reasons: Array<{ code: 'new' | 'back' | 'promo' | 'reports', label: string, at: string | null }>
     since: string | null
     checks: Record<ClientCheckKey, ClientCheck>

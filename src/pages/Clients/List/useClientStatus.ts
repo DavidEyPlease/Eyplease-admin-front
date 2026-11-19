@@ -6,6 +6,7 @@ import { IClientListItem } from '@/interfaces/clients'
 import { PaginationResponse } from '@/interfaces/common'
 import { queryKeys } from '@/utils/queryKeys'
 import useCountryStore from '@/store/country'
+import useCompanyStore from '@/store/company'
 import { boardKey } from './useClientsBoard'
 
 /**
@@ -19,6 +20,7 @@ import { boardKey } from './useClientsBoard'
 const useClientStatus = () => {
     const queryClient = useQueryClient()
     const country = useCountryStore(state => state.country)
+    const company = useCompanyStore(state => state.company)
     const { request, requestState } = useRequestQuery({ onError: () => { } })
 
     const setActive = async (clientId: string, active: boolean) => {
@@ -32,7 +34,7 @@ const useClientStatus = () => {
             throw new Error(response?.message || 'No se pudo cambiar el estado')
         }
 
-        queryClient.setQueryData<PaginationResponse<IClientListItem>>(boardKey(country), old => old && {
+        queryClient.setQueryData<PaginationResponse<IClientListItem>>(boardKey(country, company), old => old && {
             ...old,
             items: old.items.map(item => item.id === clientId
                 ? { ...item, user: { ...item.user, active } } as IClientListItem

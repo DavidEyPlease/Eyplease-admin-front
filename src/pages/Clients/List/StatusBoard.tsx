@@ -13,6 +13,9 @@ import { statusTarget } from './statusTarget'
 import useClientsBoard, { BoardClient, PaymentState } from './useClientsBoard'
 import { countryInfo, moneyIn } from '@/constants/countries'
 import useCountryStore from '@/store/country'
+import useCompanyStore from '@/store/company'
+import { companyInfo, isDefaultCompany } from '@/constants/companies'
+import CompanyTag from '@/components/generics/CompanyTag'
 import '@/pages/Hoy/hoy.css'
 
 const PAYMENT: Record<PaymentState, { label: string, tone: string }> = {
@@ -102,6 +105,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
                 </div>
             </td>
             <td className="px-3 py-3 whitespace-nowrap">
+                <CompanyTag company={client.company} className="mr-1" />
                 {plan ? <><span className="pulse-tag plain">{plan.name}</span> <small className="ml-1 text-[11.5px] text-muted-foreground">{price}</small></> : <span className="text-[12px] text-muted-foreground">Sin plan</span>}
                 {client.promotion && <small className="mt-1 block text-[11px] text-emerald-600 dark:text-emerald-400">{client.promotion.name ?? 'Con promoción'}</small>}
             </td>
@@ -114,7 +118,7 @@ const Row = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
                 <small className="block text-[11px] text-muted-foreground">{Number(client.previous_month_points ?? 0).toLocaleString('es-MX')} el mes pasado</small>
             </td>
             <td className="px-3 py-3 whitespace-nowrap">
-                {row.hasPortalPassword ? <small className="text-[11.5px] text-muted-foreground">{lastSeen(client.last_sign_in_at)}</small> : <span className="pulse-tag warn">Sin contraseña del portal</span>}
+                {row.needsPortalPassword ? <span className="pulse-tag warn">Sin contraseña del portal</span> : <small className="text-[11.5px] text-muted-foreground">{lastSeen(client.last_sign_in_at)}</small>}
             </td>
             {/* Todo lo de esta celda se queda en la celda: el menú va en un portal, pero los eventos de
                 React suben por el árbol de componentes, y sin esto elegir «Desactivar» abría su ficha */}
@@ -153,13 +157,14 @@ const Card = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
             {/* Las etiquetas van a todo lo ancho de la tarjeta, no en la columna del nombre: ahí cabía una por renglón */}
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pr-2">
                 {active ? <span className={cn('pulse-tag', pay.tone)}>{pay.label}</span> : <span className="pulse-tag warn">Inactiva</span>}
+                <CompanyTag company={client.company} />
                 {plan ? <span className="pulse-tag plain">{plan.name} · {price}</span> : <span className="pulse-tag plain">Sin plan</span>}
                 {reports && <span className={cn('pulse-tag', reportsDone ? 'ok' : 'warn')}>Reportes {reports.loaded} de {reports.entitled}</span>}
-                {!row.hasPortalPassword && <span className="pulse-tag warn">Sin contraseña del portal</span>}
+                {row.needsPortalPassword && <span className="pulse-tag warn">Sin contraseña del portal</span>}
             </div>
             <small className="mt-1.5 block pr-2 text-[11.5px] text-muted-foreground">
                 <b className="font-bold text-foreground tabular-nums">{Number(client.current_month_points ?? 0).toLocaleString('es-MX')}</b> puntos este mes
-                {row.hasPortalPassword && ` · ${lastSeen(client.last_sign_in_at)}`}
+                {!row.needsPortalPassword && ` · ${lastSeen(client.last_sign_in_at)}`}
                 {client.promotion && <span className="text-emerald-600 dark:text-emerald-400"> · {client.promotion.name ?? 'Con promoción'}</span>}
             </small>
         </article>
@@ -174,6 +179,7 @@ const Card = ({ row, onChangeStatus, onPaymentLink }: RowProps) => {
 const StatusBoard = () => {
     const { rows, loading } = useClientsBoard()
     const country = useCountryStore(state => state.country)
+    const company = useCompanyStore(state => state.company)
     const [search, setSearch] = useState('')
     const [plan, setPlan] = useState<string>('all')
     const [quick, setQuick] = useState<Quick>('all')
@@ -190,7 +196,7 @@ const StatusBoard = () => {
 
     const counts = useMemo(() => ({
         overdue: rows.filter(row => row.payment === 'overdue').length,
-        no_password: rows.filter(row => !row.hasPortalPassword).length,
+        no_password: rows.filter(row => row.needsPortalPassword).length,
         reports: rows.filter(row => row.reports && row.reports.loaded < row.reports.entitled).length,
         inactive: rows.filter(row => row.client.user?.active === false).length,
     }), [rows])
@@ -200,7 +206,7 @@ const StatusBoard = () => {
         return rows.filter(row => {
             if (plan !== 'all' && row.client.user?.plan?.name !== plan) return false
             if (quick === 'overdue' && row.payment !== 'overdue') return false
-            if (quick === 'no_password' && row.hasPortalPassword) return false
+            if (quick === 'no_password' && !row.needsPortalPassword) return false
             if (quick === 'reports' && !(row.reports && row.reports.loaded < row.reports.entitled)) return false
             if (quick === 'inactive' && row.client.user?.active !== false) return false
             if (text && !`${row.client.name} ${row.client.account}`.toLocaleLowerCase('es-MX').includes(text)) return false
@@ -248,7 +254,7 @@ const StatusBoard = () => {
                     </table>
                 </div>
                 {loading && <div className="grid gap-2 p-4">{Array.from({ length: 6 }, (_, index) => <span key={index} className="h-12 animate-pulse rounded-xl bg-foreground/[.06]" />)}</div>}
-                {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : `Todavía no hay clientas en ${countryInfo(country).label}.`}</p>}
+                {!loading && !shown.length && <p className="px-5 py-10 text-center text-[13px] text-muted-foreground">{rows.length ? 'Ninguna clienta con ese filtro.' : `Todavía no hay clientas${isDefaultCompany(company) ? '' : ` de ${companyInfo(company).label}`} en ${countryInfo(country).label}.`}</p>}
             </section>
 
             <StatusDialog target={changing && statusTarget(changing.client)} onClose={() => setChanging(null)} />

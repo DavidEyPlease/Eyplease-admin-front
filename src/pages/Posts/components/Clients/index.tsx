@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangleIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlayIcon, SearchIcon, XIcon } from 'lucide-react'
 
 import { IClientCoverageResponse, IClientCoverageRow, ICoverageColumn, IPostsCoverageResponse, PostArtifact } from '@/interfaces/posts'
+import { Company, companyHas, companyOf } from '@/constants/companies'
 import { cn } from '@/lib/utils'
 import { NEWSLETTER_LABEL, formatNumber } from '../../page-utils'
 import PeriodPicker from '../PeriodPicker'
@@ -16,6 +17,8 @@ const CELL_UI = {
 } as const
 
 interface Props {
+    /** La empresa que se mira: decide si se ofrece «Generar lo suyo» (sólo donde el motor arma las piezas) */
+    company: Company
     coverage: IPostsCoverageResponse
     clientCoverage: IClientCoverageResponse | null
     loading: boolean
@@ -57,7 +60,7 @@ const ClientsSkeleton = () => (
 )
 
 /** Por clienta: a quién le falta qué, ordenadas por huecos, y generar sólo lo suyo. */
-const ClientsTab = ({ coverage, clientCoverage, loading, updating, publishing, period, search, onPeriodChange, onSearch, onChangePage, onPublishClient }: Props) => {
+const ClientsTab = ({ company, coverage, clientCoverage, loading, updating, publishing, period, search, onPeriodChange, onSearch, onChangePage, onPublishClient }: Props) => {
     const [text, setText] = useState(search)
 
     // Buscar al dejar de escribir, sin un botón de más.
@@ -83,7 +86,10 @@ const ClientsTab = ({ coverage, clientCoverage, loading, updating, publishing, p
     }, [columns])
 
     const rows = clientCoverage?.items ?? []
-    const withoutReport = rows.filter(row => summarize(row, columns).empty >= NO_REPORT_EMPTY_SECTIONS)
+    /* La empresa de la fila si la trae; si no, la que se pidió */
+    const companyOfRow = (row: IClientCoverageRow) => row.company ? companyOf(row.company) : company
+    /* «Sin reporte importado» sólo aplica a quien tiene reportes del portal (Mary Kay) */
+    const withoutReport = rows.filter(row => companyHas(companyOfRow(row), 'portal') && summarize(row, columns).empty >= NO_REPORT_EMPTY_SECTIONS)
 
     return (
         <div className="grid min-w-0 grid-cols-1 gap-4">
@@ -161,7 +167,11 @@ const ClientsTab = ({ coverage, clientCoverage, loading, updating, publishing, p
                                 </span>
 
                                 <span className="flex justify-end">
-                                    {summary.problems.length > 0 && (
+                                    {/* A otra empresa sus piezas no las arma el motor: se suben a mano desde su ficha */}
+                                    {summary.problems.length > 0 && !companyHas(companyOfRow(row), 'render') && (
+                                        <span className="text-right text-[11.5px] text-muted-foreground">Se suben a mano en su ficha</span>
+                                    )}
+                                    {summary.problems.length > 0 && companyHas(companyOfRow(row), 'render') && (
                                         <button
                                             type="button"
                                             className="vta-btn !h-8 !text-[12px]"

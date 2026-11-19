@@ -20,6 +20,7 @@ import { MONTHS_OPTIONS } from "@/constants/app"
 import useFetchQuery from "@/hooks/useFetchQuery"
 import useTemplatePresets from "../useTemplatePresets"
 import { TEMPLATE_GROUP_REPORTS } from "../page-utils"
+import { companyInfo, companyOf } from "@/constants/companies"
 
 interface TemplateFormProps {
     item?: ITemplate | null
@@ -300,7 +301,8 @@ const TemplateForm = ({ item, cloneFrom, isReportsTemplates, onSuccess }: Templa
                         name="enabled_all_clients"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Activar a todos los clientes</FormLabel>
+                                {/* La API la activa sólo a las clientas de la empresa de la plantilla (todas las de hoy son de Mary Kay) */}
+                                <FormLabel>Activar a todas las clientas de {companyInfo(companyOf(item ?? cloneFrom)).label}</FormLabel>
                                 <FormControl>
                                     <Switch
                                         id="enabled_all_clients"

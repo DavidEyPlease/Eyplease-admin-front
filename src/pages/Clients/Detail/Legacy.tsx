@@ -18,6 +18,7 @@ import { queryKeys } from "@/utils/queryKeys";
 import FadeInGrid from "@/components/generics/FadeInGrid";
 import { ClientStatsSection } from "../components/ClientStatsSection";
 import ClientForm from "../components/Form";
+import { companyHas, companyOf } from "@/constants/companies";
 
 const LegacyClientDetail = () => {
     const params = useParams<{ id: string }>();
@@ -37,7 +38,8 @@ const LegacyClientDetail = () => {
     const client = response?.client;
     const stats = response?.stats;
     // Círculo Rosa de Colombia se cuenta aparte (meses con descuento, no corazones): sólo en sus cuentas.
-    const esColombia = ['COL', 'CO'].includes((client?.country || '').toUpperCase());
+    const company = companyOf(client);
+    const esColombia = ['COL', 'CO'].includes((client?.country || '').toUpperCase()) && companyHas(company, 'pink_circle');
 
     useEffect(() => {
         subscribeEvent('client-updated', handleClientUpdate as EventListener)
@@ -71,7 +73,7 @@ const LegacyClientDetail = () => {
                                             <TabsTrigger value="actions">Acciones</TabsTrigger>
                                         </TabsList>
                                         <TabsContent value="vendors">
-                                            <Network clientId={params.id || ''} />
+                                            <Network clientId={params.id || ''} company={company} />
                                         </TabsContent>
                                         {esColombia && (
                                             <TabsContent value="pink-circle">

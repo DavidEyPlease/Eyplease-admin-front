@@ -1,3 +1,4 @@
+import { Company } from "@/constants/companies"
 import { IPermission } from "./permissions"
 
 export interface IPlan {
@@ -6,6 +7,9 @@ export interface IPlan {
         filtran los avisos a clientas. Opcional porque un API sin actualizar no la manda. */
     plan_key?: string | null
     name: string
+    /** De qué empresa es el plan: sólo se le ofrece a sus clientas y el editor pide sólo sus secciones. Opcional
+        porque una API sin actualizar no lo manda; sin él es Mary Kay (`companyOf`). */
+    company?: Company
     price: number
     /** Moneda de `price`: la del país de la clienta cuando viene dentro de ella (Colombia, COP). Opcional
         porque una API sin actualizar no la manda; sin ella es MXN. */

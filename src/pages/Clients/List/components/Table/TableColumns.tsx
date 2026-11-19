@@ -8,6 +8,7 @@ import PlanBadge from "@/pages/Configurations/Plans/components/PlanBadge";
 import { formatDate } from "@/utils/dates";
 import QuickActionsClient from "../../../components/QuickActions";
 import ClientPromotionCell from "./ClientPromotionCell";
+import CompanyTag from "@/components/generics/CompanyTag";
 
 export const tableColumns: ColumnDef<IClientListItem>[] = [
     {
@@ -27,7 +28,10 @@ export const tableColumns: ColumnDef<IClientListItem>[] = [
                 />
                 <div className="flex flex-col gap-1">
                     <Link className="text-sm underline font-semibold text-gray-800 dark:text-white" to={replaceRecordIdInPath(APP_ROUTES.CLIENTS.DETAIL, row.original.id)} text={row.original.name} />
-                    <PlanBadge plan={row.original.user?.plan} />
+                    <span className="flex flex-wrap items-center gap-1">
+                        <PlanBadge plan={row.original.user?.plan} />
+                        <CompanyTag company={row.original.company} />
+                    </span>
                 </div>
                 {/* 
                     <p className="text-xs text-gray-800 dark:text-white">

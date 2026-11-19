@@ -6,6 +6,7 @@ import Spinner from "@/components/common/Spinner"
 import { APP_ROUTES } from "@/constants/app"
 import { cn } from "@/lib/utils"
 import { WaClientCardResponse } from "@/interfaces/whatsapp"
+import CompanyTag from "@/components/generics/CompanyTag"
 
 interface Props {
     data: WaClientCardResponse | undefined
@@ -70,6 +71,7 @@ const ClientCard = ({ data, loading }: Props) => {
                 <Chip className={client.active ? "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300"}>
                     {client.active ? "Activa" : "Inactiva"}
                 </Chip>
+                <CompanyTag company={client.company} />
                 {client.plan && <Chip className="bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300">{client.plan}</Chip>}
                 {client.rank && <Chip className="border border-border text-muted-foreground">{client.rank}</Chip>}
             </div>

@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { toast } from 'sonner'
 
 import { API_ROUTES } from '@/constants/api'
+import { Company, DEFAULT_COMPANY } from '@/constants/companies'
 import useFetchQuery from '@/hooks/useFetchQuery'
 import useRequestQuery from '@/hooks/useRequestQuery'
 import { DeliveriesResponse } from '@/interfaces/deliveries'
@@ -17,7 +18,7 @@ import { ACTIVE_RUN_STATUSES, CLIENTS_PER_PAGE, currentPeriod, periodToMonthNumb
 
 const COVERAGE_STALE_TIME_MS = 60_000
 
-const coverageKey = (period: string, newsletter?: string) => queryKeys.list('posts/coverage', { period, newsletter })
+const coverageKey = (period: string, newsletter: string | undefined, company: Company) => queryKeys.list('posts/coverage', { period, newsletter, company })
 const clientCoverageKey = (params: Record<string, unknown>) => queryKeys.list('posts/coverage/clients', params)
 const RUNS_QUERY_KEY = queryKeys.generic('posts/render-runs')
 const DELIVERIES_QUERY_KEY = queryKeys.generic('posts/deliveries')
@@ -29,10 +30,11 @@ const EMPTY_COVERAGE: IPostsCoverageResponse = {
     sections: [],
 }
 
-export const usePostsCoverage = (period: string, newsletter?: string) => {
+/** `company`: las secciones de esa empresa (la API, sin ella, da las de Mary Kay) */
+export const usePostsCoverage = (period: string, newsletter?: string, company: Company = DEFAULT_COMPANY) => {
     const { response, loading, isRefetching } = useFetchQuery<IPostsCoverageResponse>(API_ROUTES.POSTS.COVERAGE, {
-        queryParams: { period, newsletter },
-        customQueryKey: coverageKey(period, newsletter),
+        queryParams: { period, newsletter, company },
+        customQueryKey: coverageKey(period, newsletter, company),
         staleTime: COVERAGE_STALE_TIME_MS,
     })
 
@@ -43,8 +45,9 @@ export const usePostsCoverage = (period: string, newsletter?: string) => {
     }
 }
 
-export const useClientCoverage = (period: string, page: number, newsletter?: string, search?: string) => {
-    const queryParams = { period, page, perPage: CLIENTS_PER_PAGE, newsletter, search }
+/** `company`: sólo las clientas de esa empresa (la API, sin ella, da las de Mary Kay) */
+export const useClientCoverage = (period: string, page: number, newsletter?: string, search?: string, company: Company = DEFAULT_COMPANY) => {
+    const queryParams = { period, page, perPage: CLIENTS_PER_PAGE, newsletter, search, company }
 
     const { response, loading, isRefetching } = useFetchQuery<IClientCoverageResponse>(API_ROUTES.POSTS.CLIENT_COVERAGE, {
         queryParams,

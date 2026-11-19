@@ -23,6 +23,9 @@ import StatusBoard from "./StatusBoard"
 import { cn } from "@/lib/utils"
 import useCountryStore from "@/store/country"
 import { countryInfo } from "@/constants/countries"
+import useCompanyStore from "@/store/company"
+import { companyInfo, companyOf, isDefaultCompany } from "@/constants/companies"
+import CompanySwitch from "@/components/generics/CompanySwitch"
 
 const ClientsListPage = () => {
     const navigate = useNavigate()
@@ -35,6 +38,8 @@ const ClientsListPage = () => {
     const { utilData } = useAuthStore(state => state)
     /* Sólo las clientas del país que se mira arriba: sus cuentas, su moneda y sus programas no se mezclan */
     const country = useCountryStore(state => state.country)
+    /* Y sólo las de la empresa que se elige aquí (Mary Kay por omisión): la API las separa con `company` */
+    const company = useCompanyStore(state => state.company)
 
     const {
         selectedFilters,
@@ -56,12 +61,13 @@ const ClientsListPage = () => {
         defaultSortBy: 'previous_month_points',
         defaultSortOrder: 'desc',
         customQueryKey: (params) => queryKeys.list('clients/list', params),
-        extraParams: { country },
+        extraParams: { country, company },
     })
 
     const filterList = CLIENTS_FILTER_ITEMS.map(i => {
         if (i.id === 'plan' && i.type === FilterTypes.SELECT) {
-            i.options = utilData.plans.map(plan => ({
+            /* Sólo los planes de la empresa que se mira */
+            i.options = utilData.plans.filter(plan => companyOf(plan) === company).map(plan => ({
                 label: plan.name,
                 value: plan.id
             }))
@@ -71,7 +77,8 @@ const ClientsListPage = () => {
 
     return (
         <div className="grid grid-cols-[minmax(0,1fr)] pt-2 gap-y-4">
-            <PageHead eyebrow={`Clientas · ${countryInfo(country).label}`} title={<>Todas las clientas · <em>una fila, todo su estado</em></>} sub="Plan, pago, reportes del mes, puntos y acceso sin salir de la lista. Entra a una para verla a fondo.">
+            <PageHead eyebrow={`Clientas · ${isDefaultCompany(company) ? '' : `${companyInfo(company).label} · `}${countryInfo(country).label}`} title={<>Todas las clientas · <em>una fila, todo su estado</em></>} sub="Plan, pago, reportes del mes, puntos y acceso sin salir de la lista. Entra a una para verla a fondo.">
+                <CompanySwitch />
                 <div className="inline-flex rounded-xl bg-foreground/5 p-[3px]">
                     {([['board', 'Estado'], ['table', 'Tabla de trabajo']] as const).map(([key, label]) => (
                         <button key={key} type="button" onClick={() => setView(key)} className={cn('h-8 cursor-pointer rounded-[9px] px-3.5 text-[12.5px] font-bold transition-colors', view === key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{label}</button>
@@ -86,6 +93,8 @@ const ClientsListPage = () => {
             {view === 'table' && <>
             {!newShell && <ClientsMetrics />}
             <div className="flex items-center gap-x-2">
+                {/* Con el marco de siempre no hay encabezado: el selector de empresa va junto a los filtros */}
+                {!newShell && <CompanySwitch />}
                 <div className="flex-1">
                     <FiltersAndSearch
                         title="Filtros de clientes"

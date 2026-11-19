@@ -5,6 +5,8 @@ import { IClient } from "@/interfaces/clients";
 import { Card, CardContent, CardHeader, CardTitle } from "@/uishadcn/ui/card";
 import { formatDate } from "@/utils/dates";
 import Plan from "./Plan";
+import CompanyTag from "@/components/generics/CompanyTag";
+import { companyHas, companyOf } from "@/constants/companies";
 
 interface Props {
     client: IClient
@@ -18,6 +20,7 @@ const Summary = ({ client }: Props) => {
                     <div className="flex items-center gap-x-2">
                         <Avatar sizeClasses="w-14 h-14" src={client.photo?.url} alt={client.name} />
                         <CardTitle>{client.name}</CardTitle>
+                        <CompanyTag company={client.company} />
                     </div>
                     <Chip label={client.user?.active ? 'Activo' : 'Inactivo'} colorClass={client.user?.active ? 'bg-emerald-500' : 'bg-red-500'} />
                 </div>
@@ -37,10 +40,11 @@ const Summary = ({ client }: Props) => {
                         label='Login'
                         value={client.platform_guest_account || client.account}
                     />
-                    <FieldValue
+                    {/* La contraseña del portal sólo existe para Mary Kay */}
+                    {companyHas(companyOf(client), 'portal') && <FieldValue
                         label='Acceso'
                         value={client.external_company_pw || 'No disponible'}
-                    />
+                    />}
                 </div>
 
                 {client.user?.plan && <Plan plan={client.user?.plan} />}

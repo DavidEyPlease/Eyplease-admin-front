@@ -1,3 +1,5 @@
+import { Company } from "@/constants/companies"
+
 /**
  * Tipos del modulo de WhatsApp. Reflejan lo que devuelve
  * /admin/whatsapp/* en la API, que a su vez lee la base del bot.
@@ -102,6 +104,8 @@ export interface WaClientCard {
     country_code: string | null
     rank: string | null
     plan: string | null
+    /** Su empresa (Mary Kay, Zermat). Opcional porque la API todavía no lo manda; sin él es Mary Kay */
+    company?: Company
     payments: WaClientPaymentSummary
 }
 

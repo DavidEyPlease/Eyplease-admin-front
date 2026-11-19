@@ -14,6 +14,7 @@ import { replaceRecordIdInPath } from "@/utils"
 import { formatDate } from "@/utils/dates"
 import { BrowserEvent, publishEvent, subscribeEvent, unsubscribeEvent } from "@/utils/events"
 import { queryKeys } from "@/utils/queryKeys"
+import { companyInfo, companyOf } from "@/constants/companies"
 
 import AIEditor from "../components/AIEditor"
 import ManageClients from "../components/ManageClients"
@@ -144,7 +145,7 @@ const TemplateDetailPage = () => {
                                     id={`template-${template.id}-status`}
                                 />
                             </FieldValue>
-                            <FieldValue label="Usada en todos los clientes">
+                            <FieldValue label={`Activa en todas las clientas de ${companyInfo(companyOf(template)).label}`}>
                                 <SwitchAction
                                     templateId={template.id}
                                     actionField="enabled_all_clients"

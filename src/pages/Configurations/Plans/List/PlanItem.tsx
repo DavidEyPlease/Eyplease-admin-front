@@ -1,5 +1,6 @@
 import Link from "@/components/common/Link";
 import Chip from "@/components/generics/Chip";
+import CompanyTag from "@/components/generics/CompanyTag";
 import { APP_ROUTES } from "@/constants/app";
 import { IPlan } from "@/interfaces/plans";
 import { TableCell, TableRow } from "@/uishadcn/ui/table";
@@ -18,6 +19,7 @@ const PlanItem = ({ plan }: Props) => {
             </TableCell>
             <TableCell>
                 <Link to={replaceRecordIdInPath(APP_ROUTES.CONFIGURATIONS.PLAN_DETAIL, plan.id)} className="font-semibold" text={plan.name} />
+                <CompanyTag company={plan.company} className="ml-2" />
             </TableCell>
             <TableCell>
                 {formatCurrency(plan.price)}

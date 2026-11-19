@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { COMPANY_KEYS, DEFAULT_COMPANY } from "@/constants/companies";
 import { APP_LINK_PATTERN, isAppLink } from "./appLinks";
 
 /** Los tres avisos que entiende la app: cada uno se pinta distinto en Hoy. */
@@ -33,6 +34,8 @@ export const parseAccounts = (text: string) => [...new Set(text.split(/[\s,;]+/)
 export const looksLikePrice = (text: string) => /\$\s?\d|\bprecio|\bdescuento|\bpaga[rs]?\b|\bcuesta\b|\bofert|\bpromoci[oó]n|%\s?(de\s)?desc/i.test(text);
 
 export const ClientNotificationSchema = z.object({
+    /** A las clientas de qué empresa (obligatorio: sin él la API lo manda sólo a Mary Kay) */
+    company: z.enum(COMPANY_KEYS, { message: "Elige de qué empresa son las clientas" }),
     title: z.string().min(1, { message: "El título es requerido" }).max(120, { message: "El título no puede superar 120 caracteres" }),
     body: z.string().min(1, { message: "El mensaje es requerido" }).max(500, { message: "El mensaje no puede superar 500 caracteres" }),
     segment: z.enum(["ios", "android", "all"], { message: "Selecciona un segmento" }),
@@ -89,6 +92,7 @@ export const ClientNotificationSchema = z.object({
 export type ClientNotificationForm = z.infer<typeof ClientNotificationSchema>;
 
 export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
+    company: DEFAULT_COMPANY,
     title: "",
     body: "",
     segment: "all",
@@ -110,7 +114,8 @@ export const FORM_DEFAULT_VALUES: ClientNotificationForm = {
  * lee con Carbon::parse, y una hora sin zona la tomaría como UTC (la junta de las 7 p. m. saldría
  * a la 1 p. m.). El navegador del equipo está en México, así que se convierten desde ahí.
  */
-/** `country`: sólo a las clientas de ese país (el que se mira en el panel); sin él, a todas. `plan_keys` sólo si se marcó alguno. */
+/** `country`: sólo a las clientas de ese país (el que se mira en el panel); sin él, a todas. `company`: siempre, la
+    que se eligió en el aviso. `plan_keys` sólo si se marcó alguno. */
 export const toPayload = (values: ClientNotificationForm, country?: string) => {
     const link = values.link.trim();
     const linkLabel = values.link_label.trim();
@@ -118,6 +123,7 @@ export const toPayload = (values: ClientNotificationForm, country?: string) => {
 
     return {
         ...(country ? { country } : {}),
+        company: values.company,
         title: values.title,
         body: values.body,
         segment: values.segment,

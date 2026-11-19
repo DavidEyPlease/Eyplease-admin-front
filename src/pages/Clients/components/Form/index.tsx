@@ -9,6 +9,7 @@ import BasicInfoForm from "./BasicInfoForm";
 import Pictures from "./Pictures";
 import DynamicTabs from "@/components/generics/DynamicTabs";
 import UpdateNetwork from "../../Detail/components/Network/UpdateNetwork";
+import { companyHas, companyInfo, companyOf } from "@/constants/companies";
 
 interface ClientFormProps {
     client?: IClient;
@@ -18,6 +19,8 @@ interface ClientFormProps {
 const ClientForm = ({ client, onSetClient }: ClientFormProps) => {
     const [step, setStep] = useState<FormSteps>('basic-info');
     const [networkRole, setNetworkRole] = useState<NetworkRankGroupType>('unity');
+    /* El Excel de vendedoras es el de InTouch (Mary Kay): a una clienta de otra empresa su grupo se le carga en su ficha */
+    const company = companyOf(client);
 
     const onCreateSuccess = (client: IClient) => {
         onSetClient(client);
@@ -79,7 +82,12 @@ const ClientForm = ({ client, onSetClient }: ClientFormProps) => {
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="flex flex-col gap-4 text-balance">
-                            {client &&
+                            {client && !companyHas(company, 'network_excel') && (
+                                <p className="text-sm text-muted-foreground">
+                                    Es clienta de {companyInfo(company).label}: su grupo no sale del Excel de InTouch. Cárgalo desde su ficha, en «Su grupo y sus piezas».
+                                </p>
+                            )}
+                            {client && companyHas(company, 'network_excel') &&
                                 <>
                                     <DynamicTabs
                                         value={networkRole}

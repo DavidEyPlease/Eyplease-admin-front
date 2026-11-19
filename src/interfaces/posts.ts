@@ -1,3 +1,5 @@
+import { Company } from "@/constants/companies"
+
 /**
  * Contrato de cobertura de publicaciones.
  * Mezcla dos orígenes (ver plan de backend):
@@ -120,6 +122,8 @@ export interface IClientCoverageRow {
     client_name: string
     client_account: string | null
     plan_name: string | null
+    /** Su empresa. Opcional: la API no lo manda por fila (toda la respuesta es de la empresa que se pidió) */
+    company?: Company
     /** Estado por section_key */
     cells: Record<string, CoverageCellState>
     /** Celdas que no están completas, excluyendo las que no incluye su plan */

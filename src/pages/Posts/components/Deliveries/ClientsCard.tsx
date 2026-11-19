@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { APP_ROUTES } from '@/constants/app'
+import { companyHas, companyOf } from '@/constants/companies'
+import CompanyTag from '@/components/generics/CompanyTag'
 import { ClientCheckKey, DeliveryClient } from '@/interfaces/deliveries'
 import { initials, shortDate } from '../../deliveries.utils'
 
@@ -21,13 +23,15 @@ interface Props {
 
 const ClientRow = ({ client, publishing, onGeneratePieces }: { client: DeliveryClient, publishing: boolean, onGeneratePieces: (client: DeliveryClient) => void }) => {
     const navigate = useNavigate()
-    const canGenerate = client.missing.includes('pieces')
+    /* Sólo donde el motor arma las piezas (Mary Kay): a otra empresa se le suben a mano desde su ficha */
+    const canGenerate = client.missing.includes('pieces') && companyHas(companyOf(client), 'render')
 
     return (
         <div className="pub-client">
             <span className="pub-avatar">{initials(client.name)}</span>
             <span className="pub-name min-w-0">
                 <b className="truncate">{client.name}</b>
+                <CompanyTag company={client.company} className="w-max" />
                 <small>{client.account} · {client.plan.replace('Plan ', '')}{client.country !== 'MEX' ? ` · ${client.country}` : ''}</small>
                 <small className="ent-why">{client.reasons.map(reason => `${reason.label}${reason.at ? ` (${shortDate(reason.at)})` : ''}`).join(' · ')}</small>
             </span>

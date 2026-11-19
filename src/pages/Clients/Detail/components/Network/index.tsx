@@ -14,9 +14,12 @@ import VendorItem from "./VendorItem";
 import DynamicTabs from "@/components/generics/DynamicTabs";
 import UpdateNetwork from "./UpdateNetwork";
 import { ScrollArea } from "@/uishadcn/ui/scroll-area";
+import { Company, companyHas, DEFAULT_COMPANY } from "@/constants/companies";
 
 interface Props {
     clientId: string
+    /** Su empresa: el Excel de red es el de InTouch (Mary Kay); a otra, su grupo se carga en su ficha */
+    company?: Company
 }
 
 const LIST_TABLE_COLUMNS: TableColumn[] = [
@@ -24,7 +27,7 @@ const LIST_TABLE_COLUMNS: TableColumn[] = [
     { key: 'actions', label: '' }
 ]
 
-const Vendors = ({ clientId }: Props) => {
+const Vendors = ({ clientId, company = DEFAULT_COMPANY }: Props) => {
     const {
         response: vendors,
         isLoading,
@@ -46,7 +49,7 @@ const Vendors = ({ clientId }: Props) => {
             <CardHeader className="pb-0">
                 <CardTitle className="justify-between flex items-center">
                     Vendedoras (es)
-                    <UpdateNetwork clientId={clientId} rolSelected={filters.vendorRole || 'unity'} />
+                    {companyHas(company, 'network_excel') && <UpdateNetwork clientId={clientId} rolSelected={filters.vendorRole || 'unity'} />}
                 </CardTitle>
                 <CardDescription>{vendors?.total_items ?? 0} vendedoras (es)</CardDescription>
             </CardHeader>

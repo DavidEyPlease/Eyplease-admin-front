@@ -3,6 +3,7 @@ import { CopyIcon, EyeIcon, EyeOffIcon, KeyRoundIcon, Loader2Icon, MessageCircle
 import { toast } from "sonner";
 
 import { countryInfo } from "@/constants/countries";
+import { companyHas, companyInfo, companyOf } from "@/constants/companies";
 import { IClientListItem, IClientUpdate } from "@/interfaces/clients";
 import { cn } from "@/lib/utils";
 import { ClientsService } from "@/services/clients.service";
@@ -74,6 +75,9 @@ interface Props {
  * Su foto y logotipo, sus datos de contacto y de cuenta, y el acceso al portal de Mary Kay con el que
  * el robot baja sus reportes. Todo se edita aquí mismo («Editar»): manda sólo lo que cambió al mismo
  * `PUT clients/{id}` de siempre. La contraseña va tapada; vacía al editar = no se toca.
+ *
+ * El bloque del portal sólo sale si su empresa tiene portal (`companyHas(…, 'portal')`): a una clienta de
+ * Zermat no se le pide contraseña ni se le avisa que le falta.
  */
 const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditingChange }, ref) => {
     const [showPassword, setShowPassword] = useState(false)
@@ -88,6 +92,9 @@ const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditin
     }
 
     const country = countryOf(client.country)
+    const company = companyOf(client)
+    const companyName = companyInfo(company).label
+    const hasPortal = companyHas(company, 'portal')
     const email = client.user?.email
     const phone = client.user?.phone
     const whatsapp = whatsappLink(phone, country)
@@ -115,7 +122,7 @@ const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditin
         if (draft.username.trim() !== original.username) payload.username = draft.username.trim()
         /* Vacío no se manda: el robot toma la cuenta cuando no hay usuario de portal, y la API guardaría un texto vacío */
         if (draft.platform_guest_account.trim() && draft.platform_guest_account.trim() !== original.platform_guest_account) payload.platform_guest_account = draft.platform_guest_account.trim()
-        if (draft.mk_password.trim()) payload.mk_password = draft.mk_password.trim()
+        if (hasPortal && draft.mk_password.trim()) payload.mk_password = draft.mk_password.trim()
 
         if (!Object.keys(payload).length) { onEditingChange(false); return }
 
@@ -161,15 +168,15 @@ const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditin
                             <option value="COL">🇨🇴 Colombia</option>
                         </select>
                     </Field>
-                    <Field label="Cuenta de Mary Kay" error={errors.username} hint="También es su usuario para entrar a Eyplease+"><input value={draft.username} onChange={event => set('username', event.target.value)} className={cn(inputClass, 'tabular-nums')} /></Field>
+                    <Field label={`Cuenta de ${companyName}`} error={errors.username} hint="También es su usuario para entrar a Eyplease+"><input value={draft.username} onChange={event => set('username', event.target.value)} className={cn(inputClass, 'tabular-nums')} /></Field>
 
-                    <div className="mt-1 grid gap-3 rounded-2xl border border-border bg-foreground/[.025] p-3.5">
+                    {hasPortal && <div className="mt-1 grid gap-3 rounded-2xl border border-border bg-foreground/[.025] p-3.5">
                         <p className="flex items-center gap-2 text-[12.5px] font-extrabold"><KeyRoundIcon className="size-3.5 text-[#6C47FF] dark:text-[#A894FF]" /> Portal de Mary Kay</p>
                         <Field label="Usuario del portal" hint="Si no tiene uno aparte, se usa su número de cuenta"><input value={draft.platform_guest_account} onChange={event => set('platform_guest_account', event.target.value)} className={inputClass} placeholder={draft.username} /></Field>
                         <Field label="Contraseña nueva" hint={password ? 'Déjala vacía para conservar la que tiene' : 'Hoy no tiene: sin ella el robot no baja sus reportes'}>
                             <input type="password" autoComplete="new-password" value={draft.mk_password} onChange={event => set('mk_password', event.target.value)} className={inputClass} />
                         </Field>
-                    </div>
+                    </div>}
 
                     <div className="mt-1 flex items-center justify-end gap-2">
                         <button type="button" onClick={() => onEditingChange(false)} disabled={saving} className="h-10 cursor-pointer rounded-xl px-3.5 text-[13px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-50">Cancelar</button>
@@ -198,14 +205,14 @@ const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditin
                         <Fact label="En Eyplease+ desde" value={formatDate(client.created_at, { date: 'medium' })} sub={signupOrigin(client.from_signup)} />
                         {(client.start_date || client.last_order_date || client.mk_status) && (
                             <Fact
-                                label="En Mary Kay"
+                                label={`En ${companyName}`}
                                 value={dayLabel(client.start_date) ? `Desde ${dayLabel(client.start_date)}` : '—'}
                                 sub={[client.mk_status && `Estatus ${client.mk_status}`, dayLabel(client.last_order_date) && `último pedido ${dayLabel(client.last_order_date)}`].filter(Boolean).join(' · ') || undefined}
                             />
                         )}
                     </div>
 
-                    <div className="mt-3 rounded-2xl border border-border bg-foreground/[.025] p-3.5">
+                    {hasPortal && <div className="mt-3 rounded-2xl border border-border bg-foreground/[.025] p-3.5">
                         <p className="flex items-center gap-2 text-[12.5px] font-extrabold"><KeyRoundIcon className="size-3.5 text-[#6C47FF] dark:text-[#A894FF]" /> Portal de Mary Kay</p>
                         <Fact
                             label="Usuario"
@@ -228,7 +235,7 @@ const AccountFacts = forwardRef<HTMLElement, Props>(({ client, editing, onEditin
                                 Sin contraseña del portal: el robot no puede bajar sus reportes. Agrégala con «Editar».
                             </p>
                         )}
-                    </div>
+                    </div>}
                 </>
             )}
         </section>

@@ -1,3 +1,4 @@
+import { Company } from "@/constants/companies"
 import { Acomodo } from "./challenges"
 import { IBaseDBProperties, NullishFile } from "./common"
 
@@ -188,7 +189,10 @@ export interface ITemplate extends IBaseDBProperties {
     // across all variants of this template. Null when no AI flow applies.
     preset_slug: string | null
     clients_count: number
+    /** «Activar a todas»: sólo a las clientas de la empresa de la plantilla (lo limita la API) */
     enabled_all_clients: boolean
+    /** De qué empresa es. Opcional porque la API todavía no lo manda; sin él es Mary Kay */
+    company?: Company
     render_provider_id: string | null
     slug: string
     template_file_uri: string | null

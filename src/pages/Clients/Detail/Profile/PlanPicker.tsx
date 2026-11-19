@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { API_ROUTES } from "@/constants/api";
 import { moneyIn } from "@/constants/countries";
+import { Company, companyInfo, companyOf } from "@/constants/companies";
 import useRequest from "@/hooks/useRequest";
 import { IClient } from "@/interfaces/clients";
 import { ApiResponse } from "@/interfaces/common";
@@ -15,14 +16,17 @@ import { publishEvent } from "@/utils/events";
 interface Props {
     clientId: string
     activePlanId: string | null
+    /** Su empresa: sólo se le ofrecen los planes de esa empresa (la API rechaza uno de otra) */
+    company: Company
 }
 
 /**
  * Asignarle un plan a mano: el mismo PATCH de siempre (`set-plan`), con los planes en tarjetas y el
  * suyo marcado. Al guardar avisa con `client-updated` para que la ficha se ponga al día sola.
  */
-const PlanPicker = ({ clientId, activePlanId }: Props) => {
-    const plans = useAuthStore(state => state.utilData.plans)
+const PlanPicker = ({ clientId, activePlanId, company }: Props) => {
+    const allPlans = useAuthStore(state => state.utilData.plans)
+    const plans = allPlans.filter(plan => companyOf(plan) === company)
     const { request, requestState } = useRequest('PATCH')
     const [selected, setSelected] = useState<string | null>(activePlanId)
     const changed = !!selected && selected !== activePlanId
@@ -70,6 +74,11 @@ const PlanPicker = ({ clientId, activePlanId }: Props) => {
                     )
                 })}
             </div>
+            {!plans.length && (
+                <p className="mt-2 rounded-xl bg-foreground/[.04] px-3 py-2 text-[12.5px] text-muted-foreground">
+                    No hay planes de {companyInfo(company).label} para elegir.
+                </p>
+            )}
 
             <div className="mt-4 flex items-center justify-end gap-2">
                 {changed && <button type="button" onClick={() => setSelected(activePlanId)} className="h-10 cursor-pointer rounded-xl px-3.5 text-[13px] font-bold text-muted-foreground hover:text-foreground">Cancelar</button>}

@@ -1,8 +1,9 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { ChartColumnIcon, HeartIcon, LayersIcon } from "lucide-react";
+import { ChartColumnIcon, HeartIcon, LayersIcon, UsersIcon } from "lucide-react";
 
 import { API_ROUTES } from "@/constants/api";
+import { companyHas, companyOf } from "@/constants/companies";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { IClient, IClientListItem, IClientStats } from "@/interfaces/clients";
 import { PaginationResponse } from "@/interfaces/common";
@@ -18,6 +19,7 @@ import LinkedAccounts from "../components/LinkedAccounts";
 import PinkCircleColombia from "../components/PinkCircleColombia";
 import AccountFacts from "./AccountFacts";
 import CloneReel from "./CloneReel";
+import CompanyGroup from "./CompanyGroup";
 import Hero from "./Hero";
 import Insights from "./Insights";
 import MonthPulse from "./MonthPulse";
@@ -26,7 +28,7 @@ import useClientInsights from "./useClientInsights";
 import { countryOf } from "./utils";
 import "@/pages/Hoy/hoy.css";
 
-type Tab = 'insights' | 'pink' | 'plan'
+type Tab = 'insights' | 'pink' | 'group' | 'plan'
 
 const Skeleton = () => (
     <div className="grid min-w-0 grid-cols-1 gap-4" aria-busy>
@@ -59,6 +61,8 @@ const ClientProfile = () => {
     const detail = response?.client
     const stats = response?.stats ?? null
     const country = countryOf(detail?.country)
+    /* Su empresa decide qué bloques salen (portal, Círculo Rosa, su grupo a mano…): ver `constants/companies.ts` */
+    const company = companyOf(detail)
 
     /* Los puntos del mes y si paga con tarjeta vienen en el padrón, no en la ficha: su fila, buscada por cuenta */
     const row = useFetchQuery<PaginationResponse<IClientListItem>>(API_ROUTES.CLIENTS.LIST, {
@@ -97,7 +101,8 @@ const ClientProfile = () => {
     const isColombia = country === 'COL'
     const tabs: Array<{ value: Tab, label: string, icon: ReactNode }> = [
         { value: 'insights', label: 'Indicadores y uso', icon: <ChartColumnIcon className="size-4" /> },
-        ...(isColombia ? [{ value: 'pink' as Tab, label: 'Círculo Rosa', icon: <HeartIcon className="size-4" /> }] : []),
+        ...(isColombia && companyHas(company, 'pink_circle') ? [{ value: 'pink' as Tab, label: 'Círculo Rosa', icon: <HeartIcon className="size-4" /> }] : []),
+        ...(companyHas(company, 'manual') ? [{ value: 'group' as Tab, label: 'Su grupo y sus piezas', icon: <UsersIcon className="size-4" /> }] : []),
         { value: 'plan', label: 'Plan y ajustes', icon: <LayersIcon className="size-4" /> },
     ]
 
@@ -136,11 +141,12 @@ const ClientProfile = () => {
                         ))}
                     </nav>
 
-                    {tab === 'insights' && <Insights data={insights.response} loading={insights.loading} failed={!!insights.error} country={country} />}
-                    {tab === 'pink' && isColombia && <PinkCircleColombia clientId={client.id} />}
+                    {tab === 'insights' && <Insights data={insights.response} loading={insights.loading} failed={!!insights.error} country={country} company={company} />}
+                    {tab === 'pink' && isColombia && companyHas(company, 'pink_circle') && <PinkCircleColombia clientId={client.id} />}
+                    {tab === 'group' && companyHas(company, 'manual') && <CompanyGroup clientId={client.id} company={company} />}
                     {tab === 'plan' && (
                         <div className="grid min-w-0 grid-cols-1 gap-4">
-                            <PlanPicker key={client.user?.plan?.id ?? 'none'} clientId={client.id} activePlanId={client.user?.plan?.id ?? null} />
+                            <PlanPicker key={client.user?.plan?.id ?? 'none'} clientId={client.id} activePlanId={client.user?.plan?.id ?? null} company={company} />
                             <CloneReel clientId={client.id} userId={client.user?.id} />
                         </div>
                     )}

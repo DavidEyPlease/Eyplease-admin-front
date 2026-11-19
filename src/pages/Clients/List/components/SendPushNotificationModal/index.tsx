@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { AlertTriangleIcon, CalendarClockIcon, ImageIcon, MegaphoneIcon, PinIcon, SmartphoneIcon, UserXIcon, UsersIcon } from "lucide-react";
+import { AlertTriangleIcon, BuildingIcon, CalendarClockIcon, ImageIcon, MegaphoneIcon, PinIcon, SmartphoneIcon, UserXIcon, UsersIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import Modal from "@/components/common/Modal";
@@ -18,6 +18,8 @@ import { Textarea } from "@/uishadcn/ui/textarea";
 import { ClientNotificationForm, ClientNotificationPayload, ClientNotificationSchema, endOfDay, FORM_DEFAULT_VALUES, looksLikePrice, NoticeKind, parseAccounts, startOfDay, toPayload } from "./schema";
 import useCountryStore from "@/store/country";
 import { countryInfo } from "@/constants/countries";
+import useCompanyStore from "@/store/company";
+import { Company, COMPANIES, companyInfo, companyOf } from "@/constants/companies";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { IPlan } from "@/interfaces/plans";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/uishadcn/ui/select";
@@ -63,6 +65,14 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
     /* Una junta de México no les sirve a las de Colombia (ni al revés): el aviso va sólo al país que se mira arriba */
     const country = useCountryStore(state => state.country);
     const countryName = countryInfo(country).label;
+    /* Y sólo a las de UNA empresa (una junta de Mary Kay no le sirve a una líder de Zermat): se elige aquí, y de
+       entrada es la que se mira en la lista de clientas */
+    const listCompany = useCompanyStore(state => state.company);
+    const company = form.watch("company");
+    const companyName = companyInfo(company).label;
+    useEffect(() => {
+        if (open) form.setValue("company", listCompany, { shouldValidate: true });
+    }, [open, listCompany, form]);
 
     const kind = form.watch("kind");
     const pinned = form.watch("pinned");
@@ -97,7 +107,9 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
 
     /* Los planes, para mandar el aviso sólo a quien tiene (o no tiene) uno: «esto viene en el Plan Elite» */
     const { response: plans, loading: plansLoading } = useFetchQuery<IPlan[]>(API_ROUTES.PLANS.LIST, { customQueryKey: ["config", "plans", "aviso"], enabled: open });
-    const plansWithKey = (plans ?? []).filter((plan) => !!plan.plan_key);
+    /* Sólo los planes de la empresa elegida: los de otra no le llegarían a nadie */
+    const anyPlanWithKey = (plans ?? []).some((plan) => !!plan.plan_key);
+    const plansWithKey = (plans ?? []).filter((plan) => !!plan.plan_key && companyOf(plan) === company);
     const chosenPlans = plansWithKey.filter((plan) => planKeys.includes(plan.plan_key as string));
     const plansText = chosenPlans.length ? ` con ${listText(chosenPlans.map((plan) => plan.name))}` : "";
 
@@ -111,7 +123,8 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
 
         if (response.success) {
             const when = values.send_at ? `programado para el ${whenText(new Date(values.send_at))}` : "enviado";
-            toast.success(values.pinned ? `Aviso ${when} a las clientas de ${countryName}${plansText} y fijado arriba de Hoy en la app` : `Aviso ${when} a las clientas de ${countryName}${plansText}`);
+            const audience = `las clientas de ${companyInfo(values.company).label} en ${countryName}${plansText}`;
+            toast.success(values.pinned ? `Aviso ${when} a ${audience} y fijado arriba de Hoy en la app` : `Aviso ${when} a ${audience}`);
             form.reset(FORM_DEFAULT_VALUES);
             onOpenChange(false);
         }
@@ -135,6 +148,36 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
         >
             <Form {...form}>
                 <form onSubmit={onSubmit} className="flex flex-col gap-5">
+                    <FormField
+                        control={form.control}
+                        name="company"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="flex items-center gap-1.5"><BuildingIcon className="size-4" /> ¿A las clientas de qué empresa?</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                        value={field.value}
+                                        onValueChange={(value) => {
+                                            field.onChange(value as Company);
+                                            /* Los planes marcados eran de la otra empresa */
+                                            form.setValue("plan_keys", []);
+                                        }}
+                                        className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+                                    >
+                                        {COMPANIES.map((option) => (
+                                            <Label key={option.value} className={cn(OPTION_CARD, field.value === option.value && "border-primary bg-primary/5")}>
+                                                <RadioGroupItem value={option.value} />
+                                                Clientas de {option.label}
+                                            </Label>
+                                        ))}
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormDescription>Le llega sólo a las de esa empresa; a las de la otra, no.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <FormField
                         control={form.control}
                         name="kind"
@@ -394,7 +437,7 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                                     </div>
                                 )}
                                 {plansLoading && <p className="text-xs text-muted-foreground">Cargando los planes…</p>}
-                                {!plansLoading && plansWithKey.length === 0 && <p className="text-xs text-muted-foreground">El API todavía no manda la llave de cada plan: el aviso va a todos los planes.</p>}
+                                {!plansLoading && plansWithKey.length === 0 && <p className="text-xs text-muted-foreground">{anyPlanWithKey ? `${companyName} no tiene planes para elegir: va a todas sus clientas.` : "El API todavía no manda la llave de cada plan: el aviso va a todos los planes."}</p>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -432,7 +475,7 @@ const SendPushNotificationModal = ({ open, onOpenChange }: SendPushNotificationM
                     </div>
 
                     <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
-                        {sendAt ? <>El <b className="font-semibold text-foreground">{whenText(new Date(sendAt))}</b> les llega</> : "Les llega"} sólo a las clientas de <b className="font-semibold text-foreground">{countryName}</b> (el país que estás viendo arriba)
+                        {sendAt ? <>El <b className="font-semibold text-foreground">{whenText(new Date(sendAt))}</b> les llega</> : "Les llega"} sólo a las clientas de <b className="font-semibold text-foreground">{companyName}</b> en <b className="font-semibold text-foreground">{countryName}</b> (la empresa que elegiste y el país que estás viendo arriba)
                         {chosenPlans.length ? <> con <b className="font-semibold text-foreground">{listText(chosenPlans.map((plan) => plan.name))}</b></> : ", de todos los planes"}
                         {excluded.length ? <>, menos {excluded.length === 1 ? "la cuenta" : "las cuentas"} <b className="font-semibold text-foreground">{listText(excluded)}</b></> : ""}.
                         {imageUrl && pinned ? " Con su imagen en la ventana de la app." : ""}

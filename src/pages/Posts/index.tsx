@@ -13,6 +13,9 @@ import { useMonthPrep, useMonthPrepActions, useMonthPrepRefresh } from './useMon
 import { useClientCoverage, useDeliveries, useLaunchClosing, usePostPauses, usePostRenderRuns, usePostsCoverage, usePublishForClient, usePublishPosts } from './usePosts'
 import PageHead from "@/layouts/TopShell/PageHead"
 import { isNewShell } from "@/layouts/TopShell/useNewShell"
+import CompanySwitch from "@/components/generics/CompanySwitch"
+import { DEFAULT_COMPANY } from "@/constants/companies"
+import useCompanyStore from "@/store/company"
 import '@/pages/Hoy/hoy.css'
 import '@/pages/Sales/ventas.css'
 import '@/pages/Growth/growth.css'
@@ -40,9 +43,19 @@ const PostsPage = () => {
     const [period, setPeriod] = useState(defaultPeriod)
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
+    /* «Qué falta» y «Por clienta» se miran por empresa (la API separa secciones y clientas); otra empresa es otra lista */
+    const company = useCompanyStore(state => state.company)
+    const [lastCompany, setLastCompany] = useState(company)
+    if (lastCompany !== company) {
+        setLastCompany(company)
+        setPage(1)
+    }
+    const companyTab = tab === 'control' || tab === 'coverage'
 
-    const { coverage, loading, isRefetching } = usePostsCoverage(period)
-    const { clientCoverage, loading: loadingClients, updating: updatingClients } = useClientCoverage(period, page, undefined, search)
+    const { coverage, loading, isRefetching } = usePostsCoverage(period, undefined, company)
+    /* Entregas es el cierre de Mary Kay: sus formatos salen siempre de las secciones de Mary Kay (si es la que se mira, es la misma consulta) */
+    const { coverage: deliveriesCoverage } = usePostsCoverage(period, undefined, DEFAULT_COMPANY)
+    const { clientCoverage, loading: loadingClients, updating: updatingClients } = useClientCoverage(period, page, undefined, search, company)
     const { runs, loading: loadingRuns } = usePostRenderRuns()
     const { publish, publishing } = usePublishPosts(period)
     const { pause, resume, saving } = usePostPauses()
@@ -76,11 +89,14 @@ const PostsPage = () => {
     return (
         <div className="flex min-w-0 flex-col gap-4">
             {isNewShell() ? (
-                <PageHead eyebrow="Operación · Publicaciones" title={(HEAD[tab] ?? HEAD.control).title} sub={(HEAD[tab] ?? HEAD.control).sub} />
+                <PageHead eyebrow="Operación · Publicaciones" title={(HEAD[tab] ?? HEAD.control).title} sub={(HEAD[tab] ?? HEAD.control).sub}>
+                    {companyTab && <CompanySwitch />}
+                </PageHead>
             ) : (
                 <div className="flex items-center gap-2.5">
                     <span className="h-7 w-1.5 rounded-full bg-brand-gradient-v" />
                     <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Publicaciones</h1>
+                    {companyTab && <CompanySwitch className="ml-auto" />}
                 </div>
             )}
 
@@ -99,7 +115,7 @@ const PostsPage = () => {
                         data={deliveries}
                         loading={loadingDeliveries}
                         isRefetching={refetchingDeliveries}
-                        coverage={coverage}
+                        coverage={deliveriesCoverage}
                         publishing={launching || publishingClientNow}
                         onLaunch={launch}
                         onPublishClient={publishClientNow}
@@ -143,6 +159,7 @@ const PostsPage = () => {
 
                 <TabsContent value="coverage">
                     <ClientsTab
+                        company={company}
                         coverage={coverage}
                         clientCoverage={clientCoverage}
                         loading={loadingClients}

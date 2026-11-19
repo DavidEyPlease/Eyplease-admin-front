@@ -20,16 +20,20 @@ import clsx from "clsx";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { queryKeys } from "@/utils/queryKeys";
 import useRequestQuery from "@/hooks/useRequestQuery";
+import { companyOf } from "@/constants/companies";
+import CompanyTag from "@/components/generics/CompanyTag";
 
 interface Props {
     plan: IPlan
 }
 
 const FormPlan = ({ plan }: Props) => {
-    // const { response: modules, loading: permissionsLoading } = useFetch<IModule[]>(API_ROUTES.PERMISSIONS.GET_ALL_ACCESS)
+    /* Con la empresa del plan, las secciones que se palomean (`nested_modules`) son sólo las de esa empresa: la API
+       rechaza al guardar una sección de otra */
+    const company = companyOf(plan)
     const { response: apiResponse, loading: permissionsLoading } = useFetchQuery<{ modules: IModule[] }>(API_ROUTES.PERMISSIONS.GET_ALL_ACCESS, {
-        customQueryKey: queryKeys.list(`plan/${plan.id}/accesses`),
-        queryParams: { role: RoleKeys.CLIENT }
+        customQueryKey: queryKeys.list(`plan/${plan.id}/accesses`, { company }),
+        queryParams: { role: RoleKeys.CLIENT, company }
     })
 
     const {
@@ -168,7 +172,7 @@ const FormPlan = ({ plan }: Props) => {
                 </Card>
                 <Card className="col-span-3">
                     <CardContent>
-                        <h3 className="mb-2 text-lg font-semibold">Permisos</h3>
+                        <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold">Permisos <CompanyTag company={plan.company} /></h3>
                         {permissionsLoading ? (
                             <Spinner size="sm" color="primary" />
                         ) : (

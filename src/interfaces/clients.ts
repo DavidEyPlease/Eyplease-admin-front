@@ -1,3 +1,4 @@
+import { Company } from "@/constants/companies"
 import { EypleaseFile } from "./files"
 import { IPlan } from "./plans"
 import { DiscountType } from "./promotion"
@@ -16,6 +17,11 @@ export interface IClient {
     id: string
     name: string
     account: string
+    /** De qué empresa es (Mary Kay, Zermat). Opcional porque una API sin actualizar no lo manda: sin él es Mary Kay
+        (`companyOf`). Lo que el panel enseña de cada empresa está en `constants/companies.ts`. */
+    company?: Company
+    /** «Mary Kay», «Zermat»: sólo viene en la ficha */
+    company_name?: string
     from_signup: string
     mk_status: string
     photo: EypleaseFile

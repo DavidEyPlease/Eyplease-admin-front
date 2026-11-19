@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { APP_ROUTES } from "@/constants/app";
 import { countryInfo, moneyIn } from "@/constants/countries";
+import CompanyTag from "@/components/generics/CompanyTag";
 import { IClientListItem } from "@/interfaces/clients";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/uishadcn/ui/dropdown-menu";
@@ -60,6 +61,7 @@ const Hero = ({ client, onEdit, onPaymentLink, onChangeStatus }: Props) => {
                     </p>
                     <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                         <span className={cn('pulse-tag', active ? 'ok' : 'warn')}>{active ? 'Activa' : 'Inactiva'}</span>
+                        <CompanyTag company={client.company} />
                         {plan
                             ? <span className="pulse-tag plain max-w-full overflow-hidden whitespace-nowrap">{plan.name} · {moneyIn(Number(plan.price), currency)}{currency !== 'MXN' ? ` ${currency}` : ''}/mes</span>
                             : <span className="pulse-tag warn">Sin plan</span>}

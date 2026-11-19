@@ -3,6 +3,7 @@ import { ActivityIcon, FileChartColumnIcon, ImagesIcon, StarIcon, WalletIcon } f
 
 import { API_ROUTES } from "@/constants/api";
 import { Country, moneyIn } from "@/constants/countries";
+import { companyHas, companyOf } from "@/constants/companies";
 import useFetchQuery from "@/hooks/useFetchQuery";
 import { IClientListItem, IClientStats } from "@/interfaces/clients";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,9 @@ interface Props {
 const MonthPulse = ({ client, stats, country, pointsLoading, insights, insightsLoading }: Props) => {
     const active = client.user?.active !== false
     const { debt, loading: debtLoading, failed: debtFailed } = useClientDebt(client.id)
+    /* Los reportes del mes los baja el robot del portal: a una clienta de otra empresa no se le bajan */
+    const company = companyOf(client)
+    const hasPortal = companyHas(company, 'portal')
 
     /* La misma matriz y la misma llave que Reportes y el padrón: si ya se vio, sale del caché */
     const period = defaultPeriod()
@@ -73,6 +77,7 @@ const MonthPulse = ({ client, stats, country, pointsLoading, insights, insightsL
         queryParams: { year_month: period, country },
         customQueryKey: queryKeys.generic('report-clients-status', { period, country }),
         staleTime: 60_000,
+        enabled: hasPortal,
     })
     const cells = Object.values(matrix.response?.clients.find(item => item.account === client.account)?.cells ?? {})
     const loaded = cells.filter(cell => cell === STATUS_LOADED).length
@@ -103,7 +108,7 @@ const MonthPulse = ({ client, stats, country, pointsLoading, insights, insightsL
                 value={points.toLocaleString(country === 'COL' ? 'es-CO' : 'es-MX')}
                 sub={`${previous.toLocaleString(country === 'COL' ? 'es-CO' : 'es-MX')} el mes pasado`}
             />
-            <Tile
+            {hasPortal ? <Tile
                 icon={<FileChartColumnIcon className="size-3.5" />}
                 label="Reportes del mes"
                 loading={matrix.loading && !matrix.response}
@@ -111,7 +116,12 @@ const MonthPulse = ({ client, stats, country, pointsLoading, insights, insightsL
                 value={cells.length ? `${loaded} de ${cells.length}` : '—'}
                 sub={cells.length ? `Cargados de ${periodLabel(period).toLowerCase()}` : active ? `No aparece en los reportes de ${periodLabel(period).toLowerCase()}` : 'Dada de baja: no se le bajan'}
                 bar={cells.length ? (loaded / cells.length) * 100 : undefined}
-            />
+            /> : <Tile
+                icon={<FileChartColumnIcon className="size-3.5" />}
+                label="Reportes del mes"
+                value="—"
+                sub="Su grupo se carga a mano"
+            />}
             <Tile
                 icon={<ImagesIcon className="size-3.5" />}
                 label="Publicaciones"

@@ -50,6 +50,9 @@ export const API_ROUTES = {
         DEBT: '/clients/{id}/debt',
         CLONE_REEL: '/clients/{id}/clone-reel',
         INSIGHTS: '/clients/{id}/insights',
+        /** Sólo clientas de otra empresa (Zermat): su grupo, tal como viene de su portal, y sus piezas terminadas */
+        COMPANY_ROSTER: '/clients/{id}/company-roster',
+        COMPANY_PIECES: '/clients/{id}/company-pieces',
     },
     PLANS: {
         LIST: '/plans',

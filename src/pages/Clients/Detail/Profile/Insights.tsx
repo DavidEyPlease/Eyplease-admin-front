@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { ActivityIcon, BriefcaseBusinessIcon, InfoIcon, SmartphoneIcon } from "lucide-react";
 
 import { Country } from "@/constants/countries";
+import { Company, companyHas } from "@/constants/companies";
 import { periodLabel } from "@/utils/finance";
 import MiniBars from "./MiniBars";
 import { ago, appDevices, ClientInsights } from "./useClientInsights";
@@ -26,7 +27,7 @@ const Section = ({ icon, title, sub, children }: { icon: ReactNode, title: strin
 )
 
 /** Los indicadores de su negocio: los mismos que ella ve en la pestaña Indicadores de su app. */
-const Business = ({ data, country }: { data: ClientInsights, country: Country }) => {
+const Business = ({ data, country, company }: { data: ClientInsights, country: Country, company: Company }) => {
     const locale = country === 'COL' ? 'es-CO' : 'es-MX'
     const number = (value: number) => value.toLocaleString(locale)
     const { indicators } = data
@@ -43,8 +44,11 @@ const Business = ({ data, country }: { data: ClientInsights, country: Country })
                     sub={ordered.count === null ? 'Aún no carga su reporte' : ordered.source === 'hearts' ? 'Según sus corazones' : 'Según su reporte de ventas'}
                 />
                 <Stat label="Reto de las 5" value={number(indicators.leaders.count)} sub={indicators.leaders.period ? `con 5+ activas · ${monthLong(indicators.leaders.period)}` : 'con 5 o más activas'} />
-                <Stat label="Con corazones" value={indicators.with_hearts.count === null ? '—' : number(indicators.with_hearts.count)} sub="Círculo Rosa" />
-                <Stat label="Cerca del regalo" value={indicators.near_gift.count === null ? '—' : number(indicators.near_gift.count)} sub="a 3 meses o menos" />
+                {/* Círculo Rosa es de Mary Kay: a otra empresa no se le cuentan corazones ni regalo */}
+                {companyHas(company, 'pink_circle') && <>
+                    <Stat label="Con corazones" value={indicators.with_hearts.count === null ? '—' : number(indicators.with_hearts.count)} sub="Círculo Rosa" />
+                    <Stat label="Cerca del regalo" value={indicators.near_gift.count === null ? '—' : number(indicators.near_gift.count)} sub="a 3 meses o menos" />
+                </>}
             </div>
 
             <div className="min-w-0">
@@ -195,7 +199,7 @@ const InsightsSkeleton = () => (
     </div>
 )
 
-const Insights = ({ data, loading, failed, country }: { data: ClientInsights | undefined, loading: boolean, failed: boolean, country: Country }) => {
+const Insights = ({ data, loading, failed, country, company }: { data: ClientInsights | undefined, loading: boolean, failed: boolean, country: Country, company: Company }) => {
     if (loading && !data) return <InsightsSkeleton />
     if (!data) return (
         <section className="shell-glass rounded-3xl p-5 text-[13px] text-muted-foreground">
@@ -204,7 +208,7 @@ const Insights = ({ data, loading, failed, country }: { data: ClientInsights | u
     )
     return (
         <div className="grid min-w-0 grid-cols-1 gap-4">
-            <Business data={data} country={country} />
+            <Business data={data} country={country} company={company} />
             <Usage data={data} />
         </div>
     )
