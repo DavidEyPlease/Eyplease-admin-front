@@ -642,7 +642,11 @@ const financeLedger: Record<string, Record<string, DemoPayment>> = {
     'EJ-005': { [cur]: { amount: 552, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-4471', receipt_uploaded_at: iso(95) } },
     'EJ-001': { [cur]: { amount: 1490, paid: 0, status: 'in_review', receipt_url: 'https://example.com/comprobante-de-ejemplo', reference_number: 'EJEMPLO-9020', receipt_uploaded_at: iso(260) } },
     'EJ-002': { [lastDecember]: { amount: 990, paid: 990, status: 'paid', paid_at: `${lastDecember}-10T18:00:00Z` }, [cur]: { amount: 990, paid: 0, status: 'pending' } }, 'EJ-004': { [cur]: { amount: 690, paid: 0, status: 'pending' } }, 'EJ-009': { [cur]: { amount: 990, paid: 0, status: 'pending' } },
+    /* La de Colombia, al corriente: para ver «Moneda de cobro» en su ficha (Colombia → Todas o Pagados) */
+    'EJ-COL1': { [prev]: { amount: 278300, paid: 278300, status: 'paid', paid_at: `${prev}-03T18:00:00Z` } },
 }
+/* Cuentas de Colombia ligadas a México que se cobran en pesos mexicanos (al precio de México) */
+const financeMxn: Record<string, boolean> = {}
 /* Bajas con adeudo: cuentas desactivadas que se fueron debiendo (sólo salen con `inactive=1`) */
 const financeInactiveLedger: Record<string, Record<string, DemoPayment>> = {
     'EJ-010': { [lastDecember]: { amount: 349, paid: 0, status: 'overdue' }, [period(2)]: { amount: 349, paid: 300, status: 'partial' }, [prev]: { amount: 349, paid: 0, status: 'overdue' } },
@@ -703,7 +707,8 @@ const financeClients = (status: string, inactive = false, year = now.getFullYear
         const paymentDay = Math.min(28, today + 1 + index * 2)
         /* Como la API: con deuda, el próximo cobro es el día de pago del mes más viejo que debe */
         const oldestOwed = Object.keys(payments).sort().find(p => ['pending', 'partial', 'overdue'].includes(payments[p].status))
-        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: client?.user.plan.price ?? 349, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: paymentDay, phone: null, balance, promotion: null, next_charge_date: oldestOwed ? `${oldestOwed}-${pad(paymentDay)}` : null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
+        const colombia = (client?.country ?? 'MEX') === 'COL', mxn = colombia && !!financeMxn[account]
+        return { id: account, user_id: client?.user.id, name: client?.name ?? (inactive ? 'CLIENTA DE EJEMPLO (BAJA)' : account), plan: client?.user.plan.name ?? 'Plan de ejemplo A', fixed_payment: mxn ? 1490 : client?.user.plan.price ?? 349, currency: colombia && !mxn ? 'COP' : 'MXN', can_pay_in_mxn: colombia, pays_in_mxn: mxn, billing_type: inactive || index % 3 !== 0 ? 'manual' : 'stripe', app_status: inactive ? 'inactive' : 'active', payment_day: paymentDay, phone: null, balance, promotion: null, next_charge_date: oldestOwed ? `${oldestOwed}-${pad(paymentDay)}` : null, next_charge_amount: null, promised_until: financePromises[account] ?? null, payments }
     })
     /* Los totales, sobre TODO el filtro y con lo arrastrado, como getTotals de la API */
     const total = (statuses: string[]) => matching.reduce((sum, [, payments]) => sum + Object.values(payments).filter(payment => statuses.includes(payment.status)).reduce((acc, payment) => acc + remainingOf(payment), 0), 0)
@@ -1480,6 +1485,13 @@ export const installMockApi = () => {
         /* Como en producción hoy: sin el Portal de clientes activado, Stripe no da la liga */
         else if (/^\/finance\/card-issues\/[^/]+\/card-link$/.test(path)) { await wait(400); response = new Response(JSON.stringify({ success: false, data: null, message: 'Primero activa el «Portal de clientes» en Stripe (Configuración → Billing → Portal de clientes) y vuelve a intentar.' }), { status: 422, headers: { 'Content-Type': 'application/json' } }) }
         else if (path === '/finance/clients') response = respond(financeClients(url.searchParams.get('collection_status') ?? 'collectable', url.searchParams.get('inactive') === '1', Number(url.searchParams.get('year')) || undefined, url.searchParams.get('country'), url.searchParams.get('search') ?? ''))
+        /* Moneda de cobro de una cuenta de Colombia ligada a México, como la API: MXN = precio de México */
+        else if (/^\/finance\/clients\/[^/]+\/billing-currency$/.test(path) && method === 'PUT') {
+            const account = decodeURIComponent(path.split('/')[3])
+            financeMxn[account] = (JSON.parse(String(init?.body ?? '{}')) as { billing_currency: string | null }).billing_currency === 'MXN'
+            await wait(300)
+            response = respond(financeClients('paid').items.find(item => item.id === account) ?? financeClients('collectable').items.find(item => item.id === account) ?? null)
+        }
         /* Día de pago, como la API: entra al calendario y, si el primer cobro cae en el mes en curso, se le crea ya */
         else if (/^\/finance\/clients\/[^/]+\/payment-day$/.test(path) && method === 'PUT') {
             const account = decodeURIComponent(path.split('/')[3])

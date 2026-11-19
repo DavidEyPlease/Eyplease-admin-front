@@ -33,6 +33,9 @@ interface ApiFinanceClient {
     plan: string | null
     plan_free?: boolean
     fixed_payment: number | null
+    currency?: string
+    can_pay_in_mxn?: boolean
+    pays_in_mxn?: boolean
     billing_type: "stripe" | "manual"
     card_charging?: boolean
     app_status: string | null
@@ -61,6 +64,9 @@ const mapClient = (c: ApiFinanceClient): FinanceClient => ({
     plan: c.plan ?? null,
     planFree: c.plan_free ?? false,
     fixedPayment: c.fixed_payment ?? null,
+    currency: c.currency ?? "MXN",
+    canPayInMxn: c.can_pay_in_mxn ?? false,
+    paysInMxn: c.pays_in_mxn ?? false,
     billingType: c.billing_type ?? "manual",
     cardCharging: c.card_charging ?? c.billing_type === "stripe",
     appStatus: c.app_status ?? null,
@@ -238,6 +244,28 @@ export const usePaymentDay = () => {
     }
 
     return { setPaymentDay, saving: requestState.loading }
+}
+
+/**
+ * Cuenta de Colombia ligada a una de México: cobrarla en pesos mexicanos (al precio de México) o regresarla a pesos
+ * colombianos. Devuelve su ficha ya actualizada y refresca la lista de cobranza.
+ */
+export const useBillingCurrency = () => {
+    const { request, requestState } = useRequestQuery({
+        invalidateQueries: [queryKeys.listBase(CLIENTS_ENTITY)],
+        onError: (error) => { toast.error(error.message || "No se pudo cambiar la moneda de cobro") },
+    })
+
+    const setBillingCurrency = async (account: string, currency: "MXN" | null) => {
+        const response = await request<{ billing_currency: "MXN" | null }, ApiFinanceClient>(
+            "PUT",
+            replaceRecordIdInPath(API_ROUTES.FINANCE.CLIENT_BILLING_CURRENCY, account),
+            { billing_currency: currency },
+        )
+        return response?.data ? mapClient(response.data) : null
+    }
+
+    return { setBillingCurrency, saving: requestState.loading }
 }
 
 export interface ReviewReceiptInput {

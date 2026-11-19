@@ -7,7 +7,8 @@ import Spinner from "@/components/common/Spinner"
 import DateInput from "@/components/common/Inputs/DateInput"
 import { PaymentStatus } from "@/interfaces/finance"
 import { carriedPeriods, dateOnly, formatDueDate, formatMoney, formatPaidAt, paidAtOn, periodLabel, periodLabelIn, periodPaid, periodYear, periodsForYear, promiseState } from "@/utils/finance"
-import { MarkPaymentInput, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
+import { MarkPaymentInput, useBillingCurrency, useFinanceClient, useMarkPayment, usePaymentPromise } from "../useFinanceClients"
+import { moneyIn } from "@/constants/countries"
 import { StatusPill } from "./ui"
 import PaymentDayDialog from "./PaymentDayDialog"
 import WinBackDialog from "./WinBackDialog"
@@ -45,6 +46,7 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
     const { client, loading } = useFinanceClient(clientId, year)
     const { markPayment } = useMarkPayment()
     const { setPromise } = usePaymentPromise()
+    const { setBillingCurrency, saving: savingCurrency } = useBillingCurrency()
     const yearPeriods = periodsForYear(year)
     /* Lo que sigue debiendo de años anteriores va arriba del año: cuenta en el saldo (la app la
        sigue cobrando) y desde aquí mismo se marca pagado. */
@@ -77,6 +79,18 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
         toast.success(date ? `Promesa de pago registrada para el ${formatDueDate(dateOnly(date))}` : "Promesa de pago quitada")
     }
 
+    /* Cuenta de Colombia ligada a una de México: cobrarla en pesos mexicanos (al precio de México) o en los de su país.
+       La API no deja cambiarla si debe meses en la otra moneda o si está domiciliada, y lo dice. */
+    const onBillingCurrency = async (toMxn: boolean) => {
+        if (!client) return
+        const updated = await setBillingCurrency(client.id, toMxn ? "MXN" : null)
+        if (updated) {
+            toast.success(toMxn
+                ? `Se le cobra en pesos mexicanos: ${moneyIn(updated.fixedPayment ?? 0, "MXN")} MXN al mes`
+                : `Se le cobra en pesos colombianos: ${moneyIn(updated.fixedPayment ?? 0, updated.currency ?? "COP")} ${updated.currency ?? "COP"} al mes`)
+        }
+    }
+
     // Ajusta el monto de un periodo (ej. precios/promociones distintas en meses pasados).
     const onAmountChange = (period: string, amount: number | null) => {
         if (!client) return
@@ -107,7 +121,26 @@ const ClientDrawer = ({ clientId, year, onClose }: { clientId: string | null; ye
                                 {APP_STATUS_LABELS[client.appStatus ?? ""] ?? "—"}
                             </span>
                         </Row>
-                        <Row label="Pago fijo">{formatMoney(client.fixedPayment)}</Row>
+                        <Row label="Pago fijo">
+                            {client.currency && client.currency !== "MXN" && client.fixedPayment !== null
+                                ? `${moneyIn(client.fixedPayment, client.currency)} ${client.currency}`
+                                : formatMoney(client.fixedPayment)}
+                        </Row>
+                        {client.canPayInMxn && (
+                            <Row label="Moneda de cobro">
+                                <span className="inline-flex items-center gap-2">
+                                    {client.paysInMxn ? "Pesos mexicanos (precio de México)" : "Pesos colombianos"}
+                                    <button
+                                        type="button"
+                                        disabled={savingCurrency}
+                                        onClick={() => onBillingCurrency(!client.paysInMxn)}
+                                        className="text-xs font-bold text-primary hover:underline disabled:opacity-50"
+                                    >
+                                        {client.paysInMxn ? "Cobrar en pesos colombianos" : "Cobrar en pesos mexicanos"}
+                                    </button>
+                                </span>
+                            </Row>
+                        )}
                         <Row label="Día de pago">
                             <span className="inline-flex items-center gap-2">
                                 {client.paymentDay ?? (client.billingType === "manual" ? <span className="text-amber-600 dark:text-amber-400">Sin día: no se le cobra</span> : "—")}

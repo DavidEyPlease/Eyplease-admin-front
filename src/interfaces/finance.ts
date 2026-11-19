@@ -51,6 +51,12 @@ export interface FinanceClient {
     balance: number
     /** Fixed monthly payment = the client's plan price (plans.price). */
     fixedPayment: number | null
+    /** Moneda en que se le cobra (MXN, o COP en Colombia). */
+    currency?: string
+    /** Cuenta de otro país ligada a una de México: se le puede cobrar en pesos mexicanos. */
+    canPayInMxn?: boolean
+    /** Esa cuenta ya se cobra en pesos mexicanos, al precio de México. */
+    paysInMxn?: boolean
     /** 'stripe' = has a stripe_id (Cashier); 'manual' = billed by the dues job. */
     billingType: "stripe" | "manual"
     /** Domiciliada cuya tarjeta Stripe SIGUE cobrando. Falso si es por fecha o si su suscripción ya murió («unpaid»). */

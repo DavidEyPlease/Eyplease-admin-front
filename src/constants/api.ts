@@ -169,6 +169,7 @@ export const API_ROUTES = {
         CLIENT_PROMISE: '/finance/clients/{id}/promise',
         /** Día de pago: con él la clienta entra al calendario de cobro (toda alta nueva nace sin día). */
         CLIENT_PAYMENT_DAY: '/finance/clients/{id}/payment-day',
+        CLIENT_BILLING_CURRENCY: '/finance/clients/{id}/billing-currency',
         // Regreso con promoción (reconquista): GET vista previa, POST aplicar
         CLIENT_WIN_BACK: '/finance/clients/{id}/win-back',
         /** Cobros con tarjeta que Stripe no pudo hacer: la lista, «revisar ahora» y la liga para cambiar la tarjeta. */
